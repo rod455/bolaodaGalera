@@ -651,7 +651,7 @@ const BolaoPage = () => {
                     jogo={jogo}
                     palpite={palpites[jogo.id] || null}
                     now={now}
-                    onClick={() => navigate(`/bolao/${id}/palpites`)}
+                    onClick={() => navigate(`/bolao/${id}/palpites?jogo=${jogo.id}`)}
                   />
                 ))}
               </div>
@@ -674,7 +674,7 @@ const BolaoPage = () => {
                     jogo={jogo}
                     palpite={palpites[jogo.id] || null}
                     now={now}
-                    onClick={() => navigate(`/bolao/${id}/palpites`)}
+                    onClick={() => navigate(`/bolao/${id}/palpites?jogo=${jogo.id}`)}
                   />
                 ))}
               </div>

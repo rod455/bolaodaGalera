@@ -68,11 +68,11 @@ function formatDataJogo(isoDate: string): string {
 }
 
 const BolaoCard = ({
-  bolao, participantes, posicao, onAccess, imgFallback,
+  bolao, participantes, posicao, isParticipating, onAccess, imgFallback,
   draggable, onDragStart, onDragOver, onDrop, onDragEnd, isDragging,
 }: {
   bolao: Bolao; participantes: number; posicao: number | null;
-  onAccess: () => void; imgFallback: string;
+  isParticipating?: boolean; onAccess: () => void; imgFallback: string;
   draggable?: boolean; onDragStart?: () => void;
   onDragOver?: (e: React.DragEvent) => void;
   onDrop?: () => void; onDragEnd?: () => void; isDragging?: boolean;
@@ -110,9 +110,9 @@ const BolaoCard = ({
           </div>
         </div>
         <Button size="sm"
-          className={`font-semibold rounded-lg ${posicao ? "bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800" : "bg-copa-green-500 hover:bg-copa-green-600 text-white"}`}
+          className={`font-semibold rounded-lg ${isParticipating ? "bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800" : "bg-copa-green-500 hover:bg-copa-green-600 text-white"}`}
           onClick={(e) => { e.stopPropagation(); onAccess(); }}>
-          {posicao ? "Acessar" : "Participar"}<ChevronRight className="w-4 h-4 ml-1" />
+          {isParticipating ? "Acessar" : "Participar"}<ChevronRight className="w-4 h-4 ml-1" />
         </Button>
       </div>
     </CardContent>
@@ -402,7 +402,8 @@ const Home = () => {
           <div className="space-y-4">
             {privados.map((b, i) => (
               <BolaoCard key={b.id} bolao={b} participantes={participantesCount[b.id] || 0}
-                posicao={userPosicoes[b.id] || null} onAccess={() => navigate(`/bolao/${b.id}`)}
+                posicao={userPosicoes[b.id] || null} isParticipating={true}
+                onAccess={() => navigate(`/bolao/${b.id}`)}
                 imgFallback={fallbackImages[i % fallbackImages.length]} draggable
                 onDragStart={() => handleDragStart("privados", i)} onDragOver={handleDragOver}
                 onDrop={() => handleDrop("privados", i)} onDragEnd={handleDragEnd}
