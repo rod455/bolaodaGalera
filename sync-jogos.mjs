@@ -2,7 +2,8 @@
 // Bolão na Copa - Sincronização de Jogos
 // Usando football-data.org API v4 (GRÁTIS)
 // ============================================
-// Execute: node sync-jogos.mjs
+// Execute: node sync-jogos.mjs          → sync completo
+// Execute: node sync-jogos.mjs --live   → atualiza só placares ao vivo
 // Requer:  npm install @supabase/supabase-js
 // ============================================
 
@@ -16,9 +17,6 @@ const FOOTBALL_DATA_TOKEN = 'd71ade413a674835a2285ad938ba30f6'; // football-data
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
 // football-data.org competition codes (gratuitos no free tier)
-// BSA = Brasileirão Série A (id: 2013) → season 2026
-// CL  = Champions League (id: 2001) → season 2025 (25/26, mata-mata fev-maio 2026)
-// WC  = World Cup (id: 2000) → season 2026
 const CAMPEONATOS = [
   { code: 'BSA', id: 2013, nome: 'Brasileirão', season: 2026 },
   { code: 'WC',  id: 2000, nome: 'Copa do Mundo', season: 2026 },
@@ -83,11 +81,10 @@ function mapStatus(apiStatus) {
   return map[apiStatus] || 'agendado';
 }
 
-// ---- Sync ----
+// ---- Sync Completo ----
 async function syncCampeonato(camp) {
   console.log(`\n📡 Sincronizando: ${camp.nome} (code=${camp.code}, season=${camp.season})`);
 
-  // Buscar campeonato_id no Supabase
   const { data: campData, error: campError } = await supabase
     .from('campeonatos')
     .select('id')
@@ -102,7 +99,6 @@ async function syncCampeonato(camp) {
 
   console.log(`  ✅ Campeonato encontrado: ${campData.id}`);
 
-  // Buscar jogos da temporada específica
   const data = await fdFetch(`/competitions/${camp.code}/matches?season=${camp.season}`);
   if (!data || !data.matches) {
     console.log(`  ❌ Nenhum jogo retornado`);
@@ -141,7 +137,6 @@ async function syncCampeonato(camp) {
     }
   }
 
-  // Log
   await supabase.from('sync_log').insert({
     campeonato_api_id: camp.id,
     tipo: 'football-data.org',
@@ -152,12 +147,107 @@ async function syncCampeonato(camp) {
   return count;
 }
 
+// ---- Sync LIVE (apenas jogos em andamento) ----
+async function syncLiveScores() {
+  console.log('⚡ Modo LIVE - Atualizando placares em tempo real');
+  console.log('================================================\n');
+
+  const now = new Date();
+  const todayStart = new Date(now);
+  todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date(now);
+  todayEnd.setHours(23, 59, 59, 999);
+
+  // Buscar jogos que precisam de atualização
+  const { data: games, error } = await supabase
+    .from('jogos')
+    .select('id, api_football_id, status, data_hora, time_a, time_b, placar_time_a, placar_time_b')
+    .or(`and(status.eq.agendado,data_hora.lte.${now.toISOString()}),status.eq.ao_vivo`)
+    .gte('data_hora', todayStart.toISOString())
+    .lte('data_hora', todayEnd.toISOString());
+
+  if (error) {
+    console.log('❌ Erro ao buscar jogos:', error.message);
+    return;
+  }
+
+  if (!games || games.length === 0) {
+    console.log('✅ Nenhum jogo em andamento para atualizar.');
+    return;
+  }
+
+  console.log(`📋 ${games.length} jogo(s) para atualizar:\n`);
+
+  let updated = 0;
+  for (const game of games) {
+    if (!game.api_football_id) {
+      console.log(`  ⚠️ ${game.time_a} vs ${game.time_b} - sem api_football_id, pulando`);
+      continue;
+    }
+
+    const matchData = await fdFetch(`/matches/${game.api_football_id}`);
+    if (!matchData) continue;
+
+    const score = matchData.score || {};
+    const ft = score.fullTime || {};
+    const ht = score.halfTime || {};
+    const newStatus = mapStatus(matchData.status);
+
+    let placarA = ft.home;
+    let placarB = ft.away;
+    if (placarA == null && newStatus === 'ao_vivo') {
+      placarA = ht.home ?? 0;
+      placarB = ht.away ?? 0;
+    }
+
+    const updateData = { status: newStatus };
+    if (placarA != null) updateData.placar_time_a = placarA;
+    if (placarB != null) updateData.placar_time_b = placarB;
+
+    const { error: updateErr } = await supabase
+      .from('jogos')
+      .update(updateData)
+      .eq('id', game.id);
+
+    const emoji = newStatus === 'ao_vivo' ? '🔴' :
+                  newStatus === 'encerrado' ? '✅' : '⏳';
+    const placarStr = placarA != null ? `${placarA} x ${placarB}` : '? x ?';
+    const oldPlacar = `${game.placar_time_a ?? '?'} x ${game.placar_time_b ?? '?'}`;
+
+    if (updateErr) {
+      console.log(`  ❌ ${game.time_a} vs ${game.time_b}: erro - ${updateErr.message}`);
+    } else {
+      console.log(`  ${emoji} ${game.time_a} ${placarStr} ${game.time_b} [${newStatus}] (antes: ${oldPlacar})`);
+      updated++;
+    }
+
+    // Respeitar rate limit (10 req/min no free tier)
+    await new Promise(r => setTimeout(r, 7000));
+  }
+
+  if (updated > 0) {
+    await supabase.from('sync_log').insert({
+      campeonato_api_id: 0,
+      tipo: 'live-scores',
+      jogos_atualizados: updated,
+    }).catch(() => {});
+  }
+
+  console.log(`\n🎉 ${updated} jogo(s) atualizado(s)!`);
+  console.log(`⏰ ${now.toLocaleTimeString('pt-BR')}`);
+}
+
 // ---- Main ----
+const isLiveMode = process.argv.includes('--live');
+
 async function main() {
+  if (isLiveMode) {
+    return syncLiveScores();
+  }
+
   console.log('🏆 Bolão na Copa - Sincronização via football-data.org');
   console.log('======================================================\n');
 
-  // Testar Supabase
   console.log('🔍 Testando conexão Supabase...');
   const { data: testData, error: testError } = await supabase
     .from('campeonatos')
@@ -171,7 +261,6 @@ async function main() {
   console.log(`✅ Supabase OK! ${testData.length} campeonatos:`);
   testData.forEach(c => console.log(`   - ${c.nome_popular || c.nome} (api_id: ${c.api_football_id}, temporada: ${c.temporada})`));
 
-  // Testar football-data.org
   console.log('\n🔍 Testando conexão football-data.org...');
   const fdTest = await fdFetch('/competitions/BSA');
   if (!fdTest) {
@@ -183,8 +272,6 @@ async function main() {
   let total = 0;
   for (const camp of CAMPEONATOS) {
     total += await syncCampeonato(camp);
-
-    // Respeitar rate limit (10 req/min no free)
     console.log('  ⏳ Aguardando 7s (rate limit)...');
     await new Promise(r => setTimeout(r, 7000));
   }
@@ -196,3 +283,12 @@ main().catch(err => {
   console.error('❌ Erro fatal:', err.message);
   process.exit(1);
 });
+
+// ============================================
+// USO:
+//   node sync-jogos.mjs          → sync completo (todos os jogos)
+//   node sync-jogos.mjs --live   → atualiza só placares ao vivo
+//
+// LOOP AUTOMÁTICO (PowerShell):
+//   while ($true) { node sync-jogos.mjs --live; Start-Sleep -Seconds 180 }
+// ============================================
