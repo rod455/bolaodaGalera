@@ -292,18 +292,41 @@ const Home = () => {
     setAlerts(pendingAlerts);
   };
 
+  const ensureProfile = async () => {
+    if (!user) return false;
+    const { data: profile } = await supabase.from("profiles").select("id").eq("id", user.id).single();
+    if (!profile) {
+      const { error } = await supabase.from("profiles").insert({
+        id: user.id,
+        nome: user.user_metadata?.nome || user.email?.split("@")[0] || "Usuário",
+        email: user.email || "",
+      });
+      if (error && error.code !== "23505") {
+        console.error("Erro ao criar perfil:", error);
+        return false;
+      }
+    }
+    return true;
+  };
+
   const handleEntrarNacional = async (bolaoId: string) => {
     if (!user) return;
     setJoiningBolao(bolaoId);
     try {
+      await ensureProfile();
       const { error } = await supabase.from("bolao_participantes").insert({ bolao_id: bolaoId, user_id: user.id });
       if (error) {
-        if (error.code === "23505") toast.info("Você já está participando!");
+        if (error.code === "23505") {
+          toast.info("Você já está participando!");
+          setUserBolaoIds((prev) => new Set(prev).add(bolaoId));
+          navigate(`/bolao/${bolaoId}`);
+        }
         else throw error;
       } else {
         toast.success("Você entrou no bolão!");
         setUserBolaoIds((prev) => new Set(prev).add(bolaoId));
         setParticipantesCount((prev) => ({ ...prev, [bolaoId]: (prev[bolaoId] || 0) + 1 }));
+        navigate(`/bolao/${bolaoId}`);
       }
     } catch (err: any) { toast.error(err.message || "Erro ao entrar no bolão"); }
     finally { setJoiningBolao(null); }
