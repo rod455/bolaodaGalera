@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Radio, Clock, Loader2, Calendar, Trophy } from "lucide-react";
+import { Radio, Clock, Loader2, Calendar, Trophy, CheckCircle2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,16 +29,23 @@ const AoVivo = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [jogosAoVivo, setJogosAoVivo] = useState<Jogo[]>([]);
+  const [jogosEmAndamento, setJogosEmAndamento] = useState<Jogo[]>([]);
   const [jogosHoje, setJogosHoje] = useState<Jogo[]>([]);
   const [jogosAmanha, setJogosAmanha] = useState<Jogo[]>([]);
+  const [jogosEncerradosHoje, setJogosEncerradosHoje] = useState<Jogo[]>([]);
   const [loading, setLoading] = useState(true);
-  // Map campeonato_id -> bolao_ids (user participates in)
+  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   const [userBolaoMap, setUserBolaoMap] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (user) loadJogos();
     // Auto-refresh every 60 seconds
-    const interval = setInterval(() => { if (user) loadJogos(); }, 60000);
+    const interval = setInterval(() => {
+      if (user) {
+        loadJogos();
+        setLastRefresh(new Date());
+      }
+    }, 60000);
     return () => clearInterval(interval);
   }, [user]);
 
@@ -62,17 +69,32 @@ const AoVivo = () => {
 
       const allJogos = (jogos as Jogo[]) || [];
 
-      // Separate into categories
+      // Ao vivo (status ao_vivo)
       setJogosAoVivo(allJogos.filter((j) => j.status === "ao_vivo"));
 
-      const todayAgendados = allJogos.filter(
-        (j) => j.status === "agendado" && new Date(j.data_hora) <= todayEnd
+      // Em andamento (agendado mas data_hora já passou)
+      setJogosEmAndamento(
+        allJogos.filter((j) => j.status === "agendado" && new Date(j.data_hora) <= now)
       );
-      const tomorrowAgendados = allJogos.filter(
-        (j) => j.status === "agendado" && new Date(j.data_hora) > todayEnd
+
+      // Agendados hoje (futuro)
+      setJogosHoje(
+        allJogos.filter(
+          (j) => j.status === "agendado" && new Date(j.data_hora) > now && new Date(j.data_hora) <= todayEnd
+        )
       );
-      setJogosHoje(todayAgendados);
-      setJogosAmanha(tomorrowAgendados);
+
+      // Agendados amanhã
+      setJogosAmanha(
+        allJogos.filter(
+          (j) => j.status === "agendado" && new Date(j.data_hora) > todayEnd
+        )
+      );
+
+      // Encerrados hoje
+      setJogosEncerradosHoje(
+        allJogos.filter((j) => j.status === "encerrado")
+      );
 
       // Get user's bolões to link games
       if (user) {
@@ -99,12 +121,11 @@ const AoVivo = () => {
   const handleClickJogo = (jogo: Jogo) => {
     const bolaoId = userBolaoMap[jogo.campeonato_id];
     if (bolaoId) {
-      navigate(`/bolao/${bolaoId}/palpites?jogo=${jogo.id}`);
+      navigate(`/bolao/${bolaoId}`);
     }
   };
 
-  const JogoCard = ({ jogo }: { jogo: Jogo }) => {
-    const isLive = jogo.status === "ao_vivo";
+  const JogoCard = ({ jogo, type }: { jogo: Jogo; type: "ao_vivo" | "em_andamento" | "agendado" | "encerrado" }) => {
     const hasBolao = !!userBolaoMap[jogo.campeonato_id];
     const camp = jogo.campeonatos as any;
 
@@ -112,10 +133,14 @@ const AoVivo = () => {
       <div
         onClick={() => hasBolao && handleClickJogo(jogo)}
         className={`rounded-xl border px-4 py-3 space-y-2 transition-all ${
-          isLive
+          type === "ao_vivo"
             ? "border-red-200 bg-red-50/50 shadow-md"
+            : type === "em_andamento"
+            ? "border-amber-200 bg-amber-50/50 shadow-md"
+            : type === "encerrado"
+            ? "border-gray-100 bg-gray-50/50"
             : "border-gray-100 bg-white"
-        } ${hasBolao ? "cursor-pointer hover:shadow-md hover:border-copa-green-200" : ""}`}
+        } ${hasBolao ? "cursor-pointer hover:shadow-md" : ""}`}
       >
         {/* Championship + Rodada */}
         <div className="flex items-center justify-between">
@@ -129,10 +154,22 @@ const AoVivo = () => {
               {jogo.rodada ? ` • ${jogo.rodada}` : ""}
             </span>
           </div>
-          {isLive && (
+          {type === "ao_vivo" && (
             <div className="flex items-center gap-1">
               <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
               <span className="text-[10px] font-bold text-red-600">AO VIVO</span>
+            </div>
+          )}
+          {type === "em_andamento" && (
+            <div className="flex items-center gap-1">
+              <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+              <span className="text-[10px] font-bold text-amber-600">EM ANDAMENTO</span>
+            </div>
+          )}
+          {type === "encerrado" && (
+            <div className="flex items-center gap-1">
+              <CheckCircle2 className="w-3 h-3 text-gray-400" />
+              <span className="text-[10px] font-bold text-gray-400">ENCERRADO</span>
             </div>
           )}
         </div>
@@ -148,9 +185,13 @@ const AoVivo = () => {
           </div>
 
           <div className="flex items-center gap-2 mx-3">
-            {isLive || jogo.status === "encerrado" ? (
-              <span className={`text-lg font-black ${isLive ? "text-red-600" : ""}`}>
+            {type === "ao_vivo" || type === "encerrado" ? (
+              <span className={`text-lg font-black ${type === "ao_vivo" ? "text-red-600" : ""}`}>
                 {jogo.placar_time_a ?? 0} x {jogo.placar_time_b ?? 0}
+              </span>
+            ) : type === "em_andamento" ? (
+              <span className="text-xs text-amber-600 font-bold">
+                {formatHora(jogo.data_hora)}
               </span>
             ) : (
               <span className="text-xs text-muted-foreground font-bold">
@@ -179,7 +220,7 @@ const AoVivo = () => {
     );
   }
 
-  const noGames = jogosAoVivo.length === 0 && jogosHoje.length === 0 && jogosAmanha.length === 0;
+  const noGames = jogosAoVivo.length === 0 && jogosEmAndamento.length === 0 && jogosHoje.length === 0 && jogosAmanha.length === 0 && jogosEncerradosHoje.length === 0;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -190,6 +231,9 @@ const AoVivo = () => {
         </h2>
         <p className="text-sm text-muted-foreground mt-1">
           Acompanhe os jogos ao vivo e de hoje
+          <span className="text-[10px] ml-2 text-muted-foreground/60">
+            Atualizado {lastRefresh.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+          </span>
         </p>
       </div>
 
@@ -207,7 +251,27 @@ const AoVivo = () => {
           </CardHeader>
           <CardContent className="space-y-2">
             {jogosAoVivo.map((jogo) => (
-              <JogoCard key={jogo.id} jogo={jogo} />
+              <JogoCard key={jogo.id} jogo={jogo} type="ao_vivo" />
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Em andamento */}
+      {jogosEmAndamento.length > 0 && (
+        <Card className="rounded-2xl shadow-sm border-amber-200">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-bold flex items-center gap-2 text-amber-600">
+              <span className="w-2.5 h-2.5 bg-amber-500 rounded-full animate-pulse" />
+              Em andamento
+              <span className="text-xs bg-amber-100 text-amber-600 rounded-full px-2 py-0.5 ml-1">
+                {jogosEmAndamento.length}
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {jogosEmAndamento.map((jogo) => (
+              <JogoCard key={jogo.id} jogo={jogo} type="em_andamento" />
             ))}
           </CardContent>
         </Card>
@@ -224,7 +288,24 @@ const AoVivo = () => {
           </CardHeader>
           <CardContent className="space-y-2">
             {jogosHoje.map((jogo) => (
-              <JogoCard key={jogo.id} jogo={jogo} />
+              <JogoCard key={jogo.id} jogo={jogo} type="agendado" />
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Encerrados hoje */}
+      {jogosEncerradosHoje.length > 0 && (
+        <Card className="rounded-2xl shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-bold flex items-center gap-2 text-muted-foreground">
+              <CheckCircle2 className="w-4 h-4" />
+              Encerrados hoje
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {jogosEncerradosHoje.map((jogo) => (
+              <JogoCard key={jogo.id} jogo={jogo} type="encerrado" />
             ))}
           </CardContent>
         </Card>
@@ -241,7 +322,7 @@ const AoVivo = () => {
           </CardHeader>
           <CardContent className="space-y-2">
             {jogosAmanha.map((jogo) => (
-              <JogoCard key={jogo.id} jogo={jogo} />
+              <JogoCard key={jogo.id} jogo={jogo} type="agendado" />
             ))}
           </CardContent>
         </Card>

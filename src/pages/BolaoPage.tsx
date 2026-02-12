@@ -150,6 +150,15 @@ function getStatusInfo(jogo: Jogo, palpite: Palpite | null, now: Date) {
   }
 
   // agendado
+  if (diffMin <= 0) {
+    // Game already started but status not yet updated
+    return {
+      label: "Em andamento",
+      color: "text-amber-600 bg-amber-50",
+      icon: Clock,
+    };
+  }
+
   if (diffMin <= 10) {
     return {
       label: "Palpites encerrados",
@@ -199,6 +208,9 @@ const BolaoPage = () => {
 
   useEffect(() => {
     if (id && user) loadBolao();
+    // Auto-refresh every 60 seconds for live score updates
+    const interval = setInterval(() => { if (id && user) loadBolao(); }, 60000);
+    return () => clearInterval(interval);
   }, [id, user]);
 
   const loadBolao = async () => {
@@ -227,7 +239,7 @@ const BolaoPage = () => {
       if (bolaoData.campeonato_id) {
         const now = new Date();
 
-        // Próximos jogos (agendados)
+        // Próximos jogos (agendados no futuro)
         const { data: proximos } = await supabase
           .from("jogos")
           .select("*")
@@ -237,14 +249,25 @@ const BolaoPage = () => {
           .order("data_hora", { ascending: true })
           .limit(5);
 
-        // Jogos recentes (encerrados, últimos 3)
+        // Jogos agendados que já começaram (data_hora passed but status not yet updated)
+        const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
+        const { data: emAndamento } = await supabase
+          .from("jogos")
+          .select("*")
+          .eq("campeonato_id", bolaoData.campeonato_id)
+          .eq("status", "agendado")
+          .lt("data_hora", now.toISOString())
+          .gte("data_hora", twoHoursAgo.toISOString())
+          .order("data_hora", { ascending: true });
+
+        // Jogos recentes (encerrados, últimos 5)
         const { data: recentes } = await supabase
           .from("jogos")
           .select("*")
           .eq("campeonato_id", bolaoData.campeonato_id)
           .eq("status", "encerrado")
           .order("data_hora", { ascending: false })
-          .limit(3);
+          .limit(5);
 
         // Jogos ao vivo
         const { data: aoVivo } = await supabase
@@ -255,6 +278,7 @@ const BolaoPage = () => {
 
         const allJogos = [
           ...(aoVivo || []),
+          ...(emAndamento || []),
           ...(proximos || []),
           ...(recentes || []).reverse(),
         ] as Jogo[];
@@ -497,15 +521,22 @@ const BolaoPage = () => {
 
   // Separate jogos into sections
   const jogosAoVivo = jogos.filter((j) => j.status === "ao_vivo");
-  const jogosProximos = jogos.filter((j) => j.status === "agendado");
+  const jogosEmAndamento = jogos.filter((j) => {
+    if (j.status !== "agendado") return false;
+    return new Date(j.data_hora).getTime() <= now.getTime();
+  });
+  const jogosProximos = jogos.filter((j) => {
+    if (j.status !== "agendado") return false;
+    return new Date(j.data_hora).getTime() > now.getTime();
+  });
   const jogosEncerrados = jogos.filter((j) => j.status === "encerrado");
 
-  // Games where palpites are locked (visible to all in private bolão)
+  // Games where palpites are locked (visible to all): encerrado, ao_vivo, or started/about to start
   const jogosRevelados = jogos.filter((j) => {
     if (j.status === "encerrado" || j.status === "ao_vivo") return true;
     if (j.status === "agendado") {
       const diffMin = (new Date(j.data_hora).getTime() - now.getTime()) / (1000 * 60);
-      return diffMin <= 10;
+      return diffMin <= 10; // includes negative (already started)
     }
     return false;
   });
@@ -709,6 +740,27 @@ const BolaoPage = () => {
             </div>
           )}
 
+          {/* Jogos em andamento (agendados cuja data já passou) */}
+          {jogosEmAndamento.length > 0 && (
+            <div className="mb-3">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+                <span className="text-xs font-semibold text-amber-600">Em andamento</span>
+              </div>
+              <div className="space-y-2">
+                {jogosEmAndamento.map((jogo) => (
+                  <JogoRowClickable
+                    key={jogo.id}
+                    jogo={jogo}
+                    palpite={palpites[jogo.id] || null}
+                    now={now}
+                    onClick={() => navigate(`/bolao/${id}/palpites?jogo=${jogo.id}`)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Próximos jogos */}
           {jogosProximos.length > 0 && (
             <div>
@@ -732,7 +784,7 @@ const BolaoPage = () => {
             </div>
           )}
 
-          {jogosProximos.length === 0 && jogosAoVivo.length === 0 && (
+          {jogosProximos.length === 0 && jogosAoVivo.length === 0 && jogosEmAndamento.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-2">
               Nenhum jogo agendado no momento.
             </p>
@@ -741,7 +793,7 @@ const BolaoPage = () => {
       </Card>
 
       {/* ═══ 3. PALPITES DOS PARTICIPANTES (private only) ═══ */}
-      {!bolao.is_nacional && jogosRevelados.length > 0 && (
+      {jogosRevelados.length > 0 && (
         <Card className="rounded-2xl shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-bold flex items-center gap-2">
