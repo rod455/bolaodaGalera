@@ -379,101 +379,7 @@ const BolaoPage = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
       </div>
 
-      {/* Jogos ao vivo */}
-      {jogosAoVivo.length > 0 && (
-        <Card className="rounded-2xl shadow-sm border-red-200">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-bold flex items-center gap-2">
-              <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-              <span className="text-red-600">Ao vivo</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {jogosAoVivo.map((jogo) => (
-              <JogoRow
-                key={jogo.id}
-                jogo={jogo}
-                palpite={palpites[jogo.id] || null}
-                now={now}
-              />
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Próximos jogos */}
-      {jogosProximos.length > 0 && (
-        <Card className="rounded-2xl shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-bold flex items-center gap-2">
-              <span className="w-2 h-2 bg-copa-green-500 rounded-full animate-pulse" />
-              Próximos jogos
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {jogosProximos.map((jogo) => (
-              <JogoRow
-                key={jogo.id}
-                jogo={jogo}
-                palpite={palpites[jogo.id] || null}
-                now={now}
-              />
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Jogos encerrados */}
-      {jogosEncerrados.length > 0 && (
-        <Card className="rounded-2xl shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-bold flex items-center gap-2 text-muted-foreground">
-              Últimos resultados
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {jogosEncerrados.map((jogo) => (
-              <JogoRow
-                key={jogo.id}
-                jogo={jogo}
-                palpite={palpites[jogo.id] || null}
-                now={now}
-              />
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      {jogos.length === 0 && (
-        <Card className="rounded-2xl shadow-sm">
-          <CardContent className="py-8 text-center">
-            <p className="text-sm text-muted-foreground">
-              Nenhum jogo disponível no momento.
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Fazer Palpites CTA */}
-      <Card className="rounded-2xl shadow-sm border-copa-gold-200 bg-copa-gold-50">
-        <CardContent className="p-5">
-          <h3 className="text-lg font-bold text-copa-green-700 mb-1">
-            Faça seus palpites
-          </h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            Veja e edite seus palpites futuros ou confira os já realizados
-          </p>
-          <Button
-            onClick={() => navigate(`/bolao/${id}/palpites`)}
-            className="w-full h-11 bg-copa-green-500 hover:bg-copa-green-600 text-white font-bold rounded-xl"
-          >
-            Ir para palpites
-            <ChevronRight className="w-4 h-4 ml-2" />
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Ranking */}
+      {/* ═══ 1. RANKING ═══ */}
       <Card className="rounded-2xl shadow-sm">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
@@ -481,7 +387,7 @@ const BolaoPage = () => {
               <Trophy className="w-4 h-4 text-copa-gold-400" />
               Ranking
             </CardTitle>
-            {ranking.length > 3 && (
+            {ranking.length > 5 && (
               <button className="text-sm text-copa-green-500 font-medium hover:underline">
                 Ver ranking completo
               </button>
@@ -537,30 +443,120 @@ const BolaoPage = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* ═══ 2. PALPITES - Próximos jogos clicáveis ═══ */}
+      <Card className="rounded-2xl shadow-sm border-copa-gold-200 bg-copa-gold-50">
+        <CardContent className="p-5">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg font-bold text-copa-green-700">
+              Faça seus palpites
+            </h3>
+            <Button
+              size="sm"
+              onClick={() => navigate(`/bolao/${id}/palpites`)}
+              className="bg-copa-green-500 hover:bg-copa-green-600 text-white font-semibold rounded-lg"
+            >
+              Ver todos <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          </div>
+
+          {/* Jogos ao vivo */}
+          {jogosAoVivo.length > 0 && (
+            <div className="mb-3">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                <span className="text-xs font-semibold text-red-600">Ao vivo</span>
+              </div>
+              <div className="space-y-2">
+                {jogosAoVivo.map((jogo) => (
+                  <JogoRowClickable
+                    key={jogo.id}
+                    jogo={jogo}
+                    palpite={palpites[jogo.id] || null}
+                    now={now}
+                    onClick={() => navigate(`/bolao/${id}/palpites`)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Próximos jogos */}
+          {jogosProximos.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="w-2 h-2 bg-copa-green-500 rounded-full animate-pulse" />
+                <span className="text-xs font-semibold text-copa-green-600">
+                  Próximos jogos
+                </span>
+              </div>
+              <div className="space-y-2">
+                {jogosProximos.slice(0, 5).map((jogo) => (
+                  <JogoRowClickable
+                    key={jogo.id}
+                    jogo={jogo}
+                    palpite={palpites[jogo.id] || null}
+                    now={now}
+                    onClick={() => navigate(`/bolao/${id}/palpites`)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {jogosProximos.length === 0 && jogosAoVivo.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-2">
+              Nenhum jogo agendado no momento.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ═══ 3. ÚLTIMOS RESULTADOS ═══ */}
+      {jogosEncerrados.length > 0 && (
+        <Card className="rounded-2xl shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-bold flex items-center gap-2 text-muted-foreground">
+              Últimos resultados
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {jogosEncerrados.map((jogo) => (
+              <ResultadoRow
+                key={jogo.id}
+                jogo={jogo}
+                palpite={palpites[jogo.id] || null}
+              />
+            ))}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
 
-/* ─── JogoRow Component ─── */
+/* ─── JogoRowClickable: Próximos jogos - clicável, leva para palpites ─── */
 
-const JogoRow = ({
+const JogoRowClickable = ({
   jogo,
   palpite,
   now,
+  onClick,
 }: {
   jogo: Jogo;
   palpite: Palpite | null;
   now: Date;
+  onClick: () => void;
 }) => {
-  const status = getStatusInfo(jogo, palpite, now);
-  const StatusIcon = status.icon;
-  const isEncerrado = jogo.status === "encerrado";
+  const jogoDate = new Date(jogo.data_hora);
+  const diffMin = (jogoDate.getTime() - now.getTime()) / (1000 * 60);
+  const isLocked = diffMin <= 10;
+  const hasPalpite = !!palpite;
 
   return (
     <div
-      className={`rounded-xl px-4 py-3 space-y-2 ${
-        isEncerrado ? "bg-gray-50/80" : "bg-muted/50"
-      }`}
+      onClick={onClick}
+      className="rounded-xl bg-white border border-gray-100 px-4 py-3 space-y-2 cursor-pointer hover:shadow-md hover:border-copa-green-200 transition-all"
     >
       {/* Fase / Rodada */}
       {(jogo.fase || jogo.rodada) && (
@@ -573,81 +569,144 @@ const JogoRow = ({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 flex-1 min-w-0">
           {jogo.logo_time_a ? (
-            <img
-              src={jogo.logo_time_a}
-              alt={jogo.time_a}
-              className="w-6 h-6 object-contain flex-shrink-0"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = "none";
-              }}
-            />
+            <img src={jogo.logo_time_a} alt={jogo.time_a} className="w-6 h-6 object-contain flex-shrink-0"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
           ) : (
             <div className="w-6 h-6 bg-gray-200 rounded-full flex-shrink-0" />
           )}
           <span className="text-sm font-semibold truncate">{jogo.time_a}</span>
         </div>
 
-        {/* Score / Palpite display */}
-        <div className="flex items-center gap-1.5 mx-3 flex-shrink-0">
-          {isEncerrado ? (
-            <div className="flex items-center gap-1">
-              <span className="text-base font-black">
-                {jogo.placar_time_a}
-              </span>
-              <span className="text-xs text-muted-foreground font-bold">x</span>
-              <span className="text-base font-black">
-                {jogo.placar_time_b}
-              </span>
-            </div>
-          ) : (
-            <span className="text-[10px] text-muted-foreground font-bold">
-              vs
-            </span>
-          )}
-        </div>
+        <span className="text-[10px] text-muted-foreground font-bold mx-3">vs</span>
 
         <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
-          <span className="text-sm font-semibold truncate text-right">
-            {jogo.time_b}
-          </span>
+          <span className="text-sm font-semibold truncate text-right">{jogo.time_b}</span>
           {jogo.logo_time_b ? (
-            <img
-              src={jogo.logo_time_b}
-              alt={jogo.time_b}
-              className="w-6 h-6 object-contain flex-shrink-0"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = "none";
-              }}
-            />
+            <img src={jogo.logo_time_b} alt={jogo.time_b} className="w-6 h-6 object-contain flex-shrink-0"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
           ) : (
             <div className="w-6 h-6 bg-gray-200 rounded-full flex-shrink-0" />
           )}
         </div>
       </div>
 
-      {/* Date + Status + Palpite */}
+      {/* Date + Status */}
       <div className="flex items-center justify-between">
         <span className="text-[10px] text-muted-foreground">
           {formatDataJogo(jogo.data_hora)}
         </span>
         <div className="flex items-center gap-1.5">
-          {palpite && jogo.status !== "encerrado" && (
-            <span className="text-[10px] font-bold text-copa-green-700 bg-copa-green-100 rounded-md px-1.5 py-0.5">
-              Seu palpite: {palpite.placar_time_a} x {palpite.placar_time_b}
-            </span>
+          {hasPalpite ? (
+            <Badge variant="secondary" className="text-[10px] font-medium border-0 px-2 py-0.5 text-copa-green-600 bg-copa-green-100">
+              <CheckCircle2 className="w-3 h-3 mr-1" />
+              Palpite: {palpite!.placar_time_a} x {palpite!.placar_time_b}
+            </Badge>
+          ) : isLocked ? (
+            <Badge variant="secondary" className="text-[10px] font-medium border-0 px-2 py-0.5 text-gray-500 bg-gray-100">
+              <Lock className="w-3 h-3 mr-1" />
+              Encerrado
+            </Badge>
+          ) : (
+            <Badge variant="secondary" className="text-[10px] font-medium border-0 px-2 py-0.5 text-amber-600 bg-amber-50">
+              <Clock className="w-3 h-3 mr-1" />
+              Fazer palpite
+              <ChevronRight className="w-3 h-3 ml-0.5" />
+            </Badge>
           )}
-          {palpite && jogo.status === "encerrado" && (
-            <span className="text-[10px] font-bold text-gray-500 bg-gray-100 rounded-md px-1.5 py-0.5">
-              Palpite: {palpite.placar_time_a} x {palpite.placar_time_b}
-            </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ─── ResultadoRow: Jogos encerrados com placar, palpite e pontos ─── */
+
+const ResultadoRow = ({
+  jogo,
+  palpite,
+}: {
+  jogo: Jogo;
+  palpite: Palpite | null;
+}) => {
+  const hasPalpite = !!palpite;
+  const pontos = palpite?.pontos ?? 0;
+
+  // Determine if palpite was exact, partial or wrong
+  let palpiteColor = "text-gray-400";
+  let pontosColor = "text-gray-400 bg-gray-100";
+  if (hasPalpite && pontos > 0) {
+    // Check if exact match
+    if (
+      palpite!.placar_time_a === jogo.placar_time_a &&
+      palpite!.placar_time_b === jogo.placar_time_b
+    ) {
+      palpiteColor = "text-copa-green-600";
+      pontosColor = "text-copa-green-700 bg-copa-green-100";
+    } else {
+      palpiteColor = "text-amber-600";
+      pontosColor = "text-amber-700 bg-amber-100";
+    }
+  } else if (hasPalpite) {
+    palpiteColor = "text-red-400";
+    pontosColor = "text-red-500 bg-red-50";
+  }
+
+  return (
+    <div className="rounded-xl bg-gray-50/80 px-4 py-3 space-y-2">
+      {/* Fase / Rodada */}
+      {(jogo.fase || jogo.rodada) && (
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
+          {[traduzirFase(jogo.fase), jogo.rodada].filter(Boolean).join(" • ")}
+        </p>
+      )}
+
+      {/* Teams + Score */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          {jogo.logo_time_a ? (
+            <img src={jogo.logo_time_a} alt={jogo.time_a} className="w-6 h-6 object-contain flex-shrink-0"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+          ) : (
+            <div className="w-6 h-6 bg-gray-200 rounded-full flex-shrink-0" />
           )}
-          <Badge
-            variant="secondary"
-            className={`text-[10px] font-medium border-0 px-2 py-0.5 ${status.color}`}
-          >
-            <StatusIcon className="w-3 h-3 mr-1" />
-            {status.label}
-          </Badge>
+          <span className="text-sm font-semibold truncate">{jogo.time_a}</span>
+        </div>
+
+        <div className="flex items-center gap-1 mx-3 flex-shrink-0">
+          <span className="text-base font-black">{jogo.placar_time_a}</span>
+          <span className="text-xs text-muted-foreground font-bold">x</span>
+          <span className="text-base font-black">{jogo.placar_time_b}</span>
+        </div>
+
+        <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
+          <span className="text-sm font-semibold truncate text-right">{jogo.time_b}</span>
+          {jogo.logo_time_b ? (
+            <img src={jogo.logo_time_b} alt={jogo.time_b} className="w-6 h-6 object-contain flex-shrink-0"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+          ) : (
+            <div className="w-6 h-6 bg-gray-200 rounded-full flex-shrink-0" />
+          )}
+        </div>
+      </div>
+
+      {/* Date + Palpite + Pontos */}
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] text-muted-foreground">
+          {formatDataJogo(jogo.data_hora)}
+        </span>
+        <div className="flex items-center gap-1.5">
+          {hasPalpite ? (
+            <>
+              <span className={`text-[10px] font-semibold ${palpiteColor}`}>
+                Palpite: {palpite!.placar_time_a} x {palpite!.placar_time_b}
+              </span>
+              <span className={`text-[10px] font-bold rounded-md px-1.5 py-0.5 ${pontosColor}`}>
+                {pontos > 0 ? `+${pontos} pts` : "0 pts"}
+              </span>
+            </>
+          ) : (
+            <span className="text-[10px] text-gray-400">Sem palpite</span>
+          )}
         </div>
       </div>
     </div>
