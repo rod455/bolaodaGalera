@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft, Trophy, Users, ChevronRight, Medal, Loader2, Clock,
-  CheckCircle2, AlertCircle, Lock, Share2, Copy, LogOut, Trash2, Copy,
+  CheckCircle2, AlertCircle, Lock, Share2, Copy, LogOut, Trash2, Eye, ChevronDown, ChevronUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -192,6 +192,10 @@ const BolaoPage = () => {
   const [showCopyDialog, setShowCopyDialog] = useState(false);
   const [otherBoloes, setOtherBoloes] = useState<{ id: string; nome: string; campeonato_id: string | null }[]>([]);
   const [copying, setCopying] = useState(false);
+  // Palpites dos participantes (private bolão only)
+  const [expandedJogo, setExpandedJogo] = useState<string | null>(null);
+  const [participantPalpites, setParticipantPalpites] = useState<Record<string, { nome: string; avatar: string; placar_a: number; placar_b: number; pontos: number | null }[]>>({});
+  const [loadingPalpites, setLoadingPalpites] = useState<string | null>(null);
 
   useEffect(() => {
     if (id && user) loadBolao();
@@ -452,12 +456,59 @@ const BolaoPage = () => {
     }
   };
 
+  const toggleJogoPalpites = async (jogoId: string) => {
+    if (expandedJogo === jogoId) {
+      setExpandedJogo(null);
+      return;
+    }
+    setExpandedJogo(jogoId);
+    if (participantPalpites[jogoId]) return;
+
+    setLoadingPalpites(jogoId);
+    try {
+      const { data } = await supabase
+        .from("palpites")
+        .select("placar_time_a, placar_time_b, pontos, user_id, profiles(nome)")
+        .eq("bolao_id", id!)
+        .eq("jogo_id", jogoId);
+
+      const list = (data || []).map((p: any) => {
+        const nome = p.profiles?.nome || "Usuário";
+        const initials = nome.split(" ").map((w: string) => w[0]).join("").substring(0, 2).toUpperCase();
+        return {
+          nome,
+          avatar: initials,
+          placar_a: p.placar_time_a,
+          placar_b: p.placar_time_b,
+          pontos: p.pontos,
+          isCurrentUser: p.user_id === user?.id,
+        };
+      });
+      list.sort((a: any, b: any) => (b.pontos ?? 0) - (a.pontos ?? 0));
+      setParticipantPalpites((prev) => ({ ...prev, [jogoId]: list }));
+    } catch (err) {
+      console.error("Erro ao carregar palpites:", err);
+    } finally {
+      setLoadingPalpites(null);
+    }
+  };
+
   const now = new Date();
 
   // Separate jogos into sections
   const jogosAoVivo = jogos.filter((j) => j.status === "ao_vivo");
   const jogosProximos = jogos.filter((j) => j.status === "agendado");
   const jogosEncerrados = jogos.filter((j) => j.status === "encerrado");
+
+  // Games where palpites are locked (visible to all in private bolão)
+  const jogosRevelados = jogos.filter((j) => {
+    if (j.status === "encerrado" || j.status === "ao_vivo") return true;
+    if (j.status === "agendado") {
+      const diffMin = (new Date(j.data_hora).getTime() - now.getTime()) / (1000 * 60);
+      return diffMin <= 10;
+    }
+    return false;
+  });
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -689,7 +740,123 @@ const BolaoPage = () => {
         </CardContent>
       </Card>
 
-      {/* ═══ 3. ÚLTIMOS RESULTADOS ═══ */}
+      {/* ═══ 3. PALPITES DOS PARTICIPANTES (private only) ═══ */}
+      {!bolao.is_nacional && jogosRevelados.length > 0 && (
+        <Card className="rounded-2xl shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-bold flex items-center gap-2">
+              <Eye className="w-4 h-4 text-copa-green-500" />
+              Palpites dos participantes
+            </CardTitle>
+            <p className="text-xs text-muted-foreground mt-1">
+              Visíveis após o fechamento das apostas
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {jogosRevelados.slice(0, 10).map((jogo) => {
+              const isExpanded = expandedJogo === jogo.id;
+              const pList = participantPalpites[jogo.id] || [];
+              const isLoadingThis = loadingPalpites === jogo.id;
+              const isEncerrado = jogo.status === "encerrado";
+
+              return (
+                <div key={jogo.id} className="rounded-xl border border-gray-100 overflow-hidden">
+                  {/* Game header - clickable */}
+                  <button
+                    onClick={() => toggleJogoPalpites(jogo.id)}
+                    className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      {jogo.logo_time_a ? (
+                        <img src={jogo.logo_time_a} alt="" className="w-5 h-5 object-contain flex-shrink-0"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                      ) : <div className="w-5 h-5 bg-gray-200 rounded-full flex-shrink-0" />}
+                      <span className="text-xs font-semibold truncate">{jogo.time_a}</span>
+                      {isEncerrado ? (
+                        <span className="text-xs font-black mx-1">{jogo.placar_time_a} x {jogo.placar_time_b}</span>
+                      ) : (
+                        <span className="text-[10px] text-muted-foreground font-bold mx-1">vs</span>
+                      )}
+                      <span className="text-xs font-semibold truncate">{jogo.time_b}</span>
+                      {jogo.logo_time_b ? (
+                        <img src={jogo.logo_time_b} alt="" className="w-5 h-5 object-contain flex-shrink-0"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                      ) : <div className="w-5 h-5 bg-gray-200 rounded-full flex-shrink-0" />}
+                    </div>
+                    <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+                      {jogo.status === "ao_vivo" && (
+                        <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                      )}
+                      {isExpanded ? (
+                        <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                      )}
+                    </div>
+                  </button>
+
+                  {/* Expanded: participant palpites */}
+                  {isExpanded && (
+                    <div className="border-t bg-muted/30 px-4 py-2 space-y-1.5">
+                      {isLoadingThis ? (
+                        <div className="flex items-center justify-center py-3">
+                          <Loader2 className="w-4 h-4 animate-spin text-copa-green-500" />
+                        </div>
+                      ) : pList.length === 0 ? (
+                        <p className="text-xs text-muted-foreground text-center py-2">
+                          Nenhum palpite registrado.
+                        </p>
+                      ) : (
+                        pList.map((p: any, idx: number) => {
+                          const isExact = isEncerrado && p.placar_a === jogo.placar_time_a && p.placar_b === jogo.placar_time_b;
+                          return (
+                            <div
+                              key={idx}
+                              className={`flex items-center justify-between rounded-lg px-3 py-2 ${
+                                p.isCurrentUser
+                                  ? "bg-copa-green-50 border border-copa-green-200"
+                                  : isExact
+                                  ? "bg-copa-gold-50"
+                                  : "bg-white"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 bg-copa-green-100 rounded-full flex items-center justify-center text-[10px] font-bold text-copa-green-600 flex-shrink-0">
+                                  {p.avatar}
+                                </div>
+                                <span className={`text-xs font-medium ${p.isCurrentUser ? "text-copa-green-700 font-bold" : ""}`}>
+                                  {p.nome}
+                                  {p.isCurrentUser && <span className="text-[9px] text-copa-green-500 ml-1">(você)</span>}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className={`text-xs font-bold ${isExact ? "text-copa-green-600" : ""}`}>
+                                  {p.placar_a} x {p.placar_b}
+                                </span>
+                                {isEncerrado && p.pontos != null && (
+                                  <span className={`text-[10px] font-bold rounded px-1.5 py-0.5 ${
+                                    p.pontos > 0
+                                      ? "text-copa-green-700 bg-copa-green-100"
+                                      : "text-gray-400 bg-gray-100"
+                                  }`}>
+                                    {p.pontos > 0 ? `+${p.pontos}` : "0"} pts
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ═══ 4. ÚLTIMOS RESULTADOS ═══ */}
       {jogosEncerrados.length > 0 && (
         <Card className="rounded-2xl shadow-sm">
           <CardHeader className="pb-2">
