@@ -2,13 +2,17 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft, Trophy, Users, ChevronRight, Medal, Loader2, Clock,
-  CheckCircle2, AlertCircle, Lock,
+  CheckCircle2, AlertCircle, Lock, Share2, Copy, Copy,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from "@/components/ui/dialog";
 
 interface Bolao {
   id: string;
@@ -17,6 +21,7 @@ interface Bolao {
   imagem_url: string | null;
   campeonato_id: string | null;
   is_nacional: boolean;
+  codigo_convite: string | null;
   campeonatos?: {
     logo_url: string;
     nome_popular: string;
@@ -178,6 +183,9 @@ const BolaoPage = () => {
   const [ranking, setRanking] = useState<RankingEntry[]>([]);
   const [totalParticipantes, setTotalParticipantes] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [showCopyDialog, setShowCopyDialog] = useState(false);
+  const [otherBoloes, setOtherBoloes] = useState<{ id: string; nome: string; campeonato_id: string | null }[]>([]);
+  const [copying, setCopying] = useState(false);
 
   useEffect(() => {
     if (id && user) loadBolao();
@@ -315,6 +323,80 @@ const BolaoPage = () => {
     }
   };
 
+  const openCopyDialog = async () => {
+    if (!user || !bolao) return;
+    // Find other bolões the user participates in with the same campeonato
+    const { data: participacoes } = await supabase
+      .from("bolao_participantes")
+      .select("bolao_id, boloes(id, nome, campeonato_id)")
+      .eq("user_id", user.id);
+
+    const others = (participacoes || [])
+      .filter((p: any) => p.boloes && p.boloes.id !== id && p.boloes.campeonato_id === bolao.campeonato_id)
+      .map((p: any) => ({ id: p.boloes.id, nome: p.boloes.nome, campeonato_id: p.boloes.campeonato_id }));
+
+    setOtherBoloes(others);
+    setShowCopyDialog(true);
+  };
+
+  const copyPalpitesFrom = async (sourceBolaoId: string) => {
+    if (!user || !id) return;
+    setCopying(true);
+    try {
+      // Get palpites from source bolão
+      const { data: sourcePalpites } = await supabase
+        .from("palpites")
+        .select("jogo_id, placar_time_a, placar_time_b")
+        .eq("user_id", user.id)
+        .eq("bolao_id", sourceBolaoId);
+
+      if (!sourcePalpites || sourcePalpites.length === 0) {
+        toast.info("Nenhum palpite encontrado no bolão selecionado.");
+        setCopying(false);
+        return;
+      }
+
+      // Get existing palpites in this bolão
+      const { data: existingPalpites } = await supabase
+        .from("palpites")
+        .select("jogo_id")
+        .eq("user_id", user.id)
+        .eq("bolao_id", id);
+
+      const existingJogoIds = new Set((existingPalpites || []).map((p: any) => p.jogo_id));
+
+      // Only copy palpites for games not yet palpited in this bolão
+      const toInsert = sourcePalpites
+        .filter((p: any) => !existingJogoIds.has(p.jogo_id))
+        .map((p: any) => ({
+          jogo_id: p.jogo_id,
+          bolao_id: id,
+          user_id: user.id,
+          placar_time_a: p.placar_time_a,
+          placar_time_b: p.placar_time_b,
+        }));
+
+      if (toInsert.length === 0) {
+        toast.info("Todos os palpites já foram copiados anteriormente.");
+        setCopying(false);
+        setShowCopyDialog(false);
+        return;
+      }
+
+      const { error } = await supabase.from("palpites").insert(toInsert);
+      if (error) throw error;
+
+      toast.success(`${toInsert.length} palpite(s) copiado(s) com sucesso!`);
+      setShowCopyDialog(false);
+      loadBolao(); // Reload to show updated palpites
+    } catch (err: any) {
+      console.error("Erro ao copiar palpites:", err);
+      toast.error("Erro ao copiar palpites");
+    } finally {
+      setCopying(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -346,20 +428,60 @@ const BolaoPage = () => {
         </Button>
         <div className="flex-1 min-w-0">
           <h2 className="text-2xl font-bold truncate">{bolao.nome}</h2>
-          <p className="text-sm text-muted-foreground">
-            {totalParticipantes.toLocaleString("pt-BR")} participantes
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="text-sm text-muted-foreground">
+              {totalParticipantes.toLocaleString("pt-BR")} participantes
+            </p>
+            {bolao.codigo_convite && (
+              <>
+                <span className="text-muted-foreground">•</span>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(bolao.codigo_convite!);
+                    toast.success("Código copiado!");
+                  }}
+                  className="flex items-center gap-1 text-sm font-mono font-bold text-copa-green-600 hover:text-copa-green-700 transition-colors"
+                  title="Copiar código"
+                >
+                  {bolao.codigo_convite}
+                  <Copy className="w-3.5 h-3.5" />
+                </button>
+              </>
+            )}
+          </div>
         </div>
-        {(bolao.campeonatos as any)?.logo_url && (
-          <img
-            src={(bolao.campeonatos as any).logo_url}
-            alt=""
-            className="w-8 h-8 object-contain"
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = "none";
-            }}
-          />
-        )}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {bolao.codigo_convite && (
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => {
+                const url = `${window.location.origin}/entrar?codigo=${bolao.codigo_convite}`;
+                const text = `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nÉ só acessar: ${url}`;
+                if (navigator.share) {
+                  navigator.share({ title: `Bolão: ${bolao.nome}`, text }).catch(() => {});
+                } else {
+                  navigator.clipboard.writeText(text);
+                  toast.success("Link copiado para compartilhar!");
+                }
+              }}
+              className="rounded-full h-9 w-9 border-copa-green-200 text-copa-green-600 hover:bg-copa-green-50"
+              title="Compartilhar bolão"
+            >
+              <Share2 className="w-4 h-4" />
+            </Button>
+          )}
+          {(bolao.campeonatos as any)?.logo_url && (
+            <img
+              src={(bolao.campeonatos as any).logo_url}
+              alt=""
+              className="w-8 h-8 object-contain"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = "none";
+              }}
+            />
+          )}
+        </div>
       </div>
 
       {/* Cover Image */}
@@ -451,13 +573,23 @@ const BolaoPage = () => {
             <h3 className="text-lg font-bold text-copa-green-700">
               Faça seus palpites
             </h3>
-            <Button
-              size="sm"
-              onClick={() => navigate(`/bolao/${id}/palpites`)}
-              className="bg-copa-green-500 hover:bg-copa-green-600 text-white font-semibold rounded-lg"
-            >
-              Ver todos <ChevronRight className="w-4 h-4 ml-1" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={openCopyDialog}
+                className="text-copa-green-600 border-copa-green-300 hover:bg-copa-green-50 font-semibold rounded-lg text-xs"
+              >
+                <Copy className="w-3.5 h-3.5 mr-1" /> Copiar
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => navigate(`/bolao/${id}/palpites`)}
+                className="bg-copa-green-500 hover:bg-copa-green-600 text-white font-semibold rounded-lg"
+              >
+                Ver todos <ChevronRight className="w-4 h-4 ml-1" />
+              </Button>
+            </div>
           </div>
 
           {/* Jogos ao vivo */}
@@ -531,6 +663,45 @@ const BolaoPage = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Copy Palpites Dialog */}
+      <Dialog open={showCopyDialog} onOpenChange={setShowCopyDialog}>
+        <DialogContent className="max-w-md rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-copa-green-700">
+              Copiar palpites
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Copie os palpites que você já fez em outro bolão do mesmo campeonato para este.
+            </DialogDescription>
+          </DialogHeader>
+          {otherBoloes.length === 0 ? (
+            <div className="text-center py-6">
+              <p className="text-sm text-muted-foreground">
+                Você não participa de outro bolão com o mesmo campeonato.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2 mt-2">
+              {otherBoloes.map((ob) => (
+                <button
+                  key={ob.id}
+                  disabled={copying}
+                  onClick={() => copyPalpitesFrom(ob.id)}
+                  className="w-full flex items-center justify-between p-3.5 rounded-xl border-2 border-transparent bg-muted/50 hover:bg-copa-green-50 hover:border-copa-green-200 transition-all text-left"
+                >
+                  <span className="text-sm font-semibold">{ob.nome}</span>
+                  {copying ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-copa-green-500" />
+                  ) : (
+                    <Copy className="w-4 h-4 text-copa-green-500" />
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

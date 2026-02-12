@@ -298,7 +298,6 @@ const CriarBolao = () => {
               placeholder="Ex: Bolão da Galera"
               value={nome}
               onChange={(e) => setNome(e.target.value)}
-              onBlur={() => { if (nome.trim()) scrollToSection("section-pontuacao"); }}
               className="h-11 rounded-xl bg-muted/50"
             />
           </div>
