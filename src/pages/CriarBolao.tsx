@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Upload, Plus, Trash2, Lock, Info, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,23 +23,25 @@ interface Jogo {
   horario: string;
 }
 
-interface ModoInfo {
-  titulo: string;
-  descricao: string;
-  regras: { id: string; texto: string; pontos: string; acerto: boolean }[];
+interface Regra {
+  id: string;
+  texto: string;
+  pontos: string;
+  acerto: boolean;
 }
 
-const modosPontuacao = [
-  { id: "casual", nome: "Casual", subtitulo: "Iniciantes", plano: "free" },
-  { id: "amador", nome: "Amador", subtitulo: "Intermediário", plano: "premium" },
-  { id: "vencedor_ou_nada", nome: "Vencedor ou Nada", subtitulo: "Acerte o vencedor", plano: "premium" },
-  { id: "profissional", nome: "Profissional", subtitulo: "Avançado", plano: "premium_pro" },
-  { id: "fanatico", nome: "Torcedor Fanático", subtitulo: "Só jogos do seu time", plano: "premium_pro" },
-  { id: "tudo_ou_nada", nome: "Tudo ou Nada", subtitulo: "Placar exato ou zero", plano: "premium_pro" },
-];
+interface ModoConfig {
+  nome: string;
+  subtitulo: string;
+  plano: string;
+  titulo: string;
+  descricao: string;
+  regras: Regra[];
+}
 
-const modosDetalhes: Record<string, ModoInfo> = {
+const modos: Record<string, ModoConfig> = {
   casual: {
+    nome: "Casual", subtitulo: "Iniciantes", plano: "free",
     titulo: "Iniciantes / Casual",
     descricao: "Modo simples para quem está começando.",
     regras: [
@@ -49,6 +51,7 @@ const modosDetalhes: Record<string, ModoInfo> = {
     ],
   },
   amador: {
+    nome: "Amador", subtitulo: "Intermediário", plano: "premium",
     titulo: "Intermediário / Amadores",
     descricao: "Mais detalhado, com pontos extras por diferença de gols.",
     regras: [
@@ -61,6 +64,7 @@ const modosDetalhes: Record<string, ModoInfo> = {
     ],
   },
   vencedor_ou_nada: {
+    nome: "Vencedor ou Nada", subtitulo: "Acerte o vencedor", plano: "premium",
     titulo: "Vencedor ou Nada",
     descricao: "Pontua por acertar o vencedor ou o empate.",
     regras: [
@@ -70,6 +74,7 @@ const modosDetalhes: Record<string, ModoInfo> = {
     ],
   },
   profissional: {
+    nome: "Profissional", subtitulo: "Avançado", plano: "premium_pro",
     titulo: "Avançado / Profissional",
     descricao: "Modo completo com pontuações altas e bonificações detalhadas.",
     regras: [
@@ -84,6 +89,7 @@ const modosDetalhes: Record<string, ModoInfo> = {
     ],
   },
   fanatico: {
+    nome: "Torcedor Fanático", subtitulo: "Só jogos do seu time", plano: "premium_pro",
     titulo: "Torcedor Fanático",
     descricao: "Escolha seu time de coração e só vale apostas nos jogos do seu time.",
     regras: [
@@ -98,6 +104,7 @@ const modosDetalhes: Record<string, ModoInfo> = {
     ],
   },
   tudo_ou_nada: {
+    nome: "Tudo ou Nada", subtitulo: "Placar exato ou zero", plano: "premium_pro",
     titulo: "Tudo ou Nada",
     descricao: "Só pontua se acertar o placar exato. Para os corajosos!",
     regras: [
@@ -106,6 +113,8 @@ const modosDetalhes: Record<string, ModoInfo> = {
     ],
   },
 };
+
+const modosOrdem = ["casual", "amador", "vencedor_ou_nada", "profissional", "fanatico", "tudo_ou_nada"];
 
 const CriarBolao = () => {
   const navigate = useNavigate();
@@ -118,37 +127,63 @@ const CriarBolao = () => {
   const [novoTimeB, setNovoTimeB] = useState("");
   const [novaData, setNovaData] = useState("");
   const [novoHorario, setNovoHorario] = useState("");
-  const [infoModal, setInfoModal] = useState<ModoInfo | null>(null);
+
+  // Modal state
+  const [modalModo, setModalModo] = useState<string | null>(null);
+  const [modalRegras, setModalRegras] = useState<Set<string>>(new Set());
 
   // TODO: get from user profile in Supabase
   const userPlano = "free";
-
-  // When mode changes, pre-select all acerto=true rules
-  useEffect(() => {
-    if (modoSelecionado && modosDetalhes[modoSelecionado]) {
-      const regras = modosDetalhes[modoSelecionado].regras;
-      const ativas = new Set(regras.filter((r) => r.acerto).map((r) => r.id));
-      setRegrasAtivas(ativas);
-    }
-  }, [modoSelecionado]);
-
-  const toggleRegra = (regraId: string) => {
-    setRegrasAtivas((prev) => {
-      const next = new Set(prev);
-      if (next.has(regraId)) {
-        next.delete(regraId);
-      } else {
-        next.add(regraId);
-      }
-      return next;
-    });
-  };
 
   const isLocked = (plano: string) => {
     if (userPlano === "premium_pro") return false;
     if (userPlano === "premium" && plano === "premium_pro") return true;
     if (userPlano === "free" && (plano === "premium" || plano === "premium_pro")) return true;
     return false;
+  };
+
+  const openModoModal = (modoId: string) => {
+    const modo = modos[modoId];
+    // Pre-select all acerto=true rules
+    const defaults = new Set(modo.regras.filter((r) => r.acerto).map((r) => r.id));
+    setModalModo(modoId);
+    setModalRegras(defaults);
+  };
+
+  const toggleModalRegra = (regraId: string) => {
+    setModalRegras((prev) => {
+      const next = new Set(prev);
+      if (next.has(regraId)) next.delete(regraId);
+      else next.add(regraId);
+      return next;
+    });
+  };
+
+  const confirmModo = () => {
+    if (!modalModo) return;
+    if (modalRegras.size === 0) {
+      toast.error("Selecione pelo menos uma regra");
+      return;
+    }
+    setModoSelecionado(modalModo);
+    setRegrasAtivas(new Set(modalRegras));
+    setModalModo(null);
+    toast.success(`Modo "${modos[modalModo].nome}" selecionado com ${modalRegras.size} regra(s)`);
+  };
+
+  const handleModoClick = (modoId: string) => {
+    const modo = modos[modoId];
+    if (isLocked(modo.plano)) {
+      toast.error("Faça upgrade para desbloquear este modo");
+      navigate("/planos");
+      return;
+    }
+    openModoModal(modoId);
+  };
+
+  const handleInfoClick = (e: React.MouseEvent, modoId: string) => {
+    e.stopPropagation();
+    openModoModal(modoId);
   };
 
   const addJogo = () => {
@@ -171,7 +206,6 @@ const CriarBolao = () => {
   const handleCriar = () => {
     if (!nome) { toast.error("Informe o nome do bolão"); return; }
     if (!modoSelecionado) { toast.error("Selecione o modo de pontuação"); return; }
-    if (regrasAtivas.size === 0) { toast.error("Selecione pelo menos uma regra de pontuação"); return; }
     const codigo = Math.random().toString(36).substring(2, 8).toUpperCase();
     toast.success(`Bolão criado! Código: ${codigo}`);
     navigate("/home");
@@ -183,7 +217,8 @@ const CriarBolao = () => {
     return null;
   };
 
-  const modoAtual = modoSelecionado ? modosDetalhes[modoSelecionado] : null;
+  const modoAtual = modoSelecionado ? modos[modoSelecionado] : null;
+  const modoModal = modalModo ? modos[modalModo] : null;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -228,22 +263,16 @@ const CriarBolao = () => {
           <p className="text-xs text-muted-foreground mt-1">Selecione como os pontos serão calculados</p>
         </CardHeader>
         <CardContent className="space-y-2">
-          {modosPontuacao.map((modo) => {
+          {modosOrdem.map((modoId) => {
+            const modo = modos[modoId];
             const locked = isLocked(modo.plano);
-            const selected = modoSelecionado === modo.id;
+            const selected = modoSelecionado === modoId;
             const badge = getPlanoBadge(modo.plano);
 
             return (
               <div
-                key={modo.id}
-                onClick={() => {
-                  if (locked) {
-                    toast.error("Faça upgrade para desbloquear este modo");
-                    navigate("/planos");
-                    return;
-                  }
-                  setModoSelecionado(modo.id);
-                }}
+                key={modoId}
+                onClick={() => handleModoClick(modoId)}
                 className={`flex items-center justify-between p-3.5 rounded-xl cursor-pointer transition-all border-2 ${
                   selected ? "border-copa-green-500 bg-copa-green-50"
                     : locked ? "border-transparent bg-muted/30 opacity-60"
@@ -264,11 +293,16 @@ const CriarBolao = () => {
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground">{modo.subtitulo}</p>
+                    {selected && regrasAtivas.size > 0 && (
+                      <p className="text-[11px] text-copa-green-600 font-medium mt-0.5">
+                        {regrasAtivas.size} regra{regrasAtivas.size !== 1 ? "s" : ""} selecionada{regrasAtivas.size !== 1 ? "s" : ""}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={(e) => { e.stopPropagation(); setInfoModal(modosDetalhes[modo.id]); }}
+                    onClick={(e) => handleInfoClick(e, modoId)}
                     className="w-6 h-6 rounded-full bg-copa-green-100 hover:bg-copa-green-200 flex items-center justify-center transition-colors"
                     title="Ver regras"
                   >
@@ -281,67 +315,6 @@ const CriarBolao = () => {
           })}
         </CardContent>
       </Card>
-
-      {/* Regras do modo selecionado */}
-      {modoAtual && (
-        <Card className="rounded-2xl shadow-sm border-copa-green-200 bg-copa-green-50/30">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-bold">
-              Regras ativas — {modoAtual.titulo}
-            </CardTitle>
-            <p className="text-xs text-muted-foreground mt-1">
-              Marque quais regras de pontuação deseja aplicar neste bolão
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-1.5">
-            {modoAtual.regras.map((regra) => {
-              // "Errou" rules are always shown but not toggleable
-              if (!regra.acerto) {
-                return (
-                  <div
-                    key={regra.id}
-                    className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-red-50"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <X className="w-4 h-4 text-red-400 flex-shrink-0" />
-                      <span className="text-sm text-red-600">{regra.texto}</span>
-                    </div>
-                    <span className="text-sm font-bold text-red-500">{regra.pontos}</span>
-                  </div>
-                );
-              }
-
-              const isChecked = regrasAtivas.has(regra.id);
-              return (
-                <div
-                  key={regra.id}
-                  onClick={() => toggleRegra(regra.id)}
-                  className={`flex items-center justify-between py-2.5 px-3 rounded-lg cursor-pointer transition-colors ${
-                    isChecked ? "bg-white border border-copa-green-200" : "bg-muted/40"
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Checkbox
-                      checked={isChecked}
-                      onCheckedChange={() => toggleRegra(regra.id)}
-                      className="data-[state=checked]:bg-copa-green-500 data-[state=checked]:border-copa-green-500"
-                    />
-                    <span className={`text-sm ${isChecked ? "text-foreground font-medium" : "text-muted-foreground"}`}>
-                      {regra.texto}
-                    </span>
-                  </div>
-                  <span className={`text-sm font-bold ${isChecked ? "text-copa-green-600" : "text-muted-foreground"}`}>
-                    {regra.pontos}
-                  </span>
-                </div>
-              );
-            })}
-            <p className="text-xs text-muted-foreground pt-2">
-              {regrasAtivas.size} regra{regrasAtivas.size !== 1 ? "s" : ""} selecionada{regrasAtivas.size !== 1 ? "s" : ""}
-            </p>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Games */}
       <Card className="rounded-2xl shadow-sm">
@@ -380,23 +353,73 @@ const CriarBolao = () => {
         Criar Bolão
       </Button>
 
-      {/* Info Modal */}
-      <Dialog open={!!infoModal} onOpenChange={() => setInfoModal(null)}>
+      {/* Rules Selection Modal */}
+      <Dialog open={!!modalModo} onOpenChange={() => setModalModo(null)}>
         <DialogContent className="max-w-md rounded-2xl">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold text-copa-green-700">{infoModal?.titulo}</DialogTitle>
-            <DialogDescription className="text-sm text-muted-foreground">{infoModal?.descricao}</DialogDescription>
+            <DialogTitle className="text-lg font-bold text-copa-green-700">
+              {modoModal?.titulo}
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              {modoModal?.descricao}
+            </DialogDescription>
           </DialogHeader>
-          <div className="space-y-2 mt-2">
-            {infoModal?.regras.map((regra, i) => (
-              <div key={i} className={`flex items-center justify-between py-2 px-3 rounded-lg ${regra.acerto ? "bg-copa-green-50" : "bg-red-50"}`}>
-                <div className="flex items-center gap-2">
-                  {regra.acerto ? <Check className="w-4 h-4 text-copa-green-500 flex-shrink-0" /> : <X className="w-4 h-4 text-red-500 flex-shrink-0" />}
-                  <span className="text-sm">{regra.texto}</span>
+
+          <p className="text-xs font-medium text-muted-foreground mt-1">
+            Selecione quais regras deseja aplicar neste bolão:
+          </p>
+
+          <div className="space-y-1.5 mt-1">
+            {modoModal?.regras.map((regra) => {
+              if (!regra.acerto) {
+                return (
+                  <div key={regra.id} className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-red-50">
+                    <div className="flex items-center gap-2.5">
+                      <X className="w-4 h-4 text-red-400 flex-shrink-0" />
+                      <span className="text-sm text-red-600">{regra.texto}</span>
+                    </div>
+                    <span className="text-sm font-bold text-red-500">{regra.pontos}</span>
+                  </div>
+                );
+              }
+
+              const isChecked = modalRegras.has(regra.id);
+              return (
+                <div
+                  key={regra.id}
+                  onClick={() => toggleModalRegra(regra.id)}
+                  className={`flex items-center justify-between py-2.5 px-3 rounded-lg cursor-pointer transition-colors ${
+                    isChecked ? "bg-copa-green-50 border border-copa-green-200" : "bg-muted/40 hover:bg-muted/60"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Checkbox
+                      checked={isChecked}
+                      onCheckedChange={() => toggleModalRegra(regra.id)}
+                      className="data-[state=checked]:bg-copa-green-500 data-[state=checked]:border-copa-green-500"
+                    />
+                    <span className={`text-sm ${isChecked ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                      {regra.texto}
+                    </span>
+                  </div>
+                  <span className={`text-sm font-bold whitespace-nowrap ml-2 ${isChecked ? "text-copa-green-600" : "text-muted-foreground"}`}>
+                    {regra.pontos}
+                  </span>
                 </div>
-                <span className={`text-sm font-bold whitespace-nowrap ml-2 ${regra.acerto ? "text-copa-green-600" : "text-red-500"}`}>{regra.pontos}</span>
-              </div>
-            ))}
+              );
+            })}
+          </div>
+
+          <div className="flex items-center justify-between pt-3 border-t mt-2">
+            <p className="text-xs text-muted-foreground">
+              {modalRegras.size} regra{modalRegras.size !== 1 ? "s" : ""} selecionada{modalRegras.size !== 1 ? "s" : ""}
+            </p>
+            <Button
+              onClick={confirmModo}
+              className="bg-copa-green-500 hover:bg-copa-green-600 text-white font-bold rounded-xl px-6"
+            >
+              Confirmar
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
