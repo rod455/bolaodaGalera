@@ -217,7 +217,7 @@ const CriarBolao = () => {
         }
       }
 
-      const { error } = await supabase.from("boloes").insert({
+      const { data: newBolao, error } = await supabase.from("boloes").insert({
         nome,
         descricao: descricao || null,
         imagem_url: imagemUrl,
@@ -228,12 +228,24 @@ const CriarBolao = () => {
         regras_ativas: [],
         is_publico: false,
         is_nacional: false,
-      });
+      }).select("id").single();
 
       if (error) throw error;
 
+      // Garantir que o perfil existe
+      await supabase.from("profiles").upsert(
+        { id: user.id, nome: user.user_metadata?.nome || user.email?.split("@")[0] || "Usuário" },
+        { onConflict: "id" }
+      );
+
+      // Adicionar criador como participante
+      await supabase.from("bolao_participantes").insert({
+        bolao_id: newBolao.id,
+        user_id: user.id,
+      });
+
       toast.success(`Bolão criado! Código: ${codigo}`);
-      navigate("/home");
+      navigate(`/bolao/${newBolao.id}`);
     } catch (err: any) {
       console.error("Erro ao criar bolão:", err);
       toast.error(err.message || "Erro ao criar bolão");
