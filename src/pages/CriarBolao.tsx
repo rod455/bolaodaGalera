@@ -254,6 +254,14 @@ const CriarBolao = () => {
     return "🏆";
   };
 
+  // Auto-scroll to next section
+  const scrollToSection = (sectionId: string) => {
+    setTimeout(() => {
+      const el = document.getElementById(sectionId);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 150);
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center gap-3">
@@ -263,82 +271,13 @@ const CriarBolao = () => {
         <h2 className="text-2xl font-bold">Criar Bolão</h2>
       </div>
 
-      {/* Campeonato Selector */}
-      <Card className="rounded-2xl shadow-sm">
+      {/* 1. Basic Info */}
+      <Card id="section-info" className="rounded-2xl shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-bold flex items-center gap-2">
-            <Trophy className="w-4 h-4 text-copa-gold-500" />
-            Campeonato
+            <span className="w-6 h-6 rounded-full bg-copa-green-500 text-white text-xs font-bold flex items-center justify-center">1</span>
+            Informações Básicas
           </CardTitle>
-          <p className="text-xs text-muted-foreground mt-1">
-            Selecione o campeonato que será usado no bolão
-          </p>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {loadingCampeonatos ? (
-            <div className="flex items-center justify-center py-4">
-              <Loader2 className="w-5 h-5 text-copa-green-500 animate-spin" />
-            </div>
-          ) : (
-            campeonatos.map((camp) => {
-              const selected = campeonatoSelecionado === camp.id;
-              return (
-                <div
-                  key={camp.id}
-                  onClick={() => setCampeonatoSelecionado(camp.id)}
-                  className={`flex items-center gap-3 p-3.5 rounded-xl cursor-pointer transition-all border-2 ${
-                    selected
-                      ? "border-copa-green-500 bg-copa-green-50"
-                      : "border-transparent bg-muted/50 hover:bg-muted/80"
-                  }`}
-                >
-                  <div
-                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                      selected
-                        ? "border-copa-green-500 bg-copa-green-500"
-                        : "border-gray-300"
-                    }`}
-                  >
-                    {selected && <Check className="w-3 h-3 text-white" />}
-                  </div>
-
-                  {camp.logo_url ? (
-                    <img
-                      src={camp.logo_url}
-                      alt={camp.nome_popular}
-                      className="w-8 h-8 object-contain flex-shrink-0"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = "none";
-                      }}
-                    />
-                  ) : (
-                    <span className="text-xl flex-shrink-0">{getTipoIcon(camp.tipo)}</span>
-                  )}
-
-                  <div className="flex-1 min-w-0">
-                    <span className="text-sm font-semibold block truncate">
-                      {camp.nome_popular || camp.nome}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      Temporada {camp.temporada}
-                    </span>
-                  </div>
-                </div>
-              );
-            })
-          )}
-          {!loadingCampeonatos && campeonatos.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              Nenhum campeonato disponível. Execute a sincronização primeiro.
-            </p>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Basic Info */}
-      <Card className="rounded-2xl shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-bold">Informações Básicas</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -347,6 +286,7 @@ const CriarBolao = () => {
               placeholder="Ex: Bolão da Galera"
               value={nome}
               onChange={(e) => setNome(e.target.value)}
+              onBlur={() => { if (nome.trim()) scrollToSection("section-pontuacao"); }}
               className="h-11 rounded-xl bg-muted/50"
             />
           </div>
@@ -356,16 +296,20 @@ const CriarBolao = () => {
               placeholder="Descreva seu bolão"
               value={descricao}
               onChange={(e) => setDescricao(e.target.value)}
+              onBlur={() => { if (nome.trim()) scrollToSection("section-pontuacao"); }}
               className="h-11 rounded-xl bg-muted/50"
             />
           </div>
         </CardContent>
       </Card>
 
-      {/* Modo de Pontuação */}
-      <Card className="rounded-2xl shadow-sm">
+      {/* 2. Modo de Pontuação */}
+      <Card id="section-pontuacao" className="rounded-2xl shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-bold">Modo de Pontuação</CardTitle>
+          <CardTitle className="text-base font-bold flex items-center gap-2">
+            <span className="w-6 h-6 rounded-full bg-copa-green-500 text-white text-xs font-bold flex items-center justify-center">2</span>
+            Modo de Pontuação
+          </CardTitle>
           <p className="text-xs text-muted-foreground mt-1">
             Selecione como os pontos serão calculados
           </p>
@@ -386,6 +330,7 @@ const CriarBolao = () => {
                     return;
                   }
                   setModoSelecionado(modo.id);
+                  scrollToSection("section-campeonato");
                 }}
                 className={`flex items-center justify-between p-3.5 rounded-xl cursor-pointer transition-all border-2 ${
                   selected
@@ -436,8 +381,84 @@ const CriarBolao = () => {
         </CardContent>
       </Card>
 
-      {/* Upload Cover - moved to end */}
-      <Card className="border-dashed border-2 border-copa-green-200 rounded-2xl">
+      {/* 3. Campeonato Selector */}
+      <Card id="section-campeonato" className="rounded-2xl shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-bold flex items-center gap-2">
+            <span className="w-6 h-6 rounded-full bg-copa-green-500 text-white text-xs font-bold flex items-center justify-center">3</span>
+            <Trophy className="w-4 h-4 text-copa-gold-500" />
+            Campeonato
+          </CardTitle>
+          <p className="text-xs text-muted-foreground mt-1">
+            Selecione o campeonato que será usado no bolão
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {loadingCampeonatos ? (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="w-5 h-5 text-copa-green-500 animate-spin" />
+            </div>
+          ) : (
+            campeonatos.map((camp) => {
+              const selected = campeonatoSelecionado === camp.id;
+              return (
+                <div
+                  key={camp.id}
+                  onClick={() => {
+                    setCampeonatoSelecionado(camp.id);
+                    scrollToSection("section-imagem");
+                  }}
+                  className={`flex items-center gap-3 p-3.5 rounded-xl cursor-pointer transition-all border-2 ${
+                    selected
+                      ? "border-copa-green-500 bg-copa-green-50"
+                      : "border-transparent bg-muted/50 hover:bg-muted/80"
+                  }`}
+                >
+                  <div
+                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                      selected
+                        ? "border-copa-green-500 bg-copa-green-500"
+                        : "border-gray-300"
+                    }`}
+                  >
+                    {selected && <Check className="w-3 h-3 text-white" />}
+                  </div>
+
+                  {camp.logo_url ? (
+                    <img
+                      src={camp.logo_url}
+                      alt={camp.nome_popular}
+                      className="w-8 h-8 object-contain flex-shrink-0"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = "none";
+                      }}
+                    />
+                  ) : (
+                    <span className="text-xl flex-shrink-0">{getTipoIcon(camp.tipo)}</span>
+                  )}
+
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-semibold block truncate">
+                      {camp.nome_popular || camp.nome}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      Temporada {camp.temporada}
+                    </span>
+                  </div>
+                </div>
+              );
+            })
+          )}
+          {!loadingCampeonatos && campeonatos.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              Nenhum campeonato disponível. Execute a sincronização primeiro.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* 4. Upload Cover */}
+      <Card id="section-imagem" className="border-dashed border-2 border-copa-green-200 rounded-2xl">
         <CardContent className="flex flex-col items-center justify-center py-8">
           <label className="cursor-pointer flex flex-col items-center hover:opacity-80 transition-opacity">
             {imagemPreview ? (
