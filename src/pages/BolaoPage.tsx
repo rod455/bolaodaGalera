@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft, Trophy, Users, ChevronRight, Medal, Loader2, Clock,
-  CheckCircle2, AlertCircle, Lock, Share2, Copy, Copy,
+  CheckCircle2, AlertCircle, Lock, Share2, Copy, LogOut, Copy,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -183,6 +183,8 @@ const BolaoPage = () => {
   const [ranking, setRanking] = useState<RankingEntry[]>([]);
   const [totalParticipantes, setTotalParticipantes] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [leaving, setLeaving] = useState(false);
   const [showCopyDialog, setShowCopyDialog] = useState(false);
   const [otherBoloes, setOtherBoloes] = useState<{ id: string; nome: string; campeonato_id: string | null }[]>([]);
   const [copying, setCopying] = useState(false);
@@ -406,6 +408,25 @@ const BolaoPage = () => {
   }
 
   if (!bolao) return null;
+
+  const handleLeaveBolao = async () => {
+    if (!user || !id) return;
+    setLeaving(true);
+    try {
+      // Delete palpites first
+      await supabase.from("palpites").delete().eq("user_id", user.id).eq("bolao_id", id);
+      // Remove from participants
+      await supabase.from("bolao_participantes").delete().eq("user_id", user.id).eq("bolao_id", id);
+      toast.success("Você saiu do bolão.");
+      navigate("/home");
+    } catch (err: any) {
+      console.error("Erro ao sair:", err);
+      toast.error("Erro ao sair do bolão.");
+    } finally {
+      setLeaving(false);
+      setShowLeaveConfirm(false);
+    }
+  };
 
   const now = new Date();
 
@@ -663,6 +684,54 @@ const BolaoPage = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* ═══ SAIR DO BOLÃO ═══ */}
+      <div className="pt-4 border-t border-dashed border-gray-200">
+        <button
+          onClick={() => setShowLeaveConfirm(true)}
+          className="flex items-center gap-2 text-sm text-red-400 hover:text-red-600 transition-colors mx-auto"
+        >
+          <LogOut className="w-4 h-4" />
+          Sair do bolão
+        </button>
+      </div>
+
+      {/* Leave Confirmation Dialog */}
+      <Dialog open={showLeaveConfirm} onOpenChange={setShowLeaveConfirm}>
+        <DialogContent className="max-w-sm rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-red-600">
+              Sair do bolão?
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground mt-2">
+              Tem certeza que deseja sair de <strong>{bolao.nome}</strong>?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="bg-red-50 rounded-xl p-3 mt-2">
+            <p className="text-sm text-red-700 font-medium flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              Atenção: todos os seus palpites e pontos neste bolão serão perdidos permanentemente.
+            </p>
+          </div>
+          <div className="flex gap-3 mt-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowLeaveConfirm(false)}
+              className="flex-1 rounded-xl"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleLeaveBolao}
+              disabled={leaving}
+              className="flex-1 rounded-xl bg-red-500 hover:bg-red-600 text-white"
+            >
+              {leaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <LogOut className="w-4 h-4 mr-2" />}
+              Sair
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Copy Palpites Dialog */}
       <Dialog open={showCopyDialog} onOpenChange={setShowCopyDialog}>
