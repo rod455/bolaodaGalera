@@ -12,7 +12,7 @@ const SUPABASE_URL = 'https://fccdsfhsinwczrkpgnbw.supabase.co';
 // ⚠️ IMPORTANTE: Use a key da aba "Legacy anon, service_role API keys"
 // A key "service_role" que começa com "eyJ..." (NÃO a sb_secret_...)
 // A nova key (sb_secret_) ainda não funciona com o @supabase/supabase-js
-const SUPABASE_SERVICE_KEY = 'COLE_A_LEGACY_SERVICE_ROLE_KEY_AQUI';
+const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2Z3NkeGNkdWZla2tzeGdxeW9qIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDkwODcxOSwiZXhwIjoyMDg2NDg0NzE5fQ.XfQhnbccVV-m4_pmGqNr18WxGZrnuWzDFiNP7UBmmeo';
 
 const API_FOOTBALL_KEY = '41efb11a73658034dcb9f515f5341850';
 
