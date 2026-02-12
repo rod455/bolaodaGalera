@@ -1,114 +1,89 @@
-import { useState, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { PlusCircle, Keyboard, Users, MapPin, ChevronRight, GripVertical, Trophy, Globe, LogIn, AlertTriangle, Clock, X } from "lucide-react";
+import {
+  PlusCircle, Keyboard, Users, MapPin, ChevronRight, GripVertical,
+  Trophy, Globe, LogIn, AlertTriangle, Clock, X, Loader2, Calendar,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+interface Campeonato {
+  logo_url: string;
+  nome_popular: string;
+  nome: string;
+  temporada: number;
+}
 
 interface Bolao {
   id: string;
   nome: string;
-  descricao: string;
-  data: string;
-  participantes: number;
-  posicao: number | null;
-  imagem: string;
+  descricao: string | null;
+  imagem_url: string | null;
+  is_nacional: boolean;
+  campeonato_id: string | null;
+  campeonatos?: Campeonato | null;
 }
 
-const mockPrivados: Bolao[] = [
-  // Empty for now — user has no private bolões yet
-  // Uncomment below to test with data:
-  // {
-  //   id: "1",
-  //   nome: "Bolão do Escritório",
-  //   descricao: "Copa do Mundo",
-  //   data: "15 de Junho",
-  //   participantes: 8,
-  //   posicao: 2,
-  //   imagem: "https://images.unsplash.com/photo-1489944440615-453fc2b6a9a9?w=600&h=300&fit=crop",
-  // },
+interface ProximoJogo {
+  time_a: string;
+  time_b: string;
+  logo_time_a: string | null;
+  logo_time_b: string | null;
+  data_hora: string;
+  fase: string | null;
+  rodada: string | null;
+}
+
+interface PendingAlert {
+  id: string;
+  bolaoId: string;
+  bolaoNome: string;
+  jogo: string;
+  horasRestantes: number;
+}
+
+const fallbackImages = [
+  "https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=600&h=300&fit=crop",
+  "https://images.unsplash.com/photo-1489944440615-453fc2b6a9a9?w=600&h=300&fit=crop",
+  "https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=600&h=300&fit=crop",
 ];
 
-const mockNacionais: Bolao[] = [
-  {
-    id: "n1",
-    nome: "Mata-mata Campeonato Paulista",
-    descricao: "Quartas de Final",
-    data: "22 de Março",
-    participantes: 1842,
-    posicao: null,
-    imagem: "https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=600&h=300&fit=crop",
-  },
-  {
-    id: "n2",
-    nome: "Copa do Mundo 2026",
-    descricao: "EUA, México e Canadá",
-    data: "11 de Junho",
-    participantes: 12530,
-    posicao: null,
-    imagem: "https://images.unsplash.com/photo-1489944440615-453fc2b6a9a9?w=600&h=300&fit=crop",
-  },
-  {
-    id: "n3",
-    nome: "Mata-mata Champions League",
-    descricao: "Oitavas de Final",
-    data: "18 de Fevereiro",
-    participantes: 5621,
-    posicao: null,
-    imagem: "https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=600&h=300&fit=crop",
-  },
-];
+function formatDataJogo(isoDate: string): string {
+  const d = new Date(isoDate);
+  const now = new Date();
+  const diffMs = d.getTime() - now.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-// Mock: jogos com menos de 12h e sem palpite
-const mockPendingAlerts = [
-  {
-    id: "alert1",
-    bolaoNome: "Copa do Mundo 2026",
-    bolaoId: "n2",
-    jogo: "Brasil vs Argentina",
-    horasRestantes: 3,
-  },
-  {
-    id: "alert2",
-    bolaoNome: "Mata-mata Champions League",
-    bolaoId: "n3",
-    jogo: "Real Madrid vs Man City",
-    horasRestantes: 8,
-  },
-];
+  const hora = d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+
+  if (diffDays === 0) return `Hoje, ${hora}`;
+  if (diffDays === 1) return `Amanhã, ${hora}`;
+  if (diffDays < 7) return `${d.toLocaleDateString("pt-BR", { weekday: "short" })}, ${hora}`;
+  return `${d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })} • ${hora}`;
+}
 
 const BolaoCard = ({
-  bolao,
-  onAccess,
-  draggable,
-  onDragStart,
-  onDragOver,
-  onDrop,
-  onDragEnd,
-  isDragging,
+  bolao, participantes, posicao, onAccess, imgFallback,
+  draggable, onDragStart, onDragOver, onDrop, onDragEnd, isDragging,
 }: {
-  bolao: Bolao;
-  onAccess: () => void;
-  draggable?: boolean;
-  onDragStart?: () => void;
+  bolao: Bolao; participantes: number; posicao: number | null;
+  onAccess: () => void; imgFallback: string;
+  draggable?: boolean; onDragStart?: () => void;
   onDragOver?: (e: React.DragEvent) => void;
-  onDrop?: () => void;
-  onDragEnd?: () => void;
-  isDragging?: boolean;
+  onDrop?: () => void; onDragEnd?: () => void; isDragging?: boolean;
 }) => (
   <Card
-    className={`overflow-hidden border-0 shadow-md hover:shadow-lg transition-all cursor-pointer rounded-2xl ${
-      isDragging ? "opacity-40 scale-95" : ""
-    }`}
-    draggable={draggable}
-    onDragStart={onDragStart}
-    onDragOver={onDragOver}
-    onDrop={onDrop}
-    onDragEnd={onDragEnd}
-    onClick={onAccess}
+    className={`overflow-hidden border-0 shadow-md hover:shadow-lg transition-all cursor-pointer rounded-2xl ${isDragging ? "opacity-40 scale-95" : ""}`}
+    draggable={draggable} onDragStart={onDragStart} onDragOver={onDragOver}
+    onDrop={onDrop} onDragEnd={onDragEnd} onClick={onAccess}
   >
     <div className="relative h-36 overflow-hidden">
-      <img src={bolao.imagem} alt={bolao.nome} className="w-full h-full object-cover" />
+      <img src={bolao.imagem_url || imgFallback} alt={bolao.nome} className="w-full h-full object-cover"
+        onError={(e) => { (e.target as HTMLImageElement).src = imgFallback; }} />
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
       <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between">
         <h3 className="text-white font-bold text-lg leading-tight">{bolao.nome}</h3>
@@ -122,40 +97,96 @@ const BolaoCard = ({
     <CardContent className="p-4">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <p className="text-sm text-muted-foreground">
-            {bolao.descricao} • {bolao.data}
-          </p>
           <div className="flex items-center gap-3">
             <span className="text-xs text-muted-foreground flex items-center gap-1">
-              <Users className="w-3 h-3" />
-              {bolao.participantes.toLocaleString("pt-BR")} participantes
+              <Users className="w-3 h-3" />{participantes.toLocaleString("pt-BR")} participantes
             </span>
-            {bolao.posicao && (
-              <Badge
-                variant="secondary"
-                className="bg-copa-green-50 text-copa-green-600 border-0 text-xs font-semibold"
-              >
-                <MapPin className="w-3 h-3 mr-1" />
-                {bolao.posicao}º lugar
+            {posicao && (
+              <Badge variant="secondary" className="bg-copa-green-50 text-copa-green-600 border-0 text-xs font-semibold">
+                <MapPin className="w-3 h-3 mr-1" />{posicao}º lugar
               </Badge>
             )}
           </div>
         </div>
-        <Button
-          size="sm"
-          className={`font-semibold rounded-lg ${
-            bolao.posicao
-              ? "bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800"
-              : "bg-copa-green-500 hover:bg-copa-green-600 text-white"
-          }`}
-          onClick={(e) => {
-            e.stopPropagation();
-            onAccess();
-          }}
-        >
-          {bolao.posicao ? "Acessar" : "Participar"}
-          <ChevronRight className="w-4 h-4 ml-1" />
+        <Button size="sm"
+          className={`font-semibold rounded-lg ${posicao ? "bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800" : "bg-copa-green-500 hover:bg-copa-green-600 text-white"}`}
+          onClick={(e) => { e.stopPropagation(); onAccess(); }}>
+          {posicao ? "Acessar" : "Participar"}<ChevronRight className="w-4 h-4 ml-1" />
         </Button>
+      </div>
+    </CardContent>
+  </Card>
+);
+
+const NacionalCard = ({
+  bolao, participantes, proximoJogo, isParticipando, onEntrar, onAcessar, imgFallback, joining,
+}: {
+  bolao: Bolao; participantes: number; proximoJogo: ProximoJogo | null;
+  isParticipando: boolean; onEntrar: () => void; onAcessar: () => void;
+  imgFallback: string; joining: boolean;
+}) => (
+  <Card className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-all rounded-2xl">
+    <div className="relative h-40 overflow-hidden cursor-pointer"
+      onClick={isParticipando ? onAcessar : undefined}>
+      <img src={bolao.imagem_url || imgFallback} alt={bolao.nome} className="w-full h-full object-cover"
+        onError={(e) => { (e.target as HTMLImageElement).src = imgFallback; }} />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+      {(bolao.campeonatos as any)?.logo_url && (
+        <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm rounded-lg p-1.5">
+          <img src={(bolao.campeonatos as any).logo_url} alt="" className="w-6 h-6 object-contain"
+            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+        </div>
+      )}
+      <div className="absolute bottom-3 left-4 right-4">
+        <h3 className="text-white font-bold text-lg leading-tight">{bolao.nome}</h3>
+        <p className="text-white/70 text-xs mt-0.5">{bolao.descricao}</p>
+      </div>
+    </div>
+    <CardContent className="p-4 space-y-3">
+      {proximoJogo ? (
+        <div className="bg-muted/50 rounded-xl px-3 py-2.5">
+          <div className="flex items-center gap-1.5 mb-2">
+            <Calendar className="w-3 h-3 text-copa-green-500" />
+            <span className="text-[10px] font-semibold text-copa-green-600 uppercase tracking-wide">Próximo jogo</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              {proximoJogo.logo_time_a && (
+                <img src={proximoJogo.logo_time_a} alt="" className="w-5 h-5 object-contain flex-shrink-0"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+              )}
+              <span className="text-xs font-semibold truncate">{proximoJogo.time_a}</span>
+              <span className="text-[10px] text-muted-foreground font-bold">vs</span>
+              <span className="text-xs font-semibold truncate">{proximoJogo.time_b}</span>
+              {proximoJogo.logo_time_b && (
+                <img src={proximoJogo.logo_time_b} alt="" className="w-5 h-5 object-contain flex-shrink-0"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+              )}
+            </div>
+            <span className="text-[10px] text-muted-foreground whitespace-nowrap ml-2">
+              {formatDataJogo(proximoJogo.data_hora)}
+            </span>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-muted/30 rounded-xl px-3 py-2.5 text-center">
+          <span className="text-xs text-muted-foreground">Sem jogos agendados no momento</span>
+        </div>
+      )}
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-muted-foreground flex items-center gap-1">
+          <Users className="w-3 h-3" />{participantes.toLocaleString("pt-BR")} participantes
+        </span>
+        {isParticipando ? (
+          <Button size="sm" className="bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800 font-semibold rounded-lg" onClick={onAcessar}>
+            Acessar <ChevronRight className="w-4 h-4 ml-1" />
+          </Button>
+        ) : (
+          <Button size="sm" disabled={joining}
+            className="bg-copa-green-500 hover:bg-copa-green-600 text-white font-semibold rounded-lg disabled:opacity-60" onClick={onEntrar}>
+            {joining ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Participar <ChevronRight className="w-4 h-4 ml-1" /></>}
+          </Button>
+        )}
       </div>
     </CardContent>
   </Card>
@@ -163,138 +194,195 @@ const BolaoCard = ({
 
 const Home = () => {
   const navigate = useNavigate();
-  const [privados, setPrivados] = useState<Bolao[]>(mockPrivados);
-  const [nacionais, setNacionais] = useState<Bolao[]>(mockNacionais);
+  const { user } = useAuth();
+  const [privados, setPrivados] = useState<Bolao[]>([]);
+  const [nacionais, setNacionais] = useState<Bolao[]>([]);
+  const [participantesCount, setParticipantesCount] = useState<Record<string, number>>({});
+  const [userPosicoes, setUserPosicoes] = useState<Record<string, number | null>>({});
+  const [userBolaoIds, setUserBolaoIds] = useState<Set<string>>(new Set());
+  const [proximosJogos, setProximosJogos] = useState<Record<string, ProximoJogo | null>>({});
+  const [alerts, setAlerts] = useState<PendingAlert[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [joiningBolao, setJoiningBolao] = useState<string | null>(null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragSection, setDragSection] = useState<"privados" | "nacionais" | null>(null);
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
   const [dismissCount, setDismissCount] = useState(0);
 
-  const visibleAlerts = dismissCount >= 2
-    ? []
-    : mockPendingAlerts.filter((a) => !dismissedAlerts.has(a.id));
+  useEffect(() => { if (user) loadData(); }, [user]);
 
-  const dismissAlert = (e: React.MouseEvent, alertId: string) => {
-    e.stopPropagation();
-    setDismissedAlerts((prev) => new Set(prev).add(alertId));
-    setDismissCount((c) => c + 1);
+  const loadData = async () => {
+    try {
+      const { data: nac } = await supabase.from("boloes").select("*, campeonatos(*)").eq("is_nacional", true).eq("is_publico", true);
+      setNacionais((nac as any[]) || []);
+
+      const { data: participacoes } = await supabase.from("bolao_participantes").select("bolao_id, posicao_ranking, boloes(*, campeonatos(*))").eq("user_id", user!.id);
+      const privList: Bolao[] = [];
+      const posicoes: Record<string, number | null> = {};
+      const participandoIds = new Set<string>();
+
+      (participacoes || []).forEach((p: any) => {
+        participandoIds.add(p.bolao_id);
+        if (p.boloes && !p.boloes.is_nacional) {
+          privList.push(p.boloes);
+          posicoes[p.boloes.id] = p.posicao_ranking;
+        }
+      });
+
+      setPrivados(privList);
+      setUserPosicoes(posicoes);
+      setUserBolaoIds(participandoIds);
+
+      const allBolaoIds = [...(nac || []).map((b: any) => b.id), ...privList.map((b) => b.id)];
+      const counts: Record<string, number> = {};
+      for (const bid of allBolaoIds) {
+        const { count } = await supabase.from("bolao_participantes").select("*", { count: "exact", head: true }).eq("bolao_id", bid);
+        counts[bid] = count || 0;
+      }
+      setParticipantesCount(counts);
+
+      const proximos: Record<string, ProximoJogo | null> = {};
+      for (const bolao of (nac as any[]) || []) {
+        if (!bolao.campeonato_id) { proximos[bolao.id] = null; continue; }
+        const { data: jogos } = await supabase.from("jogos")
+          .select("time_a, time_b, logo_time_a, logo_time_b, data_hora, fase, rodada")
+          .eq("campeonato_id", bolao.campeonato_id).eq("status", "agendado")
+          .gte("data_hora", new Date().toISOString())
+          .order("data_hora", { ascending: true }).limit(1);
+        proximos[bolao.id] = jogos && jogos.length > 0 ? (jogos[0] as any) : null;
+      }
+      setProximosJogos(proximos);
+
+      await loadAlerts();
+    } catch (err) { console.error("Erro ao carregar dados:", err); }
+    finally { setLoading(false); }
   };
 
-  const handleDragStart = (section: "privados" | "nacionais", index: number) => {
-    setDragIndex(index);
-    setDragSection(section);
+  const loadAlerts = async () => {
+    if (!user) return;
+    const now = new Date();
+    const in12h = new Date(now.getTime() + 12 * 60 * 60 * 1000);
+    const cutoff = new Date(now.getTime() + 10 * 60 * 1000);
+
+    const { data: participacoes } = await supabase.from("bolao_participantes").select("bolao_id, boloes(nome, campeonato_id)").eq("user_id", user.id);
+    if (!participacoes || participacoes.length === 0) return;
+
+    const pendingAlerts: PendingAlert[] = [];
+    for (const p of participacoes) {
+      const bolao = p.boloes as any;
+      if (!bolao?.campeonato_id) continue;
+
+      const { data: jogos } = await supabase.from("jogos").select("*")
+        .eq("campeonato_id", bolao.campeonato_id).eq("status", "agendado")
+        .gt("data_hora", cutoff.toISOString()).lte("data_hora", in12h.toISOString());
+      if (!jogos || jogos.length === 0) continue;
+
+      const jogoIds = jogos.map((j: any) => j.id);
+      const { data: palpites } = await supabase.from("palpites").select("jogo_id").eq("user_id", user.id).eq("bolao_id", p.bolao_id).in("jogo_id", jogoIds);
+      const done = new Set((palpites || []).map((pp: any) => pp.jogo_id));
+
+      for (const jogo of jogos) {
+        if (!done.has((jogo as any).id)) {
+          const hrs = Math.max(1, Math.round((new Date((jogo as any).data_hora).getTime() - now.getTime()) / (1000 * 60 * 60)));
+          pendingAlerts.push({ id: `${p.bolao_id}-${(jogo as any).id}`, bolaoId: p.bolao_id, bolaoNome: bolao.nome,
+            jogo: `${(jogo as any).time_a} vs ${(jogo as any).time_b}`, horasRestantes: hrs });
+        }
+      }
+    }
+    setAlerts(pendingAlerts);
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
+  const handleEntrarNacional = async (bolaoId: string) => {
+    if (!user) return;
+    setJoiningBolao(bolaoId);
+    try {
+      const { error } = await supabase.from("bolao_participantes").insert({ bolao_id: bolaoId, user_id: user.id });
+      if (error) {
+        if (error.code === "23505") toast.info("Você já está participando!");
+        else throw error;
+      } else {
+        toast.success("Você entrou no bolão!");
+        setUserBolaoIds((prev) => new Set(prev).add(bolaoId));
+        setParticipantesCount((prev) => ({ ...prev, [bolaoId]: (prev[bolaoId] || 0) + 1 }));
+      }
+    } catch (err: any) { toast.error(err.message || "Erro ao entrar no bolão"); }
+    finally { setJoiningBolao(null); }
   };
 
-  const handleDrop = (section: "privados" | "nacionais", targetIndex: number) => {
-    if (dragIndex === null || dragSection !== section) return;
+  const visibleAlerts = dismissCount >= 2 ? [] : alerts.filter((a) => !dismissedAlerts.has(a.id));
+  const dismissAlert = (e: React.MouseEvent, alertId: string) => { e.stopPropagation(); setDismissedAlerts((prev) => new Set(prev).add(alertId)); setDismissCount((c) => c + 1); };
 
-    const list = section === "privados" ? [...privados] : [...nacionais];
-    const [moved] = list.splice(dragIndex, 1);
-    list.splice(targetIndex, 0, moved);
-
-    if (section === "privados") setPrivados(list);
-    else setNacionais(list);
-
-    setDragIndex(null);
-    setDragSection(null);
+  const handleDragStart = (s: "privados" | "nacionais", i: number) => { setDragIndex(i); setDragSection(s); };
+  const handleDragOver = (e: React.DragEvent) => e.preventDefault();
+  const handleDrop = (s: "privados" | "nacionais", ti: number) => {
+    if (dragIndex === null || dragSection !== s) return;
+    const l = s === "privados" ? [...privados] : [...nacionais];
+    const [m] = l.splice(dragIndex, 1); l.splice(ti, 0, m);
+    s === "privados" ? setPrivados(l) : setNacionais(l);
+    setDragIndex(null); setDragSection(null);
   };
+  const handleDragEnd = () => { setDragIndex(null); setDragSection(null); };
 
-  const handleDragEnd = () => {
-    setDragIndex(null);
-    setDragSection(null);
-  };
-
-  const hasPrivados = privados.length > 0;
+  if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 text-copa-green-500 animate-spin" /></div>;
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* ── URGENT ALERTS ── */}
       {visibleAlerts.length > 0 && (
         <div className="space-y-2">
-          {visibleAlerts.map((alert) => (
-            <div
-              key={alert.id}
-              onClick={() => navigate(`/bolao/${alert.bolaoId}/palpites`)}
-              className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 cursor-pointer hover:bg-amber-100 transition-colors"
-            >
+          {visibleAlerts.slice(0, 3).map((alert) => (
+            <div key={alert.id} onClick={() => navigate(`/bolao/${alert.bolaoId}/palpites`)}
+              className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 cursor-pointer hover:bg-amber-100 transition-colors">
               <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
                 <AlertTriangle className="w-4 h-4 text-amber-600" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-amber-800 truncate">
-                  {alert.jogo}
-                </p>
-                <p className="text-xs text-amber-600">
-                  {alert.bolaoNome}
-                </p>
+                <p className="text-sm font-semibold text-amber-800 truncate">{alert.jogo}</p>
+                <p className="text-xs text-amber-600">{alert.bolaoNome} • Fecha 10min antes do jogo</p>
               </div>
               <div className="flex items-center gap-1 bg-amber-200/60 rounded-lg px-2 py-1 flex-shrink-0">
                 <Clock className="w-3 h-3 text-amber-700" />
                 <span className="text-xs font-bold text-amber-700">{alert.horasRestantes}h</span>
               </div>
-              <button
-                onClick={(e) => dismissAlert(e, alert.id)}
-                className="w-6 h-6 rounded-full hover:bg-amber-200 flex items-center justify-center flex-shrink-0 transition-colors"
-                title="Fechar aviso"
-              >
+              <button onClick={(e) => dismissAlert(e, alert.id)}
+                className="w-6 h-6 rounded-full hover:bg-amber-200 flex items-center justify-center flex-shrink-0 transition-colors">
                 <X className="w-3.5 h-3.5 text-amber-500" />
               </button>
             </div>
           ))}
+          {visibleAlerts.length > 3 && (
+            <p className="text-xs text-center text-amber-600 font-medium">+{visibleAlerts.length - 3} palpites pendentes</p>
+          )}
         </div>
       )}
 
-      {/* Welcome */}
       <div>
         <h2 className="text-2xl font-bold text-foreground">Meus Bolões</h2>
         <p className="text-sm text-muted-foreground mt-1">Gerencie e acompanhe seus bolões</p>
       </div>
 
-      {/* Quick Actions */}
       <div className="grid grid-cols-2 gap-3">
-        <Button
-          variant="outline"
-          onClick={() => navigate("/criar")}
-          className="h-12 border-copa-green-200 text-copa-green-600 hover:bg-copa-green-50 font-semibold rounded-xl"
-        >
-          <PlusCircle className="w-4 h-4 mr-2" />
-          Criar novo bolão
+        <Button variant="outline" onClick={() => navigate("/criar")} className="h-12 border-copa-green-200 text-copa-green-600 hover:bg-copa-green-50 font-semibold rounded-xl">
+          <PlusCircle className="w-4 h-4 mr-2" /> Criar novo bolão
         </Button>
-        <Button
-          variant="outline"
-          onClick={() => navigate("/entrar")}
-          className="h-12 border-copa-green-200 text-copa-green-600 hover:bg-copa-green-50 font-semibold rounded-xl"
-        >
-          <Keyboard className="w-4 h-4 mr-2" />
-          Entrar por código
+        <Button variant="outline" onClick={() => navigate("/entrar")} className="h-12 border-copa-green-200 text-copa-green-600 hover:bg-copa-green-50 font-semibold rounded-xl">
+          <Keyboard className="w-4 h-4 mr-2" /> Entrar por código
         </Button>
       </div>
 
-      {/* ── PRIVADOS ── */}
       <div className="space-y-3">
         <div className="flex items-center gap-2">
           <Trophy className="w-4 h-4 text-copa-gold-500" />
           <h3 className="text-base font-bold">Bolões Privados</h3>
         </div>
-
-        {hasPrivados ? (
+        {privados.length > 0 ? (
           <div className="space-y-4">
-            {privados.map((bolao, index) => (
-              <BolaoCard
-                key={bolao.id}
-                bolao={bolao}
-                onAccess={() => navigate(`/bolao/${bolao.id}`)}
-                draggable
-                onDragStart={() => handleDragStart("privados", index)}
-                onDragOver={handleDragOver}
-                onDrop={() => handleDrop("privados", index)}
-                onDragEnd={handleDragEnd}
-                isDragging={dragSection === "privados" && dragIndex === index}
-              />
+            {privados.map((b, i) => (
+              <BolaoCard key={b.id} bolao={b} participantes={participantesCount[b.id] || 0}
+                posicao={userPosicoes[b.id] || null} onAccess={() => navigate(`/bolao/${b.id}`)}
+                imgFallback={fallbackImages[i % fallbackImages.length]} draggable
+                onDragStart={() => handleDragStart("privados", i)} onDragOver={handleDragOver}
+                onDrop={() => handleDrop("privados", i)} onDragEnd={handleDragEnd}
+                isDragging={dragSection === "privados" && dragIndex === i} />
             ))}
           </div>
         ) : (
@@ -304,26 +392,13 @@ const Home = () => {
                 <LogIn className="w-6 h-6 text-copa-green-500" />
               </div>
               <h4 className="font-bold text-foreground mb-1">Nenhum bolão privado</h4>
-              <p className="text-sm text-muted-foreground mb-4 max-w-xs">
-                Crie seu próprio bolão ou entre em um com código de convite
-              </p>
+              <p className="text-sm text-muted-foreground mb-4 max-w-xs">Crie seu próprio bolão ou entre em um com código de convite</p>
               <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  onClick={() => navigate("/criar")}
-                  className="bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800 font-semibold rounded-lg"
-                >
-                  <PlusCircle className="w-4 h-4 mr-1" />
-                  Criar bolão
+                <Button size="sm" onClick={() => navigate("/criar")} className="bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800 font-semibold rounded-lg">
+                  <PlusCircle className="w-4 h-4 mr-1" /> Criar bolão
                 </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => navigate("/entrar")}
-                  className="border-copa-green-300 text-copa-green-600 font-semibold rounded-lg"
-                >
-                  <Keyboard className="w-4 h-4 mr-1" />
-                  Entrar por código
+                <Button size="sm" variant="outline" onClick={() => navigate("/entrar")} className="border-copa-green-300 text-copa-green-600 font-semibold rounded-lg">
+                  <Keyboard className="w-4 h-4 mr-1" /> Entrar por código
                 </Button>
               </div>
             </CardContent>
@@ -331,35 +406,28 @@ const Home = () => {
         )}
       </div>
 
-      {/* ── SEPARATOR ── */}
       <div className="flex items-center gap-3">
         <div className="flex-1 h-px bg-border" />
         <span className="text-xs text-muted-foreground font-medium px-2">BOLÕES NACIONAIS</span>
         <div className="flex-1 h-px bg-border" />
       </div>
 
-      {/* ── NACIONAIS ── */}
       <div className="space-y-3">
         <div className="flex items-center gap-2">
           <Globe className="w-4 h-4 text-copa-green-500" />
           <h3 className="text-base font-bold">Bolões Nacionais</h3>
           <span className="text-xs text-muted-foreground">• Abertos para todos</span>
         </div>
-
         <div className="space-y-4">
-          {nacionais.map((bolao, index) => (
-            <BolaoCard
-              key={bolao.id}
-              bolao={bolao}
-              onAccess={() => navigate(`/bolao/${bolao.id}`)}
-              draggable
-              onDragStart={() => handleDragStart("nacionais", index)}
-              onDragOver={handleDragOver}
-              onDrop={() => handleDrop("nacionais", index)}
-              onDragEnd={handleDragEnd}
-              isDragging={dragSection === "nacionais" && dragIndex === index}
-            />
+          {nacionais.map((b, i) => (
+            <NacionalCard key={b.id} bolao={b} participantes={participantesCount[b.id] || 0}
+              proximoJogo={proximosJogos[b.id] || null} isParticipando={userBolaoIds.has(b.id)}
+              onEntrar={() => handleEntrarNacional(b.id)} onAcessar={() => navigate(`/bolao/${b.id}`)}
+              imgFallback={fallbackImages[i % fallbackImages.length]} joining={joiningBolao === b.id} />
           ))}
+          {nacionais.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-4">Nenhum bolão nacional disponível.</p>
+          )}
         </div>
       </div>
     </div>
