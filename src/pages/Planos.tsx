@@ -128,7 +128,7 @@ const Planos = () => {
             <div className="flex items-center gap-2.5">
               <Check className="w-4 h-4 text-copa-green-500 flex-shrink-0" />
               <span className="text-sm">
-                Modo Casual e Placar Correto
+                Modo Casual
                 <InfoButton modo="casual" />
               </span>
             </div>

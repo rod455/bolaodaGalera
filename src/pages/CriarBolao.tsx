@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Upload, Plus, Trash2, Lock, Info, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -25,12 +26,11 @@ interface Jogo {
 interface ModoInfo {
   titulo: string;
   descricao: string;
-  regras: { texto: string; pontos: string; acerto: boolean }[];
+  regras: { id: string; texto: string; pontos: string; acerto: boolean }[];
 }
 
 const modosPontuacao = [
   { id: "casual", nome: "Casual", subtitulo: "Iniciantes", plano: "free" },
-  { id: "placar_correto", nome: "Placar Correto", subtitulo: "Tudo ou Nada simplificado", plano: "free" },
   { id: "amador", nome: "Amador", subtitulo: "Intermediário", plano: "premium" },
   { id: "vencedor_ou_nada", nome: "Vencedor ou Nada", subtitulo: "Acerte o vencedor", plano: "premium" },
   { id: "profissional", nome: "Profissional", subtitulo: "Avançado", plano: "premium_pro" },
@@ -43,74 +43,66 @@ const modosDetalhes: Record<string, ModoInfo> = {
     titulo: "Iniciantes / Casual",
     descricao: "Modo simples para quem está começando.",
     regras: [
-      { texto: "Placar exato", pontos: "10 pontos", acerto: true },
-      { texto: "Vencedor do confronto", pontos: "3 pontos", acerto: true },
-      { texto: "Apostar no empate e errar número de gols", pontos: "5 pontos", acerto: true },
-    ],
-  },
-  placar_correto: {
-    titulo: "Placar Correto",
-    descricao: "Simples: acertou o placar exato, pontuou. Errou, zero.",
-    regras: [
-      { texto: "Placar exato", pontos: "10 pontos", acerto: true },
-      { texto: "Errou o placar", pontos: "0 pontos", acerto: false },
+      { id: "placar_exato", texto: "Placar exato", pontos: "10 pontos", acerto: true },
+      { id: "vencedor", texto: "Vencedor do confronto", pontos: "3 pontos", acerto: true },
+      { id: "empate_errado", texto: "Apostar no empate e errar número de gols", pontos: "5 pontos", acerto: true },
     ],
   },
   amador: {
     titulo: "Intermediário / Amadores",
     descricao: "Mais detalhado, com pontos extras por diferença de gols.",
     regras: [
-      { texto: "Placar exato", pontos: "10 pontos", acerto: true },
-      { texto: "Vencedor do confronto", pontos: "3 pontos", acerto: true },
-      { texto: "Apostar no empate e errar número de gols", pontos: "5 pontos", acerto: true },
-      { texto: "Diferença de gols correta", pontos: "3 pontos", acerto: true },
-      { texto: "Número de gols do vencedor", pontos: "2 pontos", acerto: true },
-      { texto: "Número de gols do perdedor", pontos: "2 pontos", acerto: true },
+      { id: "placar_exato", texto: "Placar exato", pontos: "10 pontos", acerto: true },
+      { id: "vencedor", texto: "Vencedor do confronto", pontos: "3 pontos", acerto: true },
+      { id: "empate_errado", texto: "Apostar no empate e errar número de gols", pontos: "5 pontos", acerto: true },
+      { id: "diff_gols", texto: "Diferença de gols correta", pontos: "3 pontos", acerto: true },
+      { id: "gols_vencedor", texto: "Número de gols do vencedor", pontos: "2 pontos", acerto: true },
+      { id: "gols_perdedor", texto: "Número de gols do perdedor", pontos: "2 pontos", acerto: true },
     ],
   },
   vencedor_ou_nada: {
     titulo: "Vencedor ou Nada",
     descricao: "Pontua por acertar o vencedor ou o empate.",
     regras: [
-      { texto: "Vencedor", pontos: "5 pontos", acerto: true },
-      { texto: "Empate", pontos: "5 pontos", acerto: true },
-      { texto: "Errou", pontos: "0 pontos", acerto: false },
+      { id: "vencedor", texto: "Vencedor", pontos: "5 pontos", acerto: true },
+      { id: "empate", texto: "Empate", pontos: "5 pontos", acerto: true },
+      { id: "errou", texto: "Errou", pontos: "0 pontos", acerto: false },
     ],
   },
   profissional: {
     titulo: "Avançado / Profissional",
     descricao: "Modo completo com pontuações altas e bonificações detalhadas.",
     regras: [
-      { texto: "Placar exato", pontos: "20 pontos", acerto: true },
-      { texto: "Vencedor + gols do vencedor", pontos: "12 pontos", acerto: true },
-      { texto: "Vencedor + gols do perdedor", pontos: "8 pontos", acerto: true },
-      { texto: "Vencedor + Diferença de gols", pontos: "10 pontos", acerto: true },
-      { texto: "Vencedor do confronto", pontos: "5 pontos", acerto: true },
-      { texto: "Empate e errar número de gols", pontos: "8 pontos", acerto: true },
-      { texto: "Número de gols do vencedor", pontos: "2 pontos", acerto: true },
-      { texto: "Número de gols do perdedor", pontos: "2 pontos", acerto: true },
+      { id: "placar_exato", texto: "Placar exato", pontos: "20 pontos", acerto: true },
+      { id: "venc_gols_venc", texto: "Vencedor + gols do vencedor", pontos: "12 pontos", acerto: true },
+      { id: "venc_gols_perd", texto: "Vencedor + gols do perdedor", pontos: "8 pontos", acerto: true },
+      { id: "venc_diff", texto: "Vencedor + Diferença de gols", pontos: "10 pontos", acerto: true },
+      { id: "vencedor", texto: "Vencedor do confronto", pontos: "5 pontos", acerto: true },
+      { id: "empate_errado", texto: "Empate e errar número de gols", pontos: "8 pontos", acerto: true },
+      { id: "gols_vencedor", texto: "Número de gols do vencedor", pontos: "2 pontos", acerto: true },
+      { id: "gols_perdedor", texto: "Número de gols do perdedor", pontos: "2 pontos", acerto: true },
     ],
   },
   fanatico: {
     titulo: "Torcedor Fanático",
     descricao: "Escolha seu time de coração e só vale apostas nos jogos do seu time.",
     regras: [
-      { texto: "Placar exato", pontos: "20 pontos", acerto: true },
-      { texto: "Vencedor + gols do vencedor", pontos: "12 pontos", acerto: true },
-      { texto: "Vencedor + gols do perdedor", pontos: "8 pontos", acerto: true },
-      { texto: "Vencedor + Diferença de gols", pontos: "10 pontos", acerto: true },
-      { texto: "Vencedor do confronto", pontos: "5 pontos", acerto: true },
-      { texto: "Empate e errar número de gols", pontos: "8 pontos", acerto: true },
-      { texto: "Número de gols do vencedor", pontos: "2 pontos", acerto: true },
-      { texto: "Número de gols do perdedor", pontos: "2 pontos", acerto: true },
+      { id: "placar_exato", texto: "Placar exato", pontos: "20 pontos", acerto: true },
+      { id: "venc_gols_venc", texto: "Vencedor + gols do vencedor", pontos: "12 pontos", acerto: true },
+      { id: "venc_gols_perd", texto: "Vencedor + gols do perdedor", pontos: "8 pontos", acerto: true },
+      { id: "venc_diff", texto: "Vencedor + Diferença de gols", pontos: "10 pontos", acerto: true },
+      { id: "vencedor", texto: "Vencedor do confronto", pontos: "5 pontos", acerto: true },
+      { id: "empate_errado", texto: "Empate e errar número de gols", pontos: "8 pontos", acerto: true },
+      { id: "gols_vencedor", texto: "Número de gols do vencedor", pontos: "2 pontos", acerto: true },
+      { id: "gols_perdedor", texto: "Número de gols do perdedor", pontos: "2 pontos", acerto: true },
     ],
   },
   tudo_ou_nada: {
     titulo: "Tudo ou Nada",
     descricao: "Só pontua se acertar o placar exato. Para os corajosos!",
     regras: [
-      { texto: "Placar exato", pontos: "10 pontos", acerto: true },
-      { texto: "Errou o placar", pontos: "0 pontos", acerto: false },
+      { id: "placar_exato", texto: "Placar exato", pontos: "10 pontos", acerto: true },
+      { id: "errou", texto: "Errou o placar", pontos: "0 pontos", acerto: false },
     ],
   },
 };
@@ -120,6 +112,7 @@ const CriarBolao = () => {
   const [nome, setNome] = useState("");
   const [descricao, setDescricao] = useState("");
   const [modoSelecionado, setModoSelecionado] = useState("");
+  const [regrasAtivas, setRegrasAtivas] = useState<Set<string>>(new Set());
   const [jogos, setJogos] = useState<Jogo[]>([]);
   const [novoTimeA, setNovoTimeA] = useState("");
   const [novoTimeB, setNovoTimeB] = useState("");
@@ -129,6 +122,27 @@ const CriarBolao = () => {
 
   // TODO: get from user profile in Supabase
   const userPlano = "free";
+
+  // When mode changes, pre-select all acerto=true rules
+  useEffect(() => {
+    if (modoSelecionado && modosDetalhes[modoSelecionado]) {
+      const regras = modosDetalhes[modoSelecionado].regras;
+      const ativas = new Set(regras.filter((r) => r.acerto).map((r) => r.id));
+      setRegrasAtivas(ativas);
+    }
+  }, [modoSelecionado]);
+
+  const toggleRegra = (regraId: string) => {
+    setRegrasAtivas((prev) => {
+      const next = new Set(prev);
+      if (next.has(regraId)) {
+        next.delete(regraId);
+      } else {
+        next.add(regraId);
+      }
+      return next;
+    });
+  };
 
   const isLocked = (plano: string) => {
     if (userPlano === "premium_pro") return false;
@@ -157,6 +171,7 @@ const CriarBolao = () => {
   const handleCriar = () => {
     if (!nome) { toast.error("Informe o nome do bolão"); return; }
     if (!modoSelecionado) { toast.error("Selecione o modo de pontuação"); return; }
+    if (regrasAtivas.size === 0) { toast.error("Selecione pelo menos uma regra de pontuação"); return; }
     const codigo = Math.random().toString(36).substring(2, 8).toUpperCase();
     toast.success(`Bolão criado! Código: ${codigo}`);
     navigate("/home");
@@ -167,6 +182,8 @@ const CriarBolao = () => {
     if (plano === "premium_pro") return "PRO";
     return null;
   };
+
+  const modoAtual = modoSelecionado ? modosDetalhes[modoSelecionado] : null;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -264,6 +281,67 @@ const CriarBolao = () => {
           })}
         </CardContent>
       </Card>
+
+      {/* Regras do modo selecionado */}
+      {modoAtual && (
+        <Card className="rounded-2xl shadow-sm border-copa-green-200 bg-copa-green-50/30">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-bold">
+              Regras ativas — {modoAtual.titulo}
+            </CardTitle>
+            <p className="text-xs text-muted-foreground mt-1">
+              Marque quais regras de pontuação deseja aplicar neste bolão
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-1.5">
+            {modoAtual.regras.map((regra) => {
+              // "Errou" rules are always shown but not toggleable
+              if (!regra.acerto) {
+                return (
+                  <div
+                    key={regra.id}
+                    className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-red-50"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <X className="w-4 h-4 text-red-400 flex-shrink-0" />
+                      <span className="text-sm text-red-600">{regra.texto}</span>
+                    </div>
+                    <span className="text-sm font-bold text-red-500">{regra.pontos}</span>
+                  </div>
+                );
+              }
+
+              const isChecked = regrasAtivas.has(regra.id);
+              return (
+                <div
+                  key={regra.id}
+                  onClick={() => toggleRegra(regra.id)}
+                  className={`flex items-center justify-between py-2.5 px-3 rounded-lg cursor-pointer transition-colors ${
+                    isChecked ? "bg-white border border-copa-green-200" : "bg-muted/40"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Checkbox
+                      checked={isChecked}
+                      onCheckedChange={() => toggleRegra(regra.id)}
+                      className="data-[state=checked]:bg-copa-green-500 data-[state=checked]:border-copa-green-500"
+                    />
+                    <span className={`text-sm ${isChecked ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                      {regra.texto}
+                    </span>
+                  </div>
+                  <span className={`text-sm font-bold ${isChecked ? "text-copa-green-600" : "text-muted-foreground"}`}>
+                    {regra.pontos}
+                  </span>
+                </div>
+              );
+            })}
+            <p className="text-xs text-muted-foreground pt-2">
+              {regrasAtivas.size} regra{regrasAtivas.size !== 1 ? "s" : ""} selecionada{regrasAtivas.size !== 1 ? "s" : ""}
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Games */}
       <Card className="rounded-2xl shadow-sm">
