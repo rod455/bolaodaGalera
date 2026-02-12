@@ -9,7 +9,7 @@ import { createClient } from '@supabase/supabase-js';
 
 // ⚠️ CONFIGURE AQUI:
 const SUPABASE_URL = 'https://fccdsfhsinwczrkpgnbw.supabase.co';
-const SUPABASE_SERVICE_KEY = 'sb_secret_4JtSx5O9c5Y-nYmrEDlAQg_XbKFcv0S'; // Settings > API > secret/service_role key
+const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2Z3NkeGNkdWZla2tzeGdxeW9qIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDkwODcxOSwiZXhwIjoyMDg2NDg0NzE5fQ.XfQhnbccVV-m4_pmGqNr18WxGZrnuWzDFiNP7UBmmeo'; // Settings > API > secret/service_role key
 const API_FOOTBALL_KEY = '41efb11a73658034dcb9f515f5341850';     // dashboard.api-football.com > Account > My Access
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
