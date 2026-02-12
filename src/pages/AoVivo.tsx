@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Radio, Clock, Loader2, Calendar, Trophy, CheckCircle2 } from "lucide-react";
+import { Radio, Clock, Loader2, Calendar, Trophy, CheckCircle2, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,6 +34,7 @@ const AoVivo = () => {
   const [jogosAmanha, setJogosAmanha] = useState<Jogo[]>([]);
   const [jogosEncerradosHoje, setJogosEncerradosHoje] = useState<Jogo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   const [userBolaoMap, setUserBolaoMap] = useState<Record<string, string>>({});
 
@@ -42,12 +43,23 @@ const AoVivo = () => {
     // Auto-refresh every 60 seconds
     const interval = setInterval(() => {
       if (user) {
+        triggerLiveSync();
         loadJogos();
         setLastRefresh(new Date());
       }
     }, 60000);
     return () => clearInterval(interval);
   }, [user]);
+
+  // Trigger the Edge Function to update live scores in Supabase
+  const triggerLiveSync = async () => {
+    try {
+      await supabase.functions.invoke('sync-live-scores');
+    } catch (err) {
+      // Silently fail - edge function may not be deployed yet
+      console.log('Live sync not available:', err);
+    }
+  };
 
   const loadJogos = async () => {
     try {
@@ -220,21 +232,39 @@ const AoVivo = () => {
     );
   }
 
+  const handleManualRefresh = async () => {
+    setRefreshing(true);
+    await triggerLiveSync();
+    await loadJogos();
+    setLastRefresh(new Date());
+    setRefreshing(false);
+  };
+
   const noGames = jogosAoVivo.length === 0 && jogosEmAndamento.length === 0 && jogosHoje.length === 0 && jogosAmanha.length === 0 && jogosEncerradosHoje.length === 0;
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div>
-        <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-          <Radio className="w-6 h-6 text-red-500" />
-          Jogos
-        </h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Acompanhe os jogos ao vivo e de hoje
-          <span className="text-[10px] ml-2 text-muted-foreground/60">
-            Atualizado {lastRefresh.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-          </span>
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <Radio className="w-6 h-6 text-red-500" />
+            Jogos
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Acompanhe os jogos ao vivo e de hoje
+            <span className="text-[10px] ml-2 text-muted-foreground/60">
+              Atualizado {lastRefresh.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+            </span>
+          </p>
+        </div>
+        <button
+          onClick={handleManualRefresh}
+          disabled={refreshing}
+          className="mt-1 p-2 rounded-full hover:bg-muted transition-colors disabled:opacity-50"
+          title="Atualizar placares"
+        >
+          <RefreshCw className={`w-5 h-5 text-copa-green-600 ${refreshing ? "animate-spin" : ""}`} />
+        </button>
       </div>
 
       {/* Ao Vivo */}
