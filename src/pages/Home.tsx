@@ -42,6 +42,7 @@ interface PendingAlert {
   id: string;
   bolaoId: string;
   bolaoNome: string;
+  jogoId: string;
   jogo: string;
   horasRestantes: number;
 }
@@ -285,7 +286,7 @@ const Home = () => {
         if (!done.has((jogo as any).id)) {
           const hrs = Math.max(1, Math.round((new Date((jogo as any).data_hora).getTime() - now.getTime()) / (1000 * 60 * 60)));
           pendingAlerts.push({ id: `${p.bolao_id}-${(jogo as any).id}`, bolaoId: p.bolao_id, bolaoNome: bolao.nome,
-            jogo: `${(jogo as any).time_a} vs ${(jogo as any).time_b}`, horasRestantes: hrs });
+            jogoId: (jogo as any).id, jogo: `${(jogo as any).time_a} vs ${(jogo as any).time_b}`, horasRestantes: hrs });
         }
       }
     }
@@ -353,7 +354,7 @@ const Home = () => {
       {visibleAlerts.length > 0 && (
         <div className="space-y-2">
           {visibleAlerts.slice(0, 3).map((alert) => (
-            <div key={alert.id} onClick={() => navigate(`/bolao/${alert.bolaoId}/palpites`)}
+            <div key={alert.id} onClick={() => navigate(`/bolao/${alert.bolaoId}/palpites?jogo=${alert.jogoId}`)}
               className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 cursor-pointer hover:bg-amber-100 transition-colors">
               <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
                 <AlertTriangle className="w-4 h-4 text-amber-600" />
