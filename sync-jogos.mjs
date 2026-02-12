@@ -10,8 +10,8 @@ import { createClient } from '@supabase/supabase-js';
 
 // ⚠️ CONFIGURE AQUI:
 const SUPABASE_URL = 'https://hvgsdxcdufekksxgqyoj.supabase.co';
-const SUPABASE_SERVICE_KEY = 'COLE_SUA_SERVICE_ROLE_KEY_AQUI';
-const FOOTBALL_DATA_TOKEN = 'COLE_SEU_TOKEN_AQUI'; // football-data.org > Account > API Token
+const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2Z3NkeGNkdWZla2tzeGdxeW9qIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDkwODcxOSwiZXhwIjoyMDg2NDg0NzE5fQ.XfQhnbccVV-m4_pmGqNr18WxGZrnuWzDFiNP7UBmmeo';
+const FOOTBALL_DATA_TOKEN = 'd71ade413a674835a2285ad938ba30f6'; // football-data.org > Account > API Token
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
