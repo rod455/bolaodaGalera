@@ -7,7 +7,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 // ⚠️ CONFIGURE AQUI:
-const SUPABASE_URL = 'https://fccdsfhsinwczrkpgnbw.supabase.co';
+const SUPABASE_URL = 'https://hvgsdxcdufekksxgqyoj.supabase.co';
 
 // ⚠️ IMPORTANTE: Use a key da aba "Legacy anon, service_role API keys"
 // A key "service_role" que começa com "eyJ..." (NÃO a sb_secret_...)
