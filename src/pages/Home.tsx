@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { PlusCircle, Keyboard, Users, MapPin, ChevronRight, GripVertical, Trophy, Globe, LogIn } from "lucide-react";
+import { PlusCircle, Keyboard, Users, MapPin, ChevronRight, GripVertical, Trophy, Globe, LogIn, AlertTriangle, Clock, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -56,6 +56,24 @@ const mockNacionais: Bolao[] = [
     participantes: 5621,
     posicao: null,
     imagem: "https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=600&h=300&fit=crop",
+  },
+];
+
+// Mock: jogos com menos de 12h e sem palpite
+const mockPendingAlerts = [
+  {
+    id: "alert1",
+    bolaoNome: "Copa do Mundo 2026",
+    bolaoId: "n2",
+    jogo: "Brasil vs Argentina",
+    horasRestantes: 3,
+  },
+  {
+    id: "alert2",
+    bolaoNome: "Mata-mata Champions League",
+    bolaoId: "n3",
+    jogo: "Real Madrid vs Man City",
+    horasRestantes: 8,
   },
 ];
 
@@ -149,6 +167,18 @@ const Home = () => {
   const [nacionais, setNacionais] = useState<Bolao[]>(mockNacionais);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragSection, setDragSection] = useState<"privados" | "nacionais" | null>(null);
+  const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
+  const [dismissCount, setDismissCount] = useState(0);
+
+  const visibleAlerts = dismissCount >= 2
+    ? []
+    : mockPendingAlerts.filter((a) => !dismissedAlerts.has(a.id));
+
+  const dismissAlert = (e: React.MouseEvent, alertId: string) => {
+    e.stopPropagation();
+    setDismissedAlerts((prev) => new Set(prev).add(alertId));
+    setDismissCount((c) => c + 1);
+  };
 
   const handleDragStart = (section: "privados" | "nacionais", index: number) => {
     setDragIndex(index);
@@ -182,6 +212,42 @@ const Home = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* ── URGENT ALERTS ── */}
+      {visibleAlerts.length > 0 && (
+        <div className="space-y-2">
+          {visibleAlerts.map((alert) => (
+            <div
+              key={alert.id}
+              onClick={() => navigate(`/bolao/${alert.bolaoId}/palpites`)}
+              className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 cursor-pointer hover:bg-amber-100 transition-colors"
+            >
+              <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-4 h-4 text-amber-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-amber-800 truncate">
+                  {alert.jogo}
+                </p>
+                <p className="text-xs text-amber-600">
+                  {alert.bolaoNome}
+                </p>
+              </div>
+              <div className="flex items-center gap-1 bg-amber-200/60 rounded-lg px-2 py-1 flex-shrink-0">
+                <Clock className="w-3 h-3 text-amber-700" />
+                <span className="text-xs font-bold text-amber-700">{alert.horasRestantes}h</span>
+              </div>
+              <button
+                onClick={(e) => dismissAlert(e, alert.id)}
+                className="w-6 h-6 rounded-full hover:bg-amber-200 flex items-center justify-center flex-shrink-0 transition-colors"
+                title="Fechar aviso"
+              >
+                <X className="w-3.5 h-3.5 text-amber-500" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Welcome */}
       <div>
         <h2 className="text-2xl font-bold text-foreground">Meus Bolões</h2>
