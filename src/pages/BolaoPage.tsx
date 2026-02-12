@@ -92,6 +92,28 @@ function formatDataJogo(isoDate: string): string {
   })} • ${capitalWeekday} • ${hora}`;
 }
 
+const FASE_TRADUCAO: Record<string, string> = {
+  GROUP_STAGE: "Fase de Grupos",
+  LAST_16: "Oitavas de Final",
+  LAST_32: "Fase Eliminatória",
+  QUARTER_FINALS: "Quartas de Final",
+  QUARTER_FINAL: "Quartas de Final",
+  SEMI_FINALS: "Semifinal",
+  SEMI_FINAL: "Semifinal",
+  FINAL: "Final",
+  THIRD_PLACE: "Terceiro Lugar",
+  PLAYOFF: "Repescagem",
+  LEAGUE_STAGE: "Liga",
+  REGULAR_SEASON: "Liga",
+  ROUND_OF_16: "Oitavas de Final",
+  ROUND_OF_32: "Fase Eliminatória",
+};
+
+function traduzirFase(fase: string | null): string | null {
+  if (!fase) return null;
+  return FASE_TRADUCAO[fase] || FASE_TRADUCAO[fase.toUpperCase()] || fase;
+}
+
 function getStatusInfo(jogo: Jogo, palpite: Palpite | null, now: Date) {
   const jogoDate = new Date(jogo.data_hora);
   const diffMs = jogoDate.getTime() - now.getTime();
@@ -232,15 +254,27 @@ const BolaoPage = () => {
         // Fetch user palpites for these games
         if (uniqueJogos.length > 0) {
           const jogoIds = uniqueJogos.map((j) => j.id);
-          const { data: userPalpites } = await supabase
+          const { data: userPalpites, error: palpError } = await supabase
             .from("palpites")
             .select("jogo_id, placar_time_a, placar_time_b, pontos")
             .eq("user_id", user!.id)
             .eq("bolao_id", id!)
             .in("jogo_id", jogoIds);
 
+          let palpitesList = userPalpites;
+          if (palpError) {
+            // Fallback without pontos column
+            const { data: fallback } = await supabase
+              .from("palpites")
+              .select("jogo_id, placar_time_a, placar_time_b")
+              .eq("user_id", user!.id)
+              .eq("bolao_id", id!)
+              .in("jogo_id", jogoIds);
+            palpitesList = (fallback || []).map((p: any) => ({ ...p, pontos: null }));
+          }
+
           const palpiteMap: Record<string, Palpite> = {};
-          (userPalpites || []).forEach((p: any) => {
+          (palpitesList || []).forEach((p: any) => {
             palpiteMap[p.jogo_id] = p;
           });
           setPalpites(palpiteMap);
@@ -531,7 +565,7 @@ const JogoRow = ({
       {/* Fase / Rodada */}
       {(jogo.fase || jogo.rodada) && (
         <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
-          {[jogo.fase, jogo.rodada].filter(Boolean).join(" • ")}
+          {[traduzirFase(jogo.fase), jogo.rodada].filter(Boolean).join(" • ")}
         </p>
       )}
 

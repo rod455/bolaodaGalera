@@ -29,6 +29,29 @@ interface PalpiteDB {
   pontos: number | null;
 }
 
+const FASE_TRADUCAO: Record<string, string> = {
+  GROUP_STAGE: "Fase de Grupos",
+  LAST_16: "Oitavas de Final",
+  LAST_32: "Fase Eliminatória",
+  QUARTER_FINALS: "Quartas de Final",
+  QUARTER_FINAL: "Quartas de Final",
+  SEMI_FINALS: "Semifinal",
+  SEMI_FINAL: "Semifinal",
+  FINAL: "Final",
+  THIRD_PLACE: "Terceiro Lugar",
+  PLAYOFF: "Repescagem",
+  PLAY_OFF: "Repescagem",
+  LEAGUE_STAGE: "Liga",
+  REGULAR_SEASON: "Liga",
+  ROUND_OF_16: "Oitavas de Final",
+  ROUND_OF_32: "Fase Eliminatória",
+};
+
+function traduzirFase(fase: string | null): string | null {
+  if (!fase) return null;
+  return FASE_TRADUCAO[fase] || FASE_TRADUCAO[fase.toUpperCase()] || fase;
+}
+
 function formatDataJogo(isoDate: string): string {
   const d = new Date(isoDate);
   const now = new Date();
@@ -121,13 +144,23 @@ const Palpites = () => {
 
       setJogos(uniqueJogos);
 
-      // Extract unique fases
+      // Extract unique fases (translated)
       const fasesSet = new Set<string>();
       uniqueJogos.forEach((j) => {
-        if (j.fase) fasesSet.add(j.fase);
-        if (j.rodada) fasesSet.add(j.rodada);
+        const fTrad = traduzirFase(j.fase);
+        if (fTrad) fasesSet.add(fTrad);
       });
-      setFases(["Todos", ...Array.from(fasesSet)]);
+      // Build ordered fases: Todos first, then by natural order
+      const faseOrder = [
+        "Fase de Grupos", "Fase Eliminatória", "Oitavas de Final",
+        "Quartas de Final", "Semifinal", "Terceiro Lugar", "Final", "Liga",
+      ];
+      const sortedFases = Array.from(fasesSet).sort((a, b) => {
+        const ia = faseOrder.indexOf(a);
+        const ib = faseOrder.indexOf(b);
+        return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+      });
+      setFases(["Todos", ...sortedFases]);
 
       // Load existing palpites
       if (uniqueJogos.length > 0) {
@@ -139,9 +172,21 @@ const Palpites = () => {
           .eq("bolao_id", id!)
           .in("jogo_id", jogoIds);
 
+        // If pontos column doesn't exist, retry without it
+        let palpitesList = existingPalpites;
+        if (!palpitesList) {
+          const { data: fallback } = await supabase
+            .from("palpites")
+            .select("id, jogo_id, placar_time_a, placar_time_b")
+            .eq("user_id", user!.id)
+            .eq("bolao_id", id!)
+            .in("jogo_id", jogoIds);
+          palpitesList = (fallback || []).map((p: any) => ({ ...p, pontos: null }));
+        }
+
         const pMap: Record<string, PalpiteDB> = {};
         const localMap: Record<string, { a: number; b: number }> = {};
-        (existingPalpites || []).forEach((p: any) => {
+        (palpitesList || []).forEach((p: any) => {
           pMap[p.jogo_id] = p;
           localMap[p.jogo_id] = { a: p.placar_time_a, b: p.placar_time_b };
         });
@@ -230,11 +275,11 @@ const Palpites = () => {
 
   const now = new Date();
 
-  // Filter by fase/rodada
+  // Filter by fase (translated)
   const jogosFiltrados =
     faseAtiva === "Todos"
       ? jogos
-      : jogos.filter((j) => j.fase === faseAtiva || j.rodada === faseAtiva);
+      : jogos.filter((j) => traduzirFase(j.fase) === faseAtiva);
 
   // Separate into sections
   const jogosAbertos = jogosFiltrados.filter((j) => {
@@ -447,7 +492,7 @@ const PalpiteCard = ({
       {(jogo.fase || jogo.rodada) && (
         <div className={`px-4 py-2 border-b ${isEncerrado ? "bg-gray-50" : "bg-copa-green-50"}`}>
           <p className={`text-xs font-semibold ${isEncerrado ? "text-gray-500" : "text-copa-green-600"}`}>
-            {[jogo.fase, jogo.rodada].filter(Boolean).join(" – ")}
+            {[traduzirFase(jogo.fase), jogo.rodada].filter(Boolean).join(" – ")}
           </p>
         </div>
       )}
