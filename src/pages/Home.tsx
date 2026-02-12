@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   PlusCircle, Keyboard, Users, MapPin, ChevronRight, GripVertical,
-  Trophy, Globe, LogIn, AlertTriangle, Clock, X, Loader2, Calendar,
+  Trophy, Globe, LogIn, AlertTriangle, Clock, X, Loader2, Calendar, Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -209,6 +209,9 @@ const Home = () => {
   const [dragSection, setDragSection] = useState<"privados" | "nacionais" | null>(null);
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
   const [dismissCount, setDismissCount] = useState(0);
+  const [showCodeInput, setShowCodeInput] = useState(false);
+  const [codigoInput, setCodigoInput] = useState("");
+  const [joiningByCode, setJoiningByCode] = useState(false);
 
   useEffect(() => { if (user) loadData(); }, [user]);
 
@@ -334,6 +337,34 @@ const Home = () => {
   };
 
   const visibleAlerts = dismissCount >= 2 ? [] : alerts.filter((a) => !dismissedAlerts.has(a.id));
+
+  const handleEntrarPorCodigo = async () => {
+    if (!codigoInput.trim()) { toast.error("Informe o código do bolão"); return; }
+    if (!user) return;
+    setJoiningByCode(true);
+    try {
+      await ensureProfile();
+      const { data: bolao } = await supabase
+        .from("boloes")
+        .select("id, nome")
+        .eq("codigo_convite", codigoInput.trim().toUpperCase())
+        .maybeSingle();
+      if (!bolao) { toast.error("Código inválido. Verifique e tente novamente."); return; }
+      const { error } = await supabase
+        .from("bolao_participantes")
+        .insert({ bolao_id: bolao.id, user_id: user.id });
+      if (error) {
+        if (error.code === "23505") {
+          toast.info("Você já está neste bolão!");
+          navigate(`/bolao/${bolao.id}`);
+        } else throw error;
+      } else {
+        toast.success(`Você entrou no "${bolao.nome}"!`);
+        navigate(`/bolao/${bolao.id}`);
+      }
+    } catch (err: any) { toast.error(err.message || "Erro ao entrar no bolão"); }
+    finally { setJoiningByCode(false); }
+  };
   const dismissAlert = (e: React.MouseEvent, alertId: string) => { e.stopPropagation(); setDismissedAlerts((prev) => new Set(prev).add(alertId)); setDismissCount((c) => c + 1); };
 
   const handleDragStart = (s: "privados" | "nacionais", i: number) => { setDragIndex(i); setDragSection(s); };
@@ -388,10 +419,37 @@ const Home = () => {
         <Button variant="outline" onClick={() => navigate("/criar")} className="h-12 border-copa-green-200 text-copa-green-600 hover:bg-copa-green-50 font-semibold rounded-xl">
           <PlusCircle className="w-4 h-4 mr-2" /> Criar novo bolão
         </Button>
-        <Button variant="outline" onClick={() => navigate("/entrar")} className="h-12 border-copa-green-200 text-copa-green-600 hover:bg-copa-green-50 font-semibold rounded-xl">
+        <Button variant="outline" onClick={() => setShowCodeInput(!showCodeInput)}
+          className={`h-12 font-semibold rounded-xl ${showCodeInput ? "border-copa-gold-400 text-copa-gold-600 bg-copa-gold-50" : "border-copa-green-200 text-copa-green-600 hover:bg-copa-green-50"}`}>
           <Keyboard className="w-4 h-4 mr-2" /> Entrar por código
         </Button>
       </div>
+
+      {/* Inline Code Input */}
+      {showCodeInput && (
+        <Card className="rounded-2xl shadow-sm border-copa-gold-300 bg-copa-gold-50 animate-fade-in">
+          <CardContent className="p-4">
+            <div className="flex gap-3">
+              <input
+                placeholder="Insira o código do bolão"
+                value={codigoInput}
+                onChange={(e) => setCodigoInput(e.target.value.toUpperCase())}
+                onKeyDown={(e) => { if (e.key === "Enter") handleEntrarPorCodigo(); }}
+                className="h-11 rounded-xl bg-white flex-1 font-mono text-center tracking-widest text-lg px-4 border border-gray-200 focus:border-copa-green-500 focus:outline-none"
+                maxLength={6}
+                autoFocus
+              />
+              <Button
+                onClick={handleEntrarPorCodigo}
+                disabled={joiningByCode}
+                className="h-11 px-6 bg-copa-green-500 hover:bg-copa-green-600 text-white font-semibold rounded-xl"
+              >
+                {joiningByCode ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Search className="w-4 h-4 mr-1" /> Entrar</>}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="space-y-3">
         <div className="flex items-center gap-2">
@@ -422,7 +480,7 @@ const Home = () => {
                 <Button size="sm" onClick={() => navigate("/criar")} className="bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800 font-semibold rounded-lg">
                   <PlusCircle className="w-4 h-4 mr-1" /> Criar bolão
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => navigate("/entrar")} className="border-copa-green-300 text-copa-green-600 font-semibold rounded-lg">
+                <Button size="sm" variant="outline" onClick={() => setShowCodeInput(true)} className="border-copa-green-300 text-copa-green-600 font-semibold rounded-lg">
                   <Keyboard className="w-4 h-4 mr-1" /> Entrar por código
                 </Button>
               </div>
