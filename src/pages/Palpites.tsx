@@ -410,13 +410,15 @@ const PalpiteCard = ({ jogo, palpiteDB, localPlacar, onSetPlacar, onSalvar, salv
             </div>
           ) : editable ? (
             <div className="flex items-center gap-2">
-              <input type="number" min="0" max="99" value={localPlacar.a}
-                onChange={(e) => onSetPlacar(jogo.id, "a", parseInt(e.target.value) || 0)}
-                className="w-12 h-12 text-center text-xl font-black border-2 border-copa-green-200 rounded-xl bg-white focus:border-copa-green-500 focus:outline-none" />
+              <input type="number" min="0" max="99" value={localPlacar.a.toString()}
+                onChange={(e) => { const v = parseInt(e.target.value.replace(/^0+(?=\d)/, '')) || 0; onSetPlacar(jogo.id, "a", Math.min(99, Math.max(0, v))); }}
+                onFocus={(e) => e.target.select()}
+                className="w-12 h-12 text-center text-xl font-black border-2 border-copa-green-200 rounded-xl bg-white focus:border-copa-green-500 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
               <span className="text-lg font-bold text-muted-foreground">x</span>
-              <input type="number" min="0" max="99" value={localPlacar.b}
-                onChange={(e) => onSetPlacar(jogo.id, "b", parseInt(e.target.value) || 0)}
-                className="w-12 h-12 text-center text-xl font-black border-2 border-copa-green-200 rounded-xl bg-white focus:border-copa-green-500 focus:outline-none" />
+              <input type="number" min="0" max="99" value={localPlacar.b.toString()}
+                onChange={(e) => { const v = parseInt(e.target.value.replace(/^0+(?=\d)/, '')) || 0; onSetPlacar(jogo.id, "b", Math.min(99, Math.max(0, v))); }}
+                onFocus={(e) => e.target.select()}
+                className="w-12 h-12 text-center text-xl font-black border-2 border-copa-green-200 rounded-xl bg-white focus:border-copa-green-500 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
             </div>
           ) : (
             <div className="flex flex-col items-center gap-1">

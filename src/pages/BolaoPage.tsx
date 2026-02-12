@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft, Trophy, Users, ChevronRight, Medal, Loader2, Clock,
-  CheckCircle2, AlertCircle, Lock, Share2, Copy, LogOut, Copy,
+  CheckCircle2, AlertCircle, Lock, Share2, Copy, LogOut, Trash2, Copy,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +22,7 @@ interface Bolao {
   campeonato_id: string | null;
   is_nacional: boolean;
   codigo_convite: string | null;
+  criador_id: string | null;
   campeonatos?: {
     logo_url: string;
     nome_popular: string;
@@ -185,6 +186,9 @@ const BolaoPage = () => {
   const [loading, setLoading] = useState(true);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteInput, setDeleteInput] = useState("");
+  const [deleting, setDeleting] = useState(false);
   const [showCopyDialog, setShowCopyDialog] = useState(false);
   const [otherBoloes, setOtherBoloes] = useState<{ id: string; nome: string; campeonato_id: string | null }[]>([]);
   const [copying, setCopying] = useState(false);
@@ -413,9 +417,7 @@ const BolaoPage = () => {
     if (!user || !id) return;
     setLeaving(true);
     try {
-      // Delete palpites first
       await supabase.from("palpites").delete().eq("user_id", user.id).eq("bolao_id", id);
-      // Remove from participants
       await supabase.from("bolao_participantes").delete().eq("user_id", user.id).eq("bolao_id", id);
       toast.success("Você saiu do bolão.");
       navigate("/home");
@@ -425,6 +427,28 @@ const BolaoPage = () => {
     } finally {
       setLeaving(false);
       setShowLeaveConfirm(false);
+    }
+  };
+
+  const handleDeleteBolao = async () => {
+    if (!user || !id || !bolao) return;
+    setDeleting(true);
+    try {
+      // Delete all palpites for this bolão
+      await supabase.from("palpites").delete().eq("bolao_id", id);
+      // Delete all participants
+      await supabase.from("bolao_participantes").delete().eq("bolao_id", id);
+      // Delete the bolão itself
+      await supabase.from("boloes").delete().eq("id", id);
+      toast.success("Bolão excluído com sucesso.");
+      navigate("/home");
+    } catch (err: any) {
+      console.error("Erro ao excluir:", err);
+      toast.error("Erro ao excluir bolão.");
+    } finally {
+      setDeleting(false);
+      setShowDeleteConfirm(false);
+      setDeleteInput("");
     }
   };
 
@@ -685,8 +709,8 @@ const BolaoPage = () => {
         </Card>
       )}
 
-      {/* ═══ SAIR DO BOLÃO ═══ */}
-      <div className="pt-4 border-t border-dashed border-gray-200">
+      {/* ═══ SAIR / EXCLUIR BOLÃO ═══ */}
+      <div className="pt-4 border-t border-dashed border-gray-200 space-y-3">
         <button
           onClick={() => setShowLeaveConfirm(true)}
           className="flex items-center gap-2 text-sm text-red-400 hover:text-red-600 transition-colors mx-auto"
@@ -694,6 +718,15 @@ const BolaoPage = () => {
           <LogOut className="w-4 h-4" />
           Sair do bolão
         </button>
+        {bolao.criador_id === user?.id && (
+          <button
+            onClick={() => { setDeleteInput(""); setShowDeleteConfirm(true); }}
+            className="flex items-center gap-2 text-xs text-red-300 hover:text-red-500 transition-colors mx-auto"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            Excluir bolão
+          </button>
+        )}
       </div>
 
       {/* Leave Confirmation Dialog */}
@@ -728,6 +761,50 @@ const BolaoPage = () => {
             >
               {leaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <LogOut className="w-4 h-4 mr-2" />}
               Sair
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteConfirm} onOpenChange={(v) => { setShowDeleteConfirm(v); if (!v) setDeleteInput(""); }}>
+        <DialogContent className="max-w-sm rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-red-600 flex items-center gap-2">
+              <Trash2 className="w-5 h-5" />
+              Excluir bolão
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground mt-2">
+              Esta ação é <strong>irreversível</strong>. Todos os participantes, palpites e pontuações serão apagados permanentemente.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="bg-red-50 rounded-xl p-3 mt-2">
+            <p className="text-sm text-red-700">
+              Para confirmar, digite: <strong className="font-mono">Excluir {bolao.nome}</strong>
+            </p>
+          </div>
+          <input
+            type="text"
+            value={deleteInput}
+            onChange={(e) => setDeleteInput(e.target.value)}
+            placeholder={`Excluir ${bolao.nome}`}
+            className="w-full h-11 px-4 rounded-xl border-2 border-red-200 focus:border-red-500 focus:outline-none text-sm mt-2"
+          />
+          <div className="flex gap-3 mt-3">
+            <Button
+              variant="outline"
+              onClick={() => { setShowDeleteConfirm(false); setDeleteInput(""); }}
+              className="flex-1 rounded-xl"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleDeleteBolao}
+              disabled={deleting || deleteInput !== `Excluir ${bolao.nome}`}
+              className="flex-1 rounded-xl bg-red-500 hover:bg-red-600 text-white disabled:opacity-40"
+            >
+              {deleting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
+              Excluir
             </Button>
           </div>
         </DialogContent>
