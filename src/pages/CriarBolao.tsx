@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Upload, Plus, Trash2, Lock, Info, Check, X } from "lucide-react";
+import { ArrowLeft, Upload, Lock, Info, Check, X, Trophy, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Dialog,
   DialogContent,
@@ -15,125 +16,145 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 
-interface Jogo {
+interface Campeonato {
   id: string;
-  timeA: string;
-  timeB: string;
-  data: string;
-  horario: string;
-}
-
-interface Regra {
-  id: string;
-  texto: string;
-  pontos: string;
-  acerto: boolean;
-}
-
-interface ModoConfig {
   nome: string;
-  subtitulo: string;
-  plano: string;
+  nome_popular: string;
+  logo_url: string;
+  temporada: number;
+  tipo: string;
+}
+
+interface ModoInfo {
   titulo: string;
   descricao: string;
-  regras: Regra[];
+  regras: { texto: string; pontos: string; acerto: boolean }[];
 }
 
-const modos: Record<string, ModoConfig> = {
+const modosPontuacao = [
+  { id: "casual", nome: "Casual", subtitulo: "Iniciantes", plano: "free" },
+  { id: "placar_correto", nome: "Placar Correto", subtitulo: "Tudo ou Nada simplificado", plano: "free" },
+  { id: "amador", nome: "Amador", subtitulo: "Intermediário", plano: "premium" },
+  { id: "vencedor_ou_nada", nome: "Vencedor ou Nada", subtitulo: "Acerte o vencedor", plano: "premium" },
+  { id: "profissional", nome: "Profissional", subtitulo: "Avançado", plano: "premium_pro" },
+  { id: "fanatico", nome: "Torcedor Fanático", subtitulo: "Só jogos do seu time", plano: "premium_pro" },
+  { id: "tudo_ou_nada", nome: "Tudo ou Nada", subtitulo: "Placar exato ou zero", plano: "premium_pro" },
+];
+
+const modosDetalhes: Record<string, ModoInfo> = {
   casual: {
-    nome: "Casual", subtitulo: "Iniciantes", plano: "free",
     titulo: "Iniciantes / Casual",
     descricao: "Modo simples para quem está começando.",
     regras: [
-      { id: "placar_exato", texto: "Placar exato", pontos: "10 pontos", acerto: true },
-      { id: "vencedor", texto: "Vencedor do confronto", pontos: "3 pontos", acerto: true },
-      { id: "empate_errado", texto: "Apostar no empate e errar número de gols", pontos: "5 pontos", acerto: true },
+      { texto: "Placar exato", pontos: "10 pontos", acerto: true },
+      { texto: "Vencedor do confronto", pontos: "3 pontos", acerto: true },
+      { texto: "Apostar no empate e errar número de gols", pontos: "5 pontos", acerto: true },
+    ],
+  },
+  placar_correto: {
+    titulo: "Placar Correto",
+    descricao: "Simples: acertou o placar exato, pontuou. Errou, zero.",
+    regras: [
+      { texto: "Placar exato", pontos: "10 pontos", acerto: true },
+      { texto: "Errou o placar", pontos: "0 pontos", acerto: false },
     ],
   },
   amador: {
-    nome: "Amador", subtitulo: "Intermediário", plano: "premium",
     titulo: "Intermediário / Amadores",
     descricao: "Mais detalhado, com pontos extras por diferença de gols.",
     regras: [
-      { id: "placar_exato", texto: "Placar exato", pontos: "10 pontos", acerto: true },
-      { id: "vencedor", texto: "Vencedor do confronto", pontos: "3 pontos", acerto: true },
-      { id: "empate_errado", texto: "Apostar no empate e errar número de gols", pontos: "5 pontos", acerto: true },
-      { id: "diff_gols", texto: "Diferença de gols correta", pontos: "3 pontos", acerto: true },
-      { id: "gols_vencedor", texto: "Número de gols do vencedor", pontos: "2 pontos", acerto: true },
-      { id: "gols_perdedor", texto: "Número de gols do perdedor", pontos: "2 pontos", acerto: true },
+      { texto: "Placar exato", pontos: "10 pontos", acerto: true },
+      { texto: "Vencedor do confronto", pontos: "3 pontos", acerto: true },
+      { texto: "Apostar no empate e errar número de gols", pontos: "5 pontos", acerto: true },
+      { texto: "Diferença de gols correta", pontos: "3 pontos", acerto: true },
+      { texto: "Número de gols do vencedor", pontos: "2 pontos", acerto: true },
+      { texto: "Número de gols do perdedor", pontos: "2 pontos", acerto: true },
     ],
   },
   vencedor_ou_nada: {
-    nome: "Vencedor ou Nada", subtitulo: "Acerte o vencedor", plano: "premium",
     titulo: "Vencedor ou Nada",
     descricao: "Pontua por acertar o vencedor ou o empate.",
     regras: [
-      { id: "vencedor", texto: "Vencedor", pontos: "5 pontos", acerto: true },
-      { id: "empate", texto: "Empate", pontos: "5 pontos", acerto: true },
-      { id: "errou", texto: "Errou", pontos: "0 pontos", acerto: false },
+      { texto: "Vencedor", pontos: "5 pontos", acerto: true },
+      { texto: "Empate", pontos: "5 pontos", acerto: true },
+      { texto: "Errou", pontos: "0 pontos", acerto: false },
     ],
   },
   profissional: {
-    nome: "Profissional", subtitulo: "Avançado", plano: "premium_pro",
     titulo: "Avançado / Profissional",
     descricao: "Modo completo com pontuações altas e bonificações detalhadas.",
     regras: [
-      { id: "placar_exato", texto: "Placar exato", pontos: "20 pontos", acerto: true },
-      { id: "venc_gols_venc", texto: "Vencedor + gols do vencedor", pontos: "12 pontos", acerto: true },
-      { id: "venc_gols_perd", texto: "Vencedor + gols do perdedor", pontos: "8 pontos", acerto: true },
-      { id: "venc_diff", texto: "Vencedor + Diferença de gols", pontos: "10 pontos", acerto: true },
-      { id: "vencedor", texto: "Vencedor do confronto", pontos: "5 pontos", acerto: true },
-      { id: "empate_errado", texto: "Empate e errar número de gols", pontos: "8 pontos", acerto: true },
-      { id: "gols_vencedor", texto: "Número de gols do vencedor", pontos: "2 pontos", acerto: true },
-      { id: "gols_perdedor", texto: "Número de gols do perdedor", pontos: "2 pontos", acerto: true },
+      { texto: "Placar exato", pontos: "20 pontos", acerto: true },
+      { texto: "Vencedor + gols do vencedor", pontos: "12 pontos", acerto: true },
+      { texto: "Vencedor + gols do perdedor", pontos: "8 pontos", acerto: true },
+      { texto: "Vencedor + Diferença de gols", pontos: "10 pontos", acerto: true },
+      { texto: "Vencedor do confronto", pontos: "5 pontos", acerto: true },
+      { texto: "Empate e errar número de gols", pontos: "8 pontos", acerto: true },
+      { texto: "Número de gols do vencedor", pontos: "2 pontos", acerto: true },
+      { texto: "Número de gols do perdedor", pontos: "2 pontos", acerto: true },
     ],
   },
   fanatico: {
-    nome: "Torcedor Fanático", subtitulo: "Só jogos do seu time", plano: "premium_pro",
     titulo: "Torcedor Fanático",
     descricao: "Escolha seu time de coração e só vale apostas nos jogos do seu time.",
     regras: [
-      { id: "placar_exato", texto: "Placar exato", pontos: "20 pontos", acerto: true },
-      { id: "venc_gols_venc", texto: "Vencedor + gols do vencedor", pontos: "12 pontos", acerto: true },
-      { id: "venc_gols_perd", texto: "Vencedor + gols do perdedor", pontos: "8 pontos", acerto: true },
-      { id: "venc_diff", texto: "Vencedor + Diferença de gols", pontos: "10 pontos", acerto: true },
-      { id: "vencedor", texto: "Vencedor do confronto", pontos: "5 pontos", acerto: true },
-      { id: "empate_errado", texto: "Empate e errar número de gols", pontos: "8 pontos", acerto: true },
-      { id: "gols_vencedor", texto: "Número de gols do vencedor", pontos: "2 pontos", acerto: true },
-      { id: "gols_perdedor", texto: "Número de gols do perdedor", pontos: "2 pontos", acerto: true },
+      { texto: "Placar exato", pontos: "20 pontos", acerto: true },
+      { texto: "Vencedor + gols do vencedor", pontos: "12 pontos", acerto: true },
+      { texto: "Vencedor + gols do perdedor", pontos: "8 pontos", acerto: true },
+      { texto: "Vencedor + Diferença de gols", pontos: "10 pontos", acerto: true },
+      { texto: "Vencedor do confronto", pontos: "5 pontos", acerto: true },
+      { texto: "Empate e errar número de gols", pontos: "8 pontos", acerto: true },
+      { texto: "Número de gols do vencedor", pontos: "2 pontos", acerto: true },
+      { texto: "Número de gols do perdedor", pontos: "2 pontos", acerto: true },
     ],
   },
   tudo_ou_nada: {
-    nome: "Tudo ou Nada", subtitulo: "Placar exato ou zero", plano: "premium_pro",
     titulo: "Tudo ou Nada",
     descricao: "Só pontua se acertar o placar exato. Para os corajosos!",
     regras: [
-      { id: "placar_exato", texto: "Placar exato", pontos: "10 pontos", acerto: true },
-      { id: "errou", texto: "Errou o placar", pontos: "0 pontos", acerto: false },
+      { texto: "Placar exato", pontos: "10 pontos", acerto: true },
+      { texto: "Errou o placar", pontos: "0 pontos", acerto: false },
     ],
   },
 };
 
-const modosOrdem = ["casual", "amador", "vencedor_ou_nada", "profissional", "fanatico", "tudo_ou_nada"];
-
 const CriarBolao = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [nome, setNome] = useState("");
   const [descricao, setDescricao] = useState("");
   const [modoSelecionado, setModoSelecionado] = useState("");
-  const [regrasAtivas, setRegrasAtivas] = useState<Set<string>>(new Set());
-  const [jogos, setJogos] = useState<Jogo[]>([]);
-  const [novoTimeA, setNovoTimeA] = useState("");
-  const [novoTimeB, setNovoTimeB] = useState("");
-  const [novaData, setNovaData] = useState("");
-  const [novoHorario, setNovoHorario] = useState("");
-
-  // Modal state
-  const [modalModo, setModalModo] = useState<string | null>(null);
-  const [modalRegras, setModalRegras] = useState<Set<string>>(new Set());
+  const [campeonatoSelecionado, setCampeonatoSelecionado] = useState("");
+  const [campeonatos, setCampeonatos] = useState<Campeonato[]>([]);
+  const [loadingCampeonatos, setLoadingCampeonatos] = useState(true);
+  const [imagemFile, setImagemFile] = useState<File | null>(null);
+  const [imagemPreview, setImagemPreview] = useState<string | null>(null);
+  const [criando, setCriando] = useState(false);
+  const [infoModal, setInfoModal] = useState<ModoInfo | null>(null);
 
   // TODO: get from user profile in Supabase
   const userPlano = "free";
+
+  useEffect(() => {
+    loadCampeonatos();
+  }, []);
+
+  const loadCampeonatos = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("campeonatos")
+        .select("*")
+        .eq("ativo", true)
+        .order("nome");
+
+      if (error) throw error;
+      setCampeonatos((data as any[]) || []);
+    } catch (err) {
+      console.error("Erro ao carregar campeonatos:", err);
+    } finally {
+      setLoadingCampeonatos(false);
+    }
+  };
 
   const isLocked = (plano: string) => {
     if (userPlano === "premium_pro") return false;
@@ -142,73 +163,83 @@ const CriarBolao = () => {
     return false;
   };
 
-  const openModoModal = (modoId: string) => {
-    const modo = modos[modoId];
-    // Pre-select all acerto=true rules
-    const defaults = new Set(modo.regras.filter((r) => r.acerto).map((r) => r.id));
-    setModalModo(modoId);
-    setModalRegras(defaults);
-  };
-
-  const toggleModalRegra = (regraId: string) => {
-    setModalRegras((prev) => {
-      const next = new Set(prev);
-      if (next.has(regraId)) next.delete(regraId);
-      else next.add(regraId);
-      return next;
-    });
-  };
-
-  const confirmModo = () => {
-    if (!modalModo) return;
-    if (modalRegras.size === 0) {
-      toast.error("Selecione pelo menos uma regra");
+  const handleImagemChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Imagem muito grande. Máximo 2MB.");
       return;
     }
-    setModoSelecionado(modalModo);
-    setRegrasAtivas(new Set(modalRegras));
-    setModalModo(null);
-    toast.success(`Modo "${modos[modalModo].nome}" selecionado com ${modalRegras.size} regra(s)`);
+    setImagemFile(file);
+    const reader = new FileReader();
+    reader.onload = () => setImagemPreview(reader.result as string);
+    reader.readAsDataURL(file);
   };
 
-  const handleModoClick = (modoId: string) => {
-    const modo = modos[modoId];
-    if (isLocked(modo.plano)) {
-      toast.error("Faça upgrade para desbloquear este modo");
-      navigate("/planos");
+  const handleCriar = async () => {
+    if (!campeonatoSelecionado) {
+      toast.error("Selecione um campeonato");
       return;
     }
-    openModoModal(modoId);
-  };
-
-  const handleInfoClick = (e: React.MouseEvent, modoId: string) => {
-    e.stopPropagation();
-    openModoModal(modoId);
-  };
-
-  const addJogo = () => {
-    if (!novoTimeA || !novoTimeB || !novaData || !novoHorario) {
-      toast.error("Preencha todos os campos do jogo");
+    if (!nome) {
+      toast.error("Informe o nome do bolão");
       return;
     }
-    setJogos([
-      ...jogos,
-      { id: Date.now().toString(), timeA: novoTimeA, timeB: novoTimeB, data: novaData, horario: novoHorario },
-    ]);
-    setNovoTimeA("");
-    setNovoTimeB("");
-    setNovaData("");
-    setNovoHorario("");
-  };
+    if (!modoSelecionado) {
+      toast.error("Selecione o modo de pontuação");
+      return;
+    }
+    if (!user) {
+      toast.error("Você precisa estar logado");
+      return;
+    }
 
-  const removeJogo = (id: string) => setJogos(jogos.filter((j) => j.id !== id));
+    setCriando(true);
 
-  const handleCriar = () => {
-    if (!nome) { toast.error("Informe o nome do bolão"); return; }
-    if (!modoSelecionado) { toast.error("Selecione o modo de pontuação"); return; }
-    const codigo = Math.random().toString(36).substring(2, 8).toUpperCase();
-    toast.success(`Bolão criado! Código: ${codigo}`);
-    navigate("/home");
+    try {
+      const codigo = Math.random().toString(36).substring(2, 8).toUpperCase();
+
+      let imagemUrl: string | null = null;
+
+      // Upload da imagem se houver
+      if (imagemFile) {
+        const ext = imagemFile.name.split(".").pop();
+        const path = `boloes/${codigo}.${ext}`;
+        const { error: uploadErr } = await supabase.storage
+          .from("avatars")
+          .upload(path, imagemFile);
+
+        if (!uploadErr) {
+          const { data: urlData } = supabase.storage
+            .from("avatars")
+            .getPublicUrl(path);
+          imagemUrl = urlData.publicUrl;
+        }
+      }
+
+      const { error } = await supabase.from("boloes").insert({
+        nome,
+        descricao: descricao || null,
+        imagem_url: imagemUrl,
+        codigo_convite: codigo,
+        criador_id: user.id,
+        campeonato_id: campeonatoSelecionado,
+        modo_pontuacao: modoSelecionado,
+        regras_ativas: [],
+        is_publico: false,
+        is_nacional: false,
+      });
+
+      if (error) throw error;
+
+      toast.success(`Bolão criado! Código: ${codigo}`);
+      navigate("/home");
+    } catch (err: any) {
+      console.error("Erro ao criar bolão:", err);
+      toast.error(err.message || "Erro ao criar bolão");
+    } finally {
+      setCriando(false);
+    }
   };
 
   const getPlanoBadge = (plano: string) => {
@@ -217,8 +248,11 @@ const CriarBolao = () => {
     return null;
   };
 
-  const modoAtual = modoSelecionado ? modos[modoSelecionado] : null;
-  const modoModal = modalModo ? modos[modalModo] : null;
+  const getTipoIcon = (tipo: string) => {
+    if (tipo === "mundial") return "🌍";
+    if (tipo === "continental") return "⭐";
+    return "🏆";
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -229,13 +263,75 @@ const CriarBolao = () => {
         <h2 className="text-2xl font-bold">Criar Bolão</h2>
       </div>
 
-      {/* Upload Cover */}
-      <Card className="border-dashed border-2 border-copa-green-200 rounded-2xl">
-        <CardContent className="flex flex-col items-center justify-center py-8 cursor-pointer hover:bg-copa-green-50/50 transition-colors">
-          <div className="w-14 h-14 bg-copa-green-100 rounded-full flex items-center justify-center mb-3">
-            <Upload className="w-6 h-6 text-copa-green-500" />
-          </div>
-          <p className="text-sm text-muted-foreground">Adicionar imagem de capa</p>
+      {/* Campeonato Selector */}
+      <Card className="rounded-2xl shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-bold flex items-center gap-2">
+            <Trophy className="w-4 h-4 text-copa-gold-500" />
+            Campeonato
+          </CardTitle>
+          <p className="text-xs text-muted-foreground mt-1">
+            Selecione o campeonato que será usado no bolão
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {loadingCampeonatos ? (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="w-5 h-5 text-copa-green-500 animate-spin" />
+            </div>
+          ) : (
+            campeonatos.map((camp) => {
+              const selected = campeonatoSelecionado === camp.id;
+              return (
+                <div
+                  key={camp.id}
+                  onClick={() => setCampeonatoSelecionado(camp.id)}
+                  className={`flex items-center gap-3 p-3.5 rounded-xl cursor-pointer transition-all border-2 ${
+                    selected
+                      ? "border-copa-green-500 bg-copa-green-50"
+                      : "border-transparent bg-muted/50 hover:bg-muted/80"
+                  }`}
+                >
+                  <div
+                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                      selected
+                        ? "border-copa-green-500 bg-copa-green-500"
+                        : "border-gray-300"
+                    }`}
+                  >
+                    {selected && <Check className="w-3 h-3 text-white" />}
+                  </div>
+
+                  {camp.logo_url ? (
+                    <img
+                      src={camp.logo_url}
+                      alt={camp.nome_popular}
+                      className="w-8 h-8 object-contain flex-shrink-0"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = "none";
+                      }}
+                    />
+                  ) : (
+                    <span className="text-xl flex-shrink-0">{getTipoIcon(camp.tipo)}</span>
+                  )}
+
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-semibold block truncate">
+                      {camp.nome_popular || camp.nome}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      Temporada {camp.temporada}
+                    </span>
+                  </div>
+                </div>
+              );
+            })
+          )}
+          {!loadingCampeonatos && campeonatos.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              Nenhum campeonato disponível. Execute a sincronização primeiro.
+            </p>
+          )}
         </CardContent>
       </Card>
 
@@ -247,11 +343,21 @@ const CriarBolao = () => {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label className="text-sm font-medium">Nome do Bolão</Label>
-            <Input placeholder="Ex: Copa do Mundo 2026" value={nome} onChange={(e) => setNome(e.target.value)} className="h-11 rounded-xl bg-muted/50" />
+            <Input
+              placeholder="Ex: Bolão da Galera"
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
+              className="h-11 rounded-xl bg-muted/50"
+            />
           </div>
           <div className="space-y-2">
             <Label className="text-sm font-medium">Descrição</Label>
-            <Input placeholder="Descreva seu bolão" value={descricao} onChange={(e) => setDescricao(e.target.value)} className="h-11 rounded-xl bg-muted/50" />
+            <Input
+              placeholder="Descreva seu bolão"
+              value={descricao}
+              onChange={(e) => setDescricao(e.target.value)}
+              className="h-11 rounded-xl bg-muted/50"
+            />
           </div>
         </CardContent>
       </Card>
@@ -260,49 +366,63 @@ const CriarBolao = () => {
       <Card className="rounded-2xl shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-bold">Modo de Pontuação</CardTitle>
-          <p className="text-xs text-muted-foreground mt-1">Selecione como os pontos serão calculados</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Selecione como os pontos serão calculados
+          </p>
         </CardHeader>
         <CardContent className="space-y-2">
-          {modosOrdem.map((modoId) => {
-            const modo = modos[modoId];
+          {modosPontuacao.map((modo) => {
             const locked = isLocked(modo.plano);
-            const selected = modoSelecionado === modoId;
+            const selected = modoSelecionado === modo.id;
             const badge = getPlanoBadge(modo.plano);
 
             return (
               <div
-                key={modoId}
-                onClick={() => handleModoClick(modoId)}
+                key={modo.id}
+                onClick={() => {
+                  if (locked) {
+                    toast.error("Faça upgrade para desbloquear este modo");
+                    navigate("/planos");
+                    return;
+                  }
+                  setModoSelecionado(modo.id);
+                }}
                 className={`flex items-center justify-between p-3.5 rounded-xl cursor-pointer transition-all border-2 ${
-                  selected ? "border-copa-green-500 bg-copa-green-50"
-                    : locked ? "border-transparent bg-muted/30 opacity-60"
+                  selected
+                    ? "border-copa-green-500 bg-copa-green-50"
+                    : locked
+                    ? "border-transparent bg-muted/30 opacity-60"
                     : "border-transparent bg-muted/50 hover:bg-muted/80"
                 }`}
               >
                 <div className="flex items-center gap-3 flex-1">
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                    selected ? "border-copa-green-500 bg-copa-green-500" : "border-gray-300"
-                  }`}>
+                  <div
+                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                      selected
+                        ? "border-copa-green-500 bg-copa-green-500"
+                        : "border-gray-300"
+                    }`}
+                  >
                     {selected && <Check className="w-3 h-3 text-white" />}
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold">{modo.nome}</span>
                       {badge && (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-copa-gold-100 text-copa-gold-600">{badge}</span>
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-copa-gold-100 text-copa-gold-600">
+                          {badge}
+                        </span>
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground">{modo.subtitulo}</p>
-                    {selected && regrasAtivas.size > 0 && (
-                      <p className="text-[11px] text-copa-green-600 font-medium mt-0.5">
-                        {regrasAtivas.size} regra{regrasAtivas.size !== 1 ? "s" : ""} selecionada{regrasAtivas.size !== 1 ? "s" : ""}
-                      </p>
-                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={(e) => handleInfoClick(e, modoId)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setInfoModal(modosDetalhes[modo.id]);
+                    }}
                     className="w-6 h-6 rounded-full bg-copa-green-100 hover:bg-copa-green-200 flex items-center justify-center transition-colors"
                     title="Ver regras"
                   >
@@ -316,110 +436,101 @@ const CriarBolao = () => {
         </CardContent>
       </Card>
 
-      {/* Games */}
-      <Card className="rounded-2xl shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-bold">Jogos do Bolão</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <Input placeholder="Time A" value={novoTimeA} onChange={(e) => setNovoTimeA(e.target.value)} className="h-10 rounded-xl bg-muted/50" />
-            <Input placeholder="Time B" value={novoTimeB} onChange={(e) => setNovoTimeB(e.target.value)} className="h-10 rounded-xl bg-muted/50" />
-            <Input type="date" value={novaData} onChange={(e) => setNovaData(e.target.value)} className="h-10 rounded-xl bg-muted/50" />
-            <Input type="time" value={novoHorario} onChange={(e) => setNovoHorario(e.target.value)} className="h-10 rounded-xl bg-muted/50" />
-          </div>
-          <Button variant="outline" onClick={addJogo} className="w-full h-10 rounded-xl border-copa-green-200 text-copa-green-600">
-            <Plus className="w-4 h-4 mr-2" /> Adicionar jogo
-          </Button>
-          {jogos.length > 0 && (
-            <div className="space-y-2 mt-3">
-              {jogos.map((jogo) => (
-                <div key={jogo.id} className="flex items-center justify-between bg-muted/50 rounded-xl px-4 py-3">
-                  <span className="text-sm font-medium">{jogo.timeA} vs {jogo.timeB}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">{jogo.data} {jogo.horario}</span>
-                    <button onClick={() => removeJogo(jogo.id)} className="text-destructive hover:text-destructive/80">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+      {/* Upload Cover - moved to end */}
+      <Card className="border-dashed border-2 border-copa-green-200 rounded-2xl">
+        <CardContent className="flex flex-col items-center justify-center py-8">
+          <label className="cursor-pointer flex flex-col items-center hover:opacity-80 transition-opacity">
+            {imagemPreview ? (
+              <div className="relative w-full max-w-xs">
+                <img
+                  src={imagemPreview}
+                  alt="Preview"
+                  className="w-full h-32 object-cover rounded-xl"
+                />
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setImagemFile(null);
+                    setImagemPreview(null);
+                  }}
+                  className="absolute top-2 right-2 w-6 h-6 bg-black/50 rounded-full flex items-center justify-center hover:bg-black/70 transition-colors"
+                >
+                  <X className="w-3.5 h-3.5 text-white" />
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="w-14 h-14 bg-copa-green-100 rounded-full flex items-center justify-center mb-3">
+                  <Upload className="w-6 h-6 text-copa-green-500" />
                 </div>
-              ))}
-            </div>
-          )}
+                <p className="text-sm text-muted-foreground">
+                  Adicionar imagem de capa{" "}
+                  <span className="text-xs text-muted-foreground/60">(opcional)</span>
+                </p>
+              </>
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleImagemChange}
+            />
+          </label>
         </CardContent>
       </Card>
 
-      <Button onClick={handleCriar} className="w-full h-13 bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800 font-bold text-base rounded-xl shadow-md">
-        Criar Bolão
+      {/* Submit */}
+      <Button
+        onClick={handleCriar}
+        disabled={criando}
+        className="w-full h-13 bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800 font-bold text-base rounded-xl shadow-md disabled:opacity-60"
+      >
+        {criando ? (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            Criando...
+          </>
+        ) : (
+          "Criar Bolão"
+        )}
       </Button>
 
-      {/* Rules Selection Modal */}
-      <Dialog open={!!modalModo} onOpenChange={() => setModalModo(null)}>
+      {/* Info Modal */}
+      <Dialog open={!!infoModal} onOpenChange={() => setInfoModal(null)}>
         <DialogContent className="max-w-md rounded-2xl">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-copa-green-700">
-              {modoModal?.titulo}
+              {infoModal?.titulo}
             </DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
-              {modoModal?.descricao}
+              {infoModal?.descricao}
             </DialogDescription>
           </DialogHeader>
-
-          <p className="text-xs font-medium text-muted-foreground mt-1">
-            Selecione quais regras deseja aplicar neste bolão:
-          </p>
-
-          <div className="space-y-1.5 mt-1">
-            {modoModal?.regras.map((regra) => {
-              if (!regra.acerto) {
-                return (
-                  <div key={regra.id} className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-red-50">
-                    <div className="flex items-center gap-2.5">
-                      <X className="w-4 h-4 text-red-400 flex-shrink-0" />
-                      <span className="text-sm text-red-600">{regra.texto}</span>
-                    </div>
-                    <span className="text-sm font-bold text-red-500">{regra.pontos}</span>
-                  </div>
-                );
-              }
-
-              const isChecked = modalRegras.has(regra.id);
-              return (
-                <div
-                  key={regra.id}
-                  onClick={() => toggleModalRegra(regra.id)}
-                  className={`flex items-center justify-between py-2.5 px-3 rounded-lg cursor-pointer transition-colors ${
-                    isChecked ? "bg-copa-green-50 border border-copa-green-200" : "bg-muted/40 hover:bg-muted/60"
+          <div className="space-y-2 mt-2">
+            {infoModal?.regras.map((regra, i) => (
+              <div
+                key={i}
+                className={`flex items-center justify-between py-2 px-3 rounded-lg ${
+                  regra.acerto ? "bg-copa-green-50" : "bg-red-50"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  {regra.acerto ? (
+                    <Check className="w-4 h-4 text-copa-green-500 flex-shrink-0" />
+                  ) : (
+                    <X className="w-4 h-4 text-red-500 flex-shrink-0" />
+                  )}
+                  <span className="text-sm">{regra.texto}</span>
+                </div>
+                <span
+                  className={`text-sm font-bold whitespace-nowrap ml-2 ${
+                    regra.acerto ? "text-copa-green-600" : "text-red-500"
                   }`}
                 >
-                  <div className="flex items-center gap-2.5">
-                    <Checkbox
-                      checked={isChecked}
-                      onCheckedChange={() => toggleModalRegra(regra.id)}
-                      className="data-[state=checked]:bg-copa-green-500 data-[state=checked]:border-copa-green-500"
-                    />
-                    <span className={`text-sm ${isChecked ? "text-foreground font-medium" : "text-muted-foreground"}`}>
-                      {regra.texto}
-                    </span>
-                  </div>
-                  <span className={`text-sm font-bold whitespace-nowrap ml-2 ${isChecked ? "text-copa-green-600" : "text-muted-foreground"}`}>
-                    {regra.pontos}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="flex items-center justify-between pt-3 border-t mt-2">
-            <p className="text-xs text-muted-foreground">
-              {modalRegras.size} regra{modalRegras.size !== 1 ? "s" : ""} selecionada{modalRegras.size !== 1 ? "s" : ""}
-            </p>
-            <Button
-              onClick={confirmModo}
-              className="bg-copa-green-500 hover:bg-copa-green-600 text-white font-bold rounded-xl px-6"
-            >
-              Confirmar
-            </Button>
+                  {regra.pontos}
+                </span>
+              </div>
+            ))}
           </div>
         </DialogContent>
       </Dialog>
