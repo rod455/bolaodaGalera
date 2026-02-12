@@ -2,18 +2,48 @@
 // Bolão na Copa - Sincronização de Jogos
 // ============================================
 // Execute: node sync-jogos.mjs
-// Requer:  npm install @supabase/supabase-js
 // ============================================
 
 import { createClient } from '@supabase/supabase-js';
 
 // ⚠️ CONFIGURE AQUI:
 const SUPABASE_URL = 'https://fccdsfhsinwczrkpgnbw.supabase.co';
-const SUPABASE_SERVICE_KEY = 'sb_secret_4JtSx5O9c5Y-nYmrEDlAQg_XbKFcv0S'; // Settings > API > secret/service_role key
-const API_FOOTBALL_KEY = '41efb11a73658034dcb9f515f5341850';     // dashboard.api-football.com > Account > My Access
+
+// ⚠️ IMPORTANTE: Use a key da aba "Legacy anon, service_role API keys"
+// A key "service_role" que começa com "eyJ..." (NÃO a sb_secret_...)
+// A nova key (sb_secret_) ainda não funciona com o @supabase/supabase-js
+const SUPABASE_SERVICE_KEY = 'COLE_A_LEGACY_SERVICE_ROLE_KEY_AQUI';
+
+const API_FOOTBALL_KEY = '41efb11a73658034dcb9f515f5341850';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
+// ---- DEBUG: Testar conexão primeiro ----
+console.log('🔍 Testando conexão com Supabase...');
+const { data: testData, error: testError } = await supabase
+  .from('campeonatos')
+  .select('id, api_football_id, nome')
+  .limit(5);
+
+if (testError) {
+  console.log('❌ ERRO na conexão:', testError.message);
+  console.log('   Detalhes:', JSON.stringify(testError, null, 2));
+  console.log('\n💡 Dica: Vá em Settings > API Keys > aba "Legacy anon, service_role API keys"');
+  console.log('   Copie a key "service_role" com label "secret" (começa com eyJ...)');
+  process.exit(1);
+}
+
+if (!testData || testData.length === 0) {
+  console.log('⚠️ Conexão OK, mas nenhum campeonato encontrado.');
+  console.log('   Verifique se rodou o SQL schema no Supabase.');
+  process.exit(1);
+}
+
+console.log(`✅ Conexão OK! ${testData.length} campeonatos encontrados:`);
+testData.forEach(c => console.log(`   - ${c.nome} (api_id: ${c.api_football_id})`));
+console.log('');
+
+// ---- Config ----
 const CAMPEONATOS = [
   { api_id: 475, season: 2026, nome: 'Paulistão' },
   { api_id: 1,   season: 2026, nome: 'Copa do Mundo' },
@@ -33,18 +63,21 @@ function mapStatus(apiStatus) {
 }
 
 async function syncCampeonato(camp) {
-  console.log(`\n📡 Sincronizando: ${camp.nome} (league=${camp.api_id}, season=${camp.season})`);
+  console.log(`📡 Sincronizando: ${camp.nome} (league=${camp.api_id}, season=${camp.season})`);
 
-  const { data: campData } = await supabase
+  const { data: campData, error: campError } = await supabase
     .from('campeonatos')
     .select('id')
     .eq('api_football_id', camp.api_id)
     .single();
 
-  if (!campData) {
-    console.log(`  ❌ Campeonato ${camp.nome} não encontrado no banco`);
+  if (campError || !campData) {
+    console.log(`  ❌ Campeonato ${camp.nome} não encontrado`);
+    if (campError) console.log(`  Erro: ${campError.message}`);
     return 0;
   }
+
+  console.log(`  ✅ Campeonato ID: ${campData.id}`);
 
   const url = `https://v3.football.api-sports.io/fixtures?league=${camp.api_id}&season=${camp.season}`;
   const res = await fetch(url, {
@@ -53,15 +86,12 @@ async function syncCampeonato(camp) {
   const json = await res.json();
 
   if (json.errors && Object.keys(json.errors).length > 0) {
-    console.log(`  ❌ Erro API:`, json.errors);
-    await supabase.from('sync_log').insert({
-      campeonato_api_id: camp.api_id, tipo: 'fixtures', erro: JSON.stringify(json.errors),
-    });
+    console.log(`  ❌ Erro API-Football:`, json.errors);
     return 0;
   }
 
   const fixtures = json.response || [];
-  console.log(`  📋 ${fixtures.length} jogos encontrados`);
+  console.log(`  📋 ${fixtures.length} jogos encontrados na API`);
 
   let count = 0;
   for (const fix of fixtures) {
@@ -87,24 +117,17 @@ async function syncCampeonato(camp) {
     }
   }
 
-  await supabase.from('sync_log').insert({
-    campeonato_api_id: camp.api_id, tipo: 'fixtures', jogos_atualizados: count,
-  });
-
-  console.log(`  ✅ ${count} jogos sincronizados`);
+  console.log(`  ✅ ${count} jogos sincronizados\n`);
   return count;
 }
 
-async function main() {
-  console.log('🏆 Bolão na Copa - Sincronização de Jogos');
-  console.log('=========================================');
+// ---- Main ----
+console.log('🏆 Bolão na Copa - Sincronização de Jogos');
+console.log('=========================================\n');
 
-  let total = 0;
-  for (const camp of CAMPEONATOS) {
-    total += await syncCampeonato(camp);
-  }
-
-  console.log(`\n🎉 Total: ${total} jogos sincronizados`);
+let total = 0;
+for (const camp of CAMPEONATOS) {
+  total += await syncCampeonato(camp);
 }
 
-main().catch(console.error);
+console.log(`🎉 Total: ${total} jogos sincronizados`);
