@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Bolão na Copa - Green & Gold Theme */
+    --background: 140 30% 96%;
+    --foreground: 150 40% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 150 40% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 150 40% 10%;
+
+    /* Green Primary */
+    --primary: 145 75% 28%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Gold/Yellow */
+    --secondary: 45 95% 53%;
+    --secondary-foreground: 150 40% 10%;
+
+    --muted: 140 15% 92%;
+    --muted-foreground: 150 10% 45%;
+
+    --accent: 45 95% 53%;
+    --accent-foreground: 150 40% 10%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --success: 145 75% 28%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 35 85% 55%;
+    --warning-foreground: 0 0% 10%;
+
+    --border: 140 20% 88%;
+    --input: 140 15% 92%;
+    --ring: 145 75% 28%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 145 75% 28%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 140 15% 95%;
+    --sidebar-accent-foreground: 150 40% 10%;
+    --sidebar-border: 140 20% 90%;
+    --sidebar-ring: 145 75% 28%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: hsl(140 15% 92%);
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(145 75% 28% / 0.3);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(145 75% 28% / 0.5);
+}
