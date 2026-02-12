@@ -10,8 +10,8 @@ import { createClient } from '@supabase/supabase-js';
 
 // ⚠️ CONFIGURE AQUI:
 const SUPABASE_URL = 'https://hvgsdxcdufekksxgqyoj.supabase.co';
-const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2Z3NkeGNkdWZla2tzeGdxeW9qIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDkwODcxOSwiZXhwIjoyMDg2NDg0NzE5fQ.XfQhnbccVV-m4_pmGqNr18WxGZrnuWzDFiNP7UBmmeo';
-const FOOTBALL_DATA_TOKEN = 'd71ade413a674835a2285ad938ba30f6'; // football-data.org > Account > API Token
+const SUPABASE_SERVICE_KEY = 'COLE_SUA_SERVICE_ROLE_KEY_AQUI';
+const FOOTBALL_DATA_TOKEN = 'COLE_SEU_TOKEN_AQUI'; // football-data.org > Account > API Token
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
@@ -26,6 +26,25 @@ const CAMPEONATOS = [
 ];
 
 // ---- Helpers ----
+const FASE_MAP = {
+  GROUP_STAGE: 'Fase de Grupos',
+  LAST_16: 'Oitavas de Final',
+  LAST_32: 'Fase Eliminatória',
+  QUARTER_FINALS: 'Quartas de Final',
+  SEMI_FINALS: 'Semifinal',
+  FINAL: 'Final',
+  THIRD_PLACE: 'Terceiro Lugar',
+  PLAYOFF: 'Repescagem',
+  LEAGUE_STAGE: 'Liga',
+  REGULAR_SEASON: 'Liga',
+  ROUND_OF_16: 'Oitavas de Final',
+  ROUND_OF_32: 'Fase Eliminatória',
+};
+function traduzirFase(stage) {
+  if (!stage) return null;
+  return FASE_MAP[stage] || FASE_MAP[stage.toUpperCase()] || stage;
+}
+
 async function fdFetch(endpoint) {
   const url = `https://api.football-data.org/v4${endpoint}`;
   const res = await fetch(url, {
@@ -108,8 +127,8 @@ async function syncCampeonato(camp) {
       p_logo_time_a: homeTeam.crest || null,
       p_logo_time_b: awayTeam.crest || null,
       p_data_hora: match.utcDate,
-      p_fase: match.stage || null,
-      p_rodada: match.matchday ? `Rodada ${match.matchday}` : (match.stage || null),
+      p_fase: traduzirFase(match.stage) || null,
+      p_rodada: match.matchday ? `Rodada ${match.matchday}` : null,
       p_placar_time_a: ft.home ?? null,
       p_placar_time_b: ft.away ?? null,
       p_status: mapStatus(match.status),
