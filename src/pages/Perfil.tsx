@@ -208,7 +208,10 @@ const Perfil = () => {
             </div>
           </div>
 
-          <Button className="w-full h-12 bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800 font-bold rounded-xl shadow-md">
+          <Button
+            onClick={() => navigate("/planos")}
+            className="w-full h-12 bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800 font-bold rounded-xl shadow-md"
+          >
             <Crown className="w-4 h-4 mr-2" />
             UPGRADE PARA PREMIUM
           </Button>
