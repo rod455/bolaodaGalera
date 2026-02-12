@@ -490,14 +490,50 @@ const BolaoPage = () => {
 
     setLoadingPalpites(jogoId);
     try {
-      const { data } = await supabase
+      // Step 1: fetch all palpites for this game in this bolão
+      const { data: palpitesData, error: palpErr } = await supabase
         .from("palpites")
-        .select("placar_time_a, placar_time_b, pontos, user_id, profiles(nome)")
+        .select("placar_time_a, placar_time_b, pontos, user_id")
         .eq("bolao_id", id!)
         .eq("jogo_id", jogoId);
 
-      const list = (data || []).map((p: any) => {
-        const nome = p.profiles?.nome || "Usuário";
+      if (palpErr) {
+        console.error("Erro ao buscar palpites:", palpErr);
+        // Fallback without pontos
+        const { data: fallback } = await supabase
+          .from("palpites")
+          .select("placar_time_a, placar_time_b, user_id")
+          .eq("bolao_id", id!)
+          .eq("jogo_id", jogoId);
+        
+        const userIds = [...new Set((fallback || []).map((p: any) => p.user_id))];
+        const { data: profiles } = userIds.length > 0
+          ? await supabase.from("profiles").select("id, nome").in("id", userIds)
+          : { data: [] };
+        const profileMap: Record<string, string> = {};
+        (profiles || []).forEach((pr: any) => { profileMap[pr.id] = pr.nome; });
+
+        const list = (fallback || []).map((p: any) => {
+          const nome = profileMap[p.user_id] || "Usuário";
+          const initials = nome.split(" ").map((w: string) => w[0]).join("").substring(0, 2).toUpperCase();
+          return { nome, avatar: initials, placar_a: p.placar_time_a, placar_b: p.placar_time_b, pontos: null, isCurrentUser: p.user_id === user?.id };
+        });
+        list.sort((a: any, b: any) => (b.isCurrentUser ? 1 : 0) - (a.isCurrentUser ? 1 : 0));
+        setParticipantPalpites((prev) => ({ ...prev, [jogoId]: list }));
+        return;
+      }
+
+      // Step 2: fetch profiles for all user_ids
+      const userIds = [...new Set((palpitesData || []).map((p: any) => p.user_id))];
+      const { data: profiles } = userIds.length > 0
+        ? await supabase.from("profiles").select("id, nome").in("id", userIds)
+        : { data: [] };
+      
+      const profileMap: Record<string, string> = {};
+      (profiles || []).forEach((pr: any) => { profileMap[pr.id] = pr.nome; });
+
+      const list = (palpitesData || []).map((p: any) => {
+        const nome = profileMap[p.user_id] || "Usuário";
         const initials = nome.split(" ").map((w: string) => w[0]).join("").substring(0, 2).toUpperCase();
         return {
           nome,
