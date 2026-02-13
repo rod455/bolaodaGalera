@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  PlusCircle, Keyboard, Users, MapPin, ChevronRight, GripVertical,
+  PlusCircle, Keyboard, Users, MapPin, ChevronRight, ChevronUp, ChevronDown, GripVertical,
   Trophy, Globe, LogIn, AlertTriangle, Clock, X, Loader2, Calendar, Search, Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,78 +17,53 @@ import { MODO_LABELS, MODO_REGRAS, FALLBACK_IMAGES } from "@/lib/constants";
 import { formatDataJogo } from "@/lib/formatters";
 
 interface ProximoJogo {
-  time_a: string;
-  time_b: string;
-  logo_time_a: string | null;
-  logo_time_b: string | null;
-  data_hora: string;
-  fase: string | null;
-  rodada: string | null;
+  time_a: string; time_b: string;
+  logo_time_a: string | null; logo_time_b: string | null;
+  data_hora: string; fase: string | null; rodada: string | null;
 }
 
 interface PendingAlert {
-  id: string;
-  bolaoId: string;
-  bolaoNome: string;
-  jogoId: string;
-  jogo: string;
-  horasRestantes: number;
+  id: string; bolaoId: string; bolaoNome: string;
+  jogoId: string; jogo: string; horasRestantes: number;
 }
 
-/* ─── Helpers para persistir ordem dos bolões ─── */
+/* ─── Persistir ordem ─── */
 const STORAGE_KEY = "bolao_order_privados";
-
-const loadSavedOrder = (): string[] => {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : [];
-  } catch { return []; }
-};
-
-const saveOrder = (ids: string[]) => {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(ids)); } catch {}
-};
-
+const loadSavedOrder = (): string[] => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); } catch { return []; } };
+const saveOrder = (ids: string[]) => { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(ids)); } catch {} };
 const sortByOrder = (boloes: Bolao[], savedOrder: string[]): Bolao[] => {
   if (savedOrder.length === 0) return boloes;
-  const orderMap = new Map(savedOrder.map((id, idx) => [id, idx]));
-  return [...boloes].sort((a, b) => {
-    const ia = orderMap.get(a.id) ?? 999;
-    const ib = orderMap.get(b.id) ?? 999;
-    return ia - ib;
-  });
+  const m = new Map(savedOrder.map((id, i) => [id, i]));
+  return [...boloes].sort((a, b) => (m.get(a.id) ?? 999) - (m.get(b.id) ?? 999));
 };
 
-/* ─── BolaoCard (privados) ─── */
+/* ─── BolaoCard ─── */
 const BolaoCard = ({
   bolao, participantes, posicao, isParticipating, onAccess, onInfoClick, imgFallback,
-  onTouchDragStart, onTouchDragOver, onTouchDragEnd,
-  draggable, onDragStart, onDragOver, onDrop, onDragEnd, isDragging,
+  canMoveUp, canMoveDown, onMoveUp, onMoveDown,
 }: {
   bolao: Bolao; participantes: number; posicao: number | null;
   isParticipating?: boolean; onAccess: () => void; onInfoClick?: () => void; imgFallback: string;
-  onTouchDragStart?: (e: React.TouchEvent) => void;
-  onTouchDragOver?: (e: React.TouchEvent) => void;
-  onTouchDragEnd?: (e: React.TouchEvent) => void;
-  draggable?: boolean; onDragStart?: () => void;
-  onDragOver?: (e: React.DragEvent) => void;
-  onDrop?: () => void; onDragEnd?: () => void; isDragging?: boolean;
+  canMoveUp?: boolean; canMoveDown?: boolean;
+  onMoveUp?: () => void; onMoveDown?: () => void;
 }) => (
-  <Card
-    className={`overflow-hidden border-0 shadow-md hover:shadow-lg transition-all rounded-2xl ${isDragging ? "opacity-40 scale-95" : ""}`}
-    draggable={draggable} onDragStart={onDragStart} onDragOver={onDragOver}
-    onDrop={onDrop} onDragEnd={onDragEnd}
-  >
+  <Card className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-all rounded-2xl">
     <div className="relative h-36 overflow-hidden cursor-pointer" onClick={onAccess}>
       <img src={bolao.imagem_url || imgFallback} alt={bolao.nome} className="w-full h-full object-cover"
         onError={(e) => { (e.target as HTMLImageElement).src = imgFallback; }} />
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
       <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between">
         <h3 className="text-white font-bold text-lg leading-tight">{bolao.nome}</h3>
-        {draggable && (
-          <div className="bg-white/20 backdrop-blur-sm rounded-lg p-1 cursor-grab active:cursor-grabbing"
-            onTouchStart={onTouchDragStart} onTouchMove={onTouchDragOver} onTouchEnd={onTouchDragEnd}>
-            <GripVertical className="w-4 h-4 text-white" />
+        {(canMoveUp || canMoveDown) && (
+          <div className="flex flex-col gap-0.5" onClick={(e) => e.stopPropagation()}>
+            <button onClick={onMoveUp} disabled={!canMoveUp}
+              className={`bg-white/20 backdrop-blur-sm rounded-md p-0.5 transition-all ${canMoveUp ? "hover:bg-white/40 active:scale-90" : "opacity-30 cursor-default"}`}>
+              <ChevronUp className="w-4 h-4 text-white" />
+            </button>
+            <button onClick={onMoveDown} disabled={!canMoveDown}
+              className={`bg-white/20 backdrop-blur-sm rounded-md p-0.5 transition-all ${canMoveDown ? "hover:bg-white/40 active:scale-90" : "opacity-30 cursor-default"}`}>
+              <ChevronDown className="w-4 h-4 text-white" />
+            </button>
           </div>
         )}
       </div>
@@ -98,10 +73,8 @@ const BolaoCard = ({
         <div className="space-y-1">
           <div className="flex items-center gap-2 flex-wrap">
             {bolao.modo_pontuacao && (
-              <button
-                onClick={(e) => { e.stopPropagation(); onInfoClick?.(); }}
-                className="text-[10px] font-bold bg-copa-green-100 text-copa-green-700 rounded-full px-2 py-0.5 flex items-center gap-1 hover:bg-copa-green-200 transition-colors"
-              >
+              <button onClick={(e) => { e.stopPropagation(); onInfoClick?.(); }}
+                className="text-[10px] font-bold bg-copa-green-100 text-copa-green-700 rounded-full px-2 py-0.5 flex items-center gap-1 hover:bg-copa-green-200 transition-colors">
                 Modo de Jogo: {MODO_LABELS[bolao.modo_pontuacao] || bolao.modo_pontuacao}
                 <Info className="w-3 h-3" />
               </button>
@@ -135,8 +108,7 @@ const NacionalCard = ({
   onInfoClick?: () => void; imgFallback: string; joining: boolean;
 }) => (
   <Card className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-all rounded-2xl">
-    <div className="relative h-40 overflow-hidden cursor-pointer"
-      onClick={isParticipando ? onAcessar : undefined}>
+    <div className="relative h-40 overflow-hidden cursor-pointer" onClick={isParticipando ? onAcessar : undefined}>
       <img src={bolao.imagem_url || imgFallback} alt={bolao.nome} className="w-full h-full object-cover"
         onError={(e) => { (e.target as HTMLImageElement).src = imgFallback; }} />
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
@@ -160,21 +132,13 @@ const NacionalCard = ({
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 flex-1 min-w-0">
-              {proximoJogo.logo_time_a && (
-                <img src={proximoJogo.logo_time_a} alt="" className="w-5 h-5 object-contain flex-shrink-0"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-              )}
+              {proximoJogo.logo_time_a && <img src={proximoJogo.logo_time_a} alt="" className="w-5 h-5 object-contain flex-shrink-0" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />}
               <span className="text-xs font-semibold truncate">{proximoJogo.time_a}</span>
               <span className="text-[10px] text-muted-foreground font-bold">vs</span>
               <span className="text-xs font-semibold truncate">{proximoJogo.time_b}</span>
-              {proximoJogo.logo_time_b && (
-                <img src={proximoJogo.logo_time_b} alt="" className="w-5 h-5 object-contain flex-shrink-0"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-              )}
+              {proximoJogo.logo_time_b && <img src={proximoJogo.logo_time_b} alt="" className="w-5 h-5 object-contain flex-shrink-0" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />}
             </div>
-            <span className="text-[10px] text-muted-foreground whitespace-nowrap ml-2">
-              {formatDataJogo(proximoJogo.data_hora)}
-            </span>
+            <span className="text-[10px] text-muted-foreground whitespace-nowrap ml-2">{formatDataJogo(proximoJogo.data_hora)}</span>
           </div>
         </div>
       ) : (
@@ -185,10 +149,8 @@ const NacionalCard = ({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 flex-wrap">
           {bolao.modo_pontuacao && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onInfoClick?.(); }}
-              className="text-[10px] font-bold bg-copa-green-100 text-copa-green-700 rounded-full px-2 py-0.5 flex items-center gap-1 hover:bg-copa-green-200 transition-colors"
-            >
+            <button onClick={(e) => { e.stopPropagation(); onInfoClick?.(); }}
+              className="text-[10px] font-bold bg-copa-green-100 text-copa-green-700 rounded-full px-2 py-0.5 flex items-center gap-1 hover:bg-copa-green-200 transition-colors">
               Modo de Jogo: {MODO_LABELS[bolao.modo_pontuacao] || bolao.modo_pontuacao}
               <Info className="w-3 h-3" />
             </button>
@@ -202,8 +164,7 @@ const NacionalCard = ({
             Acessar <ChevronRight className="w-4 h-4 ml-1" />
           </Button>
         ) : (
-          <Button size="sm" disabled={joining}
-            className="bg-copa-green-500 hover:bg-copa-green-600 text-white font-semibold rounded-lg disabled:opacity-60" onClick={onEntrar}>
+          <Button size="sm" disabled={joining} className="bg-copa-green-500 hover:bg-copa-green-600 text-white font-semibold rounded-lg disabled:opacity-60" onClick={onEntrar}>
             {joining ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Participar <ChevronRight className="w-4 h-4 ml-1" /></>}
           </Button>
         )}
@@ -225,18 +186,12 @@ const Home = () => {
   const [alerts, setAlerts] = useState<PendingAlert[]>([]);
   const [loading, setLoading] = useState(true);
   const [joiningBolao, setJoiningBolao] = useState<string | null>(null);
-  const [dragIndex, setDragIndex] = useState<number | null>(null);
-  const [dragSection, setDragSection] = useState<"privados" | "nacionais" | null>(null);
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
   const [dismissCount, setDismissCount] = useState(0);
   const [showCodeInput, setShowCodeInput] = useState(false);
   const [codigoInput, setCodigoInput] = useState("");
   const [joiningByCode, setJoiningByCode] = useState(false);
   const [regrasModal, setRegrasModal] = useState<string | null>(null);
-
-  // Touch drag state
-  const touchDragRef = useRef<{ startIdx: number; currentIdx: number } | null>(null);
-  const cardRefsMap = useRef<Map<number, HTMLElement>>(new Map());
 
   useEffect(() => { if (user) loadData(); }, [user]);
 
@@ -258,10 +213,7 @@ const Home = () => {
         }
       });
 
-      // Aplicar ordem salva
-      const savedOrder = loadSavedOrder();
-      const sorted = sortByOrder(privList, savedOrder);
-
+      const sorted = sortByOrder(privList, loadSavedOrder());
       setPrivados(sorted);
       setUserPosicoes(posicoes);
       setUserBolaoIds(participandoIds);
@@ -285,7 +237,6 @@ const Home = () => {
         proximos[bolao.id] = jogos && jogos.length > 0 ? (jogos[0] as any) : null;
       }
       setProximosJogos(proximos);
-
       await loadAlerts();
     } catch (err) { console.error("Erro ao carregar dados:", err); }
     finally { setLoading(false); }
@@ -296,29 +247,21 @@ const Home = () => {
     const now = new Date();
     const in12h = new Date(now.getTime() + 12 * 60 * 60 * 1000);
     const cutoff = new Date(now.getTime() + 10 * 60 * 1000);
-
     const { data: participacoes } = await supabase.from("bolao_participantes").select("bolao_id, boloes(nome, campeonato_id)").eq("user_id", user.id);
     if (!participacoes || participacoes.length === 0) return;
-
     const pendingAlerts: PendingAlert[] = [];
     for (const p of participacoes) {
       const bolao = p.boloes as any;
       if (!bolao?.campeonato_id) continue;
-
-      const { data: jogos } = await supabase.from("jogos").select("*")
-        .eq("campeonato_id", bolao.campeonato_id).eq("status", "agendado")
-        .gt("data_hora", cutoff.toISOString()).lte("data_hora", in12h.toISOString());
+      const { data: jogos } = await supabase.from("jogos").select("*").eq("campeonato_id", bolao.campeonato_id).eq("status", "agendado").gt("data_hora", cutoff.toISOString()).lte("data_hora", in12h.toISOString());
       if (!jogos || jogos.length === 0) continue;
-
       const jogoIds = jogos.map((j: any) => j.id);
       const { data: palpites } = await supabase.from("palpites").select("jogo_id").eq("user_id", user.id).eq("bolao_id", p.bolao_id).in("jogo_id", jogoIds);
       const done = new Set((palpites || []).map((pp: any) => pp.jogo_id));
-
       for (const jogo of jogos) {
         if (!done.has((jogo as any).id)) {
           const hrs = Math.max(1, Math.round((new Date((jogo as any).data_hora).getTime() - now.getTime()) / (1000 * 60 * 60)));
-          pendingAlerts.push({ id: `${p.bolao_id}-${(jogo as any).id}`, bolaoId: p.bolao_id, bolaoNome: bolao.nome,
-            jogoId: (jogo as any).id, jogo: `${(jogo as any).time_a} vs ${(jogo as any).time_b}`, horasRestantes: hrs });
+          pendingAlerts.push({ id: `${p.bolao_id}-${(jogo as any).id}`, bolaoId: p.bolao_id, bolaoNome: bolao.nome, jogoId: (jogo as any).id, jogo: `${(jogo as any).time_a} vs ${(jogo as any).time_b}`, horasRestantes: hrs });
         }
       }
     }
@@ -329,11 +272,7 @@ const Home = () => {
     if (!user) return false;
     const { data: profile } = await supabase.from("profiles").select("id").eq("id", user.id).single();
     if (!profile) {
-      const { error } = await supabase.from("profiles").insert({
-        id: user.id,
-        nome: user.user_metadata?.nome || user.email?.split("@")[0] || "Usuário",
-        email: user.email || "",
-      });
+      const { error } = await supabase.from("profiles").insert({ id: user.id, nome: user.user_metadata?.nome || user.email?.split("@")[0] || "Usuário", email: user.email || "" });
       if (error && error.code !== "23505") { console.error("Erro ao criar perfil:", error); return false; }
     }
     return true;
@@ -346,17 +285,9 @@ const Home = () => {
       await ensureProfile();
       const { error } = await supabase.from("bolao_participantes").insert({ bolao_id: bolaoId, user_id: user.id });
       if (error) {
-        if (error.code === "23505") {
-          toast.info("Você já está participando!");
-          setUserBolaoIds((prev) => new Set(prev).add(bolaoId));
-          navigate(`/bolao/${bolaoId}`);
-        } else throw error;
-      } else {
-        toast.success("Você entrou no bolão!");
-        setUserBolaoIds((prev) => new Set(prev).add(bolaoId));
-        setParticipantesCount((prev) => ({ ...prev, [bolaoId]: (prev[bolaoId] || 0) + 1 }));
-        navigate(`/bolao/${bolaoId}`);
-      }
+        if (error.code === "23505") { toast.info("Você já está participando!"); setUserBolaoIds((prev) => new Set(prev).add(bolaoId)); navigate(`/bolao/${bolaoId}`); }
+        else throw error;
+      } else { toast.success("Você entrou no bolão!"); setUserBolaoIds((prev) => new Set(prev).add(bolaoId)); setParticipantesCount((prev) => ({ ...prev, [bolaoId]: (prev[bolaoId] || 0) + 1 })); navigate(`/bolao/${bolaoId}`); }
     } catch (err: any) { toast.error(err.message || "Erro ao entrar no bolão"); }
     finally { setJoiningBolao(null); }
   };
@@ -372,54 +303,22 @@ const Home = () => {
       const { data: bolao } = await supabase.from("boloes").select("id, nome").eq("codigo_convite", codigoInput.trim().toUpperCase()).maybeSingle();
       if (!bolao) { toast.error("Código inválido. Verifique e tente novamente."); return; }
       const { error } = await supabase.from("bolao_participantes").insert({ bolao_id: bolao.id, user_id: user.id });
-      if (error) {
-        if (error.code === "23505") { toast.info("Você já está neste bolão!"); navigate(`/bolao/${bolao.id}`); }
-        else throw error;
-      } else { toast.success(`Você entrou no "${bolao.nome}"!`); navigate(`/bolao/${bolao.id}`); }
+      if (error) { if (error.code === "23505") { toast.info("Você já está neste bolão!"); navigate(`/bolao/${bolao.id}`); } else throw error; }
+      else { toast.success(`Você entrou no "${bolao.nome}"!`); navigate(`/bolao/${bolao.id}`); }
     } catch (err: any) { toast.error(err.message || "Erro ao entrar no bolão"); }
     finally { setJoiningByCode(false); }
   };
 
   const dismissAlert = (e: React.MouseEvent, alertId: string) => { e.stopPropagation(); setDismissedAlerts((prev) => new Set(prev).add(alertId)); setDismissCount((c) => c + 1); };
 
-  /* ─── Drag & Drop (desktop) com persistência ─── */
-  const handleDragStart = (s: "privados" | "nacionais", i: number) => { setDragIndex(i); setDragSection(s); };
-  const handleDragOver = (e: React.DragEvent) => e.preventDefault();
-  const handleDrop = (s: "privados" | "nacionais", ti: number) => {
-    if (dragIndex === null || dragSection !== s) return;
-    const l = s === "privados" ? [...privados] : [...nacionais];
-    const [m] = l.splice(dragIndex, 1); l.splice(ti, 0, m);
-    if (s === "privados") {
-      setPrivados(l);
-      saveOrder(l.map((b) => b.id));
-    } else {
-      setNacionais(l);
-    }
-    setDragIndex(null); setDragSection(null);
-  };
-  const handleDragEnd = () => { setDragIndex(null); setDragSection(null); };
-
-  /* ─── Touch Drag (mobile) com persistência ─── */
-  const handleTouchDragStart = (idx: number) => (e: React.TouchEvent) => {
-    touchDragRef.current = { startIdx: idx, currentIdx: idx };
-  };
-
-  const handleTouchDragOver = (idx: number) => (e: React.TouchEvent) => {
-    if (!touchDragRef.current) return;
-    touchDragRef.current.currentIdx = idx;
-  };
-
-  const handleTouchDragEnd = () => (e: React.TouchEvent) => {
-    if (!touchDragRef.current) return;
-    const { startIdx, currentIdx } = touchDragRef.current;
-    if (startIdx !== currentIdx) {
-      const l = [...privados];
-      const [m] = l.splice(startIdx, 1);
-      l.splice(currentIdx, 0, m);
-      setPrivados(l);
-      saveOrder(l.map((b) => b.id));
-    }
-    touchDragRef.current = null;
+  /* ─── Reordenar bolões ─── */
+  const moveBolao = (index: number, direction: "up" | "down") => {
+    const newIndex = direction === "up" ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= privados.length) return;
+    const newList = [...privados];
+    [newList[index], newList[newIndex]] = [newList[newIndex], newList[index]];
+    setPrivados(newList);
+    saveOrder(newList.map((b) => b.id));
   };
 
   if (loading) return <LoadingSpinner />;
@@ -431,26 +330,20 @@ const Home = () => {
           {visibleAlerts.slice(0, 3).map((alert) => (
             <div key={alert.id} onClick={() => navigate(`/bolao/${alert.bolaoId}/palpites?jogo=${alert.jogoId}`)}
               className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 cursor-pointer hover:bg-amber-100 transition-colors">
-              <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <AlertTriangle className="w-4 h-4 text-amber-600" />
-              </div>
+              <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0"><AlertTriangle className="w-4 h-4 text-amber-600" /></div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-amber-800 truncate">{alert.jogo}</p>
                 <p className="text-xs text-amber-600">{alert.bolaoNome} • Fecha 10min antes do jogo</p>
               </div>
               <div className="flex items-center gap-1 bg-amber-200/60 rounded-lg px-2 py-1 flex-shrink-0">
-                <Clock className="w-3 h-3 text-amber-700" />
-                <span className="text-xs font-bold text-amber-700">{alert.horasRestantes}h</span>
+                <Clock className="w-3 h-3 text-amber-700" /><span className="text-xs font-bold text-amber-700">{alert.horasRestantes}h</span>
               </div>
-              <button onClick={(e) => dismissAlert(e, alert.id)}
-                className="w-6 h-6 rounded-full hover:bg-amber-200 flex items-center justify-center flex-shrink-0 transition-colors">
+              <button onClick={(e) => dismissAlert(e, alert.id)} className="w-6 h-6 rounded-full hover:bg-amber-200 flex items-center justify-center flex-shrink-0 transition-colors">
                 <X className="w-3.5 h-3.5 text-amber-500" />
               </button>
             </div>
           ))}
-          {visibleAlerts.length > 3 && (
-            <p className="text-xs text-center text-amber-600 font-medium">+{visibleAlerts.length - 3} palpites pendentes</p>
-          )}
+          {visibleAlerts.length > 3 && <p className="text-xs text-center text-amber-600 font-medium">+{visibleAlerts.length - 3} palpites pendentes</p>}
         </div>
       )}
 
@@ -473,20 +366,13 @@ const Home = () => {
         <Card className="rounded-2xl shadow-sm border-copa-gold-300 bg-copa-gold-50 animate-fade-in">
           <CardContent className="p-4">
             <div className="flex gap-3">
-              <input
-                placeholder="Insira o código do bolão"
-                value={codigoInput}
+              <input placeholder="Insira o código do bolão" value={codigoInput}
                 onChange={(e) => setCodigoInput(e.target.value.toUpperCase())}
                 onKeyDown={(e) => { if (e.key === "Enter") handleEntrarPorCodigo(); }}
                 className="h-11 rounded-xl bg-white flex-1 font-mono text-center tracking-widest text-lg px-4 border border-gray-200 focus:border-copa-green-500 focus:outline-none"
-                maxLength={6}
-                autoFocus
-              />
-              <Button
-                onClick={handleEntrarPorCodigo}
-                disabled={joiningByCode}
-                className="h-11 px-6 bg-copa-green-500 hover:bg-copa-green-600 text-white font-semibold rounded-xl"
-              >
+                maxLength={6} autoFocus />
+              <Button onClick={handleEntrarPorCodigo} disabled={joiningByCode}
+                className="h-11 px-6 bg-copa-green-500 hover:bg-copa-green-600 text-white font-semibold rounded-xl">
                 {joiningByCode ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Search className="w-4 h-4 mr-1" /> Entrar</>}
               </Button>
             </div>
@@ -506,13 +392,9 @@ const Home = () => {
                 posicao={userPosicoes[b.id] || null} isParticipating={true}
                 onAccess={() => navigate(`/bolao/${b.id}`)}
                 onInfoClick={() => setRegrasModal(b.modo_pontuacao || null)}
-                imgFallback={FALLBACK_IMAGES[i % FALLBACK_IMAGES.length]} draggable
-                onDragStart={() => handleDragStart("privados", i)} onDragOver={handleDragOver}
-                onDrop={() => handleDrop("privados", i)} onDragEnd={handleDragEnd}
-                isDragging={dragSection === "privados" && dragIndex === i}
-                onTouchDragStart={handleTouchDragStart(i)}
-                onTouchDragOver={handleTouchDragOver(i)}
-                onTouchDragEnd={handleTouchDragEnd()} />
+                imgFallback={FALLBACK_IMAGES[i % FALLBACK_IMAGES.length]}
+                canMoveUp={i > 0} canMoveDown={i < privados.length - 1}
+                onMoveUp={() => moveBolao(i, "up")} onMoveDown={() => moveBolao(i, "down")} />
             ))}
           </div>
         ) : (
@@ -556,17 +438,11 @@ const Home = () => {
               onInfoClick={() => setRegrasModal(b.modo_pontuacao || null)}
               imgFallback={FALLBACK_IMAGES[i % FALLBACK_IMAGES.length]} joining={joiningBolao === b.id} />
           ))}
-          {nacionais.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-4">Nenhum bolão nacional disponível.</p>
-          )}
+          {nacionais.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Nenhum bolão nacional disponível.</p>}
         </div>
       </div>
 
-      <RegrasModal
-        regras={regrasModal ? MODO_REGRAS[regrasModal] || null : null}
-        open={!!regrasModal}
-        onClose={() => setRegrasModal(null)}
-      />
+      <RegrasModal regras={regrasModal ? MODO_REGRAS[regrasModal] || null : null} open={!!regrasModal} onClose={() => setRegrasModal(null)} />
     </div>
   );
 };

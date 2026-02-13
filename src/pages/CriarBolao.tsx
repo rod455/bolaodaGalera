@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -36,18 +37,20 @@ const CriarBolao = () => {
   const [criando, setCriando] = useState(false);
   const [infoModal, setInfoModal] = useState<RegraInfo | null>(null);
   const [regrasAtivas, setRegrasAtivas] = useState<string[]>([]);
+  const [regrasModalOpen, setRegrasModalOpen] = useState(false);
 
   const { plano: userPlano } = useUserPlan();
 
   useEffect(() => { loadCampeonatos(); }, []);
 
-  // Quando muda o modo, ativa todas as regras positivas por padrão
+  // Quando muda o modo, ativa todas as regras positivas e abre modal
   useEffect(() => {
     if (modoSelecionado && MODO_REGRAS[modoSelecionado]) {
       const todasRegras = MODO_REGRAS[modoSelecionado].regras
         .filter((r) => r.acerto)
         .map((r) => r.texto);
       setRegrasAtivas(todasRegras);
+      setRegrasModalOpen(true);
     } else {
       setRegrasAtivas([]);
     }
@@ -108,16 +111,10 @@ const CriarBolao = () => {
       }
 
       const { data: newBolao, error } = await supabase.from("boloes").insert({
-        nome,
-        descricao: descricao || null,
-        imagem_url: imagemUrl,
-        codigo_convite: codigo,
-        criador_id: user.id,
-        campeonato_id: campeonatoSelecionado,
-        modo_pontuacao: modoSelecionado,
-        regras_ativas: regrasAtivas,
-        is_publico: false,
-        is_nacional: false,
+        nome, descricao: descricao || null, imagem_url: imagemUrl,
+        codigo_convite: codigo, criador_id: user.id, campeonato_id: campeonatoSelecionado,
+        modo_pontuacao: modoSelecionado, regras_ativas: regrasAtivas,
+        is_publico: false, is_nacional: false,
       }).select("id").single();
 
       if (error) throw error;
@@ -126,7 +123,6 @@ const CriarBolao = () => {
         { id: user.id, nome: user.user_metadata?.nome || user.email?.split("@")[0] || "Usuário" },
         { onConflict: "id" }
       );
-
       await supabase.from("bolao_participantes").insert({ bolao_id: newBolao.id, user_id: user.id });
 
       toast.success(`Bolão criado! Código: ${codigo}`);
@@ -155,6 +151,7 @@ const CriarBolao = () => {
   };
 
   const modoRegras = modoSelecionado ? MODO_REGRAS[modoSelecionado] : null;
+  const totalRegrasPositivas = modoRegras ? modoRegras.regras.filter((r) => r.acerto).length : 0;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -223,6 +220,12 @@ const CriarBolao = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  {selected && (
+                    <button onClick={(e) => { e.stopPropagation(); setRegrasModalOpen(true); }}
+                      className="text-[10px] font-bold text-copa-green-600 bg-copa-green-100 hover:bg-copa-green-200 rounded-full px-2 py-0.5 transition-colors">
+                      {regrasAtivas.length}/{totalRegrasPositivas} regras
+                    </button>
+                  )}
                   <button onClick={(e) => { e.stopPropagation(); setInfoModal(MODO_REGRAS[modo.id]); }}
                     className="w-6 h-6 rounded-full bg-copa-green-100 hover:bg-copa-green-200 flex items-center justify-center transition-colors" title="Ver regras">
                     <Info className="w-3.5 h-3.5 text-copa-green-600" />
@@ -232,48 +235,6 @@ const CriarBolao = () => {
               </div>
             );
           })}
-
-          {/* ═══ REGRAS CUSTOMIZÁVEIS ═══ */}
-          {modoRegras && (
-            <div className="mt-4 pt-4 border-t border-gray-100 space-y-3 animate-fade-in">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-copa-green-700">Regras ativas</p>
-                <span className="text-[10px] text-muted-foreground bg-muted rounded-full px-2 py-0.5">
-                  {regrasAtivas.length} de {modoRegras.regras.filter((r) => r.acerto).length}
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground">{modoRegras.descricao} Desmarque as regras que não deseja utilizar.</p>
-              <div className="space-y-1.5">
-                {modoRegras.regras.map((regra) => {
-                  if (!regra.acerto) return null;
-                  const isActive = regrasAtivas.includes(regra.texto);
-                  return (
-                    <div key={regra.texto} onClick={() => toggleRegra(regra.texto)}
-                      className={`flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-all ${
-                        isActive ? "bg-copa-green-50 border border-copa-green-200" : "bg-gray-50 border border-gray-200 opacity-50"
-                      }`}>
-                      <div className="flex items-center gap-3">
-                        <div className={`w-[18px] h-[18px] rounded flex items-center justify-center flex-shrink-0 transition-colors ${
-                          isActive ? "bg-copa-green-500" : "bg-white border-2 border-gray-300"
-                        }`}>
-                          {isActive && <Check className="w-3 h-3 text-white" />}
-                        </div>
-                        <span className={`text-sm ${isActive ? "font-medium text-foreground" : "text-muted-foreground line-through"}`}>
-                          {regra.texto}
-                        </span>
-                      </div>
-                      <span className={`text-xs font-bold ${isActive ? "text-copa-green-600" : "text-muted-foreground"}`}>
-                        {regra.pontos}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-              {regrasAtivas.length === 0 && (
-                <p className="text-xs text-red-500 font-medium mt-1">⚠ Selecione pelo menos uma regra</p>
-              )}
-            </div>
-          )}
         </CardContent>
       </Card>
 
@@ -300,8 +261,7 @@ const CriarBolao = () => {
                     selected ? "border-copa-green-500 bg-copa-green-50" : "border-transparent bg-muted/50 hover:bg-muted/80"
                   }`}>
                   <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                    selected ? "border-copa-green-500 bg-copa-green-500" : "border-gray-300"
-                  }`}>
+                    selected ? "border-copa-green-500 bg-copa-green-500" : "border-gray-300"}`}>
                     {selected && <Check className="w-3 h-3 text-white" />}
                   </div>
                   {camp.logo_url ? (
@@ -357,7 +317,61 @@ const CriarBolao = () => {
         {criando ? (<><Loader2 className="w-4 h-4 mr-2 animate-spin" />Criando...</>) : "Criar Bolão"}
       </Button>
 
+      {/* ═══ MODAL: Regras Info (somente leitura) ═══ */}
       <RegrasModal regras={infoModal} open={!!infoModal} onClose={() => setInfoModal(null)} />
+
+      {/* ═══ MODAL: Configurar Regras (com checkboxes) ═══ */}
+      {modoRegras && (
+        <Dialog open={regrasModalOpen} onOpenChange={(v) => { if (!v) { setRegrasModalOpen(false); scrollToSection("section-campeonato"); } }}>
+          <DialogContent className="max-w-md rounded-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-bold text-copa-green-700">
+                {modoRegras.titulo}
+              </DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                {modoRegras.descricao} Escolha quais regras ativar neste bolão.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2 mt-2">
+              {modoRegras.regras.map((regra, i) => {
+                if (!regra.acerto) return null;
+                const isActive = regrasAtivas.includes(regra.texto);
+                return (
+                  <div key={i} onClick={() => toggleRegra(regra.texto)}
+                    className={`flex items-center justify-between py-2.5 px-3 rounded-lg cursor-pointer transition-all ${
+                      isActive ? "bg-copa-green-50 border border-copa-green-200" : "bg-gray-50 border border-gray-200 opacity-50"
+                    }`}>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-[18px] h-[18px] rounded flex items-center justify-center flex-shrink-0 transition-colors ${
+                        isActive ? "bg-copa-green-500" : "bg-white border-2 border-gray-300"
+                      }`}>
+                        {isActive && <Check className="w-3 h-3 text-white" />}
+                      </div>
+                      <span className={`text-sm ${isActive ? "font-medium" : "text-muted-foreground line-through"}`}>
+                        {regra.texto}
+                      </span>
+                    </div>
+                    <span className={`text-sm font-bold ${isActive ? "text-copa-green-600" : "text-muted-foreground"}`}>
+                      {regra.pontos}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            {regrasAtivas.length === 0 && (
+              <p className="text-xs text-red-500 font-medium">Selecione pelo menos uma regra</p>
+            )}
+            <div className="flex items-center justify-between mt-4">
+              <span className="text-xs text-muted-foreground">{regrasAtivas.length} de {totalRegrasPositivas} regras ativas</span>
+              <Button size="sm" onClick={() => { setRegrasModalOpen(false); scrollToSection("section-campeonato"); }}
+                disabled={regrasAtivas.length === 0}
+                className="bg-copa-green-500 hover:bg-copa-green-600 text-white font-semibold rounded-lg">
+                Confirmar
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
