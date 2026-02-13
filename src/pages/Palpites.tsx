@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, Save, Loader2, Lock, CheckCircle2, Clock,
-  ChevronLeft, ChevronRight,
+  ChevronLeft, ChevronRight, Heart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,47 +14,15 @@ import type { Jogo, Palpite } from "@/lib/types";
 import { FASE_ORDER } from "@/lib/constants";
 import { traduzirFase, formatDataJogo, rodadaNum } from "@/lib/formatters";
 
-interface PalpiteDB extends Palpite {
-  id: string;
-}
+interface PalpiteDB extends Palpite { id: string; }
 
-/**
- * Fases que agrupam ida/volta na mesma tab (sem separar).
- * Ex: "Final" mostra ida e volta juntos. Semifinal separa.
- */
 const FASES_AGRUPADAS = ["Final", "Terceiro Lugar"];
-
-/**
- * Gera a "tab key" para um jogo no modo fases.
- * - Semifinal com rodada "Ida" → "Semifinal – Ida"
- * - Final com rodada "Ida" → "Final" (agrupado)
- * - Última Rodada sem rodada → "Última Rodada"
- */
-function getTabKey(jogo: Jogo): string {
-  const fase = traduzirFase(jogo.fase) || jogo.fase || "";
-  const rodada = jogo.rodada;
-  // Fases agrupadas: sempre retorna só o nome da fase
-  if (FASES_AGRUPADAS.includes(fase)) return fase;
-  // Demais fases: combina fase + rodada se houver
-  if (rodada) return `${fase} – ${rodada}`;
-  return fase;
-}
-
-/**
- * Extrai apenas a parte da fase de uma tab key (para ordenação).
- */
-function getFaseFromTabKey(tabKey: string): string {
-  const dash = tabKey.indexOf(" – ");
-  return dash >= 0 ? tabKey.substring(0, dash) : tabKey;
-}
-
-/**
- * Extrai a parte da rodada de uma tab key (para ordenação secundária).
- */
-function getRodadaFromTabKey(tabKey: string): string {
-  const dash = tabKey.indexOf(" – ");
-  return dash >= 0 ? tabKey.substring(dash + 3) : "";
-}
+const getTabKey = (jogo: Jogo): string => {
+  const faseTrad = traduzirFase(jogo.fase) || "";
+  if (!jogo.rodada) return faseTrad || "Outros";
+  if (FASES_AGRUPADAS.includes(faseTrad)) return faseTrad;
+  return `${faseTrad} – ${jogo.rodada}`;
+};
 
 const Palpites = () => {
   const navigate = useNavigate();
@@ -73,6 +41,8 @@ const Palpites = () => {
   const [rodadas, setRodadas] = useState<string[]>([]);
   const [fases, setFases] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<string>("Todos");
+  const [timeFavorito, setTimeFavorito] = useState<string | null>(null);
+  const [isFanatico, setIsFanatico] = useState(false);
 
   useEffect(() => { if (id && user) loadData(); }, [id, user]);
 
@@ -94,19 +64,37 @@ const Palpites = () => {
   const loadData = async () => {
     try {
       const { data: bolao } = await supabase
-        .from("boloes").select("nome, campeonato_id, campeonatos(tipo)")
+        .from("boloes").select("nome, campeonato_id, modo_pontuacao, campeonatos(tipo)")
         .eq("id", id).single();
       if (!bolao || !bolao.campeonato_id) { toast.error("Bolão não encontrado"); navigate(`/bolao/${id}`); return; }
       setBolaoNome(bolao.nome);
 
       const tipo = (bolao.campeonatos as any)?.tipo;
-      const leagueMode = tipo === "nacional";
+      const leagueMode = tipo === "nacional" || tipo === "estadual";
       setIsLeague(leagueMode);
+
+      const fanaticoMode = bolao.modo_pontuacao === "fanatico";
+      setIsFanatico(fanaticoMode);
+
+      let userTimeFavorito: string | null = null;
+      if (fanaticoMode && user) {
+        const { data: participante } = await supabase
+          .from("bolao_participantes").select("time_favorito")
+          .eq("bolao_id", id).eq("user_id", user.id).single();
+        userTimeFavorito = participante?.time_favorito || null;
+        setTimeFavorito(userTimeFavorito);
+      }
 
       const { data: allGames } = await supabase
         .from("jogos").select("*").eq("campeonato_id", bolao.campeonato_id)
         .order("data_hora", { ascending: true });
-      const uniqueJogos = (allGames || []) as Jogo[];
+
+      let uniqueJogos = (allGames || []) as Jogo[];
+      if (fanaticoMode && userTimeFavorito) {
+        uniqueJogos = uniqueJogos.filter(
+          (j) => j.time_a === userTimeFavorito || j.time_b === userTimeFavorito
+        );
+      }
       setJogos(uniqueJogos);
 
       const targetJogoId = searchParams.get("jogo");
@@ -116,12 +104,10 @@ const Palpites = () => {
         uniqueJogos.forEach((j) => { if (j.rodada) rodadaSet.add(j.rodada); });
         const sorted = Array.from(rodadaSet).sort((a, b) => rodadaNum(a) - rodadaNum(b));
         setRodadas(sorted);
-
         const now = new Date();
         const currentRodada = sorted.find((r) =>
           uniqueJogos.some((j) => j.rodada === r && j.status === "agendado" && new Date(j.data_hora) > now)
         );
-
         if (targetJogoId) {
           const tj = uniqueJogos.find((j) => j.id === targetJogoId);
           setActiveTab(tj?.rodada || currentRodada || sorted[sorted.length - 1] || "Todos");
@@ -129,42 +115,20 @@ const Palpites = () => {
           setActiveTab(currentRodada || sorted[sorted.length - 1] || "Todos");
         }
       } else {
-        // Modo fases: tabs compostas
-        const tabKeySet = new Set<string>();
-        uniqueJogos.forEach((j) => {
-          const key = getTabKey(j);
-          if (key) tabKeySet.add(key);
-        });
-
-        const rodadaOrder: Record<string, number> = { "Ida": 0, "Volta": 1 };
-        const sortedTabs = Array.from(tabKeySet).sort((a, b) => {
-          const faseA = getFaseFromTabKey(a);
-          const faseB = getFaseFromTabKey(b);
-          const iaFase = FASE_ORDER.indexOf(faseA);
-          const ibFase = FASE_ORDER.indexOf(faseB);
-          const orderA = iaFase === -1 ? 99 : iaFase;
-          const orderB = ibFase === -1 ? 99 : ibFase;
+        const tabSet = new Set<string>();
+        uniqueJogos.forEach((j) => tabSet.add(getTabKey(j)));
+        const sortedTabs = Array.from(tabSet).sort((a, b) => {
+          const faseA = a.split(" – ")[0]; const faseB = b.split(" – ")[0];
+          const ia = FASE_ORDER.indexOf(faseA); const ib = FASE_ORDER.indexOf(faseB);
+          const orderA = ia === -1 ? 99 : ia; const orderB = ib === -1 ? 99 : ib;
           if (orderA !== orderB) return orderA - orderB;
-          const rodA = getRodadaFromTabKey(a);
-          const rodB = getRodadaFromTabKey(b);
-          return (rodadaOrder[rodA] ?? 99) - (rodadaOrder[rodB] ?? 99);
+          return a.includes("Ida") && !b.includes("Ida") ? -1 : !a.includes("Ida") && b.includes("Ida") ? 1 : 0;
         });
-
         setFases(["Todos", ...sortedTabs]);
-
         if (targetJogoId) {
           const tj = uniqueJogos.find((j) => j.id === targetJogoId);
-          const tjTab = tj ? getTabKey(tj) : "Todos";
-          setActiveTab(tjTab || "Todos");
-        } else {
-          const now = new Date();
-          const firstOpenTab = sortedTabs.find((tab) =>
-            uniqueJogos.some((j) => {
-              return getTabKey(j) === tab && j.status === "agendado" && new Date(j.data_hora) > now;
-            })
-          );
-          setActiveTab(firstOpenTab || "Todos");
-        }
+          setActiveTab(tj ? getTabKey(tj) : "Todos");
+        } else { setActiveTab("Todos"); }
       }
 
       if (uniqueJogos.length > 0) {
@@ -225,11 +189,8 @@ const Palpites = () => {
 
   const now = new Date();
   let jogosFiltrados: Jogo[];
-  if (isLeague) {
-    jogosFiltrados = activeTab === "Todos" ? jogos : jogos.filter((j) => j.rodada === activeTab);
-  } else {
-    jogosFiltrados = activeTab === "Todos" ? jogos : jogos.filter((j) => getTabKey(j) === activeTab);
-  }
+  if (isLeague) { jogosFiltrados = activeTab === "Todos" ? jogos : jogos.filter((j) => j.rodada === activeTab); }
+  else { jogosFiltrados = activeTab === "Todos" ? jogos : jogos.filter((j) => getTabKey(j) === activeTab); }
 
   const jogosAbertos = jogosFiltrados.filter((j) => j.status === "agendado" && (new Date(j.data_hora).getTime() - now.getTime()) / (1000 * 60) > 10);
   const jogosFechados = jogosFiltrados.filter((j) => j.status === "agendado" && (new Date(j.data_hora).getTime() - now.getTime()) / (1000 * 60) <= 10);
@@ -246,37 +207,44 @@ const Palpites = () => {
     <div className="space-y-5 animate-fade-in">
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => navigate(`/bolao/${id}`)} className="rounded-full"><ArrowLeft className="w-5 h-5" /></Button>
-        <div>
+        <div className="flex-1">
           <h2 className="text-2xl font-bold">Palpites</h2>
           <p className="text-sm text-muted-foreground">{bolaoNome}</p>
         </div>
       </div>
 
-      {/* ═══ TABS ═══ */}
+      {isFanatico && timeFavorito && (
+        <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-2.5">
+          <Heart className="w-4 h-4 text-red-500 fill-red-500 flex-shrink-0" />
+          <span className="text-sm font-medium text-red-700">Mostrando apenas jogos do <strong>{timeFavorito}</strong></span>
+        </div>
+      )}
+
+      {isFanatico && !timeFavorito && (
+        <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5">
+          <Heart className="w-4 h-4 text-amber-500 flex-shrink-0" />
+          <span className="text-sm text-amber-700">Você ainda não escolheu seu time do coração. Mostrando todos os jogos.</span>
+        </div>
+      )}
+
       {isLeague ? (
         <div className="flex items-center gap-1">
           <Button variant="ghost" size="icon" disabled={!canPrev}
             onClick={() => setActiveTab(rodadas[currentRodadaIdx - 1])}
-            className="rounded-full h-9 w-9 flex-shrink-0">
-            <ChevronLeft className="w-5 h-5" />
-          </Button>
+            className="rounded-full h-9 w-9 flex-shrink-0"><ChevronLeft className="w-5 h-5" /></Button>
           <div className="flex-1 overflow-x-auto scrollbar-hide">
             <div className="flex gap-1.5 px-1">
               {rodadas.map((r) => (
                 <button key={r} onClick={() => setActiveTab(r)}
                   className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
                     activeTab === r ? "bg-copa-green-500 text-white shadow-md" : "bg-muted text-muted-foreground hover:bg-muted/80"
-                  }`}>
-                  {r.replace("Rodada ", "R")}
-                </button>
+                  }`}>{r.replace("Rodada ", "R")}</button>
               ))}
             </div>
           </div>
           <Button variant="ghost" size="icon" disabled={!canNext}
             onClick={() => setActiveTab(rodadas[currentRodadaIdx + 1])}
-            className="rounded-full h-9 w-9 flex-shrink-0">
-            <ChevronRight className="w-5 h-5" />
-          </Button>
+            className="rounded-full h-9 w-9 flex-shrink-0"><ChevronRight className="w-5 h-5" /></Button>
         </div>
       ) : fases.length > 1 && (
         <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
@@ -289,81 +257,74 @@ const Palpites = () => {
         </div>
       )}
 
-      {/* Active tab title for leagues */}
       {isLeague && activeTab !== "Todos" && (
-        <div className="text-center">
-          <span className="text-sm font-bold text-copa-green-700">{activeTab}</span>
+        <div className="text-center"><span className="text-sm font-bold text-copa-green-700">{activeTab}</span></div>
+      )}
+
+      {jogosAbertos.length > 0 && (<>
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 bg-copa-gold-400 rounded-full" />
+          <span className="text-sm font-medium text-copa-green-600">Próximos jogos – Palpite aberto</span>
         </div>
-      )}
+        <div className="space-y-4">
+          {jogosAbertos.map((jogo) => (
+            <PalpiteCard key={jogo.id} jogo={jogo} palpiteDB={palpitesDB[jogo.id] || null}
+              localPlacar={palpitesLocal[jogo.id] || { a: 0, b: 0 }} onSetPlacar={setPlacar}
+              onSalvar={salvarPalpite} salvando={salvando === jogo.id} editable />
+          ))}
+        </div>
+      </>)}
 
-      {jogosAbertos.length > 0 && (
-        <>
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 bg-copa-gold-400 rounded-full" />
-            <span className="text-sm font-medium text-copa-green-600">Próximos jogos – Palpite aberto</span>
-          </div>
-          <div className="space-y-4">
-            {jogosAbertos.map((jogo) => (
-              <PalpiteCard key={jogo.id} jogo={jogo} palpiteDB={palpitesDB[jogo.id] || null}
-                localPlacar={palpitesLocal[jogo.id] || { a: 0, b: 0 }} onSetPlacar={setPlacar}
-                onSalvar={salvarPalpite} salvando={salvando === jogo.id} editable />
-            ))}
-          </div>
-        </>
-      )}
+      {jogosFechados.length > 0 && (<>
+        <div className="flex items-center gap-2">
+          <Lock className="w-3.5 h-3.5 text-gray-400" />
+          <span className="text-sm font-medium text-gray-500">Palpites encerrados</span>
+        </div>
+        <div className="space-y-4">
+          {jogosFechados.map((jogo) => (
+            <PalpiteCard key={jogo.id} jogo={jogo} palpiteDB={palpitesDB[jogo.id] || null}
+              localPlacar={palpitesLocal[jogo.id] || { a: 0, b: 0 }} onSetPlacar={setPlacar}
+              onSalvar={salvarPalpite} salvando={false} editable={false} />
+          ))}
+        </div>
+      </>)}
 
-      {jogosFechados.length > 0 && (
-        <>
-          <div className="flex items-center gap-2">
-            <Lock className="w-3.5 h-3.5 text-gray-400" />
-            <span className="text-sm font-medium text-gray-500">Palpites encerrados</span>
-          </div>
-          <div className="space-y-4">
-            {jogosFechados.map((jogo) => (
-              <PalpiteCard key={jogo.id} jogo={jogo} palpiteDB={palpitesDB[jogo.id] || null}
-                localPlacar={palpitesLocal[jogo.id] || { a: 0, b: 0 }} onSetPlacar={setPlacar}
-                onSalvar={salvarPalpite} salvando={false} editable={false} />
-            ))}
-          </div>
-        </>
-      )}
+      {jogosAoVivo.length > 0 && (<>
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+          <span className="text-sm font-medium text-red-600">Ao vivo</span>
+        </div>
+        <div className="space-y-4">
+          {jogosAoVivo.map((jogo) => (
+            <PalpiteCard key={jogo.id} jogo={jogo} palpiteDB={palpitesDB[jogo.id] || null}
+              localPlacar={palpitesLocal[jogo.id] || { a: 0, b: 0 }} onSetPlacar={setPlacar}
+              onSalvar={salvarPalpite} salvando={false} editable={false} />
+          ))}
+        </div>
+      </>)}
 
-      {jogosAoVivo.length > 0 && (
-        <>
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-            <span className="text-sm font-medium text-red-600">Ao vivo</span>
-          </div>
-          <div className="space-y-4">
-            {jogosAoVivo.map((jogo) => (
-              <PalpiteCard key={jogo.id} jogo={jogo} palpiteDB={palpitesDB[jogo.id] || null}
-                localPlacar={palpitesLocal[jogo.id] || { a: 0, b: 0 }} onSetPlacar={setPlacar}
-                onSalvar={salvarPalpite} salvando={false} editable={false} />
-            ))}
-          </div>
-        </>
-      )}
-
-      {jogosEncerrados.length > 0 && (
-        <>
-          <div className="flex items-center gap-2 mt-4">
-            <CheckCircle2 className="w-3.5 h-3.5 text-gray-400" />
-            <span className="text-sm font-medium text-gray-500">Resultados</span>
-          </div>
-          <div className="space-y-4">
-            {jogosEncerrados.map((jogo) => (
-              <PalpiteCard key={jogo.id} jogo={jogo} palpiteDB={palpitesDB[jogo.id] || null}
-                localPlacar={palpitesLocal[jogo.id] || { a: 0, b: 0 }} onSetPlacar={setPlacar}
-                onSalvar={salvarPalpite} salvando={false} editable={false} />
-            ))}
-          </div>
-        </>
-      )}
+      {jogosEncerrados.length > 0 && (<>
+        <div className="flex items-center gap-2 mt-4">
+          <CheckCircle2 className="w-3.5 h-3.5 text-gray-400" />
+          <span className="text-sm font-medium text-gray-500">Resultados</span>
+        </div>
+        <div className="space-y-4">
+          {jogosEncerrados.map((jogo) => (
+            <PalpiteCard key={jogo.id} jogo={jogo} palpiteDB={palpitesDB[jogo.id] || null}
+              localPlacar={palpitesLocal[jogo.id] || { a: 0, b: 0 }} onSetPlacar={setPlacar}
+              onSalvar={salvarPalpite} salvando={false} editable={false} />
+          ))}
+        </div>
+      </>)}
 
       {jogosFiltrados.length === 0 && (
         <Card className="rounded-2xl">
           <CardContent className="py-10 text-center">
-            <p className="text-sm text-muted-foreground">Nenhum jogo encontrado para esta fase.</p>
+            <p className="text-sm text-muted-foreground">
+              {isFanatico && timeFavorito
+                ? `Nenhum jogo do ${timeFavorito} nesta rodada.`
+                : "Nenhum jogo encontrado para esta rodada."}
+            </p>
           </CardContent>
         </Card>
       )}
@@ -371,7 +332,6 @@ const Palpites = () => {
   );
 };
 
-/* ─── PalpiteCard ─── */
 const PalpiteCard = ({ jogo, palpiteDB, localPlacar, onSetPlacar, onSalvar, salvando, editable }: {
   jogo: Jogo; palpiteDB: PalpiteDB | null; localPlacar: { a: number; b: number };
   onSetPlacar: (jogoId: string, time: "a" | "b", valor: number) => void;
@@ -382,17 +342,12 @@ const PalpiteCard = ({ jogo, palpiteDB, localPlacar, onSetPlacar, onSalvar, salv
   const hasPalpite = !!palpiteDB;
   const hasChanges = hasPalpite && (localPlacar.a !== palpiteDB!.placar_time_a || localPlacar.b !== palpiteDB!.placar_time_b);
 
-  const faseLabel = traduzirFase(jogo.fase) || jogo.fase;
-  const rodadaLabel = jogo.rodada;
-  const headerParts = [faseLabel, rodadaLabel].filter(Boolean);
-  const headerText = headerParts.join(" – ");
-
   return (
     <Card id={`jogo-${jogo.id}`} className={`rounded-2xl shadow-sm overflow-hidden transition-all ${!editable && !isEncerrado ? "opacity-75" : ""}`}>
-      {headerText && (
+      {(jogo.fase || jogo.rodada) && (
         <div className={`px-4 py-2 border-b ${isEncerrado ? "bg-gray-50" : "bg-copa-green-50"}`}>
           <p className={`text-xs font-semibold ${isEncerrado ? "text-gray-500" : "text-copa-green-600"}`}>
-            {headerText}
+            {[traduzirFase(jogo.fase), jogo.rodada].filter(Boolean).join(" – ")}
           </p>
         </div>
       )}
@@ -435,16 +390,14 @@ const PalpiteCard = ({ jogo, palpiteDB, localPlacar, onSetPlacar, onSalvar, salv
             </div>
           ) : (
             <div className="flex flex-col items-center gap-1">
-              {hasPalpite ? (
-                <>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl font-black text-gray-400">{palpiteDB!.placar_time_a}</span>
-                    <span className="text-lg font-bold text-muted-foreground">x</span>
-                    <span className="text-xl font-black text-gray-400">{palpiteDB!.placar_time_b}</span>
-                  </div>
-                  <span className="text-[10px] text-muted-foreground"><Lock className="w-3 h-3 inline mr-0.5" />Palpite travado</span>
-                </>
-              ) : (
+              {hasPalpite ? (<>
+                <div className="flex items-center gap-2">
+                  <span className="text-xl font-black text-gray-400">{palpiteDB!.placar_time_a}</span>
+                  <span className="text-lg font-bold text-muted-foreground">x</span>
+                  <span className="text-xl font-black text-gray-400">{palpiteDB!.placar_time_b}</span>
+                </div>
+                <span className="text-[10px] text-muted-foreground"><Lock className="w-3 h-3 inline mr-0.5" />Palpite travado</span>
+              </>) : (
                 <div className="flex items-center gap-1 text-gray-400"><Lock className="w-4 h-4" /><span className="text-xs">Sem palpite</span></div>
               )}
             </div>

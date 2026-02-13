@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Upload, Lock, Info, Check, Trophy, Loader2, X, ChevronDown } from "lucide-react";
+import { ArrowLeft, Upload, Lock, Info, Check, Trophy, Loader2, X, ChevronDown, Heart, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +23,11 @@ interface Campeonato {
   tipo: string;
 }
 
+interface TimeOption {
+  nome: string;
+  logo: string | null;
+}
+
 /* ─── Categorias de campeonatos ─── */
 interface CategoriaConfig {
   id: string;
@@ -40,18 +45,16 @@ const CATEGORIAS: CategoriaConfig[] = [
 ];
 
 const categorizeCampeonato = (camp: Campeonato): string => {
-  // Primeiro tenta por tipo
   for (const cat of CATEGORIAS) {
     if (camp.tipo && cat.tipos.includes(camp.tipo)) return cat.id;
   }
-  // Fallback por nome
   const nome = (camp.nome_popular || camp.nome || "").toLowerCase();
   for (const cat of CATEGORIAS) {
     for (const kw of cat.keywords) {
       if (nome.includes(kw.toLowerCase())) return cat.id;
     }
   }
-  return "nacionais"; // default
+  return "nacionais";
 };
 
 const CriarBolao = () => {
@@ -71,6 +74,12 @@ const CriarBolao = () => {
   const [regrasModalOpen, setRegrasModalOpen] = useState(false);
   const [categoriaAberta, setCategoriaAberta] = useState<string | null>(null);
 
+  // Fanático - time do coração
+  const [timeFavorito, setTimeFavorito] = useState("");
+  const [timesDisponiveis, setTimesDisponiveis] = useState<TimeOption[]>([]);
+  const [loadingTimes, setLoadingTimes] = useState(false);
+  const [buscaTime, setBuscaTime] = useState("");
+
   const { plano: userPlano } = useUserPlan();
 
   useEffect(() => { loadCampeonatos(); }, []);
@@ -87,6 +96,16 @@ const CriarBolao = () => {
     }
   }, [modoSelecionado]);
 
+  // Carregar times quando campeonato muda E modo é fanático
+  useEffect(() => {
+    if (campeonatoSelecionado && modoSelecionado === "fanatico") {
+      loadTimes(campeonatoSelecionado);
+    } else {
+      setTimesDisponiveis([]);
+      setTimeFavorito("");
+    }
+  }, [campeonatoSelecionado, modoSelecionado]);
+
   const loadCampeonatos = async () => {
     try {
       const { data, error } = await supabase.from("campeonatos").select("*").eq("ativo", true).order("nome");
@@ -94,6 +113,35 @@ const CriarBolao = () => {
       setCampeonatos((data as any[]) || []);
     } catch (err) { console.error("Erro ao carregar campeonatos:", err); }
     finally { setLoadingCampeonatos(false); }
+  };
+
+  const loadTimes = async (campeonatoId: string) => {
+    setLoadingTimes(true);
+    try {
+      const { data: jogos } = await supabase
+        .from("jogos")
+        .select("time_a, time_b, logo_time_a, logo_time_b")
+        .eq("campeonato_id", campeonatoId);
+
+      if (!jogos) { setTimesDisponiveis([]); return; }
+
+      const timesMap = new Map<string, string | null>();
+      jogos.forEach((j: any) => {
+        if (j.time_a && !j.time_a.includes("Venc.") && !j.time_a.includes("TBD")) {
+          if (!timesMap.has(j.time_a)) timesMap.set(j.time_a, j.logo_time_a);
+        }
+        if (j.time_b && !j.time_b.includes("Venc.") && !j.time_b.includes("TBD")) {
+          if (!timesMap.has(j.time_b)) timesMap.set(j.time_b, j.logo_time_b);
+        }
+      });
+
+      const sorted = Array.from(timesMap.entries())
+        .map(([nome, logo]) => ({ nome, logo }))
+        .sort((a, b) => a.nome.localeCompare(b.nome));
+
+      setTimesDisponiveis(sorted);
+    } catch (err) { console.error("Erro ao carregar times:", err); }
+    finally { setLoadingTimes(false); }
   };
 
   const isLocked = (plano: string) => {
@@ -119,11 +167,14 @@ const CriarBolao = () => {
     );
   };
 
+  const isFanatico = modoSelecionado === "fanatico";
+
   const handleCriar = async () => {
     if (!campeonatoSelecionado) { toast.error("Selecione um campeonato"); return; }
     if (!nome) { toast.error("Informe o nome do bolão"); return; }
     if (!modoSelecionado) { toast.error("Selecione o modo de pontuação"); return; }
     if (regrasAtivas.length === 0) { toast.error("Selecione pelo menos uma regra de pontuação"); return; }
+    if (isFanatico && !timeFavorito) { toast.error("Escolha seu time do coração"); return; }
     if (!user) { toast.error("Você precisa estar logado"); return; }
 
     setCriando(true);
@@ -154,7 +205,13 @@ const CriarBolao = () => {
         { id: user.id, nome: user.user_metadata?.nome || user.email?.split("@")[0] || "Usuário" },
         { onConflict: "id" }
       );
-      await supabase.from("bolao_participantes").insert({ bolao_id: newBolao.id, user_id: user.id });
+
+      // Inserir participante com time_favorito se fanático
+      await supabase.from("bolao_participantes").insert({
+        bolao_id: newBolao.id,
+        user_id: user.id,
+        ...(isFanatico ? { time_favorito: timeFavorito } : {}),
+      });
 
       toast.success(`Bolão criado! Código: ${codigo}`);
       navigate(`/bolao/${newBolao.id}`);
@@ -178,18 +235,20 @@ const CriarBolao = () => {
   const modoRegras = modoSelecionado ? MODO_REGRAS[modoSelecionado] : null;
   const totalRegrasPositivas = modoRegras ? modoRegras.regras.filter((r) => r.acerto).length : 0;
 
-  // Agrupar campeonatos por categoria
   const campeonatosPorCategoria = CATEGORIAS.map((cat) => ({
     ...cat,
     campeonatos: campeonatos.filter((c) => categorizeCampeonato(c) === cat.id),
   })).filter((cat) => cat.campeonatos.length > 0);
 
-  // Achar categoria do campeonato selecionado (para manter aberta)
   const campSelecionado = campeonatos.find((c) => c.id === campeonatoSelecionado);
 
   const toggleCategoria = (catId: string) => {
     setCategoriaAberta((prev) => prev === catId ? null : catId);
   };
+
+  const timesFiltrados = buscaTime
+    ? timesDisponiveis.filter((t) => t.nome.toLowerCase().includes(buscaTime.toLowerCase()))
+    : timesDisponiveis;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -295,17 +354,10 @@ const CriarBolao = () => {
               const hasSelected = cat.campeonatos.some((c) => c.id === campeonatoSelecionado);
               return (
                 <div key={cat.id} className="rounded-xl overflow-hidden border border-gray-100">
-                  {/* Categoria header */}
-                  <button
-                    onClick={() => toggleCategoria(cat.id)}
+                  <button onClick={() => toggleCategoria(cat.id)}
                     className={`w-full flex items-center justify-between px-4 py-3 transition-all ${
-                      isOpen
-                        ? "bg-copa-green-50"
-                        : hasSelected
-                        ? "bg-copa-green-50/50"
-                        : "bg-muted/40 hover:bg-muted/70"
-                    }`}
-                  >
+                      isOpen ? "bg-copa-green-50" : hasSelected ? "bg-copa-green-50/50" : "bg-muted/40 hover:bg-muted/70"
+                    }`}>
                     <div className="flex items-center gap-3">
                       <span className="text-lg">{cat.emoji}</span>
                       <div className="text-left">
@@ -324,21 +376,22 @@ const CriarBolao = () => {
                       <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`} />
                     </div>
                   </button>
-
-                  {/* Campeonatos dentro da categoria */}
                   {isOpen && (
                     <div className="px-2 py-2 space-y-1 bg-white animate-fade-in">
                       {cat.campeonatos.map((camp) => {
                         const selected = campeonatoSelecionado === camp.id;
                         return (
                           <div key={camp.id}
-                            onClick={() => { setCampeonatoSelecionado(camp.id); scrollToSection("section-imagem"); }}
+                            onClick={() => {
+                              setCampeonatoSelecionado(camp.id);
+                              scrollToSection(isFanatico ? "section-time" : "section-imagem");
+                            }}
                             className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
                               selected ? "bg-copa-green-50 border border-copa-green-300" : "hover:bg-muted/50"
                             }`}>
-                            <div className={`w-4.5 h-4.5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                            <div className={`w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                               selected ? "border-copa-green-500 bg-copa-green-500" : "border-gray-300"
-                            }`} style={{ width: 18, height: 18 }}>
+                            }`}>
                               {selected && <Check className="w-3 h-3 text-white" />}
                             </div>
                             {camp.logo_url ? (
@@ -367,6 +420,60 @@ const CriarBolao = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* 3.5 Time do Coração (só para modo Fanático) */}
+      {isFanatico && campeonatoSelecionado && (
+        <Card id="section-time" className="rounded-2xl shadow-sm border-red-100 animate-fade-in">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-bold flex items-center gap-2">
+              <Heart className="w-5 h-5 text-red-500 fill-red-500" />
+              Time do Coração
+            </CardTitle>
+            <p className="text-xs text-muted-foreground mt-1">
+              Você só palpitará nos jogos deste time. Cada participante escolherá o seu ao entrar.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {loadingTimes ? (
+              <div className="flex items-center justify-center py-4"><Loader2 className="w-5 h-5 text-red-400 animate-spin" /></div>
+            ) : (
+              <>
+                {timesDisponiveis.length > 8 && (
+                  <div className="relative">
+                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <Input placeholder="Buscar time..." value={buscaTime} onChange={(e) => setBuscaTime(e.target.value)}
+                      className="h-10 rounded-xl bg-muted/50 pl-9" />
+                  </div>
+                )}
+                <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto">
+                  {timesFiltrados.map((time) => {
+                    const selected = timeFavorito === time.nome;
+                    return (
+                      <div key={time.nome}
+                        onClick={() => { setTimeFavorito(time.nome); scrollToSection("section-imagem"); }}
+                        className={`flex items-center gap-2 p-2.5 rounded-xl cursor-pointer transition-all border ${
+                          selected ? "border-red-400 bg-red-50" : "border-gray-100 hover:bg-muted/50"
+                        }`}>
+                        {time.logo ? (
+                          <img src={time.logo} alt={time.nome} className="w-7 h-7 object-contain flex-shrink-0"
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                        ) : (
+                          <div className="w-7 h-7 bg-gray-200 rounded-full flex-shrink-0" />
+                        )}
+                        <span className={`text-xs font-medium truncate ${selected ? "text-red-700" : ""}`}>{time.nome}</span>
+                        {selected && <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500 ml-auto flex-shrink-0" />}
+                      </div>
+                    );
+                  })}
+                </div>
+                {timesFiltrados.length === 0 && (
+                  <p className="text-xs text-muted-foreground text-center py-2">Nenhum time encontrado</p>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* 4. Upload Cover */}
       <Card id="section-imagem" className="border-dashed border-2 border-copa-green-200 rounded-2xl">
@@ -401,17 +508,13 @@ const CriarBolao = () => {
         {criando ? (<><Loader2 className="w-4 h-4 mr-2 animate-spin" />Criando...</>) : "Criar Bolão"}
       </Button>
 
-      {/* Modal: Regras Info (somente leitura) */}
       <RegrasModal regras={infoModal} open={!!infoModal} onClose={() => setInfoModal(null)} />
 
-      {/* Modal: Configurar Regras (com checkboxes) */}
       {modoRegras && (
         <Dialog open={regrasModalOpen} onOpenChange={(v) => { if (!v) { setRegrasModalOpen(false); scrollToSection("section-campeonato"); } }}>
           <DialogContent className="max-w-md rounded-2xl">
             <DialogHeader>
-              <DialogTitle className="text-lg font-bold text-copa-green-700">
-                {modoRegras.titulo}
-              </DialogTitle>
+              <DialogTitle className="text-lg font-bold text-copa-green-700">{modoRegras.titulo}</DialogTitle>
               <DialogDescription className="text-sm text-muted-foreground">
                 {modoRegras.descricao} Escolha quais regras ativar neste bolão.
               </DialogDescription>
@@ -431,20 +534,14 @@ const CriarBolao = () => {
                       }`}>
                         {isActive && <Check className="w-3 h-3 text-white" />}
                       </div>
-                      <span className={`text-sm ${isActive ? "font-medium" : "text-muted-foreground line-through"}`}>
-                        {regra.texto}
-                      </span>
+                      <span className={`text-sm ${isActive ? "font-medium" : "text-muted-foreground line-through"}`}>{regra.texto}</span>
                     </div>
-                    <span className={`text-sm font-bold ${isActive ? "text-copa-green-600" : "text-muted-foreground"}`}>
-                      {regra.pontos}
-                    </span>
+                    <span className={`text-sm font-bold ${isActive ? "text-copa-green-600" : "text-muted-foreground"}`}>{regra.pontos}</span>
                   </div>
                 );
               })}
             </div>
-            {regrasAtivas.length === 0 && (
-              <p className="text-xs text-red-500 font-medium">Selecione pelo menos uma regra</p>
-            )}
+            {regrasAtivas.length === 0 && <p className="text-xs text-red-500 font-medium">Selecione pelo menos uma regra</p>}
             <div className="flex items-center justify-between mt-4">
               <span className="text-xs text-muted-foreground">{regrasAtivas.length} de {totalRegrasPositivas} regras ativas</span>
               <Button size="sm" onClick={() => { setRegrasModalOpen(false); scrollToSection("section-campeonato"); }}
