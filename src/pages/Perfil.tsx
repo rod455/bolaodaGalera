@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Mail, Lock, Trash2, Crown, Check, Pencil, LogOut, Camera, Loader2 } from "lucide-react";
+import { User, Mail, Lock, Trash2, Crown, Check, Pencil, LogOut, Camera, Loader2, Zap, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,11 +8,14 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useUserPlan } from "@/hooks/useUserPlan";
 
 const Perfil = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { plano: userPlano, loading: loadingPlano } = useUserPlan();
+  const [loadingPortal, setLoadingPortal] = useState(false);
 
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
@@ -178,44 +181,115 @@ const Perfil = () => {
       <Card className="rounded-2xl shadow-sm border-copa-gold-200 overflow-hidden">
         <CardHeader className="pb-2 bg-copa-gold-50">
           <div className="flex items-center gap-2">
-            <Crown className="w-5 h-5 text-copa-gold-500" />
+            {userPlano === "premium_pro" ? (
+              <Zap className="w-5 h-5 text-copa-gold-500" />
+            ) : (
+              <Crown className="w-5 h-5 text-copa-gold-500" />
+            )}
             <CardTitle className="text-base font-bold">Seu plano atual</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="pt-4 space-y-4">
-          <Badge className="bg-copa-green-500 text-white font-bold px-4 py-1 text-sm rounded-full">
-            FREE
+          <Badge className={`font-bold px-4 py-1 text-sm rounded-full ${
+            userPlano === "premium_pro"
+              ? "bg-copa-green-500 text-white"
+              : userPlano === "premium"
+              ? "bg-copa-gold-400 text-copa-green-800"
+              : "bg-copa-green-500 text-white"
+          }`}>
+            {userPlano === "premium_pro" ? "PREMIUM PRO" : userPlano === "premium" ? "PREMIUM" : "FREE"}
           </Badge>
 
-          <div className="space-y-2.5">
-            <div className="flex items-center gap-2.5">
-              <div className="w-5 h-5 bg-copa-green-100 rounded-full flex items-center justify-center">
-                <Check className="w-3 h-3 text-copa-green-600" />
+          {userPlano === "free" ? (
+            <>
+              <div className="space-y-2.5">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-5 h-5 bg-copa-green-100 rounded-full flex items-center justify-center">
+                    <Check className="w-3 h-3 text-copa-green-600" />
+                  </div>
+                  <span className="text-sm">Criar até 1 bolão</span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-5 h-5 bg-copa-green-100 rounded-full flex items-center justify-center">
+                    <Check className="w-3 h-3 text-copa-green-600" />
+                  </div>
+                  <span className="text-sm">Participar do bolão nacional</span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-5 h-5 bg-copa-green-100 rounded-full flex items-center justify-center">
+                    <Check className="w-3 h-3 text-copa-green-600" />
+                  </div>
+                  <span className="text-sm">Propagandas habilitadas</span>
+                </div>
               </div>
-              <span className="text-sm">Criar até 2 bolões</span>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <div className="w-5 h-5 bg-copa-green-100 rounded-full flex items-center justify-center">
-                <Check className="w-3 h-3 text-copa-green-600" />
-              </div>
-              <span className="text-sm">Participar do bolão nacional</span>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <div className="w-5 h-5 bg-copa-green-100 rounded-full flex items-center justify-center">
-                <Check className="w-3 h-3 text-copa-green-600" />
-              </div>
-              <span className="text-sm">Propagandas habilitadas</span>
-            </div>
-          </div>
 
-          <Button
-            onClick={() => navigate("/planos")}
-            className="w-full h-12 bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800 font-bold rounded-xl shadow-md"
-          >
-            <Crown className="w-4 h-4 mr-2" />
-            UPGRADE PARA PREMIUM
-          </Button>
-          <p className="text-center text-xs text-muted-foreground">Mais vantagens exclusivas</p>
+              <Button
+                onClick={() => navigate("/planos")}
+                className="w-full h-12 bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800 font-bold rounded-xl shadow-md"
+              >
+                <Crown className="w-4 h-4 mr-2" />
+                UPGRADE PARA PREMIUM
+              </Button>
+              <p className="text-center text-xs text-muted-foreground">Mais vantagens exclusivas</p>
+            </>
+          ) : (
+            <>
+              <div className="space-y-2.5">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-5 h-5 bg-copa-green-100 rounded-full flex items-center justify-center">
+                    <Check className="w-3 h-3 text-copa-green-600" />
+                  </div>
+                  <span className="text-sm">Bolões ilimitados</span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-5 h-5 bg-copa-green-100 rounded-full flex items-center justify-center">
+                    <Check className="w-3 h-3 text-copa-green-600" />
+                  </div>
+                  <span className="text-sm">Sem anúncios</span>
+                </div>
+                {userPlano === "premium_pro" && (
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-5 h-5 bg-copa-green-100 rounded-full flex items-center justify-center">
+                      <Check className="w-3 h-3 text-copa-green-600" />
+                    </div>
+                    <span className="text-sm">Todos os modos de pontuação</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  onClick={async () => {
+                    setLoadingPortal(true);
+                    try {
+                      const { data, error } = await supabase.functions.invoke("create-portal");
+                      if (error) throw error;
+                      if (data?.url) window.location.href = data.url;
+                    } catch {
+                      toast.error("Erro ao abrir gerenciamento.");
+                    } finally {
+                      setLoadingPortal(false);
+                    }
+                  }}
+                  disabled={loadingPortal}
+                  variant="outline"
+                  className="flex-1 h-11 border-copa-gold-400 text-copa-gold-600 hover:bg-copa-gold-50 font-semibold rounded-xl"
+                >
+                  {loadingPortal ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <ExternalLink className="w-4 h-4 mr-2" />}
+                  Gerenciar assinatura
+                </Button>
+                {userPlano === "premium" && (
+                  <Button
+                    onClick={() => navigate("/planos")}
+                    className="h-11 bg-copa-green-500 hover:bg-copa-green-600 text-white font-semibold rounded-xl px-4"
+                  >
+                    <Zap className="w-4 h-4 mr-1" />
+                    Upgrade PRO
+                  </Button>
+                )}
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
 

@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserPlan } from "@/hooks/useUserPlan";
 import {
   Dialog,
   DialogContent,
@@ -132,8 +133,7 @@ const CriarBolao = () => {
   const [criando, setCriando] = useState(false);
   const [infoModal, setInfoModal] = useState<ModoInfo | null>(null);
 
-  // TODO: get from user profile in Supabase
-  const userPlano = "free";
+  const { plano: userPlano } = useUserPlan();
 
   useEffect(() => {
     loadCampeonatos();
