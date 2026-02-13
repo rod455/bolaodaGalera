@@ -12,6 +12,7 @@ import AoVivo from "./pages/AoVivo";
 import Perfil from "./pages/Perfil";
 import BolaoPage from "./pages/BolaoPage";
 import Palpites from "./pages/Palpites";
+import Planos from "./pages/Planos";
 import NotFound from "./pages/NotFound";
 import AppLayout from "./components/layout/AppLayout";
 import ProtectedRoute from "./components/layout/ProtectedRoute";
@@ -42,6 +43,7 @@ const App = () => (
               <Route path="/perfil" element={<Perfil />} />
               <Route path="/bolao/:id" element={<BolaoPage />} />
               <Route path="/bolao/:id/palpites" element={<Palpites />} />
+              <Route path="/planos" element={<Planos />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
