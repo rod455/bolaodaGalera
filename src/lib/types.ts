@@ -20,6 +20,7 @@ export interface Bolao {
   codigo_convite: string | null;
   criador_id: string | null;
   modo_pontuacao: string;
+  time_favorito?: string | null;
   campeonatos?: Campeonato | null;
 }
 
