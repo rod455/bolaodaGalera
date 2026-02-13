@@ -191,11 +191,17 @@ const BolaoPage = () => {
           return true;
         });
 
-        setJogos(uniqueJogos);
+        // Filtrar pelo time_favorito se modo fanático
+        const isFanatico = (bolaoData as any).modo_pontuacao === "fanatico";
+        const timeFav = (bolaoData as any).time_favorito;
+        const jogosFinal = (isFanatico && timeFav)
+          ? uniqueJogos.filter((j) => j.time_a === timeFav || j.time_b === timeFav)
+          : uniqueJogos;
+        setJogos(jogosFinal);
 
         // Fetch user palpites for these games
-        if (uniqueJogos.length > 0) {
-          const jogoIds = uniqueJogos.map((j) => j.id);
+        if (jogosFinal.length > 0) {
+          const jogoIds = jogosFinal.map((j) => j.id);
           const { data: userPalpites, error: palpError } = await supabase
             .from("palpites")
             .select("jogo_id, placar_time_a, placar_time_b, pontos")
