@@ -86,8 +86,7 @@ const Auth = () => {
         {/* Logo */}
         <div className="flex flex-col items-center gap-3">
           <img src="https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/604913%20(512%20x%20512%20px).png"
-            alt="Bolão na Copa" className="w-24 h-24 object-contain drop-shadow-lg" />
-          <h1 className="text-3xl font-black text-white tracking-tight">Bolão na Copa</h1>
+            alt="Bolão na Copa" className="w-44 h-44 object-contain drop-shadow-lg" />
           <p className="text-copa-green-100 text-sm">
             {isLogin ? "Entre no seu bolão" : "Crie sua conta"}
           </p>
