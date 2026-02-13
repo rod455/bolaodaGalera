@@ -289,10 +289,24 @@ const Perfil = () => {
                   Ver planos
                 </Button>
                 <Button
-                  onClick={() => navigate("/planos")}
+                  onClick={async () => {
+                    setLoadingPortal(true);
+                    try {
+                      const { data, error } = await supabase.functions.invoke("create-checkout", {
+                        body: { priceId: "price_1T0KMtCPiJml4DyD2m8qiXj6" },
+                      });
+                      if (error) throw error;
+                      if (data?.url) window.location.href = data.url;
+                    } catch {
+                      toast.error("Erro ao iniciar pagamento.");
+                    } finally {
+                      setLoadingPortal(false);
+                    }
+                  }}
+                  disabled={loadingPortal}
                   className="h-11 bg-copa-green-500 hover:bg-copa-green-600 text-white font-semibold rounded-xl px-4"
                 >
-                  <Zap className="w-4 h-4 mr-1" />
+                  {loadingPortal ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Zap className="w-4 h-4 mr-1" />}
                   Upgrade PRO
                 </Button>
               </div>
