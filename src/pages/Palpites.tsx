@@ -62,7 +62,9 @@ const Palpites = () => {
       setBolaoNome(bolao.nome);
 
       const tipo = (bolao.campeonatos as any)?.tipo;
-      const leagueMode = tipo === "nacional" || tipo === "estadual";
+      // Liga (rodadas) apenas para campeonatos de pontos corridos
+      // Estaduais e copa_nacional usam modo de fases (mata-mata)
+      const leagueMode = tipo === "nacional";
       setIsLeague(leagueMode);
 
       const { data: allGames } = await supabase

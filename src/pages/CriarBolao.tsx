@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Upload, Lock, Info, Check, Trophy, Loader2 } from "lucide-react";
+import { ArrowLeft, Upload, Lock, Info, Check, Trophy, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -166,6 +166,8 @@ const CriarBolao = () => {
   const getTipoIcon = (tipo: string) => {
     if (tipo === "mundial") return "🌍";
     if (tipo === "continental") return "⭐";
+    if (tipo === "estadual") return "🏟️";
+    if (tipo === "copa_nacional") return "🏆";
     return "🏆";
   };
 
