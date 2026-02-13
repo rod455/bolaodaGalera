@@ -10,7 +10,6 @@ export const MODO_LABELS: Record<string, string> = {
   vencedor_ou_nada: "Vencedor ou Nada",
   profissional: "Profissional",
   fanatico: "Torcedor Fanático",
-  tudo_ou_nada: "Tudo ou Nada",
 };
 
 // ── Regras detalhadas de cada modo (versão unificada) ──
@@ -76,28 +75,19 @@ export const MODO_REGRAS: Record<string, RegraInfo> = {
       { texto: "Gols do perdedor", pontos: "2 pts", acerto: true },
     ],
   },
-  tudo_ou_nada: {
-    titulo: "Modo Tudo ou Nada",
-    descricao: "Placar exato ou zero. Para os corajosos!",
-    regras: [
-      { texto: "Placar exato", pontos: "10 pts", acerto: true },
-      { texto: "Errou o placar", pontos: "0 pts", acerto: false },
-    ],
-  },
 };
 
 // ── Configuração dos modos para CriarBolao (com plano requerido) ──
 export const MODOS_PONTUACAO: ModoConfig[] = [
   { id: "casual", nome: "Casual", subtitulo: "Iniciantes", plano: "free" },
-  { id: "placar_correto", nome: "Placar Correto", subtitulo: "Tudo ou Nada simplificado", plano: "free" },
+  { id: "placar_correto", nome: "Placar Correto", subtitulo: "Acertou o placar ou zero", plano: "free" },
   { id: "amador", nome: "Amador", subtitulo: "Intermediário", plano: "premium" },
   { id: "vencedor_ou_nada", nome: "Vencedor ou Nada", subtitulo: "Acerte o vencedor", plano: "premium" },
   { id: "profissional", nome: "Profissional", subtitulo: "Avançado", plano: "premium_pro" },
   { id: "fanatico", nome: "Torcedor Fanático", subtitulo: "Só jogos do seu time", plano: "premium_pro" },
-  { id: "tudo_ou_nada", nome: "Tudo ou Nada", subtitulo: "Placar exato ou zero", plano: "premium_pro" },
 ];
 
-// ── Tradução de fases (football-data.org → PT-BR + fases manuais) ──
+// ── Tradução de fases (football-data.org → PT-BR) ──
 export const FASE_TRADUCAO: Record<string, string> = {
   GROUP_STAGE: "Fase de Grupos",
   LAST_16: "Oitavas de Final",
@@ -114,13 +104,6 @@ export const FASE_TRADUCAO: Record<string, string> = {
   REGULAR_SEASON: "Liga",
   ROUND_OF_16: "Oitavas de Final",
   ROUND_OF_32: "Fase Eliminatória",
-  // Fases já em português (jogos manuais dos estaduais/Copa do Brasil)
-  "Última Rodada": "Última Rodada",
-  "Oitavas de Final": "Oitavas de Final",
-  "Quartas de Final": "Quartas de Final",
-  "Semifinal": "Semifinal",
-  "Final": "Final",
-  "Terceiro Lugar": "Terceiro Lugar",
 };
 
 // ── Imagens fallback para cards de bolão ──
@@ -134,7 +117,6 @@ export const FALLBACK_IMAGES = [
 export const FASE_ORDER = [
   "Fase de Grupos",
   "Fase Eliminatória",
-  "Última Rodada",
   "Oitavas de Final",
   "Quartas de Final",
   "Semifinal",
