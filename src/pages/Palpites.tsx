@@ -18,6 +18,44 @@ interface PalpiteDB extends Palpite {
   id: string;
 }
 
+/**
+ * Fases que agrupam ida/volta na mesma tab (sem separar).
+ * Ex: "Final" mostra ida e volta juntos. Semifinal separa.
+ */
+const FASES_AGRUPADAS = ["Final", "Terceiro Lugar"];
+
+/**
+ * Gera a "tab key" para um jogo no modo fases.
+ * - Semifinal com rodada "Ida" → "Semifinal – Ida"
+ * - Final com rodada "Ida" → "Final" (agrupado)
+ * - Última Rodada sem rodada → "Última Rodada"
+ */
+function getTabKey(jogo: Jogo): string {
+  const fase = traduzirFase(jogo.fase) || jogo.fase || "";
+  const rodada = jogo.rodada;
+  // Fases agrupadas: sempre retorna só o nome da fase
+  if (FASES_AGRUPADAS.includes(fase)) return fase;
+  // Demais fases: combina fase + rodada se houver
+  if (rodada) return `${fase} – ${rodada}`;
+  return fase;
+}
+
+/**
+ * Extrai apenas a parte da fase de uma tab key (para ordenação).
+ */
+function getFaseFromTabKey(tabKey: string): string {
+  const dash = tabKey.indexOf(" – ");
+  return dash >= 0 ? tabKey.substring(0, dash) : tabKey;
+}
+
+/**
+ * Extrai a parte da rodada de uma tab key (para ordenação secundária).
+ */
+function getRodadaFromTabKey(tabKey: string): string {
+  const dash = tabKey.indexOf(" – ");
+  return dash >= 0 ? tabKey.substring(dash + 3) : "";
+}
+
 const Palpites = () => {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -62,8 +100,6 @@ const Palpites = () => {
       setBolaoNome(bolao.nome);
 
       const tipo = (bolao.campeonatos as any)?.tipo;
-      // Modo liga (rodadas): apenas para campeonatos de pontos corridos (Brasileirão)
-      // Estaduais, copa_nacional, mundial, continental = modo fases (mata-mata)
       const leagueMode = tipo === "nacional";
       setIsLeague(leagueMode);
 
@@ -93,32 +129,41 @@ const Palpites = () => {
           setActiveTab(currentRodada || sorted[sorted.length - 1] || "Todos");
         }
       } else {
-        // Modo fases: agrupar por fase traduzida
-        const fasesSet = new Set<string>();
+        // Modo fases: tabs compostas
+        const tabKeySet = new Set<string>();
         uniqueJogos.forEach((j) => {
-          const f = traduzirFase(j.fase) || j.fase;
-          if (f) fasesSet.add(f);
+          const key = getTabKey(j);
+          if (key) tabKeySet.add(key);
         });
-        const sortedFases = Array.from(fasesSet).sort((a, b) => {
-          const ia = FASE_ORDER.indexOf(a); const ib = FASE_ORDER.indexOf(b);
-          return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+
+        const rodadaOrder: Record<string, number> = { "Ida": 0, "Volta": 1 };
+        const sortedTabs = Array.from(tabKeySet).sort((a, b) => {
+          const faseA = getFaseFromTabKey(a);
+          const faseB = getFaseFromTabKey(b);
+          const iaFase = FASE_ORDER.indexOf(faseA);
+          const ibFase = FASE_ORDER.indexOf(faseB);
+          const orderA = iaFase === -1 ? 99 : iaFase;
+          const orderB = ibFase === -1 ? 99 : ibFase;
+          if (orderA !== orderB) return orderA - orderB;
+          const rodA = getRodadaFromTabKey(a);
+          const rodB = getRodadaFromTabKey(b);
+          return (rodadaOrder[rodA] ?? 99) - (rodadaOrder[rodB] ?? 99);
         });
-        setFases(["Todos", ...sortedFases]);
+
+        setFases(["Todos", ...sortedTabs]);
 
         if (targetJogoId) {
           const tj = uniqueJogos.find((j) => j.id === targetJogoId);
-          const tjFase = tj?.fase ? (traduzirFase(tj.fase) || tj.fase) : "Todos";
-          setActiveTab(tjFase || "Todos");
+          const tjTab = tj ? getTabKey(tj) : "Todos";
+          setActiveTab(tjTab || "Todos");
         } else {
-          // Auto-selecionar a primeira fase que tem jogos abertos
           const now = new Date();
-          const firstOpenFase = sortedFases.find((fase) =>
+          const firstOpenTab = sortedTabs.find((tab) =>
             uniqueJogos.some((j) => {
-              const jFase = traduzirFase(j.fase) || j.fase;
-              return jFase === fase && j.status === "agendado" && new Date(j.data_hora) > now;
+              return getTabKey(j) === tab && j.status === "agendado" && new Date(j.data_hora) > now;
             })
           );
-          setActiveTab(firstOpenFase || "Todos");
+          setActiveTab(firstOpenTab || "Todos");
         }
       }
 
@@ -183,11 +228,7 @@ const Palpites = () => {
   if (isLeague) {
     jogosFiltrados = activeTab === "Todos" ? jogos : jogos.filter((j) => j.rodada === activeTab);
   } else {
-    // Filtrar por FASE (não por rodada)
-    jogosFiltrados = activeTab === "Todos" ? jogos : jogos.filter((j) => {
-      const jFase = traduzirFase(j.fase) || j.fase;
-      return jFase === activeTab;
-    });
+    jogosFiltrados = activeTab === "Todos" ? jogos : jogos.filter((j) => getTabKey(j) === activeTab);
   }
 
   const jogosAbertos = jogosFiltrados.filter((j) => j.status === "agendado" && (new Date(j.data_hora).getTime() - now.getTime()) / (1000 * 60) > 10);
@@ -341,7 +382,6 @@ const PalpiteCard = ({ jogo, palpiteDB, localPlacar, onSetPlacar, onSalvar, salv
   const hasPalpite = !!palpiteDB;
   const hasChanges = hasPalpite && (localPlacar.a !== palpiteDB!.placar_time_a || localPlacar.b !== palpiteDB!.placar_time_b);
 
-  // Montar label do header: "Semifinal – Ida" ou "Final" ou "Quartas de Final"
   const faseLabel = traduzirFase(jogo.fase) || jogo.fase;
   const rodadaLabel = jogo.rodada;
   const headerParts = [faseLabel, rodadaLabel].filter(Boolean);
