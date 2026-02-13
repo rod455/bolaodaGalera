@@ -62,8 +62,8 @@ const Palpites = () => {
       setBolaoNome(bolao.nome);
 
       const tipo = (bolao.campeonatos as any)?.tipo;
-      // Liga (rodadas) apenas para campeonatos de pontos corridos
-      // Estaduais e copa_nacional usam modo de fases (mata-mata)
+      // Modo liga (rodadas): apenas para campeonatos de pontos corridos (Brasileirão)
+      // Estaduais, copa_nacional, mundial, continental = modo fases (mata-mata)
       const leagueMode = tipo === "nacional";
       setIsLeague(leagueMode);
 
@@ -93,17 +93,33 @@ const Palpites = () => {
           setActiveTab(currentRodada || sorted[sorted.length - 1] || "Todos");
         }
       } else {
+        // Modo fases: agrupar por fase traduzida
         const fasesSet = new Set<string>();
-        uniqueJogos.forEach((j) => { const f = traduzirFase(j.fase); if (f) fasesSet.add(f); });
+        uniqueJogos.forEach((j) => {
+          const f = traduzirFase(j.fase) || j.fase;
+          if (f) fasesSet.add(f);
+        });
         const sortedFases = Array.from(fasesSet).sort((a, b) => {
           const ia = FASE_ORDER.indexOf(a); const ib = FASE_ORDER.indexOf(b);
           return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
         });
         setFases(["Todos", ...sortedFases]);
+
         if (targetJogoId) {
           const tj = uniqueJogos.find((j) => j.id === targetJogoId);
-          setActiveTab(tj?.fase ? (traduzirFase(tj.fase) || "Todos") : "Todos");
-        } else { setActiveTab("Todos"); }
+          const tjFase = tj?.fase ? (traduzirFase(tj.fase) || tj.fase) : "Todos";
+          setActiveTab(tjFase || "Todos");
+        } else {
+          // Auto-selecionar a primeira fase que tem jogos abertos
+          const now = new Date();
+          const firstOpenFase = sortedFases.find((fase) =>
+            uniqueJogos.some((j) => {
+              const jFase = traduzirFase(j.fase) || j.fase;
+              return jFase === fase && j.status === "agendado" && new Date(j.data_hora) > now;
+            })
+          );
+          setActiveTab(firstOpenFase || "Todos");
+        }
       }
 
       if (uniqueJogos.length > 0) {
@@ -164,8 +180,15 @@ const Palpites = () => {
 
   const now = new Date();
   let jogosFiltrados: Jogo[];
-  if (isLeague) { jogosFiltrados = activeTab === "Todos" ? jogos : jogos.filter((j) => j.rodada === activeTab); }
-  else { jogosFiltrados = activeTab === "Todos" ? jogos : jogos.filter((j) => traduzirFase(j.fase) === activeTab); }
+  if (isLeague) {
+    jogosFiltrados = activeTab === "Todos" ? jogos : jogos.filter((j) => j.rodada === activeTab);
+  } else {
+    // Filtrar por FASE (não por rodada)
+    jogosFiltrados = activeTab === "Todos" ? jogos : jogos.filter((j) => {
+      const jFase = traduzirFase(j.fase) || j.fase;
+      return jFase === activeTab;
+    });
+  }
 
   const jogosAbertos = jogosFiltrados.filter((j) => j.status === "agendado" && (new Date(j.data_hora).getTime() - now.getTime()) / (1000 * 60) > 10);
   const jogosFechados = jogosFiltrados.filter((j) => j.status === "agendado" && (new Date(j.data_hora).getTime() - now.getTime()) / (1000 * 60) <= 10);
@@ -299,7 +322,7 @@ const Palpites = () => {
       {jogosFiltrados.length === 0 && (
         <Card className="rounded-2xl">
           <CardContent className="py-10 text-center">
-            <p className="text-sm text-muted-foreground">Nenhum jogo encontrado para esta rodada.</p>
+            <p className="text-sm text-muted-foreground">Nenhum jogo encontrado para esta fase.</p>
           </CardContent>
         </Card>
       )}
@@ -318,12 +341,18 @@ const PalpiteCard = ({ jogo, palpiteDB, localPlacar, onSetPlacar, onSalvar, salv
   const hasPalpite = !!palpiteDB;
   const hasChanges = hasPalpite && (localPlacar.a !== palpiteDB!.placar_time_a || localPlacar.b !== palpiteDB!.placar_time_b);
 
+  // Montar label do header: "Semifinal – Ida" ou "Final" ou "Quartas de Final"
+  const faseLabel = traduzirFase(jogo.fase) || jogo.fase;
+  const rodadaLabel = jogo.rodada;
+  const headerParts = [faseLabel, rodadaLabel].filter(Boolean);
+  const headerText = headerParts.join(" – ");
+
   return (
     <Card id={`jogo-${jogo.id}`} className={`rounded-2xl shadow-sm overflow-hidden transition-all ${!editable && !isEncerrado ? "opacity-75" : ""}`}>
-      {(jogo.fase || jogo.rodada) && (
+      {headerText && (
         <div className={`px-4 py-2 border-b ${isEncerrado ? "bg-gray-50" : "bg-copa-green-50"}`}>
           <p className={`text-xs font-semibold ${isEncerrado ? "text-gray-500" : "text-copa-green-600"}`}>
-            {[traduzirFase(jogo.fase), jogo.rodada].filter(Boolean).join(" – ")}
+            {headerText}
           </p>
         </div>
       )}
