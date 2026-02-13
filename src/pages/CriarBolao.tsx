@@ -79,6 +79,7 @@ const CriarBolao = () => {
   const [timesDisponiveis, setTimesDisponiveis] = useState<TimeOption[]>([]);
   const [loadingTimes, setLoadingTimes] = useState(false);
   const [buscaTime, setBuscaTime] = useState("");
+  const [timeModalOpen, setTimeModalOpen] = useState(false);
 
   const { plano: userPlano } = useUserPlan();
 
@@ -100,9 +101,11 @@ const CriarBolao = () => {
   useEffect(() => {
     if (campeonatoSelecionado && modoSelecionado === "fanatico") {
       loadTimes(campeonatoSelecionado);
+      setTimeModalOpen(true);
     } else {
       setTimesDisponiveis([]);
       setTimeFavorito("");
+      setTimeModalOpen(false);
     }
   }, [campeonatoSelecionado, modoSelecionado]);
 
@@ -197,6 +200,7 @@ const CriarBolao = () => {
         codigo_convite: codigo, criador_id: user.id, campeonato_id: campeonatoSelecionado,
         modo_pontuacao: modoSelecionado, regras_ativas: regrasAtivas,
         is_publico: false, is_nacional: false,
+        ...(isFanatico ? { time_favorito: timeFavorito } : {}),
       }).select("id").single();
 
       if (error) throw error;
@@ -206,11 +210,9 @@ const CriarBolao = () => {
         { onConflict: "id" }
       );
 
-      // Inserir participante com time_favorito se fanático
       await supabase.from("bolao_participantes").insert({
         bolao_id: newBolao.id,
         user_id: user.id,
-        ...(isFanatico ? { time_favorito: timeFavorito } : {}),
       });
 
       toast.success(`Bolão criado! Código: ${codigo}`);
@@ -384,7 +386,7 @@ const CriarBolao = () => {
                           <div key={camp.id}
                             onClick={() => {
                               setCampeonatoSelecionado(camp.id);
-                              scrollToSection(isFanatico ? "section-time" : "section-imagem");
+                              scrollToSection("section-imagem");
                             }}
                             className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
                               selected ? "bg-copa-green-50 border border-copa-green-300" : "hover:bg-muted/50"
@@ -421,58 +423,20 @@ const CriarBolao = () => {
         </CardContent>
       </Card>
 
-      {/* 3.5 Time do Coração (só para modo Fanático) */}
+      {/* 3.5 Time do Coração - badge indicador (só para modo Fanático) */}
       {isFanatico && campeonatoSelecionado && (
-        <Card id="section-time" className="rounded-2xl shadow-sm border-red-100 animate-fade-in">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-bold flex items-center gap-2">
-              <Heart className="w-5 h-5 text-red-500 fill-red-500" />
-              Time do Coração
-            </CardTitle>
-            <p className="text-xs text-muted-foreground mt-1">
-              Você só palpitará nos jogos deste time. Cada participante escolherá o seu ao entrar.
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {loadingTimes ? (
-              <div className="flex items-center justify-center py-4"><Loader2 className="w-5 h-5 text-red-400 animate-spin" /></div>
-            ) : (
-              <>
-                {timesDisponiveis.length > 8 && (
-                  <div className="relative">
-                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <Input placeholder="Buscar time..." value={buscaTime} onChange={(e) => setBuscaTime(e.target.value)}
-                      className="h-10 rounded-xl bg-muted/50 pl-9" />
-                  </div>
-                )}
-                <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto">
-                  {timesFiltrados.map((time) => {
-                    const selected = timeFavorito === time.nome;
-                    return (
-                      <div key={time.nome}
-                        onClick={() => { setTimeFavorito(time.nome); scrollToSection("section-imagem"); }}
-                        className={`flex items-center gap-2 p-2.5 rounded-xl cursor-pointer transition-all border ${
-                          selected ? "border-red-400 bg-red-50" : "border-gray-100 hover:bg-muted/50"
-                        }`}>
-                        {time.logo ? (
-                          <img src={time.logo} alt={time.nome} className="w-7 h-7 object-contain flex-shrink-0"
-                            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                        ) : (
-                          <div className="w-7 h-7 bg-gray-200 rounded-full flex-shrink-0" />
-                        )}
-                        <span className={`text-xs font-medium truncate ${selected ? "text-red-700" : ""}`}>{time.nome}</span>
-                        {selected && <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500 ml-auto flex-shrink-0" />}
-                      </div>
-                    );
-                  })}
-                </div>
-                {timesFiltrados.length === 0 && (
-                  <p className="text-xs text-muted-foreground text-center py-2">Nenhum time encontrado</p>
-                )}
-              </>
-            )}
-          </CardContent>
-        </Card>
+        <div className="flex items-center justify-between bg-red-50 border border-red-200 rounded-xl px-4 py-3 animate-fade-in">
+          <div className="flex items-center gap-2">
+            <Heart className="w-4 h-4 text-red-500 fill-red-500" />
+            <span className="text-sm font-medium text-red-700">
+              {timeFavorito ? <>Time: <strong>{timeFavorito}</strong></> : "Escolha seu time do coração"}
+            </span>
+          </div>
+          <button onClick={() => setTimeModalOpen(true)}
+            className="text-xs font-bold text-red-600 bg-red-100 hover:bg-red-200 rounded-full px-3 py-1 transition-colors">
+            {timeFavorito ? "Alterar" : "Escolher"}
+          </button>
+        </div>
       )}
 
       {/* 4. Upload Cover */}
@@ -510,6 +474,7 @@ const CriarBolao = () => {
 
       <RegrasModal regras={infoModal} open={!!infoModal} onClose={() => setInfoModal(null)} />
 
+      {/* Modal: Configurar Regras */}
       {modoRegras && (
         <Dialog open={regrasModalOpen} onOpenChange={(v) => { if (!v) { setRegrasModalOpen(false); scrollToSection("section-campeonato"); } }}>
           <DialogContent className="max-w-md rounded-2xl">
@@ -550,6 +515,70 @@ const CriarBolao = () => {
                 Confirmar
               </Button>
             </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Modal: Time do Coração (Fanático) */}
+      {isFanatico && (
+        <Dialog open={timeModalOpen} onOpenChange={(v) => { if (!v && timeFavorito) setTimeModalOpen(false); }}>
+          <DialogContent className="max-w-md rounded-2xl max-h-[80vh] overflow-hidden flex flex-col">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-bold text-red-700 flex items-center gap-2">
+                <Heart className="w-5 h-5 text-red-500 fill-red-500" />
+                Time do Coração
+              </DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                Você só palpitará nos jogos deste time. Cada participante escolherá o seu ao entrar no bolão.
+              </DialogDescription>
+            </DialogHeader>
+            {loadingTimes ? (
+              <div className="flex items-center justify-center py-8"><Loader2 className="w-5 h-5 text-red-400 animate-spin" /></div>
+            ) : (
+              <div className="space-y-3 flex-1 overflow-hidden flex flex-col">
+                {timesDisponiveis.length > 8 && (
+                  <div className="relative flex-shrink-0">
+                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <Input placeholder="Buscar time..." value={buscaTime} onChange={(e) => setBuscaTime(e.target.value)}
+                      className="h-10 rounded-xl bg-muted/50 pl-9" />
+                  </div>
+                )}
+                <div className="grid grid-cols-2 gap-2 overflow-y-auto max-h-60 pr-1">
+                  {timesFiltrados.map((time) => {
+                    const selected = timeFavorito === time.nome;
+                    return (
+                      <div key={time.nome}
+                        onClick={() => setTimeFavorito(time.nome)}
+                        className={`flex items-center gap-2 p-2.5 rounded-xl cursor-pointer transition-all border ${
+                          selected ? "border-red-400 bg-red-50 shadow-sm" : "border-gray-100 hover:bg-muted/50"
+                        }`}>
+                        {time.logo ? (
+                          <img src={time.logo} alt={time.nome} className="w-7 h-7 object-contain flex-shrink-0"
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                        ) : (
+                          <div className="w-7 h-7 bg-gray-200 rounded-full flex-shrink-0" />
+                        )}
+                        <span className={`text-xs font-medium truncate ${selected ? "text-red-700 font-bold" : ""}`}>{time.nome}</span>
+                        {selected && <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500 ml-auto flex-shrink-0" />}
+                      </div>
+                    );
+                  })}
+                </div>
+                {timesFiltrados.length === 0 && (
+                  <p className="text-xs text-muted-foreground text-center py-2">Nenhum time encontrado</p>
+                )}
+                <div className="flex items-center justify-between pt-2 border-t flex-shrink-0">
+                  <span className="text-xs text-muted-foreground">
+                    {timeFavorito ? <span className="text-red-600 font-medium">{timeFavorito}</span> : "Nenhum time selecionado"}
+                  </span>
+                  <Button size="sm" onClick={() => setTimeModalOpen(false)}
+                    disabled={!timeFavorito}
+                    className="bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg">
+                    Confirmar
+                  </Button>
+                </div>
+              </div>
+            )}
           </DialogContent>
         </Dialog>
       )}

@@ -64,7 +64,7 @@ const Palpites = () => {
   const loadData = async () => {
     try {
       const { data: bolao } = await supabase
-        .from("boloes").select("nome, campeonato_id, modo_pontuacao, campeonatos(tipo)")
+        .from("boloes").select("nome, campeonato_id, modo_pontuacao, time_favorito, campeonatos(tipo)")
         .eq("id", id).single();
       if (!bolao || !bolao.campeonato_id) { toast.error("Bolão não encontrado"); navigate(`/bolao/${id}`); return; }
       setBolaoNome(bolao.nome);
@@ -76,23 +76,17 @@ const Palpites = () => {
       const fanaticoMode = bolao.modo_pontuacao === "fanatico";
       setIsFanatico(fanaticoMode);
 
-      let userTimeFavorito: string | null = null;
-      if (fanaticoMode && user) {
-        const { data: participante } = await supabase
-          .from("bolao_participantes").select("time_favorito")
-          .eq("bolao_id", id).eq("user_id", user.id).single();
-        userTimeFavorito = participante?.time_favorito || null;
-        setTimeFavorito(userTimeFavorito);
-      }
+      const bolaoTimeFavorito = fanaticoMode ? (bolao as any).time_favorito || null : null;
+      setTimeFavorito(bolaoTimeFavorito);
 
       const { data: allGames } = await supabase
         .from("jogos").select("*").eq("campeonato_id", bolao.campeonato_id)
         .order("data_hora", { ascending: true });
 
       let uniqueJogos = (allGames || []) as Jogo[];
-      if (fanaticoMode && userTimeFavorito) {
+      if (fanaticoMode && bolaoTimeFavorito) {
         uniqueJogos = uniqueJogos.filter(
-          (j) => j.time_a === userTimeFavorito || j.time_b === userTimeFavorito
+          (j) => j.time_a === bolaoTimeFavorito || j.time_b === bolaoTimeFavorito
         );
       }
       setJogos(uniqueJogos);
