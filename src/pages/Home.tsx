@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   PlusCircle, Keyboard, Users, MapPin, ChevronRight, GripVertical,
@@ -35,12 +35,41 @@ interface PendingAlert {
   horasRestantes: number;
 }
 
+/* ─── Helpers para persistir ordem dos bolões ─── */
+const STORAGE_KEY = "bolao_order_privados";
+
+const loadSavedOrder = (): string[] => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : [];
+  } catch { return []; }
+};
+
+const saveOrder = (ids: string[]) => {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(ids)); } catch {}
+};
+
+const sortByOrder = (boloes: Bolao[], savedOrder: string[]): Bolao[] => {
+  if (savedOrder.length === 0) return boloes;
+  const orderMap = new Map(savedOrder.map((id, idx) => [id, idx]));
+  return [...boloes].sort((a, b) => {
+    const ia = orderMap.get(a.id) ?? 999;
+    const ib = orderMap.get(b.id) ?? 999;
+    return ia - ib;
+  });
+};
+
+/* ─── BolaoCard (privados) ─── */
 const BolaoCard = ({
   bolao, participantes, posicao, isParticipating, onAccess, onInfoClick, imgFallback,
+  onTouchDragStart, onTouchDragOver, onTouchDragEnd,
   draggable, onDragStart, onDragOver, onDrop, onDragEnd, isDragging,
 }: {
   bolao: Bolao; participantes: number; posicao: number | null;
   isParticipating?: boolean; onAccess: () => void; onInfoClick?: () => void; imgFallback: string;
+  onTouchDragStart?: (e: React.TouchEvent) => void;
+  onTouchDragOver?: (e: React.TouchEvent) => void;
+  onTouchDragEnd?: (e: React.TouchEvent) => void;
   draggable?: boolean; onDragStart?: () => void;
   onDragOver?: (e: React.DragEvent) => void;
   onDrop?: () => void; onDragEnd?: () => void; isDragging?: boolean;
@@ -57,7 +86,8 @@ const BolaoCard = ({
       <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between">
         <h3 className="text-white font-bold text-lg leading-tight">{bolao.nome}</h3>
         {draggable && (
-          <div className="bg-white/20 backdrop-blur-sm rounded-lg p-1 cursor-grab active:cursor-grabbing">
+          <div className="bg-white/20 backdrop-blur-sm rounded-lg p-1 cursor-grab active:cursor-grabbing"
+            onTouchStart={onTouchDragStart} onTouchMove={onTouchDragOver} onTouchEnd={onTouchDragEnd}>
             <GripVertical className="w-4 h-4 text-white" />
           </div>
         )}
@@ -96,6 +126,7 @@ const BolaoCard = ({
   </Card>
 );
 
+/* ─── NacionalCard ─── */
 const NacionalCard = ({
   bolao, participantes, proximoJogo, isParticipando, onEntrar, onAcessar, onInfoClick, imgFallback, joining,
 }: {
@@ -181,6 +212,7 @@ const NacionalCard = ({
   </Card>
 );
 
+/* ═══ HOME ═══ */
 const Home = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -202,6 +234,10 @@ const Home = () => {
   const [joiningByCode, setJoiningByCode] = useState(false);
   const [regrasModal, setRegrasModal] = useState<string | null>(null);
 
+  // Touch drag state
+  const touchDragRef = useRef<{ startIdx: number; currentIdx: number } | null>(null);
+  const cardRefsMap = useRef<Map<number, HTMLElement>>(new Map());
+
   useEffect(() => { if (user) loadData(); }, [user]);
 
   const loadData = async () => {
@@ -222,7 +258,11 @@ const Home = () => {
         }
       });
 
-      setPrivados(privList);
+      // Aplicar ordem salva
+      const savedOrder = loadSavedOrder();
+      const sorted = sortByOrder(privList, savedOrder);
+
+      setPrivados(sorted);
       setUserPosicoes(posicoes);
       setUserBolaoIds(participandoIds);
 
@@ -294,10 +334,7 @@ const Home = () => {
         nome: user.user_metadata?.nome || user.email?.split("@")[0] || "Usuário",
         email: user.email || "",
       });
-      if (error && error.code !== "23505") {
-        console.error("Erro ao criar perfil:", error);
-        return false;
-      }
+      if (error && error.code !== "23505") { console.error("Erro ao criar perfil:", error); return false; }
     }
     return true;
   };
@@ -313,8 +350,7 @@ const Home = () => {
           toast.info("Você já está participando!");
           setUserBolaoIds((prev) => new Set(prev).add(bolaoId));
           navigate(`/bolao/${bolaoId}`);
-        }
-        else throw error;
+        } else throw error;
       } else {
         toast.success("Você entrou no bolão!");
         setUserBolaoIds((prev) => new Set(prev).add(bolaoId));
@@ -333,39 +369,58 @@ const Home = () => {
     setJoiningByCode(true);
     try {
       await ensureProfile();
-      const { data: bolao } = await supabase
-        .from("boloes")
-        .select("id, nome")
-        .eq("codigo_convite", codigoInput.trim().toUpperCase())
-        .maybeSingle();
+      const { data: bolao } = await supabase.from("boloes").select("id, nome").eq("codigo_convite", codigoInput.trim().toUpperCase()).maybeSingle();
       if (!bolao) { toast.error("Código inválido. Verifique e tente novamente."); return; }
-      const { error } = await supabase
-        .from("bolao_participantes")
-        .insert({ bolao_id: bolao.id, user_id: user.id });
+      const { error } = await supabase.from("bolao_participantes").insert({ bolao_id: bolao.id, user_id: user.id });
       if (error) {
-        if (error.code === "23505") {
-          toast.info("Você já está neste bolão!");
-          navigate(`/bolao/${bolao.id}`);
-        } else throw error;
-      } else {
-        toast.success(`Você entrou no "${bolao.nome}"!`);
-        navigate(`/bolao/${bolao.id}`);
-      }
+        if (error.code === "23505") { toast.info("Você já está neste bolão!"); navigate(`/bolao/${bolao.id}`); }
+        else throw error;
+      } else { toast.success(`Você entrou no "${bolao.nome}"!`); navigate(`/bolao/${bolao.id}`); }
     } catch (err: any) { toast.error(err.message || "Erro ao entrar no bolão"); }
     finally { setJoiningByCode(false); }
   };
+
   const dismissAlert = (e: React.MouseEvent, alertId: string) => { e.stopPropagation(); setDismissedAlerts((prev) => new Set(prev).add(alertId)); setDismissCount((c) => c + 1); };
 
+  /* ─── Drag & Drop (desktop) com persistência ─── */
   const handleDragStart = (s: "privados" | "nacionais", i: number) => { setDragIndex(i); setDragSection(s); };
   const handleDragOver = (e: React.DragEvent) => e.preventDefault();
   const handleDrop = (s: "privados" | "nacionais", ti: number) => {
     if (dragIndex === null || dragSection !== s) return;
     const l = s === "privados" ? [...privados] : [...nacionais];
     const [m] = l.splice(dragIndex, 1); l.splice(ti, 0, m);
-    s === "privados" ? setPrivados(l) : setNacionais(l);
+    if (s === "privados") {
+      setPrivados(l);
+      saveOrder(l.map((b) => b.id));
+    } else {
+      setNacionais(l);
+    }
     setDragIndex(null); setDragSection(null);
   };
   const handleDragEnd = () => { setDragIndex(null); setDragSection(null); };
+
+  /* ─── Touch Drag (mobile) com persistência ─── */
+  const handleTouchDragStart = (idx: number) => (e: React.TouchEvent) => {
+    touchDragRef.current = { startIdx: idx, currentIdx: idx };
+  };
+
+  const handleTouchDragOver = (idx: number) => (e: React.TouchEvent) => {
+    if (!touchDragRef.current) return;
+    touchDragRef.current.currentIdx = idx;
+  };
+
+  const handleTouchDragEnd = () => (e: React.TouchEvent) => {
+    if (!touchDragRef.current) return;
+    const { startIdx, currentIdx } = touchDragRef.current;
+    if (startIdx !== currentIdx) {
+      const l = [...privados];
+      const [m] = l.splice(startIdx, 1);
+      l.splice(currentIdx, 0, m);
+      setPrivados(l);
+      saveOrder(l.map((b) => b.id));
+    }
+    touchDragRef.current = null;
+  };
 
   if (loading) return <LoadingSpinner />;
 
@@ -414,7 +469,6 @@ const Home = () => {
         </Button>
       </div>
 
-      {/* Inline Code Input */}
       {showCodeInput && (
         <Card className="rounded-2xl shadow-sm border-copa-gold-300 bg-copa-gold-50 animate-fade-in">
           <CardContent className="p-4">
@@ -455,7 +509,10 @@ const Home = () => {
                 imgFallback={FALLBACK_IMAGES[i % FALLBACK_IMAGES.length]} draggable
                 onDragStart={() => handleDragStart("privados", i)} onDragOver={handleDragOver}
                 onDrop={() => handleDrop("privados", i)} onDragEnd={handleDragEnd}
-                isDragging={dragSection === "privados" && dragIndex === i} />
+                isDragging={dragSection === "privados" && dragIndex === i}
+                onTouchDragStart={handleTouchDragStart(i)}
+                onTouchDragOver={handleTouchDragOver(i)}
+                onTouchDragEnd={handleTouchDragEnd()} />
             ))}
           </div>
         ) : (
