@@ -29,7 +29,7 @@ const AppLayout = () => {
       <header className="bg-copa-green-500 text-white sticky top-0 z-50 shadow-md">
         <div className="container max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src="https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/0AF9A524-CD73-412E-B881-5A87C85C9C3D%20(1).PNG" alt="Bolão na Copa" className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
+            <img src="https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/604913%20(512%20x%20512%20px).png" alt="Bolão na Copa" className="w-10 h-10 object-contain flex-shrink-0" />
             <h1 className="text-lg font-bold tracking-tight">Bolão na Copa</h1>
           </div>
           <button
