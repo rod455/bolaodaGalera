@@ -97,7 +97,7 @@ export const MODOS_PONTUACAO: ModoConfig[] = [
   { id: "tudo_ou_nada", nome: "Tudo ou Nada", subtitulo: "Placar exato ou zero", plano: "premium_pro" },
 ];
 
-// ── Tradução de fases (football-data.org → PT-BR) ──
+// ── Tradução de fases (football-data.org → PT-BR + fases manuais) ──
 export const FASE_TRADUCAO: Record<string, string> = {
   GROUP_STAGE: "Fase de Grupos",
   LAST_16: "Oitavas de Final",
@@ -115,6 +115,7 @@ export const FASE_TRADUCAO: Record<string, string> = {
   ROUND_OF_16: "Oitavas de Final",
   ROUND_OF_32: "Fase Eliminatória",
   // Fases já em português (jogos manuais dos estaduais/Copa do Brasil)
+  "Última Rodada": "Última Rodada",
   "Oitavas de Final": "Oitavas de Final",
   "Quartas de Final": "Quartas de Final",
   "Semifinal": "Semifinal",
@@ -133,6 +134,7 @@ export const FALLBACK_IMAGES = [
 export const FASE_ORDER = [
   "Fase de Grupos",
   "Fase Eliminatória",
+  "Última Rodada",
   "Oitavas de Final",
   "Quartas de Final",
   "Semifinal",
