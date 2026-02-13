@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft, Trophy, Users, ChevronRight, Medal, Loader2, Clock,
-  CheckCircle2, AlertCircle, Lock, Share2, Copy, LogOut, Trash2, Eye, ChevronDown, ChevronUp,
+  CheckCircle2, AlertCircle, Lock, Share2, Copy, LogOut, Trash2, Eye, ChevronDown, ChevronUp, Info, Check, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,6 +38,84 @@ const MODO_LABELS: Record<string, string> = {
   profissional: "Profissional",
   fanatico: "Torcedor Fanático",
   tudo_ou_nada: "Tudo ou Nada",
+};
+
+interface RegraInfo {
+  titulo: string;
+  descricao: string;
+  regras: { texto: string; pontos: string; acerto: boolean }[];
+}
+
+const MODO_REGRAS: Record<string, RegraInfo> = {
+  casual: {
+    titulo: "Modo Casual",
+    descricao: "Modo simples para quem está começando.",
+    regras: [
+      { texto: "Placar exato", pontos: "10 pts", acerto: true },
+      { texto: "Acertar o vencedor", pontos: "3 pts", acerto: true },
+      { texto: "Empate com gols errados", pontos: "5 pts", acerto: true },
+    ],
+  },
+  placar_correto: {
+    titulo: "Modo Placar Correto",
+    descricao: "Acertou o placar, pontuou. Errou, zero.",
+    regras: [
+      { texto: "Placar exato", pontos: "10 pts", acerto: true },
+      { texto: "Errou o placar", pontos: "0 pts", acerto: false },
+    ],
+  },
+  amador: {
+    titulo: "Modo Amador",
+    descricao: "Intermediário, com pontos por diferença de gols.",
+    regras: [
+      { texto: "Placar exato", pontos: "10 pts", acerto: true },
+      { texto: "Acertar o vencedor", pontos: "3 pts", acerto: true },
+      { texto: "Empate com gols errados", pontos: "5 pts", acerto: true },
+      { texto: "Diferença de gols correta", pontos: "3 pts", acerto: true },
+      { texto: "Gols do vencedor", pontos: "2 pts", acerto: true },
+      { texto: "Gols do perdedor", pontos: "2 pts", acerto: true },
+    ],
+  },
+  vencedor_ou_nada: {
+    titulo: "Modo Vencedor ou Nada",
+    descricao: "Acerte o vencedor ou o empate.",
+    regras: [
+      { texto: "Vencedor / Empate", pontos: "5 pts", acerto: true },
+      { texto: "Errou", pontos: "0 pts", acerto: false },
+    ],
+  },
+  profissional: {
+    titulo: "Modo Profissional",
+    descricao: "Modo completo com pontuações altas.",
+    regras: [
+      { texto: "Placar exato", pontos: "20 pts", acerto: true },
+      { texto: "Vencedor + diferença de gols", pontos: "10 pts", acerto: true },
+      { texto: "Acertar o vencedor", pontos: "5 pts", acerto: true },
+      { texto: "Empate com gols errados", pontos: "8 pts", acerto: true },
+      { texto: "Gols do vencedor", pontos: "2 pts", acerto: true },
+      { texto: "Gols do perdedor", pontos: "2 pts", acerto: true },
+    ],
+  },
+  fanatico: {
+    titulo: "Modo Torcedor Fanático",
+    descricao: "Só jogos do seu time, pontuação máxima.",
+    regras: [
+      { texto: "Placar exato", pontos: "20 pts", acerto: true },
+      { texto: "Vencedor + diferença de gols", pontos: "10 pts", acerto: true },
+      { texto: "Acertar o vencedor", pontos: "5 pts", acerto: true },
+      { texto: "Empate com gols errados", pontos: "8 pts", acerto: true },
+      { texto: "Gols do vencedor", pontos: "2 pts", acerto: true },
+      { texto: "Gols do perdedor", pontos: "2 pts", acerto: true },
+    ],
+  },
+  tudo_ou_nada: {
+    titulo: "Modo Tudo ou Nada",
+    descricao: "Placar exato ou zero. Para os corajosos!",
+    regras: [
+      { texto: "Placar exato", pontos: "10 pts", acerto: true },
+      { texto: "Errou o placar", pontos: "0 pts", acerto: false },
+    ],
+  },
 };
 
 interface Jogo {
@@ -215,6 +293,7 @@ const BolaoPage = () => {
   // Palpites dos participantes (private bolão only)
   const [expandedJogo, setExpandedJogo] = useState<string | null>(null);
   const [participantPalpites, setParticipantPalpites] = useState<Record<string, { nome: string; avatar: string; placar_a: number; placar_b: number; pontos: number | null }[]>>({});
+  const [showRegrasModal, setShowRegrasModal] = useState(false);
   const [loadingPalpites, setLoadingPalpites] = useState<string | null>(null);
 
   useEffect(() => {
@@ -595,9 +674,18 @@ const BolaoPage = () => {
         <div className="flex-1 min-w-0">
           <h2 className="text-2xl font-bold truncate">{bolao.nome}</h2>
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[10px] font-bold bg-copa-green-100 text-copa-green-700 rounded-full px-2 py-0.5">
+            <button
+              onClick={() => setShowRegrasModal(true)}
+              className="flex items-center gap-1 text-[10px] font-bold bg-copa-green-100 text-copa-green-700 rounded-full px-2 py-0.5 hover:bg-copa-green-200 transition-colors"
+            >
               {MODO_LABELS[bolao.modo_pontuacao] || bolao.modo_pontuacao}
-            </span>
+              <Info className="w-3 h-3" />
+            </button>
+            {bolao.campeonatos?.nome_popular && (
+              <span className="text-[10px] font-semibold bg-muted text-muted-foreground rounded-full px-2 py-0.5">
+                {bolao.campeonatos.nome_popular}
+              </span>
+            )}
             <p className="text-sm text-muted-foreground">
               {totalParticipantes.toLocaleString("pt-BR")} participantes
             </p>
@@ -1014,11 +1102,47 @@ const BolaoPage = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Regras de Pontuação Modal */}
+      {bolao && MODO_REGRAS[bolao.modo_pontuacao] && (
+        <Dialog open={showRegrasModal} onOpenChange={setShowRegrasModal}>
+          <DialogContent className="max-w-md rounded-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-bold text-copa-green-700">
+                {MODO_REGRAS[bolao.modo_pontuacao].titulo}
+              </DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                {MODO_REGRAS[bolao.modo_pontuacao].descricao}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2 mt-2">
+              {MODO_REGRAS[bolao.modo_pontuacao].regras.map((regra, i) => (
+                <div
+                  key={i}
+                  className={`flex items-center justify-between py-2 px-3 rounded-lg ${
+                    regra.acerto ? "bg-copa-green-50" : "bg-red-50"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    {regra.acerto ? (
+                      <Check className="w-4 h-4 text-copa-green-500 flex-shrink-0" />
+                    ) : (
+                      <X className="w-4 h-4 text-red-500 flex-shrink-0" />
+                    )}
+                    <span className="text-sm">{regra.texto}</span>
+                  </div>
+                  <span className={`text-sm font-bold whitespace-nowrap ml-2 ${regra.acerto ? "text-copa-green-600" : "text-red-500"}`}>
+                    {regra.pontos}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
-
-/* ─── ExpandableJogoRow: Shows game info + expandable participant palpites ─── */
 
 const ExpandableJogoRow = ({
   jogo,
