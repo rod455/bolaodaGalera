@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import RegrasModal from "@/components/RegrasModal";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import EventosEspeciais from "@/components/EventosEspeciais";
 import type { Bolao, Jogo, Palpite, RankingEntry } from "@/lib/types";
 import { MODO_LABELS, MODO_REGRAS } from "@/lib/constants";
 import { formatDataJogo, traduzirFase, getInitials } from "@/lib/formatters";
@@ -635,6 +636,14 @@ const BolaoPage = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* ═══ 1.5 EVENTOS ESPECIAIS ═══ */}
+      <EventosEspeciais
+        bolaoId={id!}
+        campeonatoId={bolao.campeonato_id}
+        isCriador={bolao.criador_id === user?.id}
+        userId={user?.id || ""}
+      />
 
       {/* ═══ 2. PALPITES - Próximos jogos clicáveis ═══ */}
       <Card className="rounded-2xl shadow-sm border-copa-gold-200 bg-copa-gold-50">
