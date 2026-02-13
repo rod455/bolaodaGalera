@@ -213,7 +213,13 @@ const Perfil = () => {
                   <div className="w-5 h-5 bg-copa-green-100 rounded-full flex items-center justify-center">
                     <Check className="w-3 h-3 text-copa-green-600" />
                   </div>
-                  <span className="text-sm">Participar do bolão nacional</span>
+                  <span className="text-sm">Participar de até 3 bolões</span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-5 h-5 bg-copa-green-100 rounded-full flex items-center justify-center">
+                    <Check className="w-3 h-3 text-copa-green-600" />
+                  </div>
+                  <span className="text-sm">Modo Casual</span>
                 </div>
                 <div className="flex items-center gap-2.5">
                   <div className="w-5 h-5 bg-copa-green-100 rounded-full flex items-center justify-center">
@@ -232,7 +238,7 @@ const Perfil = () => {
               </Button>
               <p className="text-center text-xs text-muted-foreground">Mais vantagens exclusivas</p>
             </>
-          ) : (
+          ) : userPlano === "premium" ? (
             <>
               <div className="space-y-2.5">
                 <div className="flex items-center gap-2.5">
@@ -245,49 +251,149 @@ const Perfil = () => {
                   <div className="w-5 h-5 bg-copa-green-100 rounded-full flex items-center justify-center">
                     <Check className="w-3 h-3 text-copa-green-600" />
                   </div>
-                  <span className="text-sm">Sem anúncios</span>
+                  <span className="text-sm">Modos Casual + Amador e Vencedor ou Nada</span>
                 </div>
-                {userPlano === "premium_pro" && (
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-5 h-5 bg-copa-green-100 rounded-full flex items-center justify-center">
-                      <Check className="w-3 h-3 text-copa-green-600" />
-                    </div>
-                    <span className="text-sm">Todos os modos de pontuação</span>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-5 h-5 bg-copa-green-100 rounded-full flex items-center justify-center">
+                    <Check className="w-3 h-3 text-copa-green-600" />
                   </div>
-                )}
+                  <span className="text-sm">Participantes ilimitados no bolão</span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-5 h-5 bg-copa-green-100 rounded-full flex items-center justify-center">
+                    <Check className="w-3 h-3 text-copa-green-600" />
+                  </div>
+                  <span className="text-sm">Sem anúncios entre telas</span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-5 h-5 bg-copa-green-100 rounded-full flex items-center justify-center">
+                    <Check className="w-3 h-3 text-copa-green-600" />
+                  </div>
+                  <span className="text-sm">Filtros personalizados</span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-5 h-5 bg-copa-green-100 rounded-full flex items-center justify-center">
+                    <Check className="w-3 h-3 text-copa-green-600" />
+                  </div>
+                  <span className="text-sm">Badge "Premium" no perfil</span>
+                </div>
               </div>
 
               <div className="flex gap-2">
                 <Button
-                  onClick={async () => {
-                    setLoadingPortal(true);
-                    try {
-                      const { data, error } = await supabase.functions.invoke("create-portal");
-                      if (error) throw error;
-                      if (data?.url) window.location.href = data.url;
-                    } catch {
-                      toast.error("Erro ao abrir gerenciamento.");
-                    } finally {
-                      setLoadingPortal(false);
-                    }
-                  }}
-                  disabled={loadingPortal}
+                  onClick={() => navigate("/planos")}
                   variant="outline"
                   className="flex-1 h-11 border-copa-gold-400 text-copa-gold-600 hover:bg-copa-gold-50 font-semibold rounded-xl"
                 >
-                  {loadingPortal ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <ExternalLink className="w-4 h-4 mr-2" />}
-                  Gerenciar assinatura
+                  <Crown className="w-4 h-4 mr-2" />
+                  Ver planos
                 </Button>
-                {userPlano === "premium" && (
-                  <Button
-                    onClick={() => navigate("/planos")}
-                    className="h-11 bg-copa-green-500 hover:bg-copa-green-600 text-white font-semibold rounded-xl px-4"
-                  >
-                    <Zap className="w-4 h-4 mr-1" />
-                    Upgrade PRO
-                  </Button>
-                )}
+                <Button
+                  onClick={() => navigate("/planos")}
+                  className="h-11 bg-copa-green-500 hover:bg-copa-green-600 text-white font-semibold rounded-xl px-4"
+                >
+                  <Zap className="w-4 h-4 mr-1" />
+                  Upgrade PRO
+                </Button>
               </div>
+
+              <Button
+                onClick={async () => {
+                  setLoadingPortal(true);
+                  try {
+                    const { data, error } = await supabase.functions.invoke("create-portal");
+                    if (error) throw error;
+                    if (data?.url) window.location.href = data.url;
+                  } catch {
+                    toast.error("Erro ao abrir cancelamento.");
+                  } finally {
+                    setLoadingPortal(false);
+                  }
+                }}
+                disabled={loadingPortal}
+                variant="ghost"
+                className="w-full h-9 text-xs text-muted-foreground hover:text-destructive"
+              >
+                {loadingPortal ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : null}
+                Cancelar assinatura
+              </Button>
+            </>
+          ) : (
+            <>
+              <div className="space-y-2.5">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-5 h-5 bg-copa-green-100 rounded-full flex items-center justify-center">
+                    <Check className="w-3 h-3 text-copa-green-600" />
+                  </div>
+                  <span className="text-sm">Todos os benefícios Premium</span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-5 h-5 bg-copa-green-100 rounded-full flex items-center justify-center">
+                    <Check className="w-3 h-3 text-copa-green-600" />
+                  </div>
+                  <span className="text-sm">Modos Profissional e Torcedor Fanático</span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-5 h-5 bg-copa-green-100 rounded-full flex items-center justify-center">
+                    <Check className="w-3 h-3 text-copa-green-600" />
+                  </div>
+                  <span className="text-sm">Modo Tudo ou Nada</span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-5 h-5 bg-copa-green-100 rounded-full flex items-center justify-center">
+                    <Check className="w-3 h-3 text-copa-green-600" />
+                  </div>
+                  <span className="text-sm">Modo Vencedor ou Nada</span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-5 h-5 bg-copa-green-100 rounded-full flex items-center justify-center">
+                    <Check className="w-3 h-3 text-copa-green-600" />
+                  </div>
+                  <span className="text-sm">Sem anúncios entre telas</span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-5 h-5 bg-copa-green-100 rounded-full flex items-center justify-center">
+                    <Check className="w-3 h-3 text-copa-green-600" />
+                  </div>
+                  <span className="text-sm">Bolões privados com senha</span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-5 h-5 bg-copa-green-100 rounded-full flex items-center justify-center">
+                    <Check className="w-3 h-3 text-copa-green-600" />
+                  </div>
+                  <span className="text-sm">Suporte prioritário</span>
+                </div>
+              </div>
+
+              <Button
+                onClick={() => navigate("/planos")}
+                variant="outline"
+                className="w-full h-11 border-copa-gold-400 text-copa-gold-600 hover:bg-copa-gold-50 font-semibold rounded-xl"
+              >
+                <Crown className="w-4 h-4 mr-2" />
+                Ver planos
+              </Button>
+
+              <Button
+                onClick={async () => {
+                  setLoadingPortal(true);
+                  try {
+                    const { data, error } = await supabase.functions.invoke("create-portal");
+                    if (error) throw error;
+                    if (data?.url) window.location.href = data.url;
+                  } catch {
+                    toast.error("Erro ao abrir cancelamento.");
+                  } finally {
+                    setLoadingPortal(false);
+                  }
+                }}
+                disabled={loadingPortal}
+                variant="ghost"
+                className="w-full h-9 text-xs text-muted-foreground hover:text-destructive"
+              >
+                {loadingPortal ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : null}
+                Cancelar assinatura
+              </Button>
             </>
           )}
         </CardContent>
