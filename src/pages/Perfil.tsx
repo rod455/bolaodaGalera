@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Mail, Lock, Trash2, Crown, Check, Pencil, LogOut, Camera, Loader2, Zap, ExternalLink } from "lucide-react";
+import { User, Mail, Lock, Trash2, Crown, Check, Pencil, LogOut, Camera, Loader2, Zap, ExternalLink, Share2, UserPlus, Copy, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -505,6 +505,58 @@ const Perfil = () => {
             <Trash2 className="w-4 h-4" />
             Excluir conta
           </button>
+        </CardContent>
+      </Card>
+
+      {/* Convidar Amigos */}
+      <Card className="rounded-2xl shadow-sm border-copa-green-200 overflow-hidden">
+        <CardContent className="p-5">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-full bg-copa-green-100 flex items-center justify-center">
+              <Gift className="w-5 h-5 text-copa-green-600" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold">Convidar Amigos</h3>
+              <p className="text-xs text-muted-foreground">Traga seus amigos para competir nos bolões</p>
+            </div>
+          </div>
+
+          <div className="bg-copa-green-50 rounded-xl p-3 mb-3">
+            <p className="text-sm text-copa-green-700 text-center">
+              Compartilhe o link e seus amigos poderão se cadastrar diretamente!
+            </p>
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              onClick={() => {
+                const url = `${window.location.origin}/auth`;
+                navigator.clipboard.writeText(url);
+                toast.success("Link copiado!");
+              }}
+              variant="outline"
+              className="flex-1 h-11 border-copa-green-300 text-copa-green-600 hover:bg-copa-green-50 font-semibold rounded-xl"
+            >
+              <Copy className="w-4 h-4 mr-2" />
+              Copiar link
+            </Button>
+            <Button
+              onClick={() => {
+                const url = `${window.location.origin}/auth`;
+                const text = `🏆 Vem jogar no Bolão na Copa! Faça seus palpites e dispute com seus amigos. Cadastre-se aqui: ${url}`;
+                if (navigator.share) {
+                  navigator.share({ title: "Bolão na Copa", text, url }).catch(() => {});
+                } else {
+                  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+                  window.open(whatsappUrl, "_blank");
+                }
+              }}
+              className="flex-1 h-11 bg-copa-green-500 hover:bg-copa-green-600 text-white font-semibold rounded-xl"
+            >
+              <Share2 className="w-4 h-4 mr-2" />
+              Compartilhar
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
