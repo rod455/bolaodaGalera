@@ -25,8 +25,19 @@ interface Bolao {
   imagem_url: string | null;
   is_nacional: boolean;
   campeonato_id: string | null;
+  modo_pontuacao?: string;
   campeonatos?: Campeonato | null;
 }
+
+const MODO_LABELS: Record<string, string> = {
+  casual: "Casual",
+  placar_correto: "Placar Correto",
+  amador: "Amador",
+  vencedor_ou_nada: "Vencedor ou Nada",
+  profissional: "Profissional",
+  fanatico: "Torcedor Fanático",
+  tudo_ou_nada: "Tudo ou Nada",
+};
 
 interface ProximoJogo {
   time_a: string;
@@ -98,7 +109,12 @@ const BolaoCard = ({
     <CardContent className="p-4">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            {bolao.modo_pontuacao && (
+              <span className="text-[10px] font-bold bg-copa-green-100 text-copa-green-700 rounded-full px-2 py-0.5">
+                {MODO_LABELS[bolao.modo_pontuacao] || bolao.modo_pontuacao}
+              </span>
+            )}
             <span className="text-xs text-muted-foreground flex items-center gap-1">
               <Users className="w-3 h-3" />{participantes.toLocaleString("pt-BR")} participantes
             </span>
@@ -175,9 +191,16 @@ const NacionalCard = ({
         </div>
       )}
       <div className="flex items-center justify-between">
-        <span className="text-xs text-muted-foreground flex items-center gap-1">
-          <Users className="w-3 h-3" />{participantes.toLocaleString("pt-BR")} participantes
-        </span>
+        <div className="flex items-center gap-2 flex-wrap">
+          {bolao.modo_pontuacao && (
+            <span className="text-[10px] font-bold bg-copa-green-100 text-copa-green-700 rounded-full px-2 py-0.5">
+              {MODO_LABELS[bolao.modo_pontuacao] || bolao.modo_pontuacao}
+            </span>
+          )}
+          <span className="text-xs text-muted-foreground flex items-center gap-1">
+            <Users className="w-3 h-3" />{participantes.toLocaleString("pt-BR")} participantes
+          </span>
+        </div>
         {isParticipando ? (
           <Button size="sm" className="bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800 font-semibold rounded-lg" onClick={onAcessar}>
             Acessar <ChevronRight className="w-4 h-4 ml-1" />

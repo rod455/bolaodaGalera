@@ -23,11 +23,22 @@ interface Bolao {
   is_nacional: boolean;
   codigo_convite: string | null;
   criador_id: string | null;
+  modo_pontuacao: string;
   campeonatos?: {
     logo_url: string;
     nome_popular: string;
   } | null;
 }
+
+const MODO_LABELS: Record<string, string> = {
+  casual: "Casual",
+  placar_correto: "Placar Correto",
+  amador: "Amador",
+  vencedor_ou_nada: "Vencedor ou Nada",
+  profissional: "Profissional",
+  fanatico: "Torcedor Fanático",
+  tudo_ou_nada: "Tudo ou Nada",
+};
 
 interface Jogo {
   id: string;
@@ -280,7 +291,7 @@ const BolaoPage = () => {
           ...(aoVivo || []),
           ...(emAndamento || []),
           ...(proximos || []),
-          ...(recentes || []).reverse(),
+          ...(recentes || []),
         ] as Jogo[];
 
         // Remove duplicates
@@ -564,8 +575,10 @@ const BolaoPage = () => {
   const jogosProximos = jogos.filter((j) => {
     if (j.status !== "agendado") return false;
     return new Date(j.data_hora).getTime() > now.getTime();
-  });
-  const jogosEncerrados = jogos.filter((j) => j.status === "encerrado");
+  }).sort((a, b) => new Date(a.data_hora).getTime() - new Date(b.data_hora).getTime());
+  const jogosEncerrados = jogos
+    .filter((j) => j.status === "encerrado")
+    .sort((a, b) => new Date(b.data_hora).getTime() - new Date(a.data_hora).getTime());
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -581,7 +594,10 @@ const BolaoPage = () => {
         </Button>
         <div className="flex-1 min-w-0">
           <h2 className="text-2xl font-bold truncate">{bolao.nome}</h2>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[10px] font-bold bg-copa-green-100 text-copa-green-700 rounded-full px-2 py-0.5">
+              {MODO_LABELS[bolao.modo_pontuacao] || bolao.modo_pontuacao}
+            </span>
             <p className="text-sm text-muted-foreground">
               {totalParticipantes.toLocaleString("pt-BR")} participantes
             </p>
