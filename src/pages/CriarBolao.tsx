@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Upload, Lock, Info, Check, Trophy, Loader2, X } from "lucide-react";
+import { ArrowLeft, Upload, Lock, Info, Check, Trophy, Loader2, X, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +23,37 @@ interface Campeonato {
   tipo: string;
 }
 
+/* ─── Categorias de campeonatos ─── */
+interface CategoriaConfig {
+  id: string;
+  label: string;
+  emoji: string;
+  tipos: string[];
+  keywords: string[];
+}
+
+const CATEGORIAS: CategoriaConfig[] = [
+  { id: "estaduais", label: "Campeonatos Estaduais", emoji: "🏟️", tipos: ["estadual"], keywords: ["Mineiro", "Paulistão", "Gaúcho", "Carioca", "Baiano", "Catarinense", "Paranaense", "Pernambucano"] },
+  { id: "nacionais", label: "Campeonatos Nacionais", emoji: "🇧🇷", tipos: ["nacional"], keywords: ["Brasileirão", "Copa do Brasil", "Serie A", "Serie B"] },
+  { id: "copa_mundo", label: "Copa do Mundo", emoji: "🌍", tipos: ["mundial"], keywords: ["Copa do Mundo", "World Cup"] },
+  { id: "europeus", label: "Campeonatos Europeus", emoji: "⭐", tipos: ["continental"], keywords: ["Champions League", "Europa League", "Conference League", "Premier League", "La Liga", "Bundesliga", "Serie A IT", "Ligue 1"] },
+];
+
+const categorizeCampeonato = (camp: Campeonato): string => {
+  // Primeiro tenta por tipo
+  for (const cat of CATEGORIAS) {
+    if (camp.tipo && cat.tipos.includes(camp.tipo)) return cat.id;
+  }
+  // Fallback por nome
+  const nome = (camp.nome_popular || camp.nome || "").toLowerCase();
+  for (const cat of CATEGORIAS) {
+    for (const kw of cat.keywords) {
+      if (nome.includes(kw.toLowerCase())) return cat.id;
+    }
+  }
+  return "nacionais"; // default
+};
+
 const CriarBolao = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -38,12 +69,12 @@ const CriarBolao = () => {
   const [infoModal, setInfoModal] = useState<RegraInfo | null>(null);
   const [regrasAtivas, setRegrasAtivas] = useState<string[]>([]);
   const [regrasModalOpen, setRegrasModalOpen] = useState(false);
+  const [categoriaAberta, setCategoriaAberta] = useState<string | null>(null);
 
   const { plano: userPlano } = useUserPlan();
 
   useEffect(() => { loadCampeonatos(); }, []);
 
-  // Quando muda o modo, ativa todas as regras positivas e abre modal
   useEffect(() => {
     if (modoSelecionado && MODO_REGRAS[modoSelecionado]) {
       const todasRegras = MODO_REGRAS[modoSelecionado].regras
@@ -137,12 +168,6 @@ const CriarBolao = () => {
     return null;
   };
 
-  const getTipoIcon = (tipo: string) => {
-    if (tipo === "mundial") return "🌍";
-    if (tipo === "continental") return "⭐";
-    return "🏆";
-  };
-
   const scrollToSection = (sectionId: string) => {
     setTimeout(() => {
       const el = document.getElementById(sectionId);
@@ -152,6 +177,19 @@ const CriarBolao = () => {
 
   const modoRegras = modoSelecionado ? MODO_REGRAS[modoSelecionado] : null;
   const totalRegrasPositivas = modoRegras ? modoRegras.regras.filter((r) => r.acerto).length : 0;
+
+  // Agrupar campeonatos por categoria
+  const campeonatosPorCategoria = CATEGORIAS.map((cat) => ({
+    ...cat,
+    campeonatos: campeonatos.filter((c) => categorizeCampeonato(c) === cat.id),
+  })).filter((cat) => cat.campeonatos.length > 0);
+
+  // Achar categoria do campeonato selecionado (para manter aberta)
+  const campSelecionado = campeonatos.find((c) => c.id === campeonatoSelecionado);
+
+  const toggleCategoria = (catId: string) => {
+    setCategoriaAberta((prev) => prev === catId ? null : catId);
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -238,7 +276,7 @@ const CriarBolao = () => {
         </CardContent>
       </Card>
 
-      {/* 3. Campeonato Selector */}
+      {/* 3. Campeonato por Categoria */}
       <Card id="section-campeonato" className="rounded-2xl shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-bold flex items-center gap-2">
@@ -246,34 +284,80 @@ const CriarBolao = () => {
             <Trophy className="w-4 h-4 text-copa-gold-500" />
             Campeonato
           </CardTitle>
-          <p className="text-xs text-muted-foreground mt-1">Selecione o campeonato que será usado no bolão</p>
+          <p className="text-xs text-muted-foreground mt-1">Escolha a categoria e selecione o campeonato</p>
         </CardHeader>
         <CardContent className="space-y-2">
           {loadingCampeonatos ? (
             <div className="flex items-center justify-center py-4"><Loader2 className="w-5 h-5 text-copa-green-500 animate-spin" /></div>
           ) : (
-            campeonatos.map((camp) => {
-              const selected = campeonatoSelecionado === camp.id;
+            campeonatosPorCategoria.map((cat) => {
+              const isOpen = categoriaAberta === cat.id;
+              const hasSelected = cat.campeonatos.some((c) => c.id === campeonatoSelecionado);
               return (
-                <div key={camp.id}
-                  onClick={() => { setCampeonatoSelecionado(camp.id); scrollToSection("section-imagem"); }}
-                  className={`flex items-center gap-3 p-3.5 rounded-xl cursor-pointer transition-all border-2 ${
-                    selected ? "border-copa-green-500 bg-copa-green-50" : "border-transparent bg-muted/50 hover:bg-muted/80"
-                  }`}>
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                    selected ? "border-copa-green-500 bg-copa-green-500" : "border-gray-300"}`}>
-                    {selected && <Check className="w-3 h-3 text-white" />}
-                  </div>
-                  {camp.logo_url ? (
-                    <img src={camp.logo_url} alt={camp.nome_popular} className="w-8 h-8 object-contain flex-shrink-0"
-                      onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                  ) : (
-                    <span className="text-xl flex-shrink-0">{getTipoIcon(camp.tipo)}</span>
+                <div key={cat.id} className="rounded-xl overflow-hidden border border-gray-100">
+                  {/* Categoria header */}
+                  <button
+                    onClick={() => toggleCategoria(cat.id)}
+                    className={`w-full flex items-center justify-between px-4 py-3 transition-all ${
+                      isOpen
+                        ? "bg-copa-green-50"
+                        : hasSelected
+                        ? "bg-copa-green-50/50"
+                        : "bg-muted/40 hover:bg-muted/70"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg">{cat.emoji}</span>
+                      <div className="text-left">
+                        <span className="text-sm font-semibold">{cat.label}</span>
+                        <span className="text-[10px] text-muted-foreground ml-2">
+                          {cat.campeonatos.length} {cat.campeonatos.length === 1 ? "campeonato" : "campeonatos"}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {hasSelected && !isOpen && (
+                        <span className="text-[10px] font-bold text-copa-green-600 bg-copa-green-100 rounded-full px-2 py-0.5">
+                          {campSelecionado?.nome_popular || campSelecionado?.nome}
+                        </span>
+                      )}
+                      <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                    </div>
+                  </button>
+
+                  {/* Campeonatos dentro da categoria */}
+                  {isOpen && (
+                    <div className="px-2 py-2 space-y-1 bg-white animate-fade-in">
+                      {cat.campeonatos.map((camp) => {
+                        const selected = campeonatoSelecionado === camp.id;
+                        return (
+                          <div key={camp.id}
+                            onClick={() => { setCampeonatoSelecionado(camp.id); scrollToSection("section-imagem"); }}
+                            className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
+                              selected ? "bg-copa-green-50 border border-copa-green-300" : "hover:bg-muted/50"
+                            }`}>
+                            <div className={`w-4.5 h-4.5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                              selected ? "border-copa-green-500 bg-copa-green-500" : "border-gray-300"
+                            }`} style={{ width: 18, height: 18 }}>
+                              {selected && <Check className="w-3 h-3 text-white" />}
+                            </div>
+                            {camp.logo_url ? (
+                              <img src={camp.logo_url} alt={camp.nome_popular} className="w-7 h-7 object-contain flex-shrink-0"
+                                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                            ) : (
+                              <div className="w-7 h-7 bg-muted rounded-full flex items-center justify-center flex-shrink-0">
+                                <Trophy className="w-3.5 h-3.5 text-muted-foreground" />
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <span className="text-sm font-medium block truncate">{camp.nome_popular || camp.nome}</span>
+                              <span className="text-[10px] text-muted-foreground">Temporada {camp.temporada}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   )}
-                  <div className="flex-1 min-w-0">
-                    <span className="text-sm font-semibold block truncate">{camp.nome_popular || camp.nome}</span>
-                    <span className="text-xs text-muted-foreground">Temporada {camp.temporada}</span>
-                  </div>
                 </div>
               );
             })
@@ -317,10 +401,10 @@ const CriarBolao = () => {
         {criando ? (<><Loader2 className="w-4 h-4 mr-2 animate-spin" />Criando...</>) : "Criar Bolão"}
       </Button>
 
-      {/* ═══ MODAL: Regras Info (somente leitura) ═══ */}
+      {/* Modal: Regras Info (somente leitura) */}
       <RegrasModal regras={infoModal} open={!!infoModal} onClose={() => setInfoModal(null)} />
 
-      {/* ═══ MODAL: Configurar Regras (com checkboxes) ═══ */}
+      {/* Modal: Configurar Regras (com checkboxes) */}
       {modoRegras && (
         <Dialog open={regrasModalOpen} onOpenChange={(v) => { if (!v) { setRegrasModalOpen(false); scrollToSection("section-campeonato"); } }}>
           <DialogContent className="max-w-md rounded-2xl">
