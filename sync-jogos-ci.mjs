@@ -5,9 +5,9 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
-const FOOTBALL_DATA_TOKEN = process.env.FOOTBALL_DATA_TOKEN;
+const SUPABASE_URL = process.env.hvgsdxcdufekksxgqyoj.supabase.co;
+const SUPABASE_SERVICE_KEY = process.env.eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2Z3NkeGNkdWZla2tzeGdxeW9qIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDkwODcxOSwiZXhwIjoyMDg2NDg0NzE5fQ.XfQhnbccVV-m4_pmGqNr18WxGZrnuWzDFiNP7UBmmeo;
+const FOOTBALL_DATA_TOKEN = process.env.d71ade413a674835a2285ad938ba30f6;
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY || !FOOTBALL_DATA_TOKEN) {
   console.error('❌ Variáveis de ambiente não configuradas.');
