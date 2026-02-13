@@ -88,7 +88,7 @@ const Auth = () => {
           <img src="https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/604913%20(512%20x%20512%20px).png"
             alt="Bolão na Copa" className="w-44 h-44 object-contain drop-shadow-lg" />
           <p className="text-copa-green-100 text-sm">
-            {isLogin ? "Entre no seu bolão" : "Crie sua conta"}
+            {isLogin ? "Seu palpite, sua torcida, sua galera." : "Crie sua conta"}
           </p>
         </div>
 
