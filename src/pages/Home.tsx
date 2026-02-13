@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   PlusCircle, Keyboard, Users, MapPin, ChevronRight, GripVertical,
-  Trophy, Globe, LogIn, AlertTriangle, Clock, X, Loader2, Calendar, Search,
+  Trophy, Globe, LogIn, AlertTriangle, Clock, X, Loader2, Calendar, Search, Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -111,8 +111,9 @@ const BolaoCard = ({
         <div className="space-y-1">
           <div className="flex items-center gap-2 flex-wrap">
             {bolao.modo_pontuacao && (
-              <span className="text-[10px] font-bold bg-copa-green-100 text-copa-green-700 rounded-full px-2 py-0.5">
-                {MODO_LABELS[bolao.modo_pontuacao] || bolao.modo_pontuacao}
+              <span className="text-[10px] font-bold bg-copa-green-100 text-copa-green-700 rounded-full px-2 py-0.5 flex items-center gap-1">
+                Modo de Jogo: {MODO_LABELS[bolao.modo_pontuacao] || bolao.modo_pontuacao}
+                <Info className="w-3 h-3" />
               </span>
             )}
             <span className="text-xs text-muted-foreground flex items-center gap-1">
@@ -193,8 +194,9 @@ const NacionalCard = ({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 flex-wrap">
           {bolao.modo_pontuacao && (
-            <span className="text-[10px] font-bold bg-copa-green-100 text-copa-green-700 rounded-full px-2 py-0.5">
-              {MODO_LABELS[bolao.modo_pontuacao] || bolao.modo_pontuacao}
+            <span className="text-[10px] font-bold bg-copa-green-100 text-copa-green-700 rounded-full px-2 py-0.5 flex items-center gap-1">
+              Modo de Jogo: {MODO_LABELS[bolao.modo_pontuacao] || bolao.modo_pontuacao}
+              <Info className="w-3 h-3" />
             </span>
           )}
           <span className="text-xs text-muted-foreground flex items-center gap-1">
