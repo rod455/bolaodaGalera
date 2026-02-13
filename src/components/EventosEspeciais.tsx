@@ -133,6 +133,7 @@ const EventosEspeciais = ({ bolaoId, campeonatoId, isCriador, userId }: EventosE
                       {evento.tipo === "multiplicador" && `x${evento.config?.multiplicador || 2} pontos`}
                       {evento.tipo === "mini_campeonato" && `${evento.config?.rodadas?.length || 0} rodadas`}
                       {evento.tipo === "desafio_jogo" && `+${evento.config?.bonus || 0} pts bônus`}
+                      {evento.config?.conta_principal ? " • Conta no geral" : " • Ranking separado"}
                     </span>
                   </div>
                   <div className="flex items-center gap-1">
@@ -188,6 +189,9 @@ const CreateEventoModal = ({ open, onClose, bolaoId, campeonatoId, userId, onCre
   const [jogoSelecionado, setJogoSelecionado] = useState<string | null>(null);
   const [bonus, setBonus] = useState(15);
 
+  // Conta no bolão principal?
+  const [contaPrincipal, setContaPrincipal] = useState(true);
+
   // Dados do campeonato
   const [rodadas, setRodadas] = useState<string[]>([]);
   const [jogos, setJogos] = useState<Jogo[]>([]);
@@ -202,6 +206,7 @@ const CreateEventoModal = ({ open, onClose, bolaoId, campeonatoId, userId, onCre
     setStep("tipo"); setTipoSelecionado(null); setNome("");
     setMultiplicador(2); setRodadasSelecionadas([]);
     setMiniRodadas([]); setJogoSelecionado(null); setBonus(15);
+    setContaPrincipal(true);
   };
 
   const loadCampeonatoData = async () => {
@@ -241,16 +246,16 @@ const CreateEventoModal = ({ open, onClose, bolaoId, campeonatoId, userId, onCre
     if (!nome.trim()) { toast.error("Dê um nome ao evento"); return; }
     if (!tipoSelecionado) return;
 
-    let config: any = {};
+    let config: any = { conta_principal: contaPrincipal };
     if (tipoSelecionado === "multiplicador") {
       if (rodadasSelecionadas.length === 0) { toast.error("Selecione pelo menos uma rodada"); return; }
-      config = { multiplicador, rodadas: rodadasSelecionadas };
+      config = { ...config, multiplicador, rodadas: rodadasSelecionadas };
     } else if (tipoSelecionado === "mini_campeonato") {
       if (miniRodadas.length < 2) { toast.error("Selecione pelo menos 2 rodadas"); return; }
-      config = { rodadas: miniRodadas };
+      config = { ...config, rodadas: miniRodadas };
     } else if (tipoSelecionado === "desafio_jogo") {
       if (!jogoSelecionado) { toast.error("Selecione um jogo"); return; }
-      config = { jogo_id: jogoSelecionado, bonus };
+      config = { ...config, jogo_id: jogoSelecionado, bonus };
     }
 
     setCriando(true);
@@ -456,6 +461,26 @@ const CreateEventoModal = ({ open, onClose, bolaoId, campeonatoId, userId, onCre
                 )}
               </>
             )}
+
+            {/* Conta no principal? */}
+            <div onClick={() => setContaPrincipal(!contaPrincipal)}
+              className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border ${
+                contaPrincipal ? "border-copa-green-300 bg-copa-green-50" : "border-gray-200 bg-gray-50"
+              }`}>
+              <div className={`w-[20px] h-[20px] rounded flex items-center justify-center flex-shrink-0 transition-colors ${
+                contaPrincipal ? "bg-copa-green-500" : "bg-white border-2 border-gray-300"
+              }`}>
+                {contaPrincipal && <Check className="w-3 h-3 text-white" />}
+              </div>
+              <div className="flex-1">
+                <span className="text-sm font-medium">Conta no bolão principal</span>
+                <p className="text-[10px] text-muted-foreground">
+                  {contaPrincipal
+                    ? "Pontos extras serão somados ao ranking geral do bolão"
+                    : "Pontos ficam 100% separados, só no ranking do evento"}
+                </p>
+              </div>
+            </div>
 
             {/* Botões */}
             <div className="flex gap-2 pt-2 border-t">
