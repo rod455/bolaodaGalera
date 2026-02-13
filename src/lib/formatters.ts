@@ -34,7 +34,7 @@ export function formatDataJogo(isoDate: string): string {
   const weekday = d.toLocaleDateString("pt-BR", { weekday: "long" });
   const capitalWeekday = weekday.charAt(0).toUpperCase() + weekday.slice(1);
 
-  if (diffDays >= 2 && diffDays < 7) {
+  if (diffDays >= 2 && diffDays <= 3) {
     return `${capitalWeekday} • ${hora}`;
   }
 
