@@ -114,6 +114,12 @@ export const FASE_TRADUCAO: Record<string, string> = {
   REGULAR_SEASON: "Liga",
   ROUND_OF_16: "Oitavas de Final",
   ROUND_OF_32: "Fase Eliminatória",
+  // Fases já em português (jogos manuais dos estaduais/Copa do Brasil)
+  "Oitavas de Final": "Oitavas de Final",
+  "Quartas de Final": "Quartas de Final",
+  "Semifinal": "Semifinal",
+  "Final": "Final",
+  "Terceiro Lugar": "Terceiro Lugar",
 };
 
 // ── Imagens fallback para cards de bolão ──
