@@ -18,33 +18,23 @@ export function formatDataJogo(isoDate: string): string {
   const d = new Date(isoDate);
   const now = new Date();
 
-  const isToday =
-    d.getDate() === now.getDate() &&
-    d.getMonth() === now.getMonth() &&
-    d.getFullYear() === now.getFullYear();
-
-  const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const isTomorrow =
-    d.getDate() === tomorrow.getDate() &&
-    d.getMonth() === tomorrow.getMonth() &&
-    d.getFullYear() === tomorrow.getFullYear();
+  // Comparar usando data local (sem hora) para evitar problemas de fuso
+  const dLocal = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const nowLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diffDays = Math.round((dLocal.getTime() - nowLocal.getTime()) / (1000 * 60 * 60 * 24));
 
   const hora = d.toLocaleTimeString("pt-BR", {
     hour: "2-digit",
     minute: "2-digit",
   });
 
-  if (isToday) return `Hoje • ${hora}`;
-  if (isTomorrow) return `Amanhã • ${hora}`;
+  if (diffDays === 0) return `Hoje • ${hora}`;
+  if (diffDays === 1) return `Amanhã • ${hora}`;
 
   const weekday = d.toLocaleDateString("pt-BR", { weekday: "long" });
   const capitalWeekday = weekday.charAt(0).toUpperCase() + weekday.slice(1);
 
-  const diffDays = Math.floor(
-    (d.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
-  );
-  if (diffDays < 7 && diffDays >= 0) {
+  if (diffDays >= 2 && diffDays < 7) {
     return `${capitalWeekday} • ${hora}`;
   }
 
