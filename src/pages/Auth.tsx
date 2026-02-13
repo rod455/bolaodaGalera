@@ -1,12 +1,22 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
-import { Trophy, Eye, EyeOff, Mail, Lock, UserPlus, ArrowLeft } from "lucide-react";
+import { Trophy, Eye, EyeOff, Mail, Lock, UserPlus, ArrowLeft, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+
+const TIMES_BRASIL = [
+  "América-MG", "Athletico-PR", "Atlético-MG", "Bahia", "Botafogo", "Bragantino",
+  "Ceará", "Chapecoense", "Corinthians", "Coritiba", "Criciúma", "Cruzeiro",
+  "Cuiabá", "Flamengo", "Fluminense", "Fortaleza", "Goiás", "Grêmio",
+  "Internacional", "Juventude", "Mirassol", "Náutico", "Novorizontino",
+  "Operário-PR", "Palmeiras", "Paysandu", "Ponte Preta", "Santos",
+  "São Paulo", "Sport", "Vasco", "Vitória",
+  "Seleção Brasileira", "Não tenho",
+];
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -18,6 +28,25 @@ const Auth = () => {
   const [name, setName] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [timeCoracao, setTimeCoracao] = useState("");
+  const [timeBusca, setTimeBusca] = useState("");
+  const [showTimeSuggestions, setShowTimeSuggestions] = useState(false);
+  const timeInputRef = useRef<HTMLDivElement>(null);
+
+  // Fechar sugestões ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (timeInputRef.current && !timeInputRef.current.contains(e.target as Node)) {
+        setShowTimeSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const timesFiltrados = timeBusca.length > 0
+    ? TIMES_BRASIL.filter((t) => t.toLowerCase().includes(timeBusca.toLowerCase()))
+    : [];
 
   // If already logged in, redirect to home
   if (!loading && session) {
@@ -56,6 +85,7 @@ const Auth = () => {
           options: {
             data: {
               nome: name,
+              time_coracao: timeCoracao || null,
             },
           },
         });
@@ -173,6 +203,59 @@ const Auth = () => {
                     className="pl-10 h-12 bg-muted/50 border-copa-green-100 focus:border-copa-green-500"
                     required={!isLogin}
                   />
+                </div>
+              </div>
+            )}
+
+            {!isLogin && (
+              <div className="space-y-2" ref={timeInputRef}>
+                <Label className="text-sm font-medium text-copa-green-700">
+                  Time do coração
+                </Label>
+                <div className="relative">
+                  <Heart className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Digite para buscar..."
+                    value={timeCoracao || timeBusca}
+                    onChange={(e) => {
+                      setTimeCoracao("");
+                      setTimeBusca(e.target.value);
+                      setShowTimeSuggestions(true);
+                    }}
+                    onFocus={() => { if (timeBusca.length > 0) setShowTimeSuggestions(true); }}
+                    className={`pl-10 h-12 bg-muted/50 border-copa-green-100 focus:border-copa-green-500 ${
+                      timeCoracao ? "text-copa-green-700 font-medium" : ""
+                    }`}
+                  />
+                  {timeCoracao && (
+                    <button type="button"
+                      onClick={() => { setTimeCoracao(""); setTimeBusca(""); }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs">
+                      ✕
+                    </button>
+                  )}
+                  {showTimeSuggestions && timesFiltrados.length > 0 && (
+                    <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-copa-green-200 rounded-xl shadow-lg max-h-40 overflow-y-auto">
+                      {timesFiltrados.map((time) => (
+                        <button key={time} type="button"
+                          onClick={() => {
+                            setTimeCoracao(time);
+                            setTimeBusca("");
+                            setShowTimeSuggestions(false);
+                          }}
+                          className="w-full text-left px-4 py-2.5 text-sm hover:bg-copa-green-50 transition-colors flex items-center gap-2">
+                          {time === "Não tenho" ? (
+                            <span className="text-muted-foreground">{time}</span>
+                          ) : (
+                            <>
+                              <Heart className="w-3.5 h-3.5 text-red-400" />
+                              <span>{time}</span>
+                            </>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
