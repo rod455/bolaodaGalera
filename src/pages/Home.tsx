@@ -2,11 +2,14 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   PlusCircle, Keyboard, Users, MapPin, ChevronRight, GripVertical,
-  Trophy, Globe, LogIn, AlertTriangle, Clock, X, Loader2, Calendar, Search, Info,
+  Trophy, Globe, LogIn, AlertTriangle, Clock, X, Loader2, Calendar, Search, Info, Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -37,6 +40,50 @@ const MODO_LABELS: Record<string, string> = {
   profissional: "Profissional",
   fanatico: "Torcedor Fanático",
   tudo_ou_nada: "Tudo ou Nada",
+};
+
+const MODO_REGRAS: Record<string, { titulo: string; descricao: string; regras: { texto: string; pontos: string; acerto: boolean }[] }> = {
+  casual: { titulo: "Modo Casual", descricao: "Modo simples para quem está começando.", regras: [
+    { texto: "Placar exato", pontos: "10 pts", acerto: true },
+    { texto: "Acertar o vencedor", pontos: "3 pts", acerto: true },
+    { texto: "Empate com gols errados", pontos: "5 pts", acerto: true },
+  ]},
+  placar_correto: { titulo: "Placar Correto", descricao: "Acertou o placar, pontuou. Errou, zero.", regras: [
+    { texto: "Placar exato", pontos: "10 pts", acerto: true },
+    { texto: "Errou o placar", pontos: "0 pts", acerto: false },
+  ]},
+  amador: { titulo: "Modo Amador", descricao: "Intermediário, com pontos por diferença de gols.", regras: [
+    { texto: "Placar exato", pontos: "10 pts", acerto: true },
+    { texto: "Acertar o vencedor", pontos: "3 pts", acerto: true },
+    { texto: "Empate com gols errados", pontos: "5 pts", acerto: true },
+    { texto: "Diferença de gols correta", pontos: "3 pts", acerto: true },
+    { texto: "Gols do vencedor", pontos: "2 pts", acerto: true },
+    { texto: "Gols do perdedor", pontos: "2 pts", acerto: true },
+  ]},
+  vencedor_ou_nada: { titulo: "Vencedor ou Nada", descricao: "Acerte o vencedor ou o empate.", regras: [
+    { texto: "Vencedor / Empate", pontos: "5 pts", acerto: true },
+    { texto: "Errou", pontos: "0 pts", acerto: false },
+  ]},
+  profissional: { titulo: "Modo Profissional", descricao: "Modo completo com pontuações altas.", regras: [
+    { texto: "Placar exato", pontos: "20 pts", acerto: true },
+    { texto: "Vencedor + diferença de gols", pontos: "10 pts", acerto: true },
+    { texto: "Acertar o vencedor", pontos: "5 pts", acerto: true },
+    { texto: "Empate com gols errados", pontos: "8 pts", acerto: true },
+    { texto: "Gols do vencedor", pontos: "2 pts", acerto: true },
+    { texto: "Gols do perdedor", pontos: "2 pts", acerto: true },
+  ]},
+  fanatico: { titulo: "Torcedor Fanático", descricao: "Só jogos do seu time, pontuação máxima.", regras: [
+    { texto: "Placar exato", pontos: "20 pts", acerto: true },
+    { texto: "Vencedor + diferença de gols", pontos: "10 pts", acerto: true },
+    { texto: "Acertar o vencedor", pontos: "5 pts", acerto: true },
+    { texto: "Empate com gols errados", pontos: "8 pts", acerto: true },
+    { texto: "Gols do vencedor", pontos: "2 pts", acerto: true },
+    { texto: "Gols do perdedor", pontos: "2 pts", acerto: true },
+  ]},
+  tudo_ou_nada: { titulo: "Tudo ou Nada", descricao: "Placar exato ou zero.", regras: [
+    { texto: "Placar exato", pontos: "10 pts", acerto: true },
+    { texto: "Errou o placar", pontos: "0 pts", acerto: false },
+  ]},
 };
 
 interface ProximoJogo {
@@ -79,21 +126,21 @@ function formatDataJogo(isoDate: string): string {
 }
 
 const BolaoCard = ({
-  bolao, participantes, posicao, isParticipating, onAccess, imgFallback,
+  bolao, participantes, posicao, isParticipating, onAccess, onInfoClick, imgFallback,
   draggable, onDragStart, onDragOver, onDrop, onDragEnd, isDragging,
 }: {
   bolao: Bolao; participantes: number; posicao: number | null;
-  isParticipating?: boolean; onAccess: () => void; imgFallback: string;
+  isParticipating?: boolean; onAccess: () => void; onInfoClick?: () => void; imgFallback: string;
   draggable?: boolean; onDragStart?: () => void;
   onDragOver?: (e: React.DragEvent) => void;
   onDrop?: () => void; onDragEnd?: () => void; isDragging?: boolean;
 }) => (
   <Card
-    className={`overflow-hidden border-0 shadow-md hover:shadow-lg transition-all cursor-pointer rounded-2xl ${isDragging ? "opacity-40 scale-95" : ""}`}
+    className={`overflow-hidden border-0 shadow-md hover:shadow-lg transition-all rounded-2xl ${isDragging ? "opacity-40 scale-95" : ""}`}
     draggable={draggable} onDragStart={onDragStart} onDragOver={onDragOver}
-    onDrop={onDrop} onDragEnd={onDragEnd} onClick={onAccess}
+    onDrop={onDrop} onDragEnd={onDragEnd}
   >
-    <div className="relative h-36 overflow-hidden">
+    <div className="relative h-36 overflow-hidden cursor-pointer" onClick={onAccess}>
       <img src={bolao.imagem_url || imgFallback} alt={bolao.nome} className="w-full h-full object-cover"
         onError={(e) => { (e.target as HTMLImageElement).src = imgFallback; }} />
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
@@ -111,10 +158,13 @@ const BolaoCard = ({
         <div className="space-y-1">
           <div className="flex items-center gap-2 flex-wrap">
             {bolao.modo_pontuacao && (
-              <span className="text-[10px] font-bold bg-copa-green-100 text-copa-green-700 rounded-full px-2 py-0.5 flex items-center gap-1">
+              <button
+                onClick={(e) => { e.stopPropagation(); onInfoClick?.(); }}
+                className="text-[10px] font-bold bg-copa-green-100 text-copa-green-700 rounded-full px-2 py-0.5 flex items-center gap-1 hover:bg-copa-green-200 transition-colors"
+              >
                 Modo de Jogo: {MODO_LABELS[bolao.modo_pontuacao] || bolao.modo_pontuacao}
                 <Info className="w-3 h-3" />
-              </span>
+              </button>
             )}
             <span className="text-xs text-muted-foreground flex items-center gap-1">
               <Users className="w-3 h-3" />{participantes.toLocaleString("pt-BR")} participantes
@@ -137,11 +187,11 @@ const BolaoCard = ({
 );
 
 const NacionalCard = ({
-  bolao, participantes, proximoJogo, isParticipando, onEntrar, onAcessar, imgFallback, joining,
+  bolao, participantes, proximoJogo, isParticipando, onEntrar, onAcessar, onInfoClick, imgFallback, joining,
 }: {
   bolao: Bolao; participantes: number; proximoJogo: ProximoJogo | null;
   isParticipando: boolean; onEntrar: () => void; onAcessar: () => void;
-  imgFallback: string; joining: boolean;
+  onInfoClick?: () => void; imgFallback: string; joining: boolean;
 }) => (
   <Card className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-all rounded-2xl">
     <div className="relative h-40 overflow-hidden cursor-pointer"
@@ -194,10 +244,13 @@ const NacionalCard = ({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 flex-wrap">
           {bolao.modo_pontuacao && (
-            <span className="text-[10px] font-bold bg-copa-green-100 text-copa-green-700 rounded-full px-2 py-0.5 flex items-center gap-1">
+            <button
+              onClick={(e) => { e.stopPropagation(); onInfoClick?.(); }}
+              className="text-[10px] font-bold bg-copa-green-100 text-copa-green-700 rounded-full px-2 py-0.5 flex items-center gap-1 hover:bg-copa-green-200 transition-colors"
+            >
               Modo de Jogo: {MODO_LABELS[bolao.modo_pontuacao] || bolao.modo_pontuacao}
               <Info className="w-3 h-3" />
-            </span>
+            </button>
           )}
           <span className="text-xs text-muted-foreground flex items-center gap-1">
             <Users className="w-3 h-3" />{participantes.toLocaleString("pt-BR")} participantes
@@ -237,6 +290,7 @@ const Home = () => {
   const [showCodeInput, setShowCodeInput] = useState(false);
   const [codigoInput, setCodigoInput] = useState("");
   const [joiningByCode, setJoiningByCode] = useState(false);
+  const [regrasModal, setRegrasModal] = useState<string | null>(null);
 
   useEffect(() => { if (user) loadData(); }, [user]);
 
@@ -487,6 +541,7 @@ const Home = () => {
               <BolaoCard key={b.id} bolao={b} participantes={participantesCount[b.id] || 0}
                 posicao={userPosicoes[b.id] || null} isParticipating={true}
                 onAccess={() => navigate(`/bolao/${b.id}`)}
+                onInfoClick={() => setRegrasModal(b.modo_pontuacao || null)}
                 imgFallback={fallbackImages[i % fallbackImages.length]} draggable
                 onDragStart={() => handleDragStart("privados", i)} onDragOver={handleDragOver}
                 onDrop={() => handleDrop("privados", i)} onDragEnd={handleDragEnd}
@@ -531,6 +586,7 @@ const Home = () => {
             <NacionalCard key={b.id} bolao={b} participantes={participantesCount[b.id] || 0}
               proximoJogo={proximosJogos[b.id] || null} isParticipando={userBolaoIds.has(b.id)}
               onEntrar={() => handleEntrarNacional(b.id)} onAcessar={() => navigate(`/bolao/${b.id}`)}
+              onInfoClick={() => setRegrasModal(b.modo_pontuacao || null)}
               imgFallback={fallbackImages[i % fallbackImages.length]} joining={joiningBolao === b.id} />
           ))}
           {nacionais.length === 0 && (
@@ -538,6 +594,33 @@ const Home = () => {
           )}
         </div>
       </div>
+
+      {/* Modal Regras de Pontuação */}
+      {regrasModal && MODO_REGRAS[regrasModal] && (
+        <Dialog open={!!regrasModal} onOpenChange={() => setRegrasModal(null)}>
+          <DialogContent className="max-w-md rounded-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-bold text-copa-green-700">
+                {MODO_REGRAS[regrasModal].titulo}
+              </DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                {MODO_REGRAS[regrasModal].descricao}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2 mt-2">
+              {MODO_REGRAS[regrasModal].regras.map((regra, i) => (
+                <div key={i} className={`flex items-center justify-between py-2 px-3 rounded-lg ${regra.acerto ? "bg-copa-green-50" : "bg-red-50"}`}>
+                  <div className="flex items-center gap-2">
+                    {regra.acerto ? <Check className="w-4 h-4 text-copa-green-500 flex-shrink-0" /> : <X className="w-4 h-4 text-red-500 flex-shrink-0" />}
+                    <span className="text-sm">{regra.texto}</span>
+                  </div>
+                  <span className={`text-sm font-bold whitespace-nowrap ml-2 ${regra.acerto ? "text-copa-green-600" : "text-red-500"}`}>{regra.pontos}</span>
+                </div>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
