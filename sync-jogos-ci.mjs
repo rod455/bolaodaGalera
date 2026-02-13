@@ -1,22 +1,24 @@
 // ============================================
-// Bolão na Copa - Sync para CI (GitHub Actions)
-// Lê chaves de variáveis de ambiente
+// Bolão na Copa - Smart Live Sync (GitHub Actions)
+// Verifica últimos 3 dias + sync completo semanal
 // ============================================
 
 import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = process.env.hvgsdxcdufekksxgqyoj.supabase.co;
-const SUPABASE_SERVICE_KEY = process.env.eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2Z3NkeGNkdWZla2tzeGdxeW9qIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDkwODcxOSwiZXhwIjoyMDg2NDg0NzE5fQ.XfQhnbccVV-m4_pmGqNr18WxGZrnuWzDFiNP7UBmmeo;
-const FOOTBALL_DATA_TOKEN = process.env.d71ade413a674835a2285ad938ba30f6;
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
+const FOOTBALL_DATA_TOKEN = process.env.FOOTBALL_DATA_TOKEN;
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY || !FOOTBALL_DATA_TOKEN) {
-  console.error('❌ Variáveis de ambiente não configuradas.');
-  console.error('   Necessário: SUPABASE_URL, SUPABASE_SERVICE_KEY, FOOTBALL_DATA_TOKEN');
+  console.log('❌ Variáveis de ambiente não configuradas.');
   process.exit(1);
 }
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
+const isFullSync = process.argv.includes('--full');
+
+// ---- Helpers ----
 async function fdFetch(endpoint) {
   const url = `https://api.football-data.org/v4${endpoint}`;
   const res = await fetch(url, {
@@ -46,28 +48,55 @@ function mapStatus(apiStatus) {
   return map[apiStatus] || 'agendado';
 }
 
-async function syncLiveScores() {
-  console.log('⚡ GitHub Actions - Atualizando placares ao vivo\n');
+const FASE_MAP = {
+  GROUP_STAGE: 'Fase de Grupos', LAST_16: 'Oitavas de Final',
+  LAST_32: 'Fase Eliminatória', QUARTER_FINALS: 'Quartas de Final',
+  SEMI_FINALS: 'Semifinal', FINAL: 'Final', THIRD_PLACE: 'Terceiro Lugar',
+  PLAYOFF: 'Repescagem', LEAGUE_STAGE: 'Liga', REGULAR_SEASON: 'Liga',
+  ROUND_OF_16: 'Oitavas de Final', ROUND_OF_32: 'Fase Eliminatória',
+};
 
+// ═══════════════════════════════════════════
+// MODO LIVE: Atualiza jogos pendentes (últimos 3 dias)
+// ═══════════════════════════════════════════
+async function syncLive() {
   const now = new Date();
-  const todayStart = new Date(now); todayStart.setHours(0, 0, 0, 0);
-  const todayEnd = new Date(now); todayEnd.setHours(23, 59, 59, 999);
+  console.log(`⚡ Smart Sync - ${now.toISOString()}\n`);
 
+  const threeDaysAgo = new Date(now);
+  threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+  threeDaysAgo.setHours(0, 0, 0, 0);
+
+  // Buscar jogos que precisam de atualização:
+  // 1. ao_vivo (placar mudando)
+  // 2. agendado mas horário já passou (deveria ter começado)
+  // Tudo dos últimos 3 dias
   const { data: games, error } = await supabase
     .from('jogos')
     .select('id, api_football_id, status, data_hora, time_a, time_b, placar_time_a, placar_time_b')
-    .or(`and(status.eq.agendado,data_hora.lte.${now.toISOString()}),status.eq.ao_vivo`)
-    .gte('data_hora', todayStart.toISOString())
-    .lte('data_hora', todayEnd.toISOString());
+    .or(`status.eq.ao_vivo,and(status.eq.agendado,data_hora.lte.${now.toISOString()})`)
+    .gte('data_hora', threeDaysAgo.toISOString());
 
-  if (error) { console.log('❌ Erro:', error.message); return; }
-  if (!games?.length) { console.log('✅ Nenhum jogo para atualizar.'); return; }
+  if (error) {
+    console.log('❌ Erro Supabase:', error.message);
+    process.exit(1);
+  }
 
-  console.log(`📋 ${games.length} jogo(s):\n`);
+  if (!games || games.length === 0) {
+    console.log('😴 Nenhum jogo pendente nos últimos 3 dias.');
+    console.log('   (API football-data.org NÃO foi chamada)');
+    return;
+  }
+
+  console.log(`📋 ${games.length} jogo(s) pendente(s):\n`);
+
   let updated = 0;
-
   for (const game of games) {
-    if (!game.api_football_id) continue;
+    if (!game.api_football_id) {
+      console.log(`  ⚠️ ${game.time_a} vs ${game.time_b} - sem api_football_id`);
+      continue;
+    }
+
     const matchData = await fdFetch(`/matches/${game.api_football_id}`);
     if (!matchData) continue;
 
@@ -76,26 +105,139 @@ async function syncLiveScores() {
     const ht = score.halfTime || {};
     const newStatus = mapStatus(matchData.status);
 
-    let placarA = ft.home, placarB = ft.away;
+    let placarA = ft.home;
+    let placarB = ft.away;
     if (placarA == null && newStatus === 'ao_vivo') {
-      placarA = ht.home ?? 0; placarB = ht.away ?? 0;
+      placarA = ht.home ?? 0;
+      placarB = ht.away ?? 0;
     }
 
     const updateData = { status: newStatus };
     if (placarA != null) updateData.placar_time_a = placarA;
     if (placarB != null) updateData.placar_time_b = placarB;
 
+    // Só atualiza se algo mudou
+    const changed = game.status !== newStatus ||
+                    game.placar_time_a !== placarA ||
+                    game.placar_time_b !== placarB;
+
+    if (!changed) {
+      console.log(`  ⏩ ${game.time_a} vs ${game.time_b} - sem alteração`);
+      await new Promise(r => setTimeout(r, 7000));
+      continue;
+    }
+
     const { error: err } = await supabase.from('jogos').update(updateData).eq('id', game.id);
+
     const emoji = newStatus === 'ao_vivo' ? '🔴' : newStatus === 'encerrado' ? '✅' : '⏳';
     const placar = placarA != null ? `${placarA} x ${placarB}` : '? x ?';
 
-    if (err) console.log(`  ❌ ${game.time_a} vs ${game.time_b}: ${err.message}`);
-    else { console.log(`  ${emoji} ${game.time_a} ${placar} ${game.time_b} [${newStatus}]`); updated++; }
+    if (err) {
+      console.log(`  ❌ ${game.time_a} vs ${game.time_b}: ${err.message}`);
+    } else {
+      console.log(`  ${emoji} ${game.time_a} ${placar} ${game.time_b} [${game.status} → ${newStatus}]`);
+      updated++;
+    }
 
     await new Promise(r => setTimeout(r, 7000));
   }
 
-  console.log(`\n🎉 ${updated} atualizado(s) - ${now.toISOString()}`);
+  if (updated > 0) {
+    await supabase.from('sync_log').insert({
+      campeonato_api_id: 0, tipo: 'github-actions-smart', jogos_atualizados: updated,
+    }).catch(() => {});
+  }
+
+  console.log(`\n🎉 ${updated} jogo(s) atualizado(s)`);
 }
 
-syncLiveScores().catch(err => { console.error('❌', err.message); process.exit(1); });
+// ═══════════════════════════════════════════
+// MODO FULL: Sync completo de todos os campeonatos
+// Roda 1x por semana para pegar novos jogos
+// ═══════════════════════════════════════════
+async function syncFull() {
+  console.log('🔄 Sync COMPLETO - Atualizando todos os campeonatos\n');
+
+  const CAMPEONATOS = [
+    { code: 'BSA', id: 2013, nome: 'Brasileirão', season: 2026 },
+    { code: 'WC',  id: 2000, nome: 'Copa do Mundo', season: 2026 },
+    { code: 'CL',  id: 2001, nome: 'Champions League', season: 2025 },
+  ];
+
+  let totalUpdated = 0;
+
+  for (const camp of CAMPEONATOS) {
+    console.log(`\n📡 ${camp.nome} (${camp.code})...`);
+
+    const { data: campData } = await supabase
+      .from('campeonatos')
+      .select('id')
+      .eq('api_football_id', camp.id)
+      .single();
+
+    if (!campData) {
+      console.log(`  ❌ Campeonato não encontrado no banco`);
+      continue;
+    }
+
+    const data = await fdFetch(`/competitions/${camp.code}/matches?season=${camp.season}`);
+    if (!data?.matches) {
+      console.log(`  ❌ Sem jogos retornados`);
+      continue;
+    }
+
+    console.log(`  📋 ${data.matches.length} jogos`);
+    let count = 0;
+
+    for (const match of data.matches) {
+      const home = match.homeTeam || {};
+      const away = match.awayTeam || {};
+      const score = match.score || {};
+      const ft = score.fullTime || {};
+
+      const { error } = await supabase.rpc('upsert_jogo', {
+        p_api_football_id: match.id,
+        p_campeonato_id: campData.id,
+        p_time_a: home.shortName || home.name || 'TBD',
+        p_time_b: away.shortName || away.name || 'TBD',
+        p_logo_time_a: home.crest || null,
+        p_logo_time_b: away.crest || null,
+        p_data_hora: match.utcDate,
+        p_fase: FASE_MAP[match.stage] || match.stage || null,
+        p_rodada: match.matchday ? `Rodada ${match.matchday}` : null,
+        p_placar_time_a: ft.home ?? null,
+        p_placar_time_b: ft.away ?? null,
+        p_status: mapStatus(match.status),
+      });
+
+      if (!error) count++;
+    }
+
+    console.log(`  ✅ ${count} jogos sincronizados`);
+    totalUpdated += count;
+
+    await new Promise(r => setTimeout(r, 7000));
+  }
+
+  if (totalUpdated > 0) {
+    await supabase.from('sync_log').insert({
+      campeonato_api_id: 0, tipo: 'github-actions-full', jogos_atualizados: totalUpdated,
+    }).catch(() => {});
+  }
+
+  console.log(`\n🎉 Total: ${totalUpdated} jogos sincronizados`);
+}
+
+// ---- Main ----
+async function main() {
+  if (isFullSync) {
+    await syncFull();
+  } else {
+    await syncLive();
+  }
+}
+
+main().catch(err => {
+  console.error('❌ Erro fatal:', err.message);
+  process.exit(1);
+});
