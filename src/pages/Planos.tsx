@@ -246,8 +246,20 @@ const Planos = () => {
             )}
           </div>
           <p className="text-sm font-semibold text-copa-green-600 mt-1">
-            {billingPeriod === "mensal" ? "R$ 9,90/mês" : "R$ 79,90/ano (≈ R$ 6,66/mês)"}
+            {billingPeriod === "mensal" ? (
+              <>R$ 9,90/mês</>
+            ) : (
+              <>R$ 79,90/ano <span className="text-xs font-normal text-muted-foreground">(≈ R$ 6,66/mês)</span></>
+            )}
           </p>
+          {billingPeriod === "mensal" && (
+            <button
+              onClick={() => setBillingPeriod("anual")}
+              className="text-xs text-copa-green-500 hover:text-copa-green-600 underline mt-0.5"
+            >
+              ou R$ 6,66/mês no plano anual →
+            </button>
+          )}
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="space-y-2">
@@ -328,8 +340,20 @@ const Planos = () => {
             <CardTitle className="text-lg font-bold text-copa-green-700">Plano Premium PRO</CardTitle>
           </div>
           <p className="text-sm font-semibold text-copa-green-600 mt-1">
-            {billingPeriod === "mensal" ? "R$ 14,90/mês" : "R$ 99,90/ano (≈ R$ 8,33/mês)"}
+            {billingPeriod === "mensal" ? (
+              <>R$ 14,90/mês</>
+            ) : (
+              <>R$ 99,90/ano <span className="text-xs font-normal text-muted-foreground">(≈ R$ 8,33/mês)</span></>
+            )}
           </p>
+          {billingPeriod === "mensal" && (
+            <button
+              onClick={() => setBillingPeriod("anual")}
+              className="text-xs text-copa-green-500 hover:text-copa-green-600 underline mt-0.5"
+            >
+              ou R$ 8,33/mês no plano anual →
+            </button>
+          )}
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="space-y-2">
