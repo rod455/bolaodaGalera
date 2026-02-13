@@ -455,6 +455,13 @@ const BolaoPage = () => {
     if (j.status !== "agendado") return false;
     return new Date(j.data_hora).getTime() > now.getTime();
   }).sort((a, b) => new Date(a.data_hora).getTime() - new Date(b.data_hora).getTime());
+
+  // Separar jogos de hoje dos próximos dias
+  const todayEnd = new Date(now);
+  todayEnd.setHours(23, 59, 59, 999);
+  const jogosHoje = jogosProximos.filter((j) => new Date(j.data_hora) <= todayEnd);
+  const jogosRestantes = jogosProximos.filter((j) => new Date(j.data_hora) > todayEnd);
+
   const jogosEncerrados = jogos
     .filter((j) => j.status === "encerrado")
     .sort((a, b) => new Date(b.data_hora).getTime() - new Date(a.data_hora).getTime());
@@ -701,17 +708,49 @@ const BolaoPage = () => {
             </div>
           )}
 
-          {/* Próximos jogos */}
-          {jogosProximos.length > 0 && (
+          {/* Jogos de hoje */}
+          {jogosHoje.length > 0 && (
+            <div className="mb-3">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="w-2 h-2 bg-copa-gold-400 rounded-full animate-pulse" />
+                <span className="text-xs font-semibold text-copa-gold-600">
+                  Hoje
+                </span>
+                <span className="text-[10px] bg-copa-gold-100 text-copa-gold-600 rounded-full px-2 py-0.5 font-bold">
+                  {jogosHoje.length}
+                </span>
+              </div>
+              <div className="space-y-2">
+                {jogosHoje.map((jogo) => (
+                  <ExpandableJogoRow
+                    key={jogo.id}
+                    jogo={jogo}
+                    palpite={palpites[jogo.id] || null}
+                    now={now}
+                    isExpanded={false}
+                    onToggle={() => {}}
+                    participantPalpites={[]}
+                    isLoadingPalpites={false}
+                    currentUserId={user?.id}
+                    onNavigate={() => navigate(`/bolao/${id}/palpites?jogo=${jogo.id}`)}
+                    highlight
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Próximos jogos (outros dias) */}
+          {jogosRestantes.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <span className="w-2 h-2 bg-copa-green-500 rounded-full animate-pulse" />
+                <span className="w-2 h-2 bg-copa-green-500 rounded-full" />
                 <span className="text-xs font-semibold text-copa-green-600">
                   Próximos jogos
                 </span>
               </div>
               <div className="space-y-2">
-                {jogosProximos.slice(0, 5).map((jogo) => (
+                {jogosRestantes.slice(0, 5).map((jogo) => (
                   <ExpandableJogoRow
                     key={jogo.id}
                     jogo={jogo}
@@ -729,7 +768,7 @@ const BolaoPage = () => {
             </div>
           )}
 
-          {jogosProximos.length === 0 && jogosAoVivo.length === 0 && jogosEmAndamento.length === 0 && (
+          {jogosHoje.length === 0 && jogosRestantes.length === 0 && jogosAoVivo.length === 0 && jogosEmAndamento.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-2">
               Nenhum jogo agendado no momento.
             </p>
@@ -922,6 +961,7 @@ const ExpandableJogoRow = ({
   isLoadingPalpites,
   currentUserId,
   onNavigate,
+  highlight,
 }: {
   jogo: Jogo;
   palpite: Palpite | null;
@@ -932,6 +972,7 @@ const ExpandableJogoRow = ({
   isLoadingPalpites: boolean;
   currentUserId?: string;
   onNavigate?: () => void;
+  highlight?: boolean;
 }) => {
   const isEncerrado = jogo.status === "encerrado";
   const isAoVivo = jogo.status === "ao_vivo";
@@ -959,7 +1000,9 @@ const ExpandableJogoRow = ({
 
   return (
     <div className={`rounded-xl overflow-hidden border transition-all ${
-      isEncerrado ? "bg-gray-50/80 border-gray-100" : "bg-white border-gray-100 hover:shadow-md"
+      isEncerrado ? "bg-gray-50/80 border-gray-100"
+        : highlight ? "bg-copa-gold-50 border-copa-gold-200 shadow-sm"
+        : "bg-white border-gray-100 hover:shadow-md"
     }`}>
       {/* Main game row */}
       <div className="px-4 py-3 space-y-2">
