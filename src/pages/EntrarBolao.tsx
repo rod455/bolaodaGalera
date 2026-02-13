@@ -9,24 +9,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-interface Bolao {
-  id: string;
-  nome: string;
-  descricao: string | null;
-  imagem_url: string | null;
-  is_publico: boolean;
-  is_nacional: boolean;
-  codigo_convite: string | null;
-  campeonato_id: string | null;
-  campeonatos?: { logo_url: string; nome_popular: string } | null;
-}
-
-const fallbackImages = [
-  "https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=600&h=300&fit=crop",
-  "https://images.unsplash.com/photo-1489944440615-453fc2b6a9a9?w=600&h=300&fit=crop",
-  "https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=600&h=300&fit=crop",
-];
+import type { Bolao } from "@/lib/types";
+import { FALLBACK_IMAGES } from "@/lib/constants";
 
 const EntrarBolao = () => {
   const navigate = useNavigate();
@@ -272,12 +256,12 @@ const EntrarBolao = () => {
                 >
                   <div className="relative h-36 overflow-hidden">
                     <img
-                      src={bolao.imagem_url || fallbackImages[i % fallbackImages.length]}
+                      src={bolao.imagem_url || FALLBACK_IMAGES[i % FALLBACK_IMAGES.length]}
                       alt={bolao.nome}
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src =
-                          fallbackImages[i % fallbackImages.length];
+                          FALLBACK_IMAGES[i % FALLBACK_IMAGES.length];
                       }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />

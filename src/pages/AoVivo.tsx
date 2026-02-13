@@ -4,26 +4,9 @@ import { Radio, Clock, Loader2, Calendar, Trophy, CheckCircle2, RefreshCw } from
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-
-interface Jogo {
-  id: string;
-  time_a: string;
-  time_b: string;
-  logo_time_a: string | null;
-  logo_time_b: string | null;
-  placar_time_a: number | null;
-  placar_time_b: number | null;
-  data_hora: string;
-  status: string;
-  fase: string | null;
-  rodada: string | null;
-  campeonato_id: string;
-  campeonatos?: { nome_popular: string; logo_url: string } | null;
-}
-
-function formatHora(iso: string): string {
-  return new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-}
+import LoadingSpinner from "@/components/LoadingSpinner";
+import type { Jogo } from "@/lib/types";
+import { formatHora } from "@/lib/formatters";
 
 const AoVivo = () => {
   const navigate = useNavigate();
@@ -225,11 +208,7 @@ const AoVivo = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 text-copa-green-500 animate-spin" />
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   const handleManualRefresh = async () => {

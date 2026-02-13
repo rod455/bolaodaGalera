@@ -9,70 +9,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import type { Jogo, Palpite } from "@/lib/types";
+import { FASE_ORDER } from "@/lib/constants";
+import { traduzirFase, formatDataJogo, rodadaNum } from "@/lib/formatters";
 
-interface Jogo {
+interface PalpiteDB extends Palpite {
   id: string;
-  time_a: string;
-  time_b: string;
-  logo_time_a: string | null;
-  logo_time_b: string | null;
-  data_hora: string;
-  fase: string | null;
-  rodada: string | null;
-  status: string;
-  placar_time_a: number | null;
-  placar_time_b: number | null;
-}
-
-interface PalpiteDB {
-  id: string;
-  jogo_id: string;
-  placar_time_a: number;
-  placar_time_b: number;
-  pontos: number | null;
-}
-
-const FASE_TRADUCAO: Record<string, string> = {
-  GROUP_STAGE: "Fase de Grupos",
-  LAST_16: "Oitavas de Final",
-  LAST_32: "Fase Eliminatória",
-  QUARTER_FINALS: "Quartas de Final",
-  QUARTER_FINAL: "Quartas de Final",
-  SEMI_FINALS: "Semifinal",
-  SEMI_FINAL: "Semifinal",
-  FINAL: "Final",
-  THIRD_PLACE: "Terceiro Lugar",
-  PLAYOFF: "Repescagem",
-  PLAY_OFF: "Repescagem",
-  LEAGUE_STAGE: "Liga",
-  REGULAR_SEASON: "Liga",
-  ROUND_OF_16: "Oitavas de Final",
-  ROUND_OF_32: "Fase Eliminatória",
-};
-
-function traduzirFase(fase: string | null): string | null {
-  if (!fase) return null;
-  return FASE_TRADUCAO[fase] || FASE_TRADUCAO[fase.toUpperCase()] || fase;
-}
-
-function formatDataJogo(isoDate: string): string {
-  const d = new Date(isoDate);
-  const now = new Date();
-  const isToday = d.getDate() === now.getDate() && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-  const tomorrow = new Date(now); tomorrow.setDate(tomorrow.getDate() + 1);
-  const isTomorrow = d.getDate() === tomorrow.getDate() && d.getMonth() === tomorrow.getMonth() && d.getFullYear() === tomorrow.getFullYear();
-  const hora = d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-  const weekday = d.toLocaleDateString("pt-BR", { weekday: "long" });
-  const capitalWeekday = weekday.charAt(0).toUpperCase() + weekday.slice(1);
-  if (isToday) return `Hoje • ${hora}`;
-  if (isTomorrow) return `Amanhã • ${hora}`;
-  return `${d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })} • ${capitalWeekday} • ${hora}`;
-}
-
-function rodadaNum(rodada: string | null): number {
-  if (!rodada) return 0;
-  const m = rodada.match(/\d+/);
-  return m ? parseInt(m[0]) : 0;
 }
 
 const Palpites = () => {
@@ -150,9 +93,8 @@ const Palpites = () => {
       } else {
         const fasesSet = new Set<string>();
         uniqueJogos.forEach((j) => { const f = traduzirFase(j.fase); if (f) fasesSet.add(f); });
-        const faseOrder = ["Fase de Grupos", "Fase Eliminatória", "Oitavas de Final", "Quartas de Final", "Semifinal", "Terceiro Lugar", "Final", "Liga"];
         const sortedFases = Array.from(fasesSet).sort((a, b) => {
-          const ia = faseOrder.indexOf(a); const ib = faseOrder.indexOf(b);
+          const ia = FASE_ORDER.indexOf(a); const ib = FASE_ORDER.indexOf(b);
           return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
         });
         setFases(["Todos", ...sortedFases]);
@@ -232,7 +174,7 @@ const Palpites = () => {
   const canPrev = isLeague && currentRodadaIdx > 0;
   const canNext = isLeague && currentRodadaIdx < rodadas.length - 1;
 
-  if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 text-copa-green-500 animate-spin" /></div>;
+  if (loading) return <LoadingSpinner />;
 
   return (
     <div className="space-y-5 animate-fade-in">

@@ -2,89 +2,19 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   PlusCircle, Keyboard, Users, MapPin, ChevronRight, GripVertical,
-  Trophy, Globe, LogIn, AlertTriangle, Clock, X, Loader2, Calendar, Search, Info, Check,
+  Trophy, Globe, LogIn, AlertTriangle, Clock, X, Loader2, Calendar, Search, Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
-} from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-interface Campeonato {
-  logo_url: string;
-  nome_popular: string;
-  nome: string;
-  temporada: number;
-}
-
-interface Bolao {
-  id: string;
-  nome: string;
-  descricao: string | null;
-  imagem_url: string | null;
-  is_nacional: boolean;
-  campeonato_id: string | null;
-  modo_pontuacao?: string;
-  campeonatos?: Campeonato | null;
-}
-
-const MODO_LABELS: Record<string, string> = {
-  casual: "Casual",
-  placar_correto: "Placar Correto",
-  amador: "Amador",
-  vencedor_ou_nada: "Vencedor ou Nada",
-  profissional: "Profissional",
-  fanatico: "Torcedor Fanático",
-  tudo_ou_nada: "Tudo ou Nada",
-};
-
-const MODO_REGRAS: Record<string, { titulo: string; descricao: string; regras: { texto: string; pontos: string; acerto: boolean }[] }> = {
-  casual: { titulo: "Modo Casual", descricao: "Modo simples para quem está começando.", regras: [
-    { texto: "Placar exato", pontos: "10 pts", acerto: true },
-    { texto: "Acertar o vencedor", pontos: "3 pts", acerto: true },
-    { texto: "Empate com gols errados", pontos: "5 pts", acerto: true },
-  ]},
-  placar_correto: { titulo: "Placar Correto", descricao: "Acertou o placar, pontuou. Errou, zero.", regras: [
-    { texto: "Placar exato", pontos: "10 pts", acerto: true },
-    { texto: "Errou o placar", pontos: "0 pts", acerto: false },
-  ]},
-  amador: { titulo: "Modo Amador", descricao: "Intermediário, com pontos por diferença de gols.", regras: [
-    { texto: "Placar exato", pontos: "10 pts", acerto: true },
-    { texto: "Acertar o vencedor", pontos: "3 pts", acerto: true },
-    { texto: "Empate com gols errados", pontos: "5 pts", acerto: true },
-    { texto: "Diferença de gols correta", pontos: "3 pts", acerto: true },
-    { texto: "Gols do vencedor", pontos: "2 pts", acerto: true },
-    { texto: "Gols do perdedor", pontos: "2 pts", acerto: true },
-  ]},
-  vencedor_ou_nada: { titulo: "Vencedor ou Nada", descricao: "Acerte o vencedor ou o empate.", regras: [
-    { texto: "Vencedor / Empate", pontos: "5 pts", acerto: true },
-    { texto: "Errou", pontos: "0 pts", acerto: false },
-  ]},
-  profissional: { titulo: "Modo Profissional", descricao: "Modo completo com pontuações altas.", regras: [
-    { texto: "Placar exato", pontos: "20 pts", acerto: true },
-    { texto: "Vencedor + diferença de gols", pontos: "10 pts", acerto: true },
-    { texto: "Acertar o vencedor", pontos: "5 pts", acerto: true },
-    { texto: "Empate com gols errados", pontos: "8 pts", acerto: true },
-    { texto: "Gols do vencedor", pontos: "2 pts", acerto: true },
-    { texto: "Gols do perdedor", pontos: "2 pts", acerto: true },
-  ]},
-  fanatico: { titulo: "Torcedor Fanático", descricao: "Só jogos do seu time, pontuação máxima.", regras: [
-    { texto: "Placar exato", pontos: "20 pts", acerto: true },
-    { texto: "Vencedor + diferença de gols", pontos: "10 pts", acerto: true },
-    { texto: "Acertar o vencedor", pontos: "5 pts", acerto: true },
-    { texto: "Empate com gols errados", pontos: "8 pts", acerto: true },
-    { texto: "Gols do vencedor", pontos: "2 pts", acerto: true },
-    { texto: "Gols do perdedor", pontos: "2 pts", acerto: true },
-  ]},
-  tudo_ou_nada: { titulo: "Tudo ou Nada", descricao: "Placar exato ou zero.", regras: [
-    { texto: "Placar exato", pontos: "10 pts", acerto: true },
-    { texto: "Errou o placar", pontos: "0 pts", acerto: false },
-  ]},
-};
+import RegrasModal from "@/components/RegrasModal";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import type { Bolao } from "@/lib/types";
+import { MODO_LABELS, MODO_REGRAS, FALLBACK_IMAGES } from "@/lib/constants";
+import { formatDataJogo } from "@/lib/formatters";
 
 interface ProximoJogo {
   time_a: string;
@@ -103,26 +33,6 @@ interface PendingAlert {
   jogoId: string;
   jogo: string;
   horasRestantes: number;
-}
-
-const fallbackImages = [
-  "https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=600&h=300&fit=crop",
-  "https://images.unsplash.com/photo-1489944440615-453fc2b6a9a9?w=600&h=300&fit=crop",
-  "https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=600&h=300&fit=crop",
-];
-
-function formatDataJogo(isoDate: string): string {
-  const d = new Date(isoDate);
-  const now = new Date();
-  const diffMs = d.getTime() - now.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  const hora = d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-
-  if (diffDays === 0) return `Hoje, ${hora}`;
-  if (diffDays === 1) return `Amanhã, ${hora}`;
-  if (diffDays < 7) return `${d.toLocaleDateString("pt-BR", { weekday: "short" })}, ${hora}`;
-  return `${d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })} • ${hora}`;
 }
 
 const BolaoCard = ({
@@ -457,7 +367,7 @@ const Home = () => {
   };
   const handleDragEnd = () => { setDragIndex(null); setDragSection(null); };
 
-  if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 text-copa-green-500 animate-spin" /></div>;
+  if (loading) return <LoadingSpinner />;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -542,7 +452,7 @@ const Home = () => {
                 posicao={userPosicoes[b.id] || null} isParticipating={true}
                 onAccess={() => navigate(`/bolao/${b.id}`)}
                 onInfoClick={() => setRegrasModal(b.modo_pontuacao || null)}
-                imgFallback={fallbackImages[i % fallbackImages.length]} draggable
+                imgFallback={FALLBACK_IMAGES[i % FALLBACK_IMAGES.length]} draggable
                 onDragStart={() => handleDragStart("privados", i)} onDragOver={handleDragOver}
                 onDrop={() => handleDrop("privados", i)} onDragEnd={handleDragEnd}
                 isDragging={dragSection === "privados" && dragIndex === i} />
@@ -587,7 +497,7 @@ const Home = () => {
               proximoJogo={proximosJogos[b.id] || null} isParticipando={userBolaoIds.has(b.id)}
               onEntrar={() => handleEntrarNacional(b.id)} onAcessar={() => navigate(`/bolao/${b.id}`)}
               onInfoClick={() => setRegrasModal(b.modo_pontuacao || null)}
-              imgFallback={fallbackImages[i % fallbackImages.length]} joining={joiningBolao === b.id} />
+              imgFallback={FALLBACK_IMAGES[i % FALLBACK_IMAGES.length]} joining={joiningBolao === b.id} />
           ))}
           {nacionais.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-4">Nenhum bolão nacional disponível.</p>
@@ -595,32 +505,11 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Modal Regras de Pontuação */}
-      {regrasModal && MODO_REGRAS[regrasModal] && (
-        <Dialog open={!!regrasModal} onOpenChange={() => setRegrasModal(null)}>
-          <DialogContent className="max-w-md rounded-2xl">
-            <DialogHeader>
-              <DialogTitle className="text-lg font-bold text-copa-green-700">
-                {MODO_REGRAS[regrasModal].titulo}
-              </DialogTitle>
-              <DialogDescription className="text-sm text-muted-foreground">
-                {MODO_REGRAS[regrasModal].descricao}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-2 mt-2">
-              {MODO_REGRAS[regrasModal].regras.map((regra, i) => (
-                <div key={i} className={`flex items-center justify-between py-2 px-3 rounded-lg ${regra.acerto ? "bg-copa-green-50" : "bg-red-50"}`}>
-                  <div className="flex items-center gap-2">
-                    {regra.acerto ? <Check className="w-4 h-4 text-copa-green-500 flex-shrink-0" /> : <X className="w-4 h-4 text-red-500 flex-shrink-0" />}
-                    <span className="text-sm">{regra.texto}</span>
-                  </div>
-                  <span className={`text-sm font-bold whitespace-nowrap ml-2 ${regra.acerto ? "text-copa-green-600" : "text-red-500"}`}>{regra.pontos}</span>
-                </div>
-              ))}
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
+      <RegrasModal
+        regras={regrasModal ? MODO_REGRAS[regrasModal] || null : null}
+        open={!!regrasModal}
+        onClose={() => setRegrasModal(null)}
+      />
     </div>
   );
 };

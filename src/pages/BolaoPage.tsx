@@ -2,212 +2,22 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft, Trophy, Users, ChevronRight, Medal, Loader2, Clock,
-  CheckCircle2, AlertCircle, Lock, Share2, Copy, LogOut, Trash2, Eye, ChevronDown, ChevronUp, Info, Check, X,
+  CheckCircle2, AlertCircle, Lock, Share2, Copy, LogOut, Trash2, Eye, ChevronDown, ChevronUp, Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
-
-interface Bolao {
-  id: string;
-  nome: string;
-  descricao: string | null;
-  imagem_url: string | null;
-  campeonato_id: string | null;
-  is_nacional: boolean;
-  codigo_convite: string | null;
-  criador_id: string | null;
-  modo_pontuacao: string;
-  campeonatos?: {
-    logo_url: string;
-    nome_popular: string;
-  } | null;
-}
-
-const MODO_LABELS: Record<string, string> = {
-  casual: "Casual",
-  placar_correto: "Placar Correto",
-  amador: "Amador",
-  vencedor_ou_nada: "Vencedor ou Nada",
-  profissional: "Profissional",
-  fanatico: "Torcedor Fanático",
-  tudo_ou_nada: "Tudo ou Nada",
-};
-
-interface RegraInfo {
-  titulo: string;
-  descricao: string;
-  regras: { texto: string; pontos: string; acerto: boolean }[];
-}
-
-const MODO_REGRAS: Record<string, RegraInfo> = {
-  casual: {
-    titulo: "Modo Casual",
-    descricao: "Modo simples para quem está começando.",
-    regras: [
-      { texto: "Placar exato", pontos: "10 pts", acerto: true },
-      { texto: "Acertar o vencedor", pontos: "3 pts", acerto: true },
-      { texto: "Empate com gols errados", pontos: "5 pts", acerto: true },
-    ],
-  },
-  placar_correto: {
-    titulo: "Modo Placar Correto",
-    descricao: "Acertou o placar, pontuou. Errou, zero.",
-    regras: [
-      { texto: "Placar exato", pontos: "10 pts", acerto: true },
-      { texto: "Errou o placar", pontos: "0 pts", acerto: false },
-    ],
-  },
-  amador: {
-    titulo: "Modo Amador",
-    descricao: "Intermediário, com pontos por diferença de gols.",
-    regras: [
-      { texto: "Placar exato", pontos: "10 pts", acerto: true },
-      { texto: "Acertar o vencedor", pontos: "3 pts", acerto: true },
-      { texto: "Empate com gols errados", pontos: "5 pts", acerto: true },
-      { texto: "Diferença de gols correta", pontos: "3 pts", acerto: true },
-      { texto: "Gols do vencedor", pontos: "2 pts", acerto: true },
-      { texto: "Gols do perdedor", pontos: "2 pts", acerto: true },
-    ],
-  },
-  vencedor_ou_nada: {
-    titulo: "Modo Vencedor ou Nada",
-    descricao: "Acerte o vencedor ou o empate.",
-    regras: [
-      { texto: "Vencedor / Empate", pontos: "5 pts", acerto: true },
-      { texto: "Errou", pontos: "0 pts", acerto: false },
-    ],
-  },
-  profissional: {
-    titulo: "Modo Profissional",
-    descricao: "Modo completo com pontuações altas.",
-    regras: [
-      { texto: "Placar exato", pontos: "20 pts", acerto: true },
-      { texto: "Vencedor + diferença de gols", pontos: "10 pts", acerto: true },
-      { texto: "Acertar o vencedor", pontos: "5 pts", acerto: true },
-      { texto: "Empate com gols errados", pontos: "8 pts", acerto: true },
-      { texto: "Gols do vencedor", pontos: "2 pts", acerto: true },
-      { texto: "Gols do perdedor", pontos: "2 pts", acerto: true },
-    ],
-  },
-  fanatico: {
-    titulo: "Modo Torcedor Fanático",
-    descricao: "Só jogos do seu time, pontuação máxima.",
-    regras: [
-      { texto: "Placar exato", pontos: "20 pts", acerto: true },
-      { texto: "Vencedor + diferença de gols", pontos: "10 pts", acerto: true },
-      { texto: "Acertar o vencedor", pontos: "5 pts", acerto: true },
-      { texto: "Empate com gols errados", pontos: "8 pts", acerto: true },
-      { texto: "Gols do vencedor", pontos: "2 pts", acerto: true },
-      { texto: "Gols do perdedor", pontos: "2 pts", acerto: true },
-    ],
-  },
-  tudo_ou_nada: {
-    titulo: "Modo Tudo ou Nada",
-    descricao: "Placar exato ou zero. Para os corajosos!",
-    regras: [
-      { texto: "Placar exato", pontos: "10 pts", acerto: true },
-      { texto: "Errou o placar", pontos: "0 pts", acerto: false },
-    ],
-  },
-};
-
-interface Jogo {
-  id: string;
-  time_a: string;
-  time_b: string;
-  logo_time_a: string | null;
-  logo_time_b: string | null;
-  data_hora: string;
-  fase: string | null;
-  rodada: string | null;
-  status: string;
-  placar_time_a: number | null;
-  placar_time_b: number | null;
-}
-
-interface Palpite {
-  jogo_id: string;
-  placar_time_a: number;
-  placar_time_b: number;
-  pontos: number | null;
-}
-
-interface RankingEntry {
-  pos: number;
-  nome: string;
-  avatar: string;
-  pontos: number;
-  isCurrentUser: boolean;
-}
-
-function formatDataJogo(isoDate: string): string {
-  const d = new Date(isoDate);
-  const now = new Date();
-
-  const isToday =
-    d.getDate() === now.getDate() &&
-    d.getMonth() === now.getMonth() &&
-    d.getFullYear() === now.getFullYear();
-
-  const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const isTomorrow =
-    d.getDate() === tomorrow.getDate() &&
-    d.getMonth() === tomorrow.getMonth() &&
-    d.getFullYear() === tomorrow.getFullYear();
-
-  const hora = d.toLocaleTimeString("pt-BR", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-
-  const weekday = d.toLocaleDateString("pt-BR", { weekday: "long" });
-  const capitalWeekday = weekday.charAt(0).toUpperCase() + weekday.slice(1);
-
-  if (isToday) return `Hoje • ${hora}`;
-  if (isTomorrow) return `Amanhã • ${hora}`;
-
-  const diffDays = Math.floor(
-    (d.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
-  );
-  if (diffDays < 7 && diffDays >= 0) {
-    return `${capitalWeekday} • ${hora}`;
-  }
-
-  return `${d.toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "long",
-  })} • ${capitalWeekday} • ${hora}`;
-}
-
-const FASE_TRADUCAO: Record<string, string> = {
-  GROUP_STAGE: "Fase de Grupos",
-  LAST_16: "Oitavas de Final",
-  LAST_32: "Fase Eliminatória",
-  QUARTER_FINALS: "Quartas de Final",
-  QUARTER_FINAL: "Quartas de Final",
-  SEMI_FINALS: "Semifinal",
-  SEMI_FINAL: "Semifinal",
-  FINAL: "Final",
-  THIRD_PLACE: "Terceiro Lugar",
-  PLAYOFF: "Repescagem",
-  LEAGUE_STAGE: "Liga",
-  REGULAR_SEASON: "Liga",
-  ROUND_OF_16: "Oitavas de Final",
-  ROUND_OF_32: "Fase Eliminatória",
-};
-
-function traduzirFase(fase: string | null): string | null {
-  if (!fase) return null;
-  return FASE_TRADUCAO[fase] || FASE_TRADUCAO[fase.toUpperCase()] || fase;
-}
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import RegrasModal from "@/components/RegrasModal";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import type { Bolao, Jogo, Palpite, RankingEntry } from "@/lib/types";
+import { MODO_LABELS, MODO_REGRAS } from "@/lib/constants";
+import { formatDataJogo, traduzirFase, getInitials } from "@/lib/formatters";
 
 function getStatusInfo(jogo: Jogo, palpite: Palpite | null, now: Date) {
   const jogoDate = new Date(jogo.data_hora);
@@ -424,16 +234,10 @@ const BolaoPage = () => {
       const rankingList: RankingEntry[] = (participantes || []).map(
         (p: any, idx: number) => {
           const nome = p.profiles?.nome || "Usuário";
-          const initials = nome
-            .split(" ")
-            .map((w: string) => w[0])
-            .join("")
-            .substring(0, 2)
-            .toUpperCase();
           return {
             pos: p.posicao_ranking || idx + 1,
             nome,
-            avatar: initials,
+            avatar: getInitials(nome),
             pontos: p.pontuacao_total || 0,
             isCurrentUser: p.user_id === user!.id,
           };
@@ -522,11 +326,7 @@ const BolaoPage = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 text-copa-green-500 animate-spin" />
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   if (!bolao) return null;
@@ -605,7 +405,7 @@ const BolaoPage = () => {
 
         const list = (fallback || []).map((p: any) => {
           const nome = profileMap[p.user_id] || "Usuário";
-          const initials = nome.split(" ").map((w: string) => w[0]).join("").substring(0, 2).toUpperCase();
+          const initials = getInitials(nome);
           return { nome, avatar: initials, placar_a: p.placar_time_a, placar_b: p.placar_time_b, pontos: null, isCurrentUser: p.user_id === user?.id };
         });
         list.sort((a: any, b: any) => (b.isCurrentUser ? 1 : 0) - (a.isCurrentUser ? 1 : 0));
@@ -624,7 +424,7 @@ const BolaoPage = () => {
 
       const list = (palpitesData || []).map((p: any) => {
         const nome = profileMap[p.user_id] || "Usuário";
-        const initials = nome.split(" ").map((w: string) => w[0]).join("").substring(0, 2).toUpperCase();
+        const initials = getInitials(nome);
         return {
           nome,
           avatar: initials,
@@ -1103,43 +903,11 @@ const BolaoPage = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Regras de Pontuação Modal */}
-      {bolao && MODO_REGRAS[bolao.modo_pontuacao] && (
-        <Dialog open={showRegrasModal} onOpenChange={setShowRegrasModal}>
-          <DialogContent className="max-w-md rounded-2xl">
-            <DialogHeader>
-              <DialogTitle className="text-lg font-bold text-copa-green-700">
-                {MODO_REGRAS[bolao.modo_pontuacao].titulo}
-              </DialogTitle>
-              <DialogDescription className="text-sm text-muted-foreground">
-                {MODO_REGRAS[bolao.modo_pontuacao].descricao}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-2 mt-2">
-              {MODO_REGRAS[bolao.modo_pontuacao].regras.map((regra, i) => (
-                <div
-                  key={i}
-                  className={`flex items-center justify-between py-2 px-3 rounded-lg ${
-                    regra.acerto ? "bg-copa-green-50" : "bg-red-50"
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    {regra.acerto ? (
-                      <Check className="w-4 h-4 text-copa-green-500 flex-shrink-0" />
-                    ) : (
-                      <X className="w-4 h-4 text-red-500 flex-shrink-0" />
-                    )}
-                    <span className="text-sm">{regra.texto}</span>
-                  </div>
-                  <span className={`text-sm font-bold whitespace-nowrap ml-2 ${regra.acerto ? "text-copa-green-600" : "text-red-500"}`}>
-                    {regra.pontos}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
+      <RegrasModal
+        regras={bolao ? MODO_REGRAS[bolao.modo_pontuacao] || null : null}
+        open={showRegrasModal}
+        onClose={() => setShowRegrasModal(false)}
+      />
     </div>
   );
 };

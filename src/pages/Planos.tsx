@@ -4,17 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserPlan } from "@/hooks/useUserPlan";
 import { supabase } from "@/integrations/supabase/client";
+import RegrasModal from "@/components/RegrasModal";
+import type { RegraInfo } from "@/lib/types";
+import { MODO_REGRAS } from "@/lib/constants";
 
 // ═══ Price IDs do Stripe ═══
 const STRIPE_PRICES = {
@@ -24,87 +20,12 @@ const STRIPE_PRICES = {
   premium_pro_anual: "price_1T0KNKCPiJml4DyDb0hcf6RG",
 };
 
-interface ModoInfo {
-  titulo: string;
-  descricao: string;
-  regras: { texto: string; pontos: string; acerto: boolean }[];
-}
-
-const modosInfo: Record<string, ModoInfo> = {
-  casual: {
-    titulo: "Iniciantes / Casual",
-    descricao: "Modo simples para quem está começando.",
-    regras: [
-      { texto: "Placar exato", pontos: "10 pontos", acerto: true },
-      { texto: "Vencedor do confronto", pontos: "3 pontos", acerto: true },
-      { texto: "Apostar no empate e errar número de gols", pontos: "5 pontos", acerto: true },
-    ],
-  },
-  amador: {
-    titulo: "Intermediário / Amadores",
-    descricao: "Mais detalhado, com pontos extras por diferença de gols.",
-    regras: [
-      { texto: "Placar exato", pontos: "10 pontos", acerto: true },
-      { texto: "Vencedor do confronto", pontos: "3 pontos", acerto: true },
-      { texto: "Apostar no empate e errar número de gols", pontos: "5 pontos", acerto: true },
-      { texto: "Diferença de gols correta", pontos: "3 pontos", acerto: true },
-      { texto: "Número de gols do vencedor", pontos: "2 pontos", acerto: true },
-      { texto: "Número de gols do perdedor", pontos: "2 pontos", acerto: true },
-    ],
-  },
-  profissional: {
-    titulo: "Avançado / Profissional",
-    descricao: "Modo completo com pontuações altas.",
-    regras: [
-      { texto: "Placar exato", pontos: "20 pontos", acerto: true },
-      { texto: "Vencedor + gols do vencedor", pontos: "12 pontos", acerto: true },
-      { texto: "Vencedor + gols do perdedor", pontos: "8 pontos", acerto: true },
-      { texto: "Vencedor + Diferença de gols", pontos: "10 pontos", acerto: true },
-      { texto: "Vencedor do confronto", pontos: "5 pontos", acerto: true },
-      { texto: "Empate e errar número de gols", pontos: "8 pontos", acerto: true },
-      { texto: "Número de gols do vencedor", pontos: "2 pontos", acerto: true },
-      { texto: "Número de gols do perdedor", pontos: "2 pontos", acerto: true },
-    ],
-  },
-  fanatico: {
-    titulo: "Torcedor Fanático",
-    descricao: "Só jogos do seu time, pontuação máxima!",
-    regras: [
-      { texto: "Placar exato", pontos: "20 pontos", acerto: true },
-      { texto: "Vencedor + gols do vencedor", pontos: "12 pontos", acerto: true },
-      { texto: "Vencedor + gols do perdedor", pontos: "8 pontos", acerto: true },
-      { texto: "Vencedor + Diferença de gols", pontos: "10 pontos", acerto: true },
-      { texto: "Vencedor do confronto", pontos: "5 pontos", acerto: true },
-      { texto: "Empate e errar número de gols", pontos: "8 pontos", acerto: true },
-      { texto: "Número de gols do vencedor", pontos: "2 pontos", acerto: true },
-      { texto: "Número de gols do perdedor", pontos: "2 pontos", acerto: true },
-    ],
-  },
-  tudo_ou_nada: {
-    titulo: "Tudo ou Nada",
-    descricao: "Placar exato ou zero. Para os corajosos!",
-    regras: [
-      { texto: "Placar exato", pontos: "10 pontos", acerto: true },
-      { texto: "Errou o placar", pontos: "0 pontos", acerto: false },
-    ],
-  },
-  vencedor_ou_nada: {
-    titulo: "Vencedor ou Nada",
-    descricao: "Acerte o vencedor ou o empate.",
-    regras: [
-      { texto: "Vencedor", pontos: "5 pontos", acerto: true },
-      { texto: "Empate", pontos: "5 pontos", acerto: true },
-      { texto: "Errou", pontos: "0 pontos", acerto: false },
-    ],
-  },
-};
-
 const Planos = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { session } = useAuth();
   const { plano: userPlano, loading: loadingPlano, refetch } = useUserPlan();
-  const [infoModal, setInfoModal] = useState<ModoInfo | null>(null);
+  const [infoModal, setInfoModal] = useState<RegraInfo | null>(null);
   const [loadingCheckout, setLoadingCheckout] = useState<string | null>(null);
   const [billingPeriod, setBillingPeriod] = useState<"mensal" | "anual">("mensal");
 
@@ -151,7 +72,7 @@ const Planos = () => {
 
   const InfoButton = ({ modo }: { modo: string }) => (
     <button
-      onClick={() => setInfoModal(modosInfo[modo])}
+      onClick={() => setInfoModal(MODO_REGRAS[modo])}
       className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-copa-green-100 hover:bg-copa-green-200 transition-colors ml-1.5"
       title="Ver detalhes"
     >
@@ -425,41 +346,11 @@ const Planos = () => {
         </CardContent>
       </Card>
 
-      {/* Info Modal */}
-      <Dialog open={!!infoModal} onOpenChange={() => setInfoModal(null)}>
-        <DialogContent className="max-w-md rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold text-copa-green-700">
-              {infoModal?.titulo}
-            </DialogTitle>
-            <DialogDescription className="text-sm text-muted-foreground">
-              {infoModal?.descricao}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2 mt-2">
-            {infoModal?.regras.map((regra, i) => (
-              <div
-                key={i}
-                className={`flex items-center justify-between py-2 px-3 rounded-lg ${
-                  regra.acerto ? "bg-copa-green-50" : "bg-red-50"
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  {regra.acerto ? (
-                    <Check className="w-4 h-4 text-copa-green-500 flex-shrink-0" />
-                  ) : (
-                    <X className="w-4 h-4 text-red-500 flex-shrink-0" />
-                  )}
-                  <span className="text-sm">{regra.texto}</span>
-                </div>
-                <span className={`text-sm font-bold ${regra.acerto ? "text-copa-green-600" : "text-red-500"}`}>
-                  {regra.pontos}
-                </span>
-              </div>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <RegrasModal
+        regras={infoModal}
+        open={!!infoModal}
+        onClose={() => setInfoModal(null)}
+      />
     </div>
   );
 };
