@@ -16,9 +16,10 @@ import { traduzirFase, formatDataJogo, rodadaNum } from "@/lib/formatters";
 
 interface PalpiteDB extends Palpite { id: string; }
 
-const FASES_AGRUPADAS = ["Final", "Terceiro Lugar"];
+const FASES_AGRUPADAS: string[] = ["Final", "Terceiro Lugar"];
 const getTabKey = (jogo: Jogo): string => {
-  const faseTrad = traduzirFase(jogo.fase) || "";
+  // traduzirFase converte EN→PT; se já estiver em PT, usa direto
+  const faseTrad = traduzirFase(jogo.fase) || jogo.fase || "";
   if (!jogo.rodada) return faseTrad || "Outros";
   if (FASES_AGRUPADAS.includes(faseTrad)) return faseTrad;
   return `${faseTrad} – ${jogo.rodada}`;
@@ -84,6 +85,7 @@ const Palpites = () => {
         .order("data_hora", { ascending: true });
 
       let uniqueJogos = (allGames || []) as Jogo[];
+
       if (fanaticoMode && bolaoTimeFavorito) {
         uniqueJogos = uniqueJogos.filter(
           (j) => j.time_a === bolaoTimeFavorito || j.time_b === bolaoTimeFavorito
@@ -94,19 +96,46 @@ const Palpites = () => {
       const targetJogoId = searchParams.get("jogo");
 
       if (leagueMode) {
-        const rodadaSet = new Set<string>();
-        uniqueJogos.forEach((j) => { if (j.rodada) rodadaSet.add(j.rodada); });
-        const sorted = Array.from(rodadaSet).sort((a, b) => rodadaNum(a) - rodadaNum(b));
-        setRodadas(sorted);
-        const now = new Date();
-        const currentRodada = sorted.find((r) =>
-          uniqueJogos.some((j) => j.rodada === r && j.status === "agendado" && new Date(j.data_hora) > now)
-        );
-        if (targetJogoId) {
-          const tj = uniqueJogos.find((j) => j.id === targetJogoId);
-          setActiveTab(tj?.rodada || currentRodada || sorted[sorted.length - 1] || "Todos");
+        // Verificar se é campeonato misto (tem fases mata-mata além de rodadas normais)
+        const KNOCKOUT_FASES_EN = ["SEMI_FINALS", "SEMI_FINAL", "FINAL", "QUARTER_FINALS", "QUARTER_FINAL"];
+        const KNOCKOUT_FASES_PT = ["Semifinal", "Final", "Quartas de Final"];
+        const hasKnockout = uniqueJogos.some((j) => j.fase && (
+          KNOCKOUT_FASES_EN.includes(j.fase) || KNOCKOUT_FASES_PT.includes(j.fase)
+        ));
+        
+        if (hasKnockout) {
+          // Modo misto: usar getTabKey como campeonatos de copa
+          const tabSet = new Set<string>();
+          uniqueJogos.forEach((j) => tabSet.add(getTabKey(j)));
+          const sortedTabs = Array.from(tabSet).sort((a, b) => {
+            const faseA = a.split(" – ")[0]; const faseB = b.split(" – ")[0];
+            const ia = FASE_ORDER.indexOf(faseA); const ib = FASE_ORDER.indexOf(faseB);
+            const orderA = ia === -1 ? 99 : ia; const orderB = ib === -1 ? 99 : ib;
+            if (orderA !== orderB) return orderA - orderB;
+            return a.includes("Ida") && !b.includes("Ida") ? -1 : !a.includes("Ida") && b.includes("Ida") ? 1 : 0;
+          });
+          setFases(["Todos", ...sortedTabs]);
+          setIsLeague(false); // Tratar como copa para UI de tabs
+          if (targetJogoId) {
+            const tj = uniqueJogos.find((j) => j.id === targetJogoId);
+            setActiveTab(tj ? getTabKey(tj) : "Todos");
+          } else { setActiveTab("Todos"); }
         } else {
-          setActiveTab(currentRodada || sorted[sorted.length - 1] || "Todos");
+          // Modo liga puro: usar rodadas
+          const rodadaSet = new Set<string>();
+          uniqueJogos.forEach((j) => { if (j.rodada) rodadaSet.add(j.rodada); });
+          const sorted = Array.from(rodadaSet).sort((a, b) => rodadaNum(a) - rodadaNum(b));
+          setRodadas(sorted);
+          const now = new Date();
+          const currentRodada = sorted.find((r) =>
+            uniqueJogos.some((j) => j.rodada === r && j.status === "agendado" && new Date(j.data_hora) > now)
+          );
+          if (targetJogoId) {
+            const tj = uniqueJogos.find((j) => j.id === targetJogoId);
+            setActiveTab(tj?.rodada || currentRodada || sorted[sorted.length - 1] || "Todos");
+          } else {
+            setActiveTab(currentRodada || sorted[sorted.length - 1] || "Todos");
+          }
         }
       } else {
         const tabSet = new Set<string>();
