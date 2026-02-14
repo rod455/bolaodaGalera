@@ -1,17 +1,28 @@
 import { useState, useCallback, useRef } from "react";
 import { useUserPlan } from "./useUserPlan";
-import { toast } from "sonner";
 
 // Chave localStorage para controle diário
 const LAST_PALPITE_AD_KEY = "bolao_last_palpite_ad";
+const getToday = () => new Date().toISOString().split("T")[0];
 
-const getToday = () => new Date().toISOString().split("T")[0]; // "2026-02-14"
+// Tipo global para o AdMob (disponível apenas no app nativo)
+declare global {
+  interface Window {
+    Capacitor?: { isNativePlatform?: () => boolean };
+    AdMobPlugin?: {
+      prepareRewardVideoAd: (opts: { adId: string }) => Promise<void>;
+      showRewardVideoAd: () => Promise<void>;
+      addListener: (event: string, cb: () => void) => void;
+    };
+  }
+}
 
 /**
  * Hook para gerenciar Rewarded Ads
- * - Usuários premium/premium_pro não veem ads
+ * - Web: usa modal de countdown (AdRewardModal)
+ * - Nativo: usa Google AdMob via Capacitor (carregado em runtime)
+ * - Premium: nunca vê ads
  * - Palpites: só mostra ad no primeiro do dia
- * - Criar bolão e Entrar: sempre mostra ad para free
  */
 export const useRewardedAd = () => {
   const { plano } = useUserPlan();
@@ -20,82 +31,69 @@ export const useRewardedAd = () => {
 
   const isPremium = plano === "premium" || plano === "premium_pro";
 
-  // Verifica se já assistiu ad de palpite hoje
   const hasWatchedPalpiteAdToday = useCallback(() => {
-    try {
-      const last = localStorage.getItem(LAST_PALPITE_AD_KEY);
-      return last === getToday();
-    } catch { return false; }
+    try { return localStorage.getItem(LAST_PALPITE_AD_KEY) === getToday(); }
+    catch { return false; }
   }, []);
 
-  // Marca que assistiu ad de palpite hoje
   const markPalpiteAdWatched = useCallback(() => {
     try { localStorage.setItem(LAST_PALPITE_AD_KEY, getToday()); } catch {}
   }, []);
 
-  // Mostra o ad e retorna promise que resolve quando terminar
-  const showAd = useCallback(async (tipo: "criar" | "palpite" | "entrar"): Promise<boolean> => {
-    // Premium não vê ads
-    if (isPremium) return true;
+  const isNative = () => {
+    try { return !!window.Capacitor?.isNativePlatform?.(); }
+    catch { return false; }
+  };
 
-    // Palpite: só no primeiro do dia
+  const showNativeAd = useCallback(async (tipo: string): Promise<boolean> => {
+    try {
+      // Import dinâmico só no nativo — Vite ignora em build web pois nunca entra aqui
+      const mod = await (Function('return import("@capacitor-community/admob")')() as Promise<any>);
+      const AdMob = mod.AdMob;
+
+      await AdMob.prepareRewardVideoAd({
+        adId: "ca-app-pub-3940256099942544/5224354917", // ID de teste — trocar por real em produção
+      });
+
+      return new Promise<boolean>((resolve) => {
+        AdMob.addListener("onRewardedVideoAdDismissed", () => {
+          if (tipo === "palpite") markPalpiteAdWatched();
+          setAdLoading(false);
+          resolve(true);
+        });
+        AdMob.addListener("onRewardedVideoAdFailedToLoad", () => {
+          setAdLoading(false);
+          resolve(true); // Deixa continuar se falhar
+        });
+        AdMob.showRewardVideoAd();
+      });
+    } catch {
+      setAdLoading(false);
+      return true; // Fallback: deixa continuar
+    }
+  }, [markPalpiteAdWatched]);
+
+  const showAd = useCallback(async (tipo: "criar" | "palpite" | "entrar"): Promise<boolean> => {
+    if (isPremium) return true;
     if (tipo === "palpite" && hasWatchedPalpiteAdToday()) return true;
 
     setAdLoading(true);
 
-    try {
-      // Verificar se está rodando no Capacitor (app nativo)
-      const isNative = typeof (window as any).Capacitor !== "undefined" && (window as any).Capacitor.isNativePlatform?.();
-
-      if (isNative) {
-        // ═══ AMBIENTE NATIVO (Android/iOS) ═══
-        try {
-          const admobModule = await import("@capacitor-community/admob");
-          const AdMob = admobModule.AdMob;
-
-          const options = {
-            adId: "ca-app-pub-3940256099942544/5224354917", // Test Rewarded Ad
-          };
-
-          await AdMob.prepareRewardVideoAd(options);
-
-          return new Promise<boolean>((resolve) => {
-            AdMob.addListener("onRewardedVideoAdDismissed", () => {
-              if (tipo === "palpite") markPalpiteAdWatched();
-              setAdLoading(false);
-              resolve(true);
-            });
-
-            AdMob.addListener("onRewardedVideoAdFailedToLoad", () => {
-              setAdLoading(false);
-              resolve(true);
-            });
-
-            AdMob.showRewardVideoAd();
-          });
-        } catch {
-          // AdMob não disponível no nativo, usar fallback web
+    if (isNative()) {
+      // ═══ APP NATIVO: usa AdMob real ═══
+      return showNativeAd(tipo);
+    } else {
+      // ═══ WEB: usa modal de countdown ═══
+      return new Promise<boolean>((resolve) => {
+        resolveRef.current = (watched: boolean) => {
+          if (watched && tipo === "palpite") markPalpiteAdWatched();
           setAdLoading(false);
-          return true;
-        }
-      } else {
-        // ═══ AMBIENTE WEB (fallback com modal) ═══
-        return new Promise<boolean>((resolve) => {
-          resolveRef.current = (watched: boolean) => {
-            if (watched && tipo === "palpite") markPalpiteAdWatched();
-            setAdLoading(false);
-            resolve(watched);
-          };
-        });
-      }
-    } catch (err) {
-      console.error("Erro ao mostrar ad:", err);
-      setAdLoading(false);
-      return true;
+          resolve(watched);
+        };
+      });
     }
-  }, [isPremium, hasWatchedPalpiteAdToday, markPalpiteAdWatched]);
+  }, [isPremium, hasWatchedPalpiteAdToday, markPalpiteAdWatched, showNativeAd]);
 
-  // Função para resolver o ad modal web
   const resolveWebAd = useCallback((watched: boolean) => {
     if (resolveRef.current) {
       resolveRef.current(watched);
