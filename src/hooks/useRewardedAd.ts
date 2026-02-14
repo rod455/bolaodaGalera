@@ -73,23 +73,21 @@ export const useRewardedAd = () => {
     }
   }, [markPalpiteAdWatched]);
 
+  const isNative = () => {
+    try { return !!window.Capacitor?.isNativePlatform?.(); }
+    catch { return false; }
+  };
+
   const showAd = useCallback(async (tipo: "criar" | "palpite" | "entrar"): Promise<boolean> => {
     if (isPremium) return true;
+    if (!isNative()) return true; // Web: sem ads
     if (tipo === "palpite" && hasWatchedPalpiteAdToday()) return true;
 
     setAdLoading(true);
 
-    // App nativo: usa AdMob real | Web: usa modal countdown
-    if (isNative()) { return showNativeAd(tipo); }
-
-    return new Promise<boolean>((resolve) => {
-      resolveRef.current = (watched: boolean) => {
-        if (watched && tipo === "palpite") markPalpiteAdWatched();
-        setAdLoading(false);
-        resolve(watched);
-      };
-    });
-  }, [isPremium, hasWatchedPalpiteAdToday, markPalpiteAdWatched]);
+    // App nativo: usa AdMob real
+    return showNativeAd(tipo);
+  }, [isPremium, hasWatchedPalpiteAdToday, showNativeAd]);
 
   const resolveWebAd = useCallback((watched: boolean) => {
     if (resolveRef.current) {
