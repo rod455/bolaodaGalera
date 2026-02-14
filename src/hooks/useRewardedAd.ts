@@ -44,58 +44,54 @@ export const useRewardedAd = () => {
     setAdLoading(true);
 
     try {
-      // Verificar se Capacitor AdMob está disponível
-      const { AdMob, RewardAdOptions, AdLoadInfo } = await import("@capacitor-community/admob").catch(() => ({ AdMob: null, RewardAdOptions: null, AdLoadInfo: null }));
+      // Verificar se está rodando no Capacitor (app nativo)
+      const isNative = typeof (window as any).Capacitor !== "undefined" && (window as any).Capacitor.isNativePlatform?.();
 
-      if (AdMob) {
+      if (isNative) {
         // ═══ AMBIENTE NATIVO (Android/iOS) ═══
-        const options: any = {
-          // IMPORTANTE: Substitua pelos seus Ad Unit IDs reais!
-          // Estes são IDs de teste do Google
-          adId: "ca-app-pub-3940256099942544/5224354917", // Test Rewarded Ad
-        };
+        try {
+          const admobModule = await import("@capacitor-community/admob");
+          const AdMob = admobModule.AdMob;
 
-        await AdMob.prepareRewardVideoAd(options);
+          const options = {
+            adId: "ca-app-pub-3940256099942544/5224354917", // Test Rewarded Ad
+          };
 
-        return new Promise<boolean>((resolve) => {
-          // Listener para quando o ad é fechado
-          AdMob.addListener("onRewardedVideoAdDismissed", () => {
-            if (tipo === "palpite") markPalpiteAdWatched();
-            setAdLoading(false);
-            resolve(true);
+          await AdMob.prepareRewardVideoAd(options);
+
+          return new Promise<boolean>((resolve) => {
+            AdMob.addListener("onRewardedVideoAdDismissed", () => {
+              if (tipo === "palpite") markPalpiteAdWatched();
+              setAdLoading(false);
+              resolve(true);
+            });
+
+            AdMob.addListener("onRewardedVideoAdFailedToLoad", () => {
+              setAdLoading(false);
+              resolve(true);
+            });
+
+            AdMob.showRewardVideoAd();
           });
-
-          // Listener para quando o usuário ganha a recompensa
-          AdMob.addListener("onRewardedVideoAdReward", () => {
-            // Recompensa recebida
-          });
-
-          // Listener para falha
-          AdMob.addListener("onRewardedVideoAdFailedToLoad", () => {
-            setAdLoading(false);
-            resolve(true); // Deixa continuar mesmo se falhar
-          });
-
-          // Mostrar o ad
-          AdMob.showRewardVideoAd();
-        });
-
+        } catch {
+          // AdMob não disponível no nativo, usar fallback web
+          setAdLoading(false);
+          return true;
+        }
       } else {
-        // ═══ AMBIENTE WEB (fallback) ═══
-        // Simula um "ad" no web com um modal de countdown
+        // ═══ AMBIENTE WEB (fallback com modal) ═══
         return new Promise<boolean>((resolve) => {
           resolveRef.current = (watched: boolean) => {
             if (watched && tipo === "palpite") markPalpiteAdWatched();
             setAdLoading(false);
             resolve(watched);
           };
-          // O componente AdModal vai chamar resolveRef.current
         });
       }
     } catch (err) {
       console.error("Erro ao mostrar ad:", err);
       setAdLoading(false);
-      return true; // Deixa continuar se der erro
+      return true;
     }
   }, [isPremium, hasWatchedPalpiteAdToday, markPalpiteAdWatched]);
 
