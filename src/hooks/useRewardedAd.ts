@@ -52,7 +52,7 @@ export const useRewardedAd = () => {
       const AdMob = mod.AdMob;
 
       await AdMob.prepareRewardVideoAd({
-        adId: "ca-app-pub-3940256099942544/5224354917", // ID de teste — trocar por real em produção
+        adId: "ca-app-pub-8494311740043165/9218959284", // Reward Bolão - Produção
       });
 
       return new Promise<boolean>((resolve) => {
@@ -79,20 +79,17 @@ export const useRewardedAd = () => {
 
     setAdLoading(true);
 
-    if (isNative()) {
-      // ═══ APP NATIVO: usa AdMob real ═══
-      return showNativeAd(tipo);
-    } else {
-      // ═══ WEB: usa modal de countdown ═══
-      return new Promise<boolean>((resolve) => {
-        resolveRef.current = (watched: boolean) => {
-          if (watched && tipo === "palpite") markPalpiteAdWatched();
-          setAdLoading(false);
-          resolve(watched);
-        };
-      });
-    }
-  }, [isPremium, hasWatchedPalpiteAdToday, markPalpiteAdWatched, showNativeAd]);
+    // App nativo: usa AdMob real | Web: usa modal countdown
+    if (isNative()) { return showNativeAd(tipo); }
+
+    return new Promise<boolean>((resolve) => {
+      resolveRef.current = (watched: boolean) => {
+        if (watched && tipo === "palpite") markPalpiteAdWatched();
+        setAdLoading(false);
+        resolve(watched);
+      };
+    });
+  }, [isPremium, hasWatchedPalpiteAdToday, markPalpiteAdWatched]);
 
   const resolveWebAd = useCallback((watched: boolean) => {
     if (resolveRef.current) {
