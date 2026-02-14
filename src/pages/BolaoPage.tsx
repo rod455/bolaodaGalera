@@ -742,10 +742,10 @@ const BolaoPage = () => {
                     jogo={jogo}
                     palpite={palpites[jogo.id] || null}
                     now={now}
-                    isExpanded={false}
-                    onToggle={() => {}}
-                    participantPalpites={[]}
-                    isLoadingPalpites={false}
+                    isExpanded={expandedJogo === jogo.id}
+                    onToggle={() => toggleJogoPalpites(jogo.id)}
+                    participantPalpites={participantPalpites[jogo.id] || []}
+                    isLoadingPalpites={loadingPalpites === jogo.id}
                     currentUserId={user?.id}
                     onNavigate={() => navigate(`/bolao/${id}/palpites?jogo=${jogo.id}`)}
                     highlight
@@ -771,10 +771,10 @@ const BolaoPage = () => {
                     jogo={jogo}
                     palpite={palpites[jogo.id] || null}
                     now={now}
-                    isExpanded={false}
-                    onToggle={() => {}}
-                    participantPalpites={[]}
-                    isLoadingPalpites={false}
+                    isExpanded={expandedJogo === jogo.id}
+                    onToggle={() => toggleJogoPalpites(jogo.id)}
+                    participantPalpites={participantPalpites[jogo.id] || []}
+                    isLoadingPalpites={loadingPalpites === jogo.id}
                     currentUserId={user?.id}
                     onNavigate={() => navigate(`/bolao/${id}/palpites?jogo=${jogo.id}`)}
                   />
