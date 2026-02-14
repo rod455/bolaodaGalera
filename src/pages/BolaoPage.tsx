@@ -993,9 +993,10 @@ const ExpandableJogoRow = ({
   const isAoVivo = jogo.status === "ao_vivo";
   const jogoDate = new Date(jogo.data_hora);
   const started = jogoDate.getTime() <= now.getTime();
+  const palpiteFechado = jogoDate.getTime() - 10 * 60 * 1000 <= now.getTime(); // 10min antes
   const hasPalpite = !!palpite;
   const pontos = palpite?.pontos ?? 0;
-  const canExpand = isEncerrado || isAoVivo || started;
+  const canExpand = isEncerrado || isAoVivo || started || palpiteFechado;
 
   // Palpite color for encerrado
   let palpiteColor = "text-gray-400";
