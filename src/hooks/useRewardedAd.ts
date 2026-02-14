@@ -73,11 +73,6 @@ export const useRewardedAd = () => {
     }
   }, [markPalpiteAdWatched]);
 
-  const isNative = () => {
-    try { return !!window.Capacitor?.isNativePlatform?.(); }
-    catch { return false; }
-  };
-
   const showAd = useCallback(async (tipo: "criar" | "palpite" | "entrar"): Promise<boolean> => {
     if (isPremium) return true;
     if (!isNative()) return true; // Web: sem ads
