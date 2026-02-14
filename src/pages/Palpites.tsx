@@ -10,6 +10,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import AdRewardModal from "@/components/AdRewardModal";
+import { useRewardedAd } from "@/hooks/useRewardedAd";
 import type { Jogo, Palpite } from "@/lib/types";
 import { FASE_ORDER } from "@/lib/constants";
 import { traduzirFase, formatDataJogo, rodadaNum } from "@/lib/formatters";
@@ -44,6 +46,8 @@ const Palpites = () => {
   const [activeTab, setActiveTab] = useState<string>("Todos");
   const [timeFavorito, setTimeFavorito] = useState<string | null>(null);
   const [isFanatico, setIsFanatico] = useState(false);
+  const { showAd, resolveWebAd, needsAd } = useRewardedAd();
+  const [showAdModal, setShowAdModal] = useState(false);
 
   useEffect(() => { if (id && user) loadData(); }, [id, user]);
 
@@ -186,6 +190,15 @@ const Palpites = () => {
 
   const salvarPalpite = async (jogoId: string) => {
     if (!user || !id) return;
+
+    // Ad no primeiro palpite do dia (free users)
+    if (needsAd) {
+      setShowAdModal(true);
+      const adResult = await showAd("palpite");
+      setShowAdModal(false);
+      if (!adResult) return;
+    }
+
     const local = palpitesLocal[jogoId];
     const placarA = local?.a ?? 0; const placarB = local?.b ?? 0;
     setSalvando(jogoId);
@@ -228,6 +241,7 @@ const Palpites = () => {
 
   return (
     <div className="space-y-5 animate-fade-in">
+      <AdRewardModal open={showAdModal} onComplete={resolveWebAd} message="Assista para salvar seu palpite" />
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => navigate(`/bolao/${id}`)} className="rounded-full"><ArrowLeft className="w-5 h-5" /></Button>
         <div className="flex-1">

@@ -10,6 +10,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserPlan } from "@/hooks/useUserPlan";
+import { useRewardedAd } from "@/hooks/useRewardedAd";
+import AdRewardModal from "@/components/AdRewardModal";
 import RegrasModal from "@/components/RegrasModal";
 import type { RegraInfo } from "@/lib/types";
 import { MODO_REGRAS, MODOS_PONTUACAO } from "@/lib/constants";
@@ -82,6 +84,9 @@ const CriarBolao = () => {
   const [timeModalOpen, setTimeModalOpen] = useState(false);
 
   const { plano: userPlano } = useUserPlan();
+  const { showAd, adLoading, resolveWebAd, needsAd } = useRewardedAd();
+  const [showAdModal, setShowAdModal] = useState(false);
+  const [adCallback, setAdCallback] = useState<(() => void) | null>(null);
 
   useEffect(() => { loadCampeonatos(); }, []);
 
@@ -179,6 +184,14 @@ const CriarBolao = () => {
     if (regrasAtivas.length === 0) { toast.error("Selecione pelo menos uma regra de pontuação"); return; }
     if (isFanatico && !timeFavorito) { toast.error("Escolha seu time do coração"); return; }
     if (!user) { toast.error("Você precisa estar logado"); return; }
+
+    // Mostrar ad para usuários free
+    if (needsAd) {
+      setShowAdModal(true);
+      const adResult = await showAd("criar");
+      setShowAdModal(false);
+      if (!adResult) return;
+    }
 
     setCriando(true);
     try {
@@ -473,6 +486,9 @@ const CriarBolao = () => {
       </Button>
 
       <RegrasModal regras={infoModal} open={!!infoModal} onClose={() => setInfoModal(null)} />
+
+      {/* Ad Reward Modal */}
+      <AdRewardModal open={showAdModal} onComplete={resolveWebAd} message="Assista para criar seu bolão" />
 
       {/* Modal: Configurar Regras */}
       {modoRegras && (

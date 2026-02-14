@@ -12,6 +12,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import RegrasModal from "@/components/RegrasModal";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import AdRewardModal from "@/components/AdRewardModal";
+import { useRewardedAd } from "@/hooks/useRewardedAd";
 import type { Bolao } from "@/lib/types";
 import { MODO_LABELS, MODO_REGRAS, FALLBACK_IMAGES } from "@/lib/constants";
 import { formatDataJogo } from "@/lib/formatters";
@@ -191,6 +193,8 @@ const Home = () => {
   const [showCodeInput, setShowCodeInput] = useState(false);
   const [codigoInput, setCodigoInput] = useState("");
   const [joiningByCode, setJoiningByCode] = useState(false);
+  const { showAd, resolveWebAd, needsAd } = useRewardedAd();
+  const [showAdModal, setShowAdModal] = useState(false);
   const [regrasModal, setRegrasModal] = useState<string | null>(null);
 
   useEffect(() => { if (user) loadData(); }, [user]);
@@ -297,6 +301,15 @@ const Home = () => {
   const handleEntrarPorCodigo = async () => {
     if (!codigoInput.trim()) { toast.error("Informe o código do bolão"); return; }
     if (!user) return;
+
+    // Mostrar ad para usuários free
+    if (needsAd) {
+      setShowAdModal(true);
+      const adResult = await showAd("entrar");
+      setShowAdModal(false);
+      if (!adResult) return;
+    }
+
     setJoiningByCode(true);
     try {
       await ensureProfile();
@@ -325,6 +338,7 @@ const Home = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      <AdRewardModal open={showAdModal} onComplete={resolveWebAd} message="Assista para entrar no bolão" />
       {visibleAlerts.length > 0 && (
         <div className="space-y-2">
           {visibleAlerts.slice(0, 3).map((alert) => (
