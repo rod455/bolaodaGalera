@@ -116,11 +116,12 @@ export const FALLBACK_IMAGES = [
 // ── Ordem canônica de fases para sorting ──
 export const FASE_ORDER = [
   "Fase de Grupos",
+  "Liga",
+  "Última Rodada",
   "Fase Eliminatória",
   "Oitavas de Final",
   "Quartas de Final",
   "Semifinal",
   "Terceiro Lugar",
   "Final",
-  "Liga",
 ];
