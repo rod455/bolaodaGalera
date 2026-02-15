@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserPlan } from "@/hooks/useUserPlan";
+import NotificacaoPreferencias from "@/components/NotificacaoPreferencias";
 
 const Perfil = () => {
   const navigate = useNavigate();
@@ -613,6 +614,9 @@ const Perfil = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* ═══ Preferências de Notificação ═══ */}
+      <NotificacaoPreferencias />
 
       {/* Dúvidas e Sugestões */}
       <Card className="rounded-2xl shadow-sm border-blue-200 overflow-hidden">
