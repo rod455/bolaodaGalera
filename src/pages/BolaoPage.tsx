@@ -111,59 +111,73 @@ const BolaoPage = () => {
   const [novoNome, setNovoNome] = useState("");
   const [savingNome, setSavingNome] = useState(false);
   const [uploadingCapa, setUploadingCapa] = useState(false);
+  const [capaEditor, setCapaEditor] = useState<{ url: string; file: File } | null>(null);
+  const [capaPositionY, setCapaPositionY] = useState(50); // porcentagem vertical (0=topo, 100=base)
+  const [isDraggingCapa, setIsDraggingCapa] = useState(false);
+  const [dragStartY, setDragStartY] = useState(0);
+  const [dragStartPos, setDragStartPos] = useState(50);
 
   const handleCapaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !id) return;
 
-    // Validar tamanho (máx 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast.error("Imagem muito grande. Máximo 5MB.");
       return;
     }
-
-    // Validar tipo
     if (!file.type.startsWith("image/")) {
       toast.error("Selecione uma imagem válida.");
       return;
     }
 
+    // Abrir editor de posição
+    const previewUrl = URL.createObjectURL(file);
+    setCapaPositionY(50);
+    setCapaEditor({ url: previewUrl, file });
+    e.target.value = "";
+  };
+
+  const handleCapaDrag = (clientY: number) => {
+    if (!isDraggingCapa) return;
+    const diff = dragStartY - clientY;
+    const newPos = Math.max(0, Math.min(100, dragStartPos + diff * 0.3));
+    setCapaPositionY(newPos);
+  };
+
+  const handleSaveCapa = async () => {
+    if (!capaEditor || !id) return;
     setUploadingCapa(true);
     try {
-      const ext = file.name.split(".").pop() || "jpg";
+      const ext = capaEditor.file.name.split(".").pop() || "jpg";
       const fileName = `bolao_${id}_capa.${ext}`;
 
-      // Upload para Supabase Storage
       const { error: uploadError } = await supabase.storage
         .from("bolao-capas")
-        .upload(fileName, file, { upsert: true });
-
+        .upload(fileName, capaEditor.file, { upsert: true });
       if (uploadError) throw uploadError;
 
-      // Obter URL pública
       const { data: urlData } = supabase.storage
         .from("bolao-capas")
         .getPublicUrl(fileName);
 
-      const publicUrl = urlData.publicUrl + "?t=" + Date.now(); // cache bust
+      const publicUrl = urlData.publicUrl + "?t=" + Date.now();
+      const positionValue = `center ${Math.round(capaPositionY)}%`;
 
-      // Atualizar bolão
       const { error: updateError } = await supabase
         .from("boloes")
-        .update({ imagem_url: publicUrl })
+        .update({ imagem_url: publicUrl, imagem_posicao: positionValue })
         .eq("id", id);
-
       if (updateError) throw updateError;
 
-      setBolao((prev) => prev ? { ...prev, imagem_url: publicUrl } : prev);
+      setBolao((prev) => prev ? { ...prev, imagem_url: publicUrl, imagem_posicao: positionValue } as any : prev);
       toast.success("Foto de capa atualizada!");
+      URL.revokeObjectURL(capaEditor.url);
+      setCapaEditor(null);
     } catch (err: any) {
       console.error("Erro upload capa:", err);
       toast.error("Erro ao atualizar foto de capa");
     } finally {
       setUploadingCapa(false);
-      // Limpar input para permitir reupload do mesmo arquivo
-      e.target.value = "";
     }
   };
 
@@ -695,6 +709,7 @@ const BolaoPage = () => {
           }
           alt={bolao.nome}
           className="w-full h-full object-cover"
+          style={{ objectPosition: (bolao as any).imagem_posicao || "center 50%" }}
           onError={(e) => {
             (e.target as HTMLImageElement).src =
               "https://images.unsplash.com/photo-1489944440615-453fc2b6a9a9?w=800&h=400&fit=crop";
@@ -719,6 +734,67 @@ const BolaoPage = () => {
           </label>
         )}
       </div>
+
+      {/* Editor de posição da capa */}
+      {capaEditor && (
+        <Dialog open={!!capaEditor} onOpenChange={(open) => { if (!open) { URL.revokeObjectURL(capaEditor.url); setCapaEditor(null); } }}>
+          <DialogContent className="max-w-lg p-0 overflow-hidden">
+            <DialogHeader className="px-5 pt-5 pb-2">
+              <DialogTitle>Ajustar posição da capa</DialogTitle>
+              <DialogDescription>
+                Arraste a imagem para cima ou para baixo para ajustar o enquadramento.
+              </DialogDescription>
+            </DialogHeader>
+            <div
+              className="relative h-52 mx-5 rounded-xl overflow-hidden cursor-grab active:cursor-grabbing select-none touch-none"
+              onMouseDown={(e) => {
+                setIsDraggingCapa(true);
+                setDragStartY(e.clientY);
+                setDragStartPos(capaPositionY);
+              }}
+              onMouseMove={(e) => handleCapaDrag(e.clientY)}
+              onMouseUp={() => setIsDraggingCapa(false)}
+              onMouseLeave={() => setIsDraggingCapa(false)}
+              onTouchStart={(e) => {
+                setIsDraggingCapa(true);
+                setDragStartY(e.touches[0].clientY);
+                setDragStartPos(capaPositionY);
+              }}
+              onTouchMove={(e) => handleCapaDrag(e.touches[0].clientY)}
+              onTouchEnd={() => setIsDraggingCapa(false)}
+            >
+              <img
+                src={capaEditor.url}
+                alt="Preview"
+                className="w-full h-full object-cover pointer-events-none"
+                style={{ objectPosition: `center ${capaPositionY}%` }}
+                draggable={false}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+              <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-black/50 text-white text-[11px] font-medium px-3 py-1 rounded-full backdrop-blur-sm pointer-events-none">
+                ↕ Arraste para ajustar
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-2 px-5 pb-5 pt-3">
+              <Button
+                variant="outline"
+                onClick={() => { URL.revokeObjectURL(capaEditor.url); setCapaEditor(null); }}
+                className="rounded-xl"
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleSaveCapa}
+                disabled={uploadingCapa}
+                className="bg-copa-green-600 hover:bg-copa-green-700 text-white rounded-xl"
+              >
+                {uploadingCapa ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                {uploadingCapa ? "Salvando..." : "Salvar"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* ═══ 1. RANKING ═══ */}
       <Card className="rounded-2xl shadow-sm">
