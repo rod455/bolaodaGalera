@@ -17,6 +17,7 @@ import NotFound from "./pages/NotFound";
 import AppLayout from "./components/layout/AppLayout";
 import ProtectedRoute from "./components/layout/ProtectedRoute";
 import SplashScreen from "./components/SplashScreen";
+import NotificationToast from "./components/NotificationToast";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +53,7 @@ const App = () => {
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
+            <NotificationToast />
           </BrowserRouter>
         </AuthProvider>
       </TooltipProvider>
