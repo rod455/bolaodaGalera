@@ -196,13 +196,26 @@ const Home = () => {
   const { showAd, resolveWebAd, needsAd } = useRewardedAd();
   const [showAdModal, setShowAdModal] = useState(false);
   const [regrasModal, setRegrasModal] = useState<string | null>(null);
+  const [userEstado, setUserEstado] = useState<string | null>(null);
 
   useEffect(() => { if (user) loadData(); }, [user]);
 
   const loadData = async () => {
     try {
+      // Carregar estado do usuário
+      const { data: profileData } = await supabase.from("profiles").select("estado").eq("id", user!.id).single();
+      const estado = profileData?.estado || null;
+      setUserEstado(estado);
+
       const { data: nac } = await supabase.from("boloes").select("*, campeonatos(*)").eq("is_nacional", true).eq("is_publico", true);
-      setNacionais((nac as any[]) || []);
+
+      // Ordenar nacionais: bolões com destaque para o estado do usuário primeiro
+      const sortedNac = [...((nac as any[]) || [])].sort((a, b) => {
+        const aDestaque = estado && (a.estados_destaque || []).includes(estado) ? 1 : 0;
+        const bDestaque = estado && (b.estados_destaque || []).includes(estado) ? 1 : 0;
+        return bDestaque - aDestaque;
+      });
+      setNacionais(sortedNac);
 
       const { data: participacoes } = await supabase.from("bolao_participantes").select("bolao_id, posicao_ranking, boloes(*, campeonatos(*))").eq("user_id", user!.id);
       const privList: Bolao[] = [];
@@ -444,6 +457,31 @@ const Home = () => {
           <h3 className="text-base font-bold">Bolões Nacionais</h3>
           <span className="text-xs text-muted-foreground">• Abertos para todos</span>
         </div>
+
+        {/* Banner de destaque regional */}
+        {(() => {
+          const destaque = userEstado ? nacionais.find(b => (b as any).estados_destaque?.includes(userEstado) && !userBolaoIds.has(b.id)) : null;
+          if (!destaque) return null;
+          return (
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-copa-green-600 to-copa-green-500 text-white p-4 shadow-lg animate-fade-in">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-10 translate-x-10" />
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-1">
+                  <Trophy className="w-5 h-5 text-copa-gold-300" />
+                  <span className="text-xs font-bold text-copa-gold-300 uppercase tracking-wider">Recomendado para você</span>
+                </div>
+                <h4 className="font-bold text-lg">{destaque.nome}</h4>
+                <p className="text-white/80 text-xs mt-0.5">{destaque.descricao || "Participe e faça seus palpites!"}</p>
+                <Button size="sm" onClick={() => handleEntrarNacional(destaque.id)}
+                  disabled={joiningBolao === destaque.id}
+                  className="mt-3 bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800 font-bold rounded-lg shadow-md">
+                  {joiningBolao === destaque.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Entrar agora <ChevronRight className="w-4 h-4 ml-1" /></>}
+                </Button>
+              </div>
+            </div>
+          );
+        })()}
+
         <div className="space-y-4">
           {nacionais.map((b, i) => (
             <NacionalCard key={b.id} bolao={b} participantes={participantesCount[b.id] || 0}

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Mail, Lock, Trash2, Crown, Check, Pencil, LogOut, Camera, Loader2, Zap, ExternalLink, Share2, UserPlus, Copy, Gift, MessageCircle, AlertTriangle } from "lucide-react";
+import { User, Mail, Lock, Trash2, Crown, Check, Pencil, LogOut, Camera, Loader2, Zap, ExternalLink, Share2, UserPlus, Copy, Gift, MessageCircle, AlertTriangle, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +31,8 @@ const Perfil = () => {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [estado, setEstado] = useState<string>("");
+  const [savingEstado, setSavingEstado] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -48,17 +50,28 @@ const Perfil = () => {
     if (!user) return;
     const { data, error } = await supabase
       .from("profiles")
-      .select("nome, avatar_url")
+      .select("nome, avatar_url, estado")
       .eq("id", user.id)
       .single();
 
     if (data) {
       setNome(data.nome || "");
       setAvatarUrl(data.avatar_url || null);
+      setEstado((data as any).estado || "");
     } else {
-      // Fallback to auth metadata
       setNome(user.user_metadata?.nome || user.email?.split("@")[0] || "Jogador");
     }
+  };
+
+  const handleSaveEstado = async (novoEstado: string) => {
+    if (!user) return;
+    setSavingEstado(true);
+    try {
+      await supabase.from("profiles").update({ estado: novoEstado }).eq("id", user.id);
+      setEstado(novoEstado);
+      toast.success("Estado atualizado!");
+    } catch { toast.error("Erro ao salvar estado"); }
+    finally { setSavingEstado(false); }
   };
 
   const handleAvatarClick = () => {
@@ -533,6 +546,39 @@ const Perfil = () => {
                 <p className="text-sm font-medium">{email}</p>
               </div>
             </div>
+          </div>
+
+          {/* Estado */}
+          <div className="flex items-center justify-between py-3.5 border-b">
+            <div className="flex items-center gap-3">
+              <MapPin className="w-4 h-4 text-muted-foreground" />
+              <div>
+                <p className="text-xs text-muted-foreground">Seu estado</p>
+                <p className="text-sm font-medium">{estado || "Não informado"}</p>
+              </div>
+            </div>
+            <select
+              value={estado}
+              onChange={(e) => handleSaveEstado(e.target.value)}
+              disabled={savingEstado}
+              className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white focus:border-copa-green-500 focus:outline-none"
+            >
+              <option value="">Selecione</option>
+              <option value="AC">AC</option><option value="AL">AL</option>
+              <option value="AP">AP</option><option value="AM">AM</option>
+              <option value="BA">BA</option><option value="CE">CE</option>
+              <option value="DF">DF</option><option value="ES">ES</option>
+              <option value="GO">GO</option><option value="MA">MA</option>
+              <option value="MT">MT</option><option value="MS">MS</option>
+              <option value="MG">MG</option><option value="PA">PA</option>
+              <option value="PB">PB</option><option value="PR">PR</option>
+              <option value="PE">PE</option><option value="PI">PI</option>
+              <option value="RJ">RJ</option><option value="RN">RN</option>
+              <option value="RS">RS</option><option value="RO">RO</option>
+              <option value="RR">RR</option><option value="SC">SC</option>
+              <option value="SP">SP</option><option value="SE">SE</option>
+              <option value="TO">TO</option>
+            </select>
           </div>
 
           {/* Senha */}
