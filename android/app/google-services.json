@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "153046746230",
+    "project_id": "bolao-copa-do-mundo-406eb",
+    "storage_bucket": "bolao-copa-do-mundo-406eb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:153046746230:android:468fe4a9c9045d80f8cb57",
+        "android_client_info": {
+          "package_name": "com.bolaonacopa.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC_cH_hMhnX_rmjsMZy03xUjlZ8sK_ST2I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:153046746230:android:d82b76608d1f80b3f8cb57",
+        "android_client_info": {
+          "package_name": "com.mycompany.bolaodacopa"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC_cH_hMhnX_rmjsMZy03xUjlZ8sK_ST2I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
