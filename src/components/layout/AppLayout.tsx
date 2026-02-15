@@ -2,6 +2,7 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Home, PlusCircle, Radio, User, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import NotificationCenter from "@/components/NotificationCenter";
 
 const navItems = [
   { path: "/home", label: "Home", icon: Home },
@@ -27,18 +28,21 @@ const AppLayout = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* ═══ DESKTOP: Header com logo + nav + sair (hidden no mobile) ═══ */}
+      {/* ═══ DESKTOP: Header com logo + nav + notificações + sair (hidden no mobile) ═══ */}
       <header className="bg-copa-green-500 text-white sticky top-0 z-50 shadow-md hidden md:block">
         <div className="container max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src={LOGO_URL} alt="Bolão na Copa" className="w-10 h-10 object-contain" />
             <h1 className="text-lg font-bold tracking-tight">Bolão na Copa</h1>
           </div>
-          <button onClick={handleLogout}
-            className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors text-sm">
-            <LogOut className="w-4 h-4" />
-            <span>Sair</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <NotificationCenter />
+            <button onClick={handleLogout}
+              className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors text-sm ml-1">
+              <LogOut className="w-4 h-4" />
+              <span>Sair</span>
+            </button>
+          </div>
         </div>
         <nav className="container max-w-4xl mx-auto px-2">
           <div className="flex">
@@ -61,12 +65,15 @@ const AppLayout = () => {
         </nav>
       </header>
 
-      {/* ═══ MOBILE: Header só com logo (visible apenas no mobile) ═══ */}
+      {/* ═══ MOBILE: Header com logo + notificações (visible apenas no mobile) ═══ */}
       <header className="bg-copa-green-500 text-white sticky top-0 z-50 shadow-md md:hidden"
         style={{ paddingTop: "max(2rem, env(safe-area-inset-top, 2rem))" }}>
-        <div className="container max-w-4xl mx-auto px-4 py-3 flex items-center justify-center gap-3">
-          <img src={LOGO_URL} alt="Bolão na Copa" className="w-9 h-9 object-contain" />
-          <h1 className="text-lg font-bold tracking-tight">Bolão na Copa</h1>
+        <div className="container max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img src={LOGO_URL} alt="Bolão na Copa" className="w-9 h-9 object-contain" />
+            <h1 className="text-lg font-bold tracking-tight">Bolão na Copa</h1>
+          </div>
+          <NotificationCenter />
         </div>
       </header>
 
