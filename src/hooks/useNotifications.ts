@@ -22,6 +22,8 @@ interface UseNotificationsReturn {
   preferencias: NotificacaoPreferencias | null;
   marcarComoLida: (id: string) => Promise<void>;
   marcarTodasComoLidas: () => Promise<void>;
+  deletarNotificacao: (id: string) => Promise<void>;
+  deletarTodas: () => Promise<void>;
   atualizarPreferencias: (prefs: Partial<NotificacaoPreferencias>) => Promise<void>;
   refetch: () => Promise<void>;
 }
@@ -211,6 +213,28 @@ export const useNotifications = (): UseNotificationsReturn => {
     setNotificacoes((prev) => prev.map((n) => ({ ...n, lida: true })));
   }, [user]);
 
+  // ── Deletar uma notificação ──
+  const deletarNotificacao = useCallback(async (id: string) => {
+    await supabase
+      .from("notificacoes")
+      .delete()
+      .eq("id", id);
+
+    setNotificacoes((prev) => prev.filter((n) => n.id !== id));
+  }, []);
+
+  // ── Deletar todas as notificações ──
+  const deletarTodas = useCallback(async () => {
+    if (!user) return;
+
+    await supabase
+      .from("notificacoes")
+      .delete()
+      .eq("user_id", user.id);
+
+    setNotificacoes([]);
+  }, [user]);
+
   // ── Atualizar preferências ──
   const atualizarPreferencias = useCallback(
     async (prefs: Partial<NotificacaoPreferencias>) => {
@@ -268,6 +292,8 @@ export const useNotifications = (): UseNotificationsReturn => {
     preferencias,
     marcarComoLida,
     marcarTodasComoLidas,
+    deletarNotificacao,
+    deletarTodas,
     atualizarPreferencias,
     refetch: fetchNotificacoes,
   };
