@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Bell, Check, CheckCheck, Clock, Trophy, TrendingUp,
-  UserPlus, Flame, Mail, Info, X, Settings,
+  UserPlus, Flame, Mail, Info, X, Settings, Trash2,
 } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotifications";
 import type { Notificacao, NotificacaoTipo } from "@/lib/notification-types";
@@ -37,6 +37,8 @@ const NotificationCenter = () => {
     naoLidas,
     marcarComoLida,
     marcarTodasComoLidas,
+    deletarNotificacao,
+    deletarTodas,
   } = useNotifications();
 
   // Fechar ao clicar fora
@@ -74,6 +76,11 @@ const NotificationCenter = () => {
     }
   };
 
+  const handleDelete = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation(); // Não navegar ao clicar no X
+    await deletarNotificacao(id);
+  };
+
   const formatTimeAgo = (iso: string) => {
     const diff = Date.now() - new Date(iso).getTime();
     const minutes = Math.floor(diff / 60000);
@@ -108,14 +115,24 @@ const NotificationCenter = () => {
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b">
             <h3 className="text-sm font-bold text-foreground">Notificações</h3>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               {naoLidas > 0 && (
                 <button
                   onClick={() => marcarTodasComoLidas()}
-                  className="flex items-center gap-1 text-[10px] font-semibold text-copa-green-600 hover:text-copa-green-700 transition-colors"
+                  className="flex items-center gap-1 text-[10px] font-semibold text-copa-green-600 hover:text-copa-green-700 transition-colors px-1.5 py-1 rounded-md hover:bg-copa-green-50"
                 >
                   <CheckCheck className="w-3.5 h-3.5" />
-                  Marcar todas
+                  Ler todas
+                </button>
+              )}
+              {notificacoes.length > 0 && (
+                <button
+                  onClick={() => deletarTodas()}
+                  className="flex items-center gap-1 text-[10px] font-semibold text-red-500 hover:text-red-600 transition-colors px-1.5 py-1 rounded-md hover:bg-red-50"
+                  title="Limpar todas"
+                >
+                  <Trash2 className="w-3 h-3" />
+                  Limpar
                 </button>
               )}
               <button
@@ -144,12 +161,12 @@ const NotificationCenter = () => {
                 const [textCor, bgCor] = cores.split(" ");
 
                 return (
-                  <button
+                  <div
                     key={notificacao.id}
-                    onClick={() => handleClickNotificacao(notificacao)}
-                    className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/50 border-b border-gray-50 last:border-b-0 ${
+                    className={`group relative flex items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/50 border-b border-gray-50 last:border-b-0 cursor-pointer ${
                       !notificacao.lida ? "bg-blue-50/30" : ""
                     }`}
+                    onClick={() => handleClickNotificacao(notificacao)}
                   >
                     {/* Ícone */}
                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${bgCor}`}>
@@ -176,11 +193,20 @@ const NotificationCenter = () => {
                       )}
                     </div>
 
+                    {/* Botão X (deletar) — aparece no hover */}
+                    <button
+                      onClick={(e) => handleDelete(e, notificacao.id)}
+                      className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-100 transition-all"
+                      title="Remover notificação"
+                    >
+                      <X className="w-3.5 h-3.5 text-red-400 hover:text-red-600" />
+                    </button>
+
                     {/* Indicador não lida */}
                     {!notificacao.lida && (
                       <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2" />
                     )}
-                  </button>
+                  </div>
                 );
               })
             )}
