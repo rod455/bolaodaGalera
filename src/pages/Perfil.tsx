@@ -1,10 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Mail, Lock, Trash2, Crown, Check, Pencil, LogOut, Camera, Loader2, Zap, ExternalLink, Share2, UserPlus, Copy, Gift } from "lucide-react";
+import { User, Mail, Lock, Trash2, Crown, Check, Pencil, LogOut, Camera, Loader2, Zap, ExternalLink, Share2, UserPlus, Copy, Gift, MessageCircle, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +19,9 @@ const Perfil = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { plano: userPlano, loading: loadingPlano } = useUserPlan();
   const [loadingPortal, setLoadingPortal] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
@@ -130,6 +136,50 @@ const Perfil = () => {
     await signOut();
     toast.success("Logout realizado");
     navigate("/auth");
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== "EXCLUIR") return;
+    setDeletingAccount(true);
+    try {
+      const userId = user?.id;
+      if (!userId) throw new Error("Usuário não encontrado");
+
+      // Deletar palpites
+      await supabase.from("palpites").delete().eq("user_id", userId);
+      // Deletar participações em bolões
+      await supabase.from("bolao_participantes").delete().eq("user_id", userId);
+      // Deletar rankings de eventos
+      await supabase.from("eventos_ranking").delete().eq("user_id", userId);
+      // Deletar bolões criados sem outros participantes
+      const { data: meusboloes } = await supabase
+        .from("boloes")
+        .select("id")
+        .eq("criador_id", userId);
+      if (meusboloes) {
+        for (const b of meusboloes) {
+          const { count } = await supabase
+            .from("bolao_participantes")
+            .select("*", { count: "exact", head: true })
+            .eq("bolao_id", b.id);
+          if (!count || count === 0) {
+            await supabase.from("boloes").delete().eq("id", b.id);
+          }
+        }
+      }
+      // Deletar perfil
+      await supabase.from("profiles").delete().eq("id", userId);
+      // Fazer logout
+      await signOut();
+      toast.success("Conta excluída com sucesso. Sentiremos sua falta!");
+      navigate("/auth");
+    } catch (err: any) {
+      console.error("Erro ao excluir conta:", err);
+      toast.error("Erro ao excluir conta. Tente novamente ou entre em contato pelo email.");
+    } finally {
+      setDeletingAccount(false);
+      setShowDeleteDialog(false);
+    }
   };
 
   const initials = nome
@@ -500,7 +550,7 @@ const Perfil = () => {
 
           <button
             className="flex items-center gap-2 py-3.5 text-destructive hover:text-destructive/80 text-sm"
-            onClick={() => toast.error("Funcionalidade em breve")}
+            onClick={() => setShowDeleteDialog(true)}
           >
             <Trash2 className="w-4 h-4" />
             Excluir conta
@@ -560,6 +610,35 @@ const Perfil = () => {
         </CardContent>
       </Card>
 
+      {/* Dúvidas e Sugestões */}
+      <Card className="rounded-2xl shadow-sm border-blue-200 overflow-hidden">
+        <CardContent className="p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+              <MessageCircle className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold">Dúvidas ou Sugestões?</h3>
+              <p className="text-xs text-muted-foreground">Fale diretamente conosco</p>
+            </div>
+          </div>
+          <p className="text-sm text-muted-foreground mb-3">
+            Tem alguma ideia para melhorar o app, encontrou um bug ou precisa de ajuda? Envie sua mensagem!
+          </p>
+          <Button
+            onClick={() => {
+              const subject = encodeURIComponent("Bolão na Copa - Dúvida/Sugestão");
+              const body = encodeURIComponent(`Olá equipe Bolão na Copa!\n\nMeu nome: ${nome}\nMeu email: ${email}\n\nMinha mensagem:\n\n`);
+              window.open(`mailto:appfactory.rlm@gmail.com?subject=${subject}&body=${body}`, "_blank");
+            }}
+            className="w-full h-11 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl"
+          >
+            <Mail className="w-4 h-4 mr-2" />
+            Enviar mensagem
+          </Button>
+        </CardContent>
+      </Card>
+
       {/* Logout */}
       <Button
         variant="outline"
@@ -569,6 +648,58 @@ const Perfil = () => {
         <LogOut className="w-4 h-4 mr-2" />
         Sair da conta
       </Button>
+
+      {/* Dialog de exclusão de conta */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="w-5 h-5" />
+              Excluir conta
+            </DialogTitle>
+            <DialogDescription>
+              Esta ação é permanente e não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700 space-y-1">
+              <p className="font-semibold">Ao excluir sua conta, serão removidos:</p>
+              <p>• Seus dados pessoais (nome, email, foto)</p>
+              <p>• Todos os seus palpites e histórico</p>
+              <p>• Participação em todos os bolões</p>
+              <p>• Assinatura Premium (se houver)</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground mb-2">
+                Digite <strong className="text-destructive font-mono">EXCLUIR</strong> para confirmar:
+              </p>
+              <Input
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder="EXCLUIR"
+                className="border-red-200 focus:border-red-500"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => { setShowDeleteDialog(false); setDeleteConfirmText(""); }}
+                className="flex-1 rounded-xl"
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleDeleteAccount}
+                disabled={deleteConfirmText !== "EXCLUIR" || deletingAccount}
+                className="flex-1 bg-destructive hover:bg-destructive/90 text-white rounded-xl"
+              >
+                {deletingAccount ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
+                {deletingAccount ? "Excluindo..." : "Excluir conta"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
