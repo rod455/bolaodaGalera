@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft, Trophy, Users, ChevronRight, Medal, Loader2, Clock,
-  CheckCircle2, AlertCircle, Lock, Share2, Copy, LogOut, Trash2, Eye, ChevronDown, ChevronUp, Info,
+  CheckCircle2, AlertCircle, Lock, Share2, Copy, LogOut, Trash2, Eye, ChevronDown, ChevronUp, Info, Pencil, Camera,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -106,6 +107,65 @@ const BolaoPage = () => {
   const [participantPalpites, setParticipantPalpites] = useState<Record<string, { nome: string; avatar: string; placar_a: number; placar_b: number; pontos: number | null }[]>>({});
   const [showRegrasModal, setShowRegrasModal] = useState(false);
   const [loadingPalpites, setLoadingPalpites] = useState<string | null>(null);
+  const [editingNome, setEditingNome] = useState(false);
+  const [novoNome, setNovoNome] = useState("");
+  const [savingNome, setSavingNome] = useState(false);
+  const [uploadingCapa, setUploadingCapa] = useState(false);
+
+  const handleCapaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !id) return;
+
+    // Validar tamanho (máx 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Imagem muito grande. Máximo 5MB.");
+      return;
+    }
+
+    // Validar tipo
+    if (!file.type.startsWith("image/")) {
+      toast.error("Selecione uma imagem válida.");
+      return;
+    }
+
+    setUploadingCapa(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const fileName = `bolao_${id}_capa.${ext}`;
+
+      // Upload para Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from("bolao-capas")
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Obter URL pública
+      const { data: urlData } = supabase.storage
+        .from("bolao-capas")
+        .getPublicUrl(fileName);
+
+      const publicUrl = urlData.publicUrl + "?t=" + Date.now(); // cache bust
+
+      // Atualizar bolão
+      const { error: updateError } = await supabase
+        .from("boloes")
+        .update({ imagem_url: publicUrl })
+        .eq("id", id);
+
+      if (updateError) throw updateError;
+
+      setBolao((prev) => prev ? { ...prev, imagem_url: publicUrl } : prev);
+      toast.success("Foto de capa atualizada!");
+    } catch (err: any) {
+      console.error("Erro upload capa:", err);
+      toast.error("Erro ao atualizar foto de capa");
+    } finally {
+      setUploadingCapa(false);
+      // Limpar input para permitir reupload do mesmo arquivo
+      e.target.value = "";
+    }
+  };
 
   useEffect(() => {
     if (id && user) loadBolao();
@@ -377,6 +437,28 @@ const BolaoPage = () => {
     }
   };
 
+  const handleSaveNome = async () => {
+    if (!novoNome.trim() || novoNome.trim() === bolao?.nome) {
+      setEditingNome(false);
+      return;
+    }
+    setSavingNome(true);
+    try {
+      const { error } = await supabase
+        .from("boloes")
+        .update({ nome: novoNome.trim() })
+        .eq("id", id!);
+      if (error) throw error;
+      setBolao((prev) => prev ? { ...prev, nome: novoNome.trim() } : prev);
+      toast.success("Nome do bolão atualizado!");
+      setEditingNome(false);
+    } catch {
+      toast.error("Erro ao atualizar nome");
+    } finally {
+      setSavingNome(false);
+    }
+  };
+
   const toggleJogoPalpites = async (jogoId: string) => {
     if (expandedJogo === jogoId) {
       setExpandedJogo(null);
@@ -486,7 +568,56 @@ const BolaoPage = () => {
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <div className="flex-1 min-w-0">
-          <h2 className="text-2xl font-bold truncate">{bolao.nome}</h2>
+          <div className="flex items-center gap-2">
+            {editingNome ? (
+              <div className="flex items-center gap-2 flex-1">
+                <Input
+                  value={novoNome}
+                  onChange={(e) => setNovoNome(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleSaveNome();
+                    if (e.key === "Escape") setEditingNome(false);
+                  }}
+                  className="h-9 text-lg font-bold bg-white border-copa-green-300 focus:border-copa-green-500"
+                  maxLength={50}
+                  autoFocus
+                  disabled={savingNome}
+                />
+                <Button
+                  size="sm"
+                  onClick={handleSaveNome}
+                  disabled={savingNome}
+                  className="bg-copa-green-600 hover:bg-copa-green-700 text-white h-9 px-3 rounded-lg"
+                >
+                  {savingNome ? <Loader2 className="w-4 h-4 animate-spin" /> : "Salvar"}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setEditingNome(false)}
+                  className="h-9 px-2"
+                >
+                  ✕
+                </Button>
+              </div>
+            ) : (
+              <>
+                <h2 className="text-2xl font-bold truncate">{bolao.nome}</h2>
+                {bolao.criador_id === user?.id && (
+                  <button
+                    onClick={() => {
+                      setNovoNome(bolao.nome);
+                      setEditingNome(true);
+                    }}
+                    className="text-muted-foreground hover:text-copa-green-600 transition-colors flex-shrink-0"
+                    title="Editar nome do bolão"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                )}
+              </>
+            )}
+          </div>
           <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => setShowRegrasModal(true)}
@@ -556,7 +687,7 @@ const BolaoPage = () => {
       </div>
 
       {/* Cover Image */}
-      <div className="relative h-48 rounded-2xl overflow-hidden shadow-md">
+      <div className="relative h-48 rounded-2xl overflow-hidden shadow-md group">
         <img
           src={
             bolao.imagem_url ||
@@ -570,6 +701,23 @@ const BolaoPage = () => {
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+        {bolao.criador_id === user?.id && (
+          <label className="absolute bottom-3 right-3 flex items-center gap-1.5 bg-black/60 hover:bg-black/80 text-white text-xs font-semibold px-3 py-2 rounded-xl cursor-pointer transition-all backdrop-blur-sm">
+            {uploadingCapa ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Camera className="w-4 h-4" />
+            )}
+            {uploadingCapa ? "Enviando..." : "Alterar capa"}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleCapaUpload}
+              className="hidden"
+              disabled={uploadingCapa}
+            />
+          </label>
+        )}
       </div>
 
       {/* ═══ 1. RANKING ═══ */}
