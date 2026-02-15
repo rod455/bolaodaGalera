@@ -22,6 +22,10 @@ const Perfil = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [deletingAccount, setDeletingAccount] = useState(false);
+  const [feedbackMsg, setFeedbackMsg] = useState("");
+  const [feedbackTipo, setFeedbackTipo] = useState<"duvida" | "sugestao" | "bug">("duvida");
+  const [sendingFeedback, setSendingFeedback] = useState(false);
+  const [feedbackSent, setFeedbackSent] = useState(false);
 
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
@@ -622,20 +626,80 @@ const Perfil = () => {
               <p className="text-xs text-muted-foreground">Fale diretamente conosco</p>
             </div>
           </div>
-          <p className="text-sm text-muted-foreground mb-3">
-            Tem alguma ideia para melhorar o app, encontrou um bug ou precisa de ajuda? Envie sua mensagem!
-          </p>
-          <Button
-            onClick={() => {
-              const subject = encodeURIComponent("Bolão na Copa - Dúvida/Sugestão");
-              const body = encodeURIComponent(`Olá equipe Bolão na Copa!\n\nMeu nome: ${nome}\nMeu email: ${email}\n\nMinha mensagem:\n\n`);
-              window.open(`mailto:appfactory.rlm@gmail.com?subject=${subject}&body=${body}`, "_blank");
-            }}
-            className="w-full h-11 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl"
-          >
-            <Mail className="w-4 h-4 mr-2" />
-            Enviar mensagem
-          </Button>
+
+          {feedbackSent ? (
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
+              <Check className="w-8 h-8 text-green-600 mx-auto mb-2" />
+              <p className="text-sm font-semibold text-green-700">Mensagem enviada!</p>
+              <p className="text-xs text-green-600 mt-1">Responderemos em breve no seu email.</p>
+              <button
+                onClick={() => { setFeedbackSent(false); setFeedbackMsg(""); }}
+                className="text-xs text-blue-500 hover:underline mt-2"
+              >
+                Enviar outra mensagem
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex gap-2">
+                {(["duvida", "sugestao", "bug"] as const).map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => setFeedbackTipo(t)}
+                    className={`flex-1 text-xs font-semibold py-2 rounded-lg border transition-all ${
+                      feedbackTipo === t
+                        ? "bg-blue-500 text-white border-blue-500"
+                        : "bg-white text-gray-600 border-gray-200 hover:border-blue-300"
+                    }`}
+                  >
+                    {t === "duvida" ? "❓ Dúvida" : t === "sugestao" ? "💡 Sugestão" : "🐛 Bug"}
+                  </button>
+                ))}
+              </div>
+              <textarea
+                value={feedbackMsg}
+                onChange={(e) => setFeedbackMsg(e.target.value)}
+                placeholder="Escreva sua mensagem aqui..."
+                className="w-full h-24 px-3 py-2 border border-gray-200 rounded-xl text-sm resize-none focus:outline-none focus:border-blue-400 transition-colors"
+                maxLength={1000}
+              />
+              <Button
+                onClick={async () => {
+                  if (!feedbackMsg.trim()) {
+                    toast.error("Escreva sua mensagem");
+                    return;
+                  }
+                  setSendingFeedback(true);
+                  try {
+                    const { error } = await supabase.functions.invoke("send-feedback", {
+                      body: {
+                        nome,
+                        email,
+                        mensagem: feedbackMsg.trim(),
+                        tipo: feedbackTipo,
+                      },
+                    });
+                    if (error) throw error;
+                    setFeedbackSent(true);
+                    toast.success("Mensagem enviada com sucesso!");
+                  } catch {
+                    toast.error("Erro ao enviar. Tente novamente.");
+                  } finally {
+                    setSendingFeedback(false);
+                  }
+                }}
+                disabled={sendingFeedback || !feedbackMsg.trim()}
+                className="w-full h-11 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl disabled:opacity-50"
+              >
+                {sendingFeedback ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                ) : (
+                  <Mail className="w-4 h-4 mr-2" />
+                )}
+                {sendingFeedback ? "Enviando..." : "Enviar mensagem"}
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
