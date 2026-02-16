@@ -67,10 +67,6 @@ async function syncLive() {
   threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
   threeDaysAgo.setHours(0, 0, 0, 0);
 
-  // Buscar jogos que precisam de atualização:
-  // 1. ao_vivo (placar mudando)
-  // 2. agendado mas horário já passou (deveria ter começado)
-  // Tudo dos últimos 3 dias
   const { data: games, error } = await supabase
     .from('jogos')
     .select('id, api_football_id, status, data_hora, time_a, time_b, placar_time_a, placar_time_b')
@@ -116,7 +112,6 @@ async function syncLive() {
     if (placarA != null) updateData.placar_time_a = placarA;
     if (placarB != null) updateData.placar_time_b = placarB;
 
-    // Só atualiza se algo mudou
     const changed = game.status !== newStatus ||
                     game.placar_time_a !== placarA ||
                     game.placar_time_b !== placarB;
