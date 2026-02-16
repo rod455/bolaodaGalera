@@ -8,6 +8,12 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
+declare global {
+  interface Window {
+    gtag: (...args: any[]) => void;
+  }
+}
+
 const TIMES_BRASIL = [
   "América-MG", "Athletico-PR", "Atlético-MG", "Bahia", "Botafogo", "Bragantino",
   "Ceará", "Chapecoense", "Corinthians", "Coritiba", "Criciúma", "Cruzeiro",
@@ -90,6 +96,12 @@ const Auth = () => {
           },
         });
         if (error) throw error;
+
+        // Dispara conversão Google Ads
+        if (typeof window.gtag !== 'undefined') {
+          window.gtag('event', 'ads_conversion');
+        }
+
         toast.success("Conta criada! Verifique seu email (olhe também a pasta Spam/Lixo eletrônico).", { duration: 8000 });
         setIsLogin(true);
       }
