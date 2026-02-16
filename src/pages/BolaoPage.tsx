@@ -871,13 +871,15 @@ const BolaoPage = () => {
         </CardContent>
       </Card>
 
-      {/* ═══ 1.5 EVENTOS ESPECIAIS ═══ */}
-      <EventosEspeciais
-        bolaoId={id!}
-        campeonatoId={bolao.campeonato_id}
-        isCriador={bolao.criador_id === user?.id}
-        userId={user?.id || ""}
-      />
+      {/* ═══ 1.5 EVENTOS ESPECIAIS (esconde em bolões nacionais) ═══ */}
+      {!bolao.is_nacional && (
+        <EventosEspeciais
+          bolaoId={id!}
+          campeonatoId={bolao.campeonato_id}
+          isCriador={bolao.criador_id === user?.id}
+          userId={user?.id || ""}
+        />
+      )}
 
       {/* ═══ 2. PALPITES - Próximos jogos clicáveis ═══ */}
       <Card className="rounded-2xl shadow-sm border-copa-gold-200 bg-copa-gold-50">
