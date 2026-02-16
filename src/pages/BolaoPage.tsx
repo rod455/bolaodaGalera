@@ -211,15 +211,25 @@ const BolaoPage = () => {
         .eq("bolao_id", id);
       setTotalParticipantes(count || 0);
 
-      // Fetch upcoming + recent games (limit 5 upcoming, 3 recent)
-      if (bolaoData.campeonato_id) {
+      // Fetch upcoming + recent games from all linked campeonatos
+      // First try bolao_campeonatos (new), fallback to boloes.campeonato_id (legacy)
+      const { data: bcData } = await supabase
+        .from("bolao_campeonatos")
+        .select("campeonato_id")
+        .eq("bolao_id", id!);
+
+      const campIds = bcData && bcData.length > 0
+        ? bcData.map((bc: any) => bc.campeonato_id)
+        : bolaoData.campeonato_id ? [bolaoData.campeonato_id] : [];
+
+      if (campIds.length > 0) {
         const now = new Date();
 
         // Próximos jogos (agendados no futuro)
         const { data: proximos } = await supabase
           .from("jogos")
           .select("*")
-          .eq("campeonato_id", bolaoData.campeonato_id)
+          .in("campeonato_id", campIds)
           .eq("status", "agendado")
           .gte("data_hora", now.toISOString())
           .order("data_hora", { ascending: true })
@@ -230,7 +240,7 @@ const BolaoPage = () => {
         const { data: emAndamento } = await supabase
           .from("jogos")
           .select("*")
-          .eq("campeonato_id", bolaoData.campeonato_id)
+          .in("campeonato_id", campIds)
           .eq("status", "agendado")
           .lt("data_hora", now.toISOString())
           .gte("data_hora", twoHoursAgo.toISOString())
@@ -240,7 +250,7 @@ const BolaoPage = () => {
         const { data: recentes } = await supabase
           .from("jogos")
           .select("*")
-          .eq("campeonato_id", bolaoData.campeonato_id)
+          .in("campeonato_id", campIds)
           .eq("status", "encerrado")
           .order("data_hora", { ascending: false })
           .limit(5);
@@ -249,7 +259,7 @@ const BolaoPage = () => {
         const { data: aoVivo } = await supabase
           .from("jogos")
           .select("*")
-          .eq("campeonato_id", bolaoData.campeonato_id)
+          .in("campeonato_id", campIds)
           .eq("status", "ao_vivo");
 
         const allJogos = [

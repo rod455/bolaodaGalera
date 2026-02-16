@@ -71,7 +71,7 @@ const Palpites = () => {
       const { data: bolao } = await supabase
         .from("boloes").select("nome, campeonato_id, modo_pontuacao, time_favorito, campeonatos(tipo)")
         .eq("id", id).single();
-      if (!bolao || !bolao.campeonato_id) { toast.error("Bolão não encontrado"); navigate(`/bolao/${id}`); return; }
+      if (!bolao) { toast.error("Bolão não encontrado"); navigate(`/bolao/${id}`); return; }
       setBolaoNome(bolao.nome);
 
       const tipo = (bolao.campeonatos as any)?.tipo;
@@ -84,8 +84,20 @@ const Palpites = () => {
       const bolaoTimeFavorito = fanaticoMode ? (bolao as any).time_favorito || null : null;
       setTimeFavorito(bolaoTimeFavorito);
 
+      // Buscar campeonatos vinculados (multi ou legacy)
+      const { data: bcData } = await supabase
+        .from("bolao_campeonatos")
+        .select("campeonato_id")
+        .eq("bolao_id", id!);
+
+      const campIds = bcData && bcData.length > 0
+        ? bcData.map((bc: any) => bc.campeonato_id)
+        : bolao.campeonato_id ? [bolao.campeonato_id] : [];
+
+      if (campIds.length === 0) { toast.error("Nenhum campeonato vinculado"); navigate(`/bolao/${id}`); return; }
+
       const { data: allGames } = await supabase
-        .from("jogos").select("*").eq("campeonato_id", bolao.campeonato_id)
+        .from("jogos").select("*").in("campeonato_id", campIds)
         .order("data_hora", { ascending: true });
 
       let uniqueJogos = (allGames || []) as Jogo[];

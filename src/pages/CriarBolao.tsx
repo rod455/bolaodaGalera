@@ -65,7 +65,7 @@ const CriarBolao = () => {
   const [nome, setNome] = useState("");
   const [descricao, setDescricao] = useState("");
   const [modoSelecionado, setModoSelecionado] = useState("");
-  const [campeonatoSelecionado, setCampeonatoSelecionado] = useState("");
+  const [campeonatosSelecionados, setCampeonatosSelecionados] = useState<string[]>([]);
   const [campeonatos, setCampeonatos] = useState<Campeonato[]>([]);
   const [loadingCampeonatos, setLoadingCampeonatos] = useState(true);
   const [imagemFile, setImagemFile] = useState<File | null>(null);
@@ -102,17 +102,17 @@ const CriarBolao = () => {
     }
   }, [modoSelecionado]);
 
-  // Carregar times quando campeonato muda E modo é fanático
+  // Carregar times quando campeonatos mudam E modo é fanático
   useEffect(() => {
-    if (campeonatoSelecionado && modoSelecionado === "fanatico") {
-      loadTimes(campeonatoSelecionado);
+    if (campeonatosSelecionados.length > 0 && modoSelecionado === "fanatico") {
+      loadTimes(campeonatosSelecionados[0]);
       setTimeModalOpen(true);
     } else {
       setTimesDisponiveis([]);
       setTimeFavorito("");
       setTimeModalOpen(false);
     }
-  }, [campeonatoSelecionado, modoSelecionado]);
+  }, [campeonatosSelecionados, modoSelecionado]);
 
   const loadCampeonatos = async () => {
     try {
@@ -178,7 +178,7 @@ const CriarBolao = () => {
   const isFanatico = modoSelecionado === "fanatico";
 
   const handleCriar = async () => {
-    if (!campeonatoSelecionado) { toast.error("Selecione um campeonato"); return; }
+    if (campeonatosSelecionados.length === 0) { toast.error("Selecione pelo menos um campeonato"); return; }
     if (!nome) { toast.error("Informe o nome do bolão"); return; }
     if (!modoSelecionado) { toast.error("Selecione o modo de pontuação"); return; }
     if (regrasAtivas.length === 0) { toast.error("Selecione pelo menos uma regra de pontuação"); return; }
@@ -208,15 +208,23 @@ const CriarBolao = () => {
         }
       }
 
+      // Criar bolão com o primeiro campeonato como referência (legacy)
       const { data: newBolao, error } = await supabase.from("boloes").insert({
         nome, descricao: descricao || null, imagem_url: imagemUrl,
-        codigo_convite: codigo, criador_id: user.id, campeonato_id: campeonatoSelecionado,
+        codigo_convite: codigo, criador_id: user.id, campeonato_id: campeonatosSelecionados[0],
         modo_pontuacao: modoSelecionado, regras_ativas: regrasAtivas,
         is_publico: false, is_nacional: false,
         ...(isFanatico ? { time_favorito: timeFavorito } : {}),
       }).select("id").single();
 
       if (error) throw error;
+
+      // Inserir todos os campeonatos na tabela de relação N:N
+      const campeonatoInserts = campeonatosSelecionados.map((cId) => ({
+        bolao_id: newBolao.id,
+        campeonato_id: cId,
+      }));
+      await supabase.from("bolao_campeonatos").insert(campeonatoInserts);
 
       await supabase.from("profiles").upsert(
         { id: user.id, nome: user.user_metadata?.nome || user.email?.split("@")[0] || "Usuário" },
@@ -255,7 +263,13 @@ const CriarBolao = () => {
     campeonatos: campeonatos.filter((c) => categorizeCampeonato(c) === cat.id),
   })).filter((cat) => cat.campeonatos.length > 0);
 
-  const campSelecionado = campeonatos.find((c) => c.id === campeonatoSelecionado);
+  const campsSelecionados = campeonatos.filter((c) => campeonatosSelecionados.includes(c.id));
+
+  const toggleCampeonato = (campId: string) => {
+    setCampeonatosSelecionados((prev) =>
+      prev.includes(campId) ? prev.filter((id) => id !== campId) : [...prev, campId]
+    );
+  };
 
   const toggleCategoria = (catId: string) => {
     setCategoriaAberta((prev) => prev === catId ? null : catId);
@@ -358,7 +372,7 @@ const CriarBolao = () => {
             <Trophy className="w-4 h-4 text-copa-gold-500" />
             Campeonato
           </CardTitle>
-          <p className="text-xs text-muted-foreground mt-1">Escolha a categoria e selecione o campeonato</p>
+          <p className="text-xs text-muted-foreground mt-1">Escolha um ou mais campeonatos para o bolão</p>
         </CardHeader>
         <CardContent className="space-y-2">
           {loadingCampeonatos ? (
@@ -366,12 +380,12 @@ const CriarBolao = () => {
           ) : (
             campeonatosPorCategoria.map((cat) => {
               const isOpen = categoriaAberta === cat.id;
-              const hasSelected = cat.campeonatos.some((c) => c.id === campeonatoSelecionado);
+              const selectedCount = cat.campeonatos.filter((c) => campeonatosSelecionados.includes(c.id)).length;
               return (
                 <div key={cat.id} className="rounded-xl overflow-hidden border border-gray-100">
                   <button onClick={() => toggleCategoria(cat.id)}
                     className={`w-full flex items-center justify-between px-4 py-3 transition-all ${
-                      isOpen ? "bg-copa-green-50" : hasSelected ? "bg-copa-green-50/50" : "bg-muted/40 hover:bg-muted/70"
+                      isOpen ? "bg-copa-green-50" : selectedCount > 0 ? "bg-copa-green-50/50" : "bg-muted/40 hover:bg-muted/70"
                     }`}>
                     <div className="flex items-center gap-3">
                       <span className="text-lg">{cat.emoji}</span>
@@ -383,9 +397,9 @@ const CriarBolao = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {hasSelected && !isOpen && (
+                      {selectedCount > 0 && !isOpen && (
                         <span className="text-[10px] font-bold text-copa-green-600 bg-copa-green-100 rounded-full px-2 py-0.5">
-                          {campSelecionado?.nome_popular || campSelecionado?.nome}
+                          {selectedCount} selecionado{selectedCount > 1 ? "s" : ""}
                         </span>
                       )}
                       <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`} />
@@ -394,18 +408,15 @@ const CriarBolao = () => {
                   {isOpen && (
                     <div className="px-2 py-2 space-y-1 bg-white animate-fade-in">
                       {cat.campeonatos.map((camp) => {
-                        const selected = campeonatoSelecionado === camp.id;
+                        const selected = campeonatosSelecionados.includes(camp.id);
                         return (
                           <div key={camp.id}
-                            onClick={() => {
-                              setCampeonatoSelecionado(camp.id);
-                              scrollToSection("section-imagem");
-                            }}
+                            onClick={() => toggleCampeonato(camp.id)}
                             className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
                               selected ? "bg-copa-green-50 border border-copa-green-300" : "hover:bg-muted/50"
                             }`}>
-                            <div className={`w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                              selected ? "border-copa-green-500 bg-copa-green-500" : "border-gray-300"
+                            <div className={`w-[18px] h-[18px] rounded flex items-center justify-center flex-shrink-0 ${
+                              selected ? "bg-copa-green-500" : "border-2 border-gray-300"
                             }`}>
                               {selected && <Check className="w-3 h-3 text-white" />}
                             </div>
@@ -433,11 +444,28 @@ const CriarBolao = () => {
           {!loadingCampeonatos && campeonatos.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-4">Nenhum campeonato disponível.</p>
           )}
+          {campeonatosSelecionados.length > 0 && (
+            <div className="bg-copa-green-50 border border-copa-green-200 rounded-xl p-3 mt-2">
+              <p className="text-xs font-bold text-copa-green-700 mb-1">
+                {campeonatosSelecionados.length} campeonato{campeonatosSelecionados.length > 1 ? "s" : ""} selecionado{campeonatosSelecionados.length > 1 ? "s" : ""}:
+              </p>
+              <div className="flex flex-wrap gap-1">
+                {campsSelecionados.map((c) => (
+                  <span key={c.id} className="text-[10px] bg-copa-green-100 text-copa-green-700 rounded-full px-2 py-0.5 flex items-center gap-1">
+                    {c.nome_popular || c.nome}
+                    <button onClick={() => toggleCampeonato(c.id)} className="hover:text-red-500">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
       {/* 3.5 Time do Coração - badge indicador (só para modo Fanático) */}
-      {isFanatico && campeonatoSelecionado && (
+      {isFanatico && campeonatosSelecionados.length > 0 && (
         <div className="flex items-center justify-between bg-red-50 border border-red-200 rounded-xl px-4 py-3 animate-fade-in">
           <div className="flex items-center gap-2">
             <Heart className="w-4 h-4 text-red-500 fill-red-500" />
