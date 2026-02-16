@@ -361,7 +361,7 @@ const Perfil = () => {
                     setLoadingPortal(true);
                     try {
                       const { data, error } = await supabase.functions.invoke("create-checkout", {
-                        body: { priceId: "price_1T0KMtCPiJml4DyD2m8qiXj6" },
+                        body: { priceId: "price_1T1TzjC1YtBHMBc2CGkzhsUe" },
                       });
                       if (error) throw error;
                       if (data?.url) window.location.href = data.url;

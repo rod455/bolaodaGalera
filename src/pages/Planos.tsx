@@ -14,10 +14,10 @@ import { MODO_REGRAS } from "@/lib/constants";
 
 // ═══ Price IDs do Stripe ═══
 const STRIPE_PRICES = {
-  premium_mensal: "price_1StwGSCPiJml4DyDe86mm6Fq",
-  premium_anual: "price_1T0KJHCPiJml4DyDwB657CRs",
-  premium_pro_mensal: "price_1T0KMtCPiJml4DyD2m8qiXj6",
-  premium_pro_anual: "price_1T0KNKCPiJml4DyDb0hcf6RG",
+  premium_mensal: "price_1T1TxnC1YtBHMBc2hJMfOwqL",
+  premium_anual: "price_1T1TyYC1YtBHMBc2E12oGz6Q",
+  premium_pro_mensal: "price_1T1TzjC1YtBHMBc2CGkzhsUe",
+  premium_pro_anual: "price_1T1U0KC1YtBHMBc2gqSGO0jD",
 };
 
 const Planos = () => {
