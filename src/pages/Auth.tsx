@@ -90,7 +90,7 @@ const Auth = () => {
           },
         });
         if (error) throw error;
-        toast.success("Conta criada com sucesso! Verifique seu email.");
+        toast.success("Conta criada! Verifique seu email (olhe também a pasta Spam/Lixo eletrônico).", { duration: 8000 });
         setIsLogin(true);
       }
     } catch (error: any) {
@@ -281,6 +281,15 @@ const Auth = () => {
             >
               {isSubmitting ? "Aguarde..." : isLogin ? "Entrar" : "Criar conta"}
             </Button>
+
+            {!isLogin && (
+              <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                <Mail className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                <p className="text-xs text-amber-700">
+                  Após criar sua conta, verifique seu email. <b>Olhe também a pasta Spam/Lixo eletrônico.</b>
+                </p>
+              </div>
+            )}
           </form>
 
           {/* Separador */}
