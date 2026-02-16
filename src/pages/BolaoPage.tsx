@@ -627,7 +627,7 @@ const BolaoPage = () => {
             ) : (
               <>
                 <h2 className="text-2xl font-bold truncate">{bolao.nome}</h2>
-                {bolao.criador_id === user?.id && (
+                {bolao.criador_id === user?.id && !bolao.is_nacional && (
                   <button
                     onClick={() => {
                       setNovoNome(bolao.nome);
@@ -726,7 +726,7 @@ const BolaoPage = () => {
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-        {bolao.criador_id === user?.id && (
+        {bolao.criador_id === user?.id && !bolao.is_nacional && (
           <label className="absolute bottom-3 right-3 flex items-center gap-1.5 bg-black/60 hover:bg-black/80 text-white text-xs font-semibold px-3 py-2 rounded-xl cursor-pointer transition-all backdrop-blur-sm">
             {uploadingCapa ? (
               <Loader2 className="w-4 h-4 animate-spin" />
