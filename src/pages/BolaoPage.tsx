@@ -92,6 +92,7 @@ const BolaoPage = () => {
   const [jogos, setJogos] = useState<Jogo[]>([]);
   const [palpites, setPalpites] = useState<Record<string, Palpite>>({});
   const [ranking, setRanking] = useState<RankingEntry[]>([]);
+  const [showFullRanking, setShowFullRanking] = useState(false);
   const [totalParticipantes, setTotalParticipantes] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
@@ -304,13 +305,12 @@ const BolaoPage = () => {
         }
       }
 
-      // Fetch ranking (top 10)
+      // Fetch ranking (all participants)
       const { data: participantes } = await supabase
         .from("bolao_participantes")
         .select("user_id, pontuacao_total, posicao_ranking, profiles(nome, avatar_url)")
         .eq("bolao_id", id!)
-        .order("pontuacao_total", { ascending: false })
-        .limit(10);
+        .order("pontuacao_total", { ascending: false });
 
       const rankingList: RankingEntry[] = (participantes || []).map(
         (p: any, idx: number) => {
@@ -805,8 +805,8 @@ const BolaoPage = () => {
               Ranking
             </CardTitle>
             {ranking.length > 5 && (
-              <button className="text-sm text-copa-green-500 font-medium hover:underline">
-                Ver ranking completo
+              <button onClick={() => setShowFullRanking(!showFullRanking)} className="text-sm text-copa-green-500 font-medium hover:underline">
+                {showFullRanking ? "Ver menos" : "Ver ranking completo"}
               </button>
             )}
           </div>
@@ -817,7 +817,7 @@ const BolaoPage = () => {
               Ranking será atualizado após os primeiros jogos.
             </p>
           ) : (
-            ranking.slice(0, 5).map((player) => (
+            (showFullRanking ? ranking : ranking.slice(0, 5)).map((player) => (
               <div
                 key={player.pos}
                 className={`flex items-center justify-between rounded-xl px-4 py-3 ${
