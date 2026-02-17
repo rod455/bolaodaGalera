@@ -137,7 +137,7 @@ const Planos = () => {
           <div className="space-y-2">
             <div className="flex items-center gap-2.5">
               <Check className="w-4 h-4 text-copa-green-500 flex-shrink-0" />
-              <span className="text-sm">Criar até 1 bolão</span>
+              <span className="text-sm">Criar até 1 bolão privado</span>
             </div>
             <div className="flex items-center gap-2.5">
               <Check className="w-4 h-4 text-copa-green-500 flex-shrink-0" />
@@ -148,7 +148,11 @@ const Planos = () => {
             </div>
             <div className="flex items-center gap-2.5">
               <Check className="w-4 h-4 text-copa-green-500 flex-shrink-0" />
-              <span className="text-sm">Participar de até 3 bolões</span>
+              <span className="text-sm">Participar de até 3 bolões privados</span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <Check className="w-4 h-4 text-copa-green-500 flex-shrink-0" />
+              <span className="text-sm">Bolões nacionais ilimitados</span>
             </div>
           </div>
         </CardContent>

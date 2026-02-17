@@ -185,6 +185,20 @@ const CriarBolao = () => {
     if (isFanatico && !timeFavorito) { toast.error("Escolha seu time do coração"); return; }
     if (!user) { toast.error("Você precisa estar logado"); return; }
 
+    // Verificar limite de criação no plano Free (1 bolão)
+    if (userPlano === "free" || !userPlano) {
+      const { count } = await supabase
+        .from("boloes")
+        .select("*", { count: "exact", head: true })
+        .eq("criador_id", user.id)
+        .eq("is_nacional", false);
+      if ((count || 0) >= 1) {
+        toast.error("Você atingiu o limite de 1 bolão no plano Free. Faça upgrade para criar mais!");
+        navigate("/planos");
+        return;
+      }
+    }
+
     // Mostrar ad para usuários free
     if (needsAd) {
       setShowAdModal(true);

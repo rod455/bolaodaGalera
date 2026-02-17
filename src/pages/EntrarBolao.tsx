@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useUserPlan } from "@/hooks/useUserPlan";
 import type { Bolao } from "@/lib/types";
 import { FALLBACK_IMAGES } from "@/lib/constants";
 
@@ -22,6 +23,23 @@ const EntrarBolao = () => {
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState<string | null>(null);
   const [buscando, setBuscando] = useState(false);
+  const { plano: userPlano } = useUserPlan();
+
+  const checkPrivateLimit = async (): Promise<boolean> => {
+    if (userPlano !== "free" && userPlano) return true;
+    if (!user) return false;
+    const { data } = await supabase
+      .from("bolao_participantes")
+      .select("bolao_id, boloes(is_nacional)")
+      .eq("user_id", user.id);
+    const privCount = (data || []).filter((p: any) => p.boloes && !p.boloes.is_nacional).length;
+    if (privCount >= 3) {
+      toast.error("Você atingiu o limite de 3 bolões privados no plano Free. Faça upgrade para participar de mais!");
+      navigate("/planos");
+      return false;
+    }
+    return true;
+  };
 
   useEffect(() => {
     if (user) loadData();
@@ -92,6 +110,10 @@ const EntrarBolao = () => {
       return;
     }
     if (!user) return;
+
+    // Verificar limite de privados
+    if (!(await checkPrivateLimit())) return;
+
     setBuscando(true);
 
     try {
@@ -135,6 +157,10 @@ const EntrarBolao = () => {
 
   const handleParticipar = async (bolaoId: string) => {
     if (!user) return;
+
+    // Verificar limite de privados
+    if (!(await checkPrivateLimit())) return;
+
     setJoining(bolaoId);
 
     try {

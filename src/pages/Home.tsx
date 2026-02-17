@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   PlusCircle, Keyboard, Users, MapPin, ChevronRight, ChevronUp, ChevronDown, GripVertical,
-  Trophy, Globe, LogIn, AlertTriangle, Clock, X, Loader2, Calendar, Search, Info, UserPlus,
+  Trophy, Globe, LogIn, AlertTriangle, Clock, X, Loader2, Calendar, Search, Info, UserPlus, Crown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,6 +14,7 @@ import RegrasModal from "@/components/RegrasModal";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import AdRewardModal from "@/components/AdRewardModal";
 import { useRewardedAd } from "@/hooks/useRewardedAd";
+import { useUserPlan } from "@/hooks/useUserPlan";
 import PromoBanner from "@/components/PromoBanner";
 import PromoCardBorder from "@/components/PromoCardBorder";
 import type { Bolao } from "@/lib/types";
@@ -199,6 +200,7 @@ const Home = () => {
   const [codigoInput, setCodigoInput] = useState("");
   const [joiningByCode, setJoiningByCode] = useState(false);
   const { showAd, resolveWebAd, needsAd } = useRewardedAd();
+  const { plano: userPlano } = useUserPlan();
   const [showAdModal, setShowAdModal] = useState(false);
   const [regrasModal, setRegrasModal] = useState<string | null>(null);
   const [userEstado, setUserEstado] = useState<string | null>(null);
@@ -334,9 +336,22 @@ const Home = () => {
 
   const visibleAlerts = dismissCount >= 2 ? [] : alerts.filter((a) => !dismissedAlerts.has(a.id));
 
+  // ═══ Limites do plano Free ═══
+  const FREE_MAX_PRIVADOS = 3;
+  const FREE_MAX_CRIAR = 1;
+  const isFree = !userPlano || userPlano === "free";
+  const atingiuLimitePrivados = isFree && user && privados.length >= FREE_MAX_PRIVADOS;
+
   const handleEntrarPorCodigo = async () => {
     if (!codigoInput.trim()) { toast.error("Informe o código do bolão"); return; }
     if (!user) return;
+
+    // Bloquear se atingiu limite de privados no plano free
+    if (atingiuLimitePrivados) {
+      toast.error(`Você atingiu o limite de ${FREE_MAX_PRIVADOS} bolões privados no plano Free. Faça upgrade para participar de mais!`);
+      navigate("/planos");
+      return;
+    }
 
     // Mostrar ad para usuários free
     if (needsAd) {
@@ -465,7 +480,28 @@ const Home = () => {
         <div className="flex items-center gap-2">
           <Trophy className="w-4 h-4 text-copa-gold-500" />
           <h3 className="text-base font-bold">Bolões Privados</h3>
+          {isFree && user && (
+            <span className="text-xs text-muted-foreground">({privados.length}/{FREE_MAX_PRIVADOS})</span>
+          )}
         </div>
+
+        {/* Aviso de limite atingido */}
+        {atingiuLimitePrivados && (
+          <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+            <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <AlertTriangle className="w-4 h-4 text-amber-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-amber-800">Limite atingido</p>
+              <p className="text-xs text-amber-600">Você atingiu o máximo de {FREE_MAX_PRIVADOS} bolões privados no plano Free.</p>
+            </div>
+            <Button size="sm" onClick={() => navigate("/planos")}
+              className="bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800 font-bold rounded-lg flex-shrink-0">
+              <Crown className="w-3.5 h-3.5 mr-1" /> Upgrade
+            </Button>
+          </div>
+        )}
+
         {privados.length > 0 ? (
           <div className="space-y-4">
             {privados.map((b, i) => (
