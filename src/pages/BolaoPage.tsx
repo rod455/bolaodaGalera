@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import RegrasModal from "@/components/RegrasModal";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import EventosEspeciais from "@/components/EventosEspeciais";
+import PromoBolaoHeader from "@/components/PromoBolaoHeader";
 import type { Bolao, Jogo, Palpite, RankingEntry } from "@/lib/types";
 import { MODO_LABELS, MODO_REGRAS } from "@/lib/constants";
 import { formatDataJogo, traduzirFase, getInitials } from "@/lib/formatters";
@@ -804,6 +805,11 @@ const BolaoPage = () => {
             </div>
           </DialogContent>
         </Dialog>
+      )}
+
+      {/* ═══ PROMO PAULISTÃO ═══ */}
+      {id === "71851d2a-88fa-4ec4-a780-7c1e450869ef" && (
+        <PromoBolaoHeader regulamentoUrl="/regulamento-bolao-paulistao.html" />
       )}
 
       {/* ═══ 1. RANKING ═══ */}
