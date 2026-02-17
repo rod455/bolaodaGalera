@@ -395,7 +395,7 @@ const Home = () => {
                 <UserPlus className="w-4 h-4 mr-1" /> Criar conta grátis
               </Button>
               <Button size="sm" variant="outline" onClick={() => navigate("/auth")}
-                className="border-white/30 text-white hover:bg-white/10 font-semibold rounded-lg">
+                className="border-white text-white hover:bg-white/20 font-semibold rounded-lg">
                 Já tenho conta
               </Button>
             </div>
