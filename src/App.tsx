@@ -18,6 +18,7 @@ import AppLayout from "./components/layout/AppLayout";
 import ProtectedRoute from "./components/layout/ProtectedRoute";
 import SplashScreen from "./components/SplashScreen";
 import NotificationToast from "./components/NotificationToast";
+import { Analytics } from "@vercel/analytics/react";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +59,7 @@ const App = () => {
             <NotificationToast />
           </BrowserRouter>
         </AuthProvider>
+        <Analytics />
       </TooltipProvider>
     </QueryClientProvider>
   );
