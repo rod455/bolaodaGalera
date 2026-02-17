@@ -14,9 +14,14 @@ import RegrasModal from "@/components/RegrasModal";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import AdRewardModal from "@/components/AdRewardModal";
 import { useRewardedAd } from "@/hooks/useRewardedAd";
+import PromoBanner from "@/components/PromoBanner";
+import PromoCardBorder from "@/components/PromoCardBorder";
 import type { Bolao } from "@/lib/types";
 import { MODO_LABELS, MODO_REGRAS, FALLBACK_IMAGES } from "@/lib/constants";
 import { formatDataJogo } from "@/lib/formatters";
+
+// ID do bolão do Paulistão (promoção R$200)
+const PAULISTAO_BOLAO_ID = "71851d2a-88fa-4ec4-a780-7c1e450869ef";
 
 interface ProximoJogo {
   time_a: string; time_b: string;
@@ -352,6 +357,13 @@ const Home = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       <AdRewardModal open={showAdModal} onComplete={resolveWebAd} message="Assista para entrar no bolão" />
+
+      {/* ═══ BANNER PROMOÇÃO PAULISTÃO ═══ */}
+      <PromoBanner
+        bolaoId={PAULISTAO_BOLAO_ID}
+        jaParticipa={userBolaoIds.has(PAULISTAO_BOLAO_ID)}
+      />
+
       {visibleAlerts.length > 0 && (
         <div className="space-y-2">
           {visibleAlerts.slice(0, 3).map((alert) => (
@@ -483,13 +495,27 @@ const Home = () => {
         })()}
 
         <div className="space-y-4">
-          {nacionais.map((b, i) => (
-            <NacionalCard key={b.id} bolao={b} participantes={participantesCount[b.id] || 0}
-              proximoJogo={proximosJogos[b.id] || null} isParticipando={userBolaoIds.has(b.id)}
-              onEntrar={() => handleEntrarNacional(b.id)} onAcessar={() => navigate(`/bolao/${b.id}`)}
-              onInfoClick={() => setRegrasModal(b.modo_pontuacao || null)}
-              imgFallback={FALLBACK_IMAGES[i % FALLBACK_IMAGES.length]} joining={joiningBolao === b.id} />
-          ))}
+          {nacionais.map((b, i) => {
+            const isPaulistao = b.id === PAULISTAO_BOLAO_ID;
+            const card = (
+              <NacionalCard key={b.id} bolao={b} participantes={participantesCount[b.id] || 0}
+                proximoJogo={proximosJogos[b.id] || null} isParticipando={userBolaoIds.has(b.id)}
+                onEntrar={() => handleEntrarNacional(b.id)} onAcessar={() => navigate(`/bolao/${b.id}`)}
+                onInfoClick={() => setRegrasModal(b.modo_pontuacao || null)}
+                imgFallback={FALLBACK_IMAGES[i % FALLBACK_IMAGES.length]} joining={joiningBolao === b.id} />
+            );
+
+            // Envolver o card do Paulistão com borda dourada
+            if (isPaulistao) {
+              return (
+                <div key={b.id} className="mt-2">
+                  <PromoCardBorder>{card}</PromoCardBorder>
+                </div>
+              );
+            }
+
+            return card;
+          })}
           {nacionais.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Nenhum bolão nacional disponível.</p>}
         </div>
       </div>
