@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate, Navigate } from "react-router-dom";
+import { useNavigate, Navigate, useSearchParams } from "react-router-dom";
 import { Trophy, Eye, EyeOff, Mail, Lock, UserPlus, ArrowLeft, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,8 +26,9 @@ const TIMES_BRASIL = [
 
 const Auth = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { session, loading } = useAuth();
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin, setIsLogin] = useState(searchParams.get("modo") !== "cadastro");
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
