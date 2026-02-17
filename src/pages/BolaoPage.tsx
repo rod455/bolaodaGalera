@@ -345,15 +345,56 @@ const BolaoPage = () => {
 
   const openCopyDialog = async () => {
     if (!user || !bolao) return;
-    // Find other bolões the user participates in with the same campeonato
+
+    // 1. Descobrir todos os campeonatos deste bolão (novo + legado)
+    const { data: bcThis } = await supabase
+      .from("bolao_campeonatos")
+      .select("campeonato_id")
+      .eq("bolao_id", id!);
+    const thisCampIds = new Set(
+      [
+        ...(bcThis || []).map((bc: any) => bc.campeonato_id),
+        ...(bolao.campeonato_id ? [bolao.campeonato_id] : []),
+      ]
+    );
+
+    // 2. Buscar todos os bolões que o usuário participa
     const { data: participacoes } = await supabase
       .from("bolao_participantes")
       .select("bolao_id, boloes(id, nome, campeonato_id)")
       .eq("user_id", user.id);
 
-    const others = (participacoes || [])
-      .filter((p: any) => p.boloes && p.boloes.id !== id && p.boloes.campeonato_id === bolao.campeonato_id)
-      .map((p: any) => ({ id: p.boloes.id, nome: p.boloes.nome, campeonato_id: p.boloes.campeonato_id }));
+    const otherBolaoIds = (participacoes || [])
+      .filter((p: any) => p.boloes && p.boloes.id !== id)
+      .map((p: any) => p.boloes);
+
+    // 3. Buscar campeonatos de todos esses bolões via bolao_campeonatos
+    const otherIds = otherBolaoIds.map((b: any) => b.id);
+    const { data: bcOthers } = otherIds.length > 0
+      ? await supabase.from("bolao_campeonatos").select("bolao_id, campeonato_id").in("bolao_id", otherIds)
+      : { data: [] };
+
+    // Montar mapa bolao_id -> Set de campeonato_ids
+    const campMap: Record<string, Set<string>> = {};
+    for (const b of otherBolaoIds) {
+      campMap[b.id] = new Set(b.campeonato_id ? [b.campeonato_id] : []);
+    }
+    for (const bc of (bcOthers || [])) {
+      if (!campMap[bc.bolao_id]) campMap[bc.bolao_id] = new Set();
+      campMap[bc.bolao_id].add(bc.campeonato_id);
+    }
+
+    // 4. Filtrar: bolões que compartilham pelo menos 1 campeonato com este
+    const others = otherBolaoIds
+      .filter((b: any) => {
+        const camps = campMap[b.id];
+        if (!camps) return false;
+        for (const c of camps) {
+          if (thisCampIds.has(c)) return true;
+        }
+        return false;
+      })
+      .map((b: any) => ({ id: b.id, nome: b.nome, campeonato_id: b.campeonato_id }));
 
     setOtherBoloes(others);
     setShowCopyDialog(true);
