@@ -33,8 +33,11 @@ const App = () => {
         <AuthProvider>
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<Navigate to="/auth" replace />} />
+              <Route path="/" element={<Navigate to="/home" replace />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/home" element={<AppLayout />}>
+                <Route index element={<Home />} />
+              </Route>
               <Route
                 element={
                   <ProtectedRoute>
@@ -42,7 +45,6 @@ const App = () => {
                   </ProtectedRoute>
                 }
               >
-                <Route path="/home" element={<Home />} />
                 <Route path="/criar" element={<CriarBolao />} />
                 <Route path="/entrar" element={<EntrarBolao />} />
                 <Route path="/ao-vivo" element={<AoVivo />} />
