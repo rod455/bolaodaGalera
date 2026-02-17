@@ -394,10 +394,10 @@ const Home = () => {
                 className="bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800 font-bold rounded-lg shadow-md">
                 <UserPlus className="w-4 h-4 mr-1" /> Criar conta grátis
               </Button>
-              <Button size="sm" variant="outline" onClick={() => navigate("/auth")}
-                className="border-white text-white hover:bg-white/20 font-semibold rounded-lg">
+              <button onClick={() => navigate("/auth")}
+                className="px-4 py-2 text-sm font-semibold rounded-lg border-2 border-white text-white hover:bg-white/20 transition-colors">
                 Já tenho conta
-              </Button>
+              </button>
             </div>
           </div>
         </div>
