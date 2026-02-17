@@ -29,6 +29,11 @@ const Auth = () => {
   const [searchParams] = useSearchParams();
   const { session, loading } = useAuth();
   const [isLogin, setIsLogin] = useState(searchParams.get("modo") !== "cadastro");
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [resetEmailSent, setResetEmailSent] = useState(false);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -55,8 +60,46 @@ const Auth = () => {
     ? TIMES_BRASIL.filter((t) => t.toLowerCase().includes(timeBusca.toLowerCase()))
     : [];
 
-  // If already logged in, redirect to home
-  if (!loading && session) {
+  // Detectar fluxo de recuperação de senha
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setIsResettingPassword(true);
+      }
+    });
+    // Também detectar via query param
+    if (searchParams.get("modo") === "reset") {
+      setIsResettingPassword(true);
+    }
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== newPasswordConfirm) {
+      toast.error("As senhas não coincidem");
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast.error("A senha deve ter pelo menos 6 caracteres");
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      toast.success("Senha alterada com sucesso!");
+      setIsResettingPassword(false);
+      navigate("/home");
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao alterar senha");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // If already logged in AND not resetting password, redirect to home
+  if (!loading && session && !isResettingPassword) {
     return <Navigate to="/home" replace />;
   }
 
@@ -138,6 +181,27 @@ const Auth = () => {
     }
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+      toast.error("Informe seu email");
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + "/auth?modo=reset",
+      });
+      if (error) throw error;
+      setResetEmailSent(true);
+      toast.success("Email de recuperação enviado! Verifique sua caixa de entrada e spam.");
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao enviar email de recuperação");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-copa-green-500 flex flex-col items-center justify-center p-6">
       {/* Background pattern */}
@@ -149,12 +213,144 @@ const Auth = () => {
           <img src="https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/604913%20(512%20x%20512%20px).png"
             alt="Bolão na Copa" className="w-44 h-44 object-contain drop-shadow-lg" />
           <p className="text-copa-green-100 text-sm">
-            {isLogin ? "Seu palpite, sua torcida, sua galera." : "Crie sua conta"}
+            {isResettingPassword ? "Defina sua nova senha" : isForgotPassword ? "Recupere sua senha" : isLogin ? "Seu palpite, sua torcida, sua galera." : "Crie sua conta"}
           </p>
         </div>
 
+        {/* ═══ TELA: Redefinir senha (após clicar no link do email) ═══ */}
+        {isResettingPassword ? (
+          <div className="bg-white rounded-2xl shadow-xl p-6 space-y-5">
+            <form onSubmit={handleResetPassword} className="space-y-4">
+              <div className="text-center mb-2">
+                <h3 className="text-lg font-bold text-copa-green-700">Nova senha</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Digite sua nova senha abaixo.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-password" className="text-sm font-medium text-copa-green-700">
+                  Nova senha
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="new-password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="pl-10 pr-10 h-12 bg-muted/50 border-copa-green-100 focus:border-copa-green-500"
+                    required
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-password-confirm" className="text-sm font-medium text-copa-green-700">
+                  Confirmar nova senha
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="new-password-confirm"
+                    type="password"
+                    placeholder="••••••••"
+                    value={newPasswordConfirm}
+                    onChange={(e) => setNewPasswordConfirm(e.target.value)}
+                    className="pl-10 h-12 bg-muted/50 border-copa-green-100 focus:border-copa-green-500"
+                    required
+                  />
+                </div>
+              </div>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full h-12 bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800 font-bold text-base rounded-xl shadow-md disabled:opacity-50"
+              >
+                {isSubmitting ? "Salvando..." : "Salvar nova senha"}
+              </Button>
+            </form>
+          </div>
+        ) : (
+        <>
+
         {/* Form Card */}
         <div className="bg-white rounded-2xl shadow-xl p-6 space-y-5">
+
+          {/* ═══ TELA: Esqueci minha senha ═══ */}
+          {isForgotPassword ? (
+            <>
+              {resetEmailSent ? (
+                <div className="text-center space-y-4 py-4">
+                  <div className="w-16 h-16 bg-copa-green-100 rounded-full flex items-center justify-center mx-auto">
+                    <Mail className="w-8 h-8 text-copa-green-600" />
+                  </div>
+                  <h3 className="text-lg font-bold text-copa-green-700">Email enviado!</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Enviamos um link de recuperação para <strong>{email}</strong>. 
+                    Verifique sua caixa de entrada e também a pasta de spam.
+                  </p>
+                  <Button
+                    type="button"
+                    onClick={() => { setIsForgotPassword(false); setResetEmailSent(false); }}
+                    className="w-full h-11 bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800 font-bold rounded-xl"
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" /> Voltar ao login
+                  </Button>
+                </div>
+              ) : (
+                <form onSubmit={handleForgotPassword} className="space-y-4">
+                  <div className="text-center mb-2">
+                    <h3 className="text-lg font-bold text-copa-green-700">Esqueceu sua senha?</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Informe seu email e enviaremos um link para redefinir sua senha.
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="reset-email" className="text-sm font-medium text-copa-green-700">
+                      Email
+                    </Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="reset-email"
+                        type="email"
+                        placeholder="seu@email.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="pl-10 h-12 bg-muted/50 border-copa-green-100 focus:border-copa-green-500"
+                        required
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full h-12 bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800 font-bold text-base rounded-xl shadow-md disabled:opacity-50"
+                  >
+                    {isSubmitting ? "Enviando..." : "Enviar link de recuperação"}
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => setIsForgotPassword(false)}
+                    className="w-full text-sm text-copa-green-500 hover:underline text-center flex items-center justify-center gap-1"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" /> Voltar ao login
+                  </button>
+                </form>
+              )}
+            </>
+          ) : (
+          /* ═══ TELA: Login / Cadastro ═══ */
+          <>
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <div className="space-y-2">
@@ -331,7 +527,11 @@ const Auth = () => {
           </button>
 
           {isLogin && (
-            <button className="text-sm text-copa-green-500 hover:underline w-full text-center">
+            <button
+              type="button"
+              onClick={() => setIsForgotPassword(true)}
+              className="text-sm text-copa-green-500 hover:underline w-full text-center"
+            >
               Esqueci minha senha
             </button>
           )}
@@ -357,7 +557,11 @@ const Auth = () => {
               )}
             </Button>
           </div>
+          </>
+          )}
         </div>
+        </>
+        )}
       </div>
     </div>
   );
