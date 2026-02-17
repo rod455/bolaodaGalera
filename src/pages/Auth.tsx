@@ -100,7 +100,11 @@ const Auth = () => {
 
         // Dispara conversão Google Ads
         if (typeof window.gtag !== 'undefined') {
-          window.gtag('event', 'ads_conversion');
+          window.gtag('event', 'conversion', {
+            'send_to': 'AW-16846659267/9D4iCMqM7fkbEMO9juE-',
+            'value': 0.5,
+            'currency': 'BRL',
+          });
         }
 
         toast.success("Conta criada! Verifique seu email (olhe também a pasta Spam/Lixo eletrônico).", { duration: 8000 });
