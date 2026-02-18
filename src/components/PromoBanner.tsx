@@ -61,22 +61,23 @@ const PromoBanner = ({ jaParticipa = false, bolaoId }: PromoBannerProps) => {
                 color: "rgba(255,255,255,0.9)",
               }}
             >
-              🏆 Promoção
+              🚨 Últimas Vagas
             </span>
           </div>
           <p className="text-white font-bold text-sm sm:text-base leading-snug">
-            Dispute o Bolão do Paulistão de forma gratuita e concorra a{" "}
-            <span style={{ color: "#FEF9C3" }}>R$ 200 em prêmios!</span>
+            <span style={{ color: "#FEF9C3" }}>R$ 200 EM PRÊMIOS</span> — ÚLTIMAS VAGAS!
           </p>
-          <p className="text-white/60 text-xs mt-1">
+          <p className="text-white/70 text-xs mt-1">
             {jaParticipa
               ? "Você já está participando! Continue fazendo seus palpites."
-              : "Inscreva-se até sábado (22/02) às 18h — é grátis e sem compromisso."}
+              : "Dispute o Bolão do Paulistão gratuitamente e concorra ao valor total. Prazo final: sábado às 18h. Não fique de fora."}
           </p>
+          <button
+            className="mt-2 px-4 py-1.5 bg-white text-amber-800 font-bold text-xs rounded-lg hover:bg-white/90 transition-colors shadow-md"
+          >
+            {jaParticipa ? "Ver meus palpites" : "Entrar agora"} <ChevronRight className="w-3.5 h-3.5 inline ml-0.5" />
+          </button>
         </div>
-
-        {/* Seta */}
-        <ChevronRight className="w-5 h-5 text-white/50 flex-shrink-0 group-hover:text-white/80 transition-colors" />
       </div>
     </div>
   );
