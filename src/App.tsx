@@ -22,8 +22,11 @@ import { Analytics } from "@vercel/analytics/react";
 
 const queryClient = new QueryClient();
 
+import { Capacitor } from "@capacitor/core";
+
 const App = () => {
-  const [showSplash, setShowSplash] = useState(true);
+  const isNative = Capacitor.isNativePlatform();
+  const [showSplash, setShowSplash] = useState(isNative);
   const handleSplashFinish = useCallback(() => setShowSplash(false), []);
 
   return (
