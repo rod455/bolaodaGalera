@@ -160,34 +160,11 @@ const Perfil = () => {
     if (deleteConfirmText !== "EXCLUIR") return;
     setDeletingAccount(true);
     try {
-      const userId = user?.id;
-      if (!userId) throw new Error("Usuário não encontrado");
+      const { data, error } = await supabase.functions.invoke("delete-account");
 
-      // Deletar palpites
-      await supabase.from("palpites").delete().eq("user_id", userId);
-      // Deletar participações em bolões
-      await supabase.from("bolao_participantes").delete().eq("user_id", userId);
-      // Deletar rankings de eventos
-      await supabase.from("eventos_ranking").delete().eq("user_id", userId);
-      // Deletar bolões criados sem outros participantes
-      const { data: meusboloes } = await supabase
-        .from("boloes")
-        .select("id")
-        .eq("criador_id", userId);
-      if (meusboloes) {
-        for (const b of meusboloes) {
-          const { count } = await supabase
-            .from("bolao_participantes")
-            .select("*", { count: "exact", head: true })
-            .eq("bolao_id", b.id);
-          if (!count || count === 0) {
-            await supabase.from("boloes").delete().eq("id", b.id);
-          }
-        }
-      }
-      // Deletar perfil
-      await supabase.from("profiles").delete().eq("id", userId);
-      // Fazer logout
+      if (error) throw error;
+      if (!data?.ok) throw new Error(data?.error || "Erro ao excluir conta");
+
       await signOut();
       toast.success("Conta excluída com sucesso. Sentiremos sua falta!");
       navigate("/auth");
