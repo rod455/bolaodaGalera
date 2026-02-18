@@ -952,6 +952,26 @@ const BolaoPage = () => {
               Faça seus palpites
             </h3>
             <div className="flex items-center gap-2">
+              {bolao.codigo_convite && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const url = `${window.location.origin}/entrar?codigo=${bolao.codigo_convite}`;
+                    const text = `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nÉ só acessar: ${url}`;
+                    if (navigator.share) {
+                      navigator.share({ title: `Bolão: ${bolao.nome}`, text }).catch(() => {});
+                    } else {
+                      navigator.clipboard.writeText(text);
+                      toast.success("Link copiado para compartilhar!");
+                    }
+                  }}
+                  className="text-copa-gold-600 border-copa-gold-400 bg-copa-gold-100 hover:bg-copa-gold-200 font-semibold rounded-lg text-xs"
+                >
+                  <Users className="w-3.5 h-3.5 mr-1" /> Convidar
+                </Button>
+              )}
               <Button
                 size="sm"
                 variant="outline"
@@ -1086,25 +1106,6 @@ const BolaoPage = () => {
             <p className="text-sm text-muted-foreground text-center py-2">
               Nenhum jogo agendado no momento.
             </p>
-          )}
-
-          {bolao.codigo_convite && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                const url = `${window.location.origin}/entrar?codigo=${bolao.codigo_convite}`;
-                const text = `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nÉ só acessar: ${url}`;
-                if (navigator.share) {
-                  navigator.share({ title: `Bolão: ${bolao.nome}`, text }).catch(() => {});
-                } else {
-                  navigator.clipboard.writeText(text);
-                  toast.success("Link copiado para compartilhar!");
-                }
-              }}
-              className="w-full mt-3 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white border-2 border-dashed border-copa-gold-300 text-copa-gold-600 text-sm font-semibold hover:bg-copa-gold-50 transition-colors"
-            >
-              <Users className="w-4 h-4" /> Convide seus amigos!
-            </button>
           )}
         </CardContent>
       </Card>
