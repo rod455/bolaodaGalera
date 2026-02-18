@@ -24,6 +24,17 @@ const queryClient = new QueryClient();
 
 import { Capacitor } from "@capacitor/core";
 
+/** Redireciona / para /home preservando o hash (necessário para tokens do Supabase auth) */
+const RootRedirect = () => {
+  const hash = window.location.hash;
+  if (hash && (hash.includes("access_token") || hash.includes("type=signup") || hash.includes("type=recovery"))) {
+    // Supabase auth token no hash — redirecionar preservando o hash
+    window.location.replace("/home" + hash);
+    return null;
+  }
+  return <Navigate to="/home" replace />;
+};
+
 const App = () => {
   const isNative = Capacitor.isNativePlatform();
   const [showSplash, setShowSplash] = useState(isNative);
@@ -37,7 +48,7 @@ const App = () => {
         <AuthProvider>
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<Navigate to="/home" replace />} />
+              <Route path="/" element={<RootRedirect />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/home" element={<AppLayout />}>
                 <Route index element={<Home />} />
