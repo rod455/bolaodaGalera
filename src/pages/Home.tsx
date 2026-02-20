@@ -181,28 +181,28 @@ const NacionalCard = ({
   </Card>
 );
 
-/* ─── CountdownStrip: Estilo placar esportivo ─── */
+/* ─── CountdownStrip: Countdown de 2h com urgência (renova por sessão) ─── */
 const CountdownStrip = () => {
-  const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0 });
+  const [timeLeft, setTimeLeft] = useState({ h: 0, m: 0, s: 0 });
 
   useEffect(() => {
-    const getNextDeadline = () => {
-      const now = new Date();
-      const target = new Date(now);
-      const dayOfWeek = target.getDay();
-      const daysUntilSat = dayOfWeek <= 6 ? (6 - dayOfWeek) : 0;
-      target.setDate(target.getDate() + (daysUntilSat === 0 && now.getHours() >= 18 ? 7 : daysUntilSat));
-      target.setHours(18, 0, 0, 0);
-      return target;
-    };
+    // Deadline de 2h a partir do momento que o usuário entra
+    const COUNTDOWN_KEY = "bolao_countdown_deadline";
+    const TWO_HOURS = 2 * 60 * 60 * 1000;
 
-    const deadline = getNextDeadline();
+    let deadline: number;
+    const saved = sessionStorage.getItem(COUNTDOWN_KEY);
+
+    if (saved && Number(saved) > Date.now()) {
+      deadline = Number(saved);
+    } else {
+      deadline = Date.now() + TWO_HOURS;
+      sessionStorage.setItem(COUNTDOWN_KEY, String(deadline));
+    }
 
     const tick = () => {
-      const now = new Date();
-      const diff = Math.max(0, deadline.getTime() - now.getTime());
+      const diff = Math.max(0, deadline - Date.now());
       setTimeLeft({
-        d: Math.floor(diff / (1000 * 60 * 60 * 24)),
         h: Math.floor((diff / (1000 * 60 * 60)) % 24),
         m: Math.floor((diff / (1000 * 60)) % 60),
         s: Math.floor((diff / 1000) % 60),
@@ -216,7 +216,7 @@ const CountdownStrip = () => {
 
   const pad = (n: number) => String(n).padStart(2, "0");
 
-  const isUrgent = timeLeft.d === 0 && timeLeft.h < 6;
+  const isUrgent = true;
 
   return (
     <div className={`relative overflow-hidden rounded-xl shadow-md ${isUrgent ? "bg-red-600" : "bg-gradient-to-r from-gray-900 to-gray-800"}`}>
@@ -225,19 +225,10 @@ const CountdownStrip = () => {
         <div className="flex items-center gap-2">
           <div className={`w-2 h-2 rounded-full ${isUrgent ? "bg-white animate-pulse" : "bg-copa-gold-400"}`} />
           <span className="text-[11px] font-bold text-white/80 uppercase tracking-wider">
-            {isUrgent ? "Últimas horas!" : "Inscrições fecham em"}
+            {isUrgent ? "Últimas horas!" : "Últimas horas!"}
           </span>
         </div>
         <div className="flex items-center gap-1">
-          {timeLeft.d > 0 && (
-            <>
-              <div className="bg-white/10 rounded px-2 py-1 min-w-[32px] text-center">
-                <span className="text-sm font-black text-white tabular-nums">{timeLeft.d}</span>
-                <span className="text-[8px] text-white/50 ml-0.5">d</span>
-              </div>
-              <span className="text-white/30 text-xs font-bold">:</span>
-            </>
-          )}
           <div className="bg-white/10 rounded px-2 py-1 min-w-[32px] text-center">
             <span className="text-sm font-black text-white tabular-nums">{pad(timeLeft.h)}</span>
             <span className="text-[8px] text-white/50 ml-0.5">h</span>
