@@ -181,16 +181,13 @@ const NacionalCard = ({
   </Card>
 );
 
-/* ─── CountdownStrip: Urgência + prova social ─── */
+/* ─── CountdownStrip: Estilo placar esportivo ─── */
 const CountdownStrip = () => {
   const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0 });
 
   useEffect(() => {
-    // Próximo jogo relevante: buscar do Supabase ou usar data fixa
-    // Vamos calcular até o próximo sábado 18h (genérico)
     const getNextDeadline = () => {
       const now = new Date();
-      // Buscar o próximo sábado 18h BRT (21h UTC)
       const target = new Date(now);
       const dayOfWeek = target.getDay();
       const daysUntilSat = dayOfWeek <= 6 ? (6 - dayOfWeek) : 0;
@@ -219,22 +216,42 @@ const CountdownStrip = () => {
 
   const pad = (n: number) => String(n).padStart(2, "0");
 
+  const isUrgent = timeLeft.d === 0 && timeLeft.h < 6;
+
   return (
-    <div className="bg-gradient-to-r from-amber-500 to-amber-600 rounded-xl px-4 py-3 shadow-md">
-      <div className="flex items-center justify-between">
+    <div className={`relative overflow-hidden rounded-xl shadow-md ${isUrgent ? "bg-red-600" : "bg-gradient-to-r from-gray-900 to-gray-800"}`}>
+      {isUrgent && <div className="absolute inset-0 bg-red-500 animate-pulse opacity-30" />}
+      <div className="relative flex items-center justify-between px-4 py-2.5">
         <div className="flex items-center gap-2">
-          <Clock className="w-4 h-4 text-white" />
-          <span className="text-xs font-bold text-white/90">Palpites fecham em:</span>
+          <div className={`w-2 h-2 rounded-full ${isUrgent ? "bg-white animate-pulse" : "bg-copa-gold-400"}`} />
+          <span className="text-[11px] font-bold text-white/80 uppercase tracking-wider">
+            {isUrgent ? "Últimas horas!" : "Inscrições fecham em"}
+          </span>
         </div>
         <div className="flex items-center gap-1">
           {timeLeft.d > 0 && (
-            <span className="bg-white/20 text-white text-xs font-bold px-1.5 py-0.5 rounded">{timeLeft.d}d</span>
+            <>
+              <div className="bg-white/10 rounded px-2 py-1 min-w-[32px] text-center">
+                <span className="text-sm font-black text-white tabular-nums">{timeLeft.d}</span>
+                <span className="text-[8px] text-white/50 ml-0.5">d</span>
+              </div>
+              <span className="text-white/30 text-xs font-bold">:</span>
+            </>
           )}
-          <span className="bg-white/20 text-white text-xs font-bold px-1.5 py-0.5 rounded">{pad(timeLeft.h)}h</span>
-          <span className="text-white/60 text-xs">:</span>
-          <span className="bg-white/20 text-white text-xs font-bold px-1.5 py-0.5 rounded">{pad(timeLeft.m)}m</span>
-          <span className="text-white/60 text-xs">:</span>
-          <span className="bg-white/20 text-white text-xs font-bold px-1.5 py-0.5 rounded">{pad(timeLeft.s)}s</span>
+          <div className="bg-white/10 rounded px-2 py-1 min-w-[32px] text-center">
+            <span className="text-sm font-black text-white tabular-nums">{pad(timeLeft.h)}</span>
+            <span className="text-[8px] text-white/50 ml-0.5">h</span>
+          </div>
+          <span className="text-white/30 text-xs font-bold">:</span>
+          <div className="bg-white/10 rounded px-2 py-1 min-w-[32px] text-center">
+            <span className="text-sm font-black text-white tabular-nums">{pad(timeLeft.m)}</span>
+            <span className="text-[8px] text-white/50 ml-0.5">m</span>
+          </div>
+          <span className="text-white/30 text-xs font-bold">:</span>
+          <div className={`rounded px-2 py-1 min-w-[32px] text-center ${isUrgent ? "bg-white/20" : "bg-copa-gold-400/20"}`}>
+            <span className={`text-sm font-black tabular-nums ${isUrgent ? "text-white" : "text-copa-gold-400"}`}>{pad(timeLeft.s)}</span>
+            <span className="text-[8px] text-white/50 ml-0.5">s</span>
+          </div>
         </div>
       </div>
     </div>
@@ -451,56 +468,78 @@ const Home = () => {
     <div className="space-y-6 animate-fade-in">
       <AdRewardModal open={showAdModal} onComplete={resolveWebAd} message="Assista para entrar no bolão" />
 
-      {/* ═══ BANNER PROMOÇÃO PAULISTÃO ═══ */}
-      <PromoBanner
-        bolaoId={PAULISTAO_BOLAO_ID}
-        jaParticipa={userBolaoIds.has(PAULISTAO_BOLAO_ID)}
-      />
+      {/* ═══ BANNER PROMOÇÃO PAULISTÃO (só para logados) ═══ */}
+      {user && (
+        <PromoBanner
+          bolaoId={PAULISTAO_BOLAO_ID}
+          jaParticipa={userBolaoIds.has(PAULISTAO_BOLAO_ID)}
+        />
+      )}
 
-      {/* ═══ GUEST: CTA para criar conta ═══ */}
+      {/* ═══ GUEST: Countdown no topo + hero de conversão ═══ */}
       {!user && (
-        <div className="space-y-4">
-          {/* Hero CTA */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-copa-green-600 via-copa-green-500 to-copa-green-700 text-white p-5 shadow-lg">
-            <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-16 translate-x-16" />
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-10 -translate-x-10" />
-            <div className="relative z-10">
-              <h2 className="text-xl font-bold">Faça parte do maior bolão do Brasil!</h2>
-              <p className="text-white/80 text-sm mt-1">Crie sua conta grátis e dispute com milhares de torcedores.</p>
+        <div className="space-y-4 -mt-2">
 
-              {/* Social proof - participantes */}
-              <div className="flex items-center gap-2 mt-3 bg-white/15 backdrop-blur-sm rounded-lg px-3 py-2 w-fit">
+          {/* ── Countdown Strip — TOPO fixo com urgência ── */}
+          <CountdownStrip />
+
+          {/* ── Hero Card — escuro, esportivo, alto contraste ── */}
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white shadow-xl">
+            {/* Textura de campo */}
+            <div className="absolute inset-0 opacity-[0.04]"
+              style={{ backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(255,255,255,0.1) 20px, rgba(255,255,255,0.1) 21px)" }} />
+            <div className="absolute top-0 right-0 w-48 h-48 bg-copa-green-500/15 rounded-full -translate-y-20 translate-x-20 blur-2xl" />
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-copa-gold-400/10 rounded-full translate-y-14 -translate-x-10 blur-xl" />
+
+            <div className="relative z-10 p-5 pb-4">
+              {/* Badge */}
+              <div className="inline-flex items-center gap-1.5 bg-copa-green-500/20 border border-copa-green-400/30 rounded-full px-3 py-1 mb-3">
+                <span className="w-2 h-2 bg-copa-green-400 rounded-full animate-pulse" />
+                <span className="text-[10px] font-bold text-copa-green-300 uppercase tracking-wider">Bolão gratuito</span>
+              </div>
+
+              <h2 className="text-2xl font-extrabold leading-tight">
+                Dê seu palpite e concorra a{" "}
+                <span className="text-copa-gold-400">R$ 200</span>
+              </h2>
+              <p className="text-white/60 text-sm mt-1.5 leading-relaxed">
+                Fase final do Paulistão 2026. Sem taxa de inscrição.
+              </p>
+
+              {/* Social proof */}
+              <div className="flex items-center gap-3 mt-4">
                 <div className="flex -space-x-2">
-                  {["bg-copa-gold-400", "bg-red-400", "bg-blue-400", "bg-green-300"].map((c, i) => (
-                    <div key={i} className={`w-6 h-6 ${c} rounded-full border-2 border-white/30 flex items-center justify-center text-[8px] font-bold text-white`}>
-                      {["⚽", "🏆", "🎯", "🔥"][i]}
+                  {["🇧🇷", "⚽", "🏆", "🎯", "🔥"].map((emoji, i) => (
+                    <div key={i} className="w-7 h-7 bg-white/10 backdrop-blur rounded-full border-2 border-gray-800 flex items-center justify-center text-xs">
+                      {emoji}
                     </div>
                   ))}
                 </div>
-                <span className="text-xs font-semibold text-white/90">
-                  {Object.values(participantesCount).reduce((a, b) => a + b, 0).toLocaleString("pt-BR")}+ participantes ativos
-                </span>
+                <div className="text-xs">
+                  <span className="font-bold text-white">
+                    {Object.values(participantesCount).reduce((a, b) => a + b, 0).toLocaleString("pt-BR")}+
+                  </span>
+                  <span className="text-white/50"> já estão participando</span>
+                </div>
               </div>
 
-              <div className="flex gap-2 mt-3">
-                <Button size="sm" onClick={() => navigate("/auth?modo=cadastro")}
-                  className="bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800 font-bold rounded-lg shadow-md">
-                  <UserPlus className="w-4 h-4 mr-1" /> Criar conta grátis
+              {/* CTAs */}
+              <div className="flex gap-2.5 mt-4">
+                <Button onClick={() => navigate("/auth?modo=cadastro")}
+                  className="flex-1 h-12 bg-copa-gold-400 hover:bg-copa-gold-500 text-gray-900 font-extrabold text-sm rounded-xl shadow-lg shadow-copa-gold-400/20 transition-all hover:scale-[1.02]">
+                  <UserPlus className="w-4 h-4 mr-1.5" /> Criar conta grátis
                 </Button>
                 <button onClick={() => navigate("/auth")}
-                  className="px-4 py-2 text-sm font-semibold rounded-lg border-2 border-white text-white hover:bg-white/20 transition-colors">
-                  Já tenho conta
+                  className="px-5 h-12 text-sm font-semibold rounded-xl border-2 border-white/20 text-white/80 hover:bg-white/10 hover:border-white/40 transition-all">
+                  Entrar
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Countdown + prova social */}
-          <CountdownStrip />
-
-          {/* Google login rápido */}
+          {/* ── Google Login rápido ── */}
           <button onClick={() => navigate("/auth?modo=cadastro")}
-            className="w-full flex items-center justify-center gap-3 bg-white border-2 border-gray-200 hover:border-copa-green-300 hover:bg-copa-green-50 rounded-xl py-3 font-semibold text-sm text-gray-700 transition-all shadow-sm">
+            className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 hover:border-copa-green-400 hover:shadow-md rounded-xl py-3.5 font-semibold text-sm text-gray-600 transition-all">
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
               <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
