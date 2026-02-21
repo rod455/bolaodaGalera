@@ -181,28 +181,27 @@ const NacionalCard = ({
   </Card>
 );
 
-/* ─── CountdownStrip: Countdown de 2h com urgência (renova por sessão) ─── */
+/* ─── CountdownStrip: Deadline real baseado no próximo sábado 18h ─── */
 const CountdownStrip = () => {
-  const [timeLeft, setTimeLeft] = useState({ h: 0, m: 0, s: 0 });
+  const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0 });
 
   useEffect(() => {
-    // Deadline de 2h a partir do momento que o usuário entra
-    const COUNTDOWN_KEY = "bolao_countdown_deadline";
-    const TWO_HOURS = 2 * 60 * 60 * 1000;
+    const getNextDeadline = () => {
+      const now = new Date();
+      const target = new Date(now);
+      const dayOfWeek = target.getDay();
+      const daysUntilSat = dayOfWeek <= 6 ? (6 - dayOfWeek) : 0;
+      target.setDate(target.getDate() + (daysUntilSat === 0 && now.getHours() >= 18 ? 7 : daysUntilSat));
+      target.setHours(18, 0, 0, 0);
+      return target;
+    };
 
-    let deadline: number;
-    const saved = sessionStorage.getItem(COUNTDOWN_KEY);
-
-    if (saved && Number(saved) > Date.now()) {
-      deadline = Number(saved);
-    } else {
-      deadline = Date.now() + TWO_HOURS;
-      sessionStorage.setItem(COUNTDOWN_KEY, String(deadline));
-    }
+    const deadline = getNextDeadline();
 
     const tick = () => {
-      const diff = Math.max(0, deadline - Date.now());
+      const diff = Math.max(0, deadline.getTime() - Date.now());
       setTimeLeft({
+        d: Math.floor(diff / (1000 * 60 * 60 * 24)),
         h: Math.floor((diff / (1000 * 60 * 60)) % 24),
         m: Math.floor((diff / (1000 * 60)) % 60),
         s: Math.floor((diff / 1000) % 60),
@@ -215,8 +214,8 @@ const CountdownStrip = () => {
   }, []);
 
   const pad = (n: number) => String(n).padStart(2, "0");
-
-  const isUrgent = true;
+  const totalHours = timeLeft.d * 24 + timeLeft.h;
+  const isUrgent = totalHours < 12;
 
   return (
     <div className={`relative overflow-hidden rounded-xl shadow-md ${isUrgent ? "bg-red-600" : "bg-gradient-to-r from-gray-900 to-gray-800"}`}>
@@ -225,10 +224,19 @@ const CountdownStrip = () => {
         <div className="flex items-center gap-2">
           <div className={`w-2 h-2 rounded-full ${isUrgent ? "bg-white animate-pulse" : "bg-copa-gold-400"}`} />
           <span className="text-[11px] font-bold text-white/80 uppercase tracking-wider">
-            {isUrgent ? "Últimas horas!" : "Últimas horas!"}
+            {isUrgent ? "Palpites fechando!" : "Palpites fecham em"}
           </span>
         </div>
         <div className="flex items-center gap-1">
+          {timeLeft.d > 0 && (
+            <>
+              <div className="bg-white/10 rounded px-2 py-1 min-w-[32px] text-center">
+                <span className="text-sm font-black text-white tabular-nums">{timeLeft.d}</span>
+                <span className="text-[8px] text-white/50 ml-0.5">d</span>
+              </div>
+              <span className="text-white/30 text-xs font-bold">:</span>
+            </>
+          )}
           <div className="bg-white/10 rounded px-2 py-1 min-w-[32px] text-center">
             <span className="text-sm font-black text-white tabular-nums">{pad(timeLeft.h)}</span>
             <span className="text-[8px] text-white/50 ml-0.5">h</span>
@@ -303,6 +311,19 @@ const Home = () => {
       let estado: string | null = null;
       const participandoIds = new Set<string>();
 
+      // Ordenar nacionais
+      const sortedNac = [...((nac as any[]) || [])].sort((a, b) => {
+        const aDestaque = estado && (a.estados_destaque || []).includes(estado) ? 1 : 0;
+        const bDestaque = estado && (b.estados_destaque || []).includes(estado) ? 1 : 0;
+        return bDestaque - aDestaque;
+      });
+      setNacionais(sortedNac);
+
+      // ★ GUEST: mostrar conteúdo IMEDIATO — loading false antes das counts
+      if (!user) {
+        setLoading(false);
+      }
+
       // ═══ DADOS DO USUÁRIO (só se logado) ═══
       if (user) {
         const { data: profileData } = await supabase.from("profiles").select("estado").eq("id", user.id).single();
@@ -324,47 +345,53 @@ const Home = () => {
         const sorted = sortByOrder(privList, loadSavedOrder());
         setPrivados(sorted);
         setUserPosicoes(posicoes);
+        setUserBolaoIds(participandoIds);
 
-        // Counts for private bolões
-        const privCounts: Record<string, number> = {};
-        for (const b of privList) {
-          const { count } = await supabase.from("bolao_participantes").select("*", { count: "exact", head: true }).eq("bolao_id", b.id);
-          privCounts[b.id] = count || 0;
+        // Re-sort nacionais com estado
+        if (estado) {
+          const resorted = [...((nac as any[]) || [])].sort((a, b) => {
+            const aD = (a.estados_destaque || []).includes(estado) ? 1 : 0;
+            const bD = (b.estados_destaque || []).includes(estado) ? 1 : 0;
+            return bD - aD;
+          });
+          setNacionais(resorted);
         }
-        setParticipantesCount((prev) => ({ ...prev, ...privCounts }));
+
+        setLoading(false);
+
+        // Counts para privados — em paralelo
+        const privCountPromises = privList.map(async (b) => {
+          const { count } = await supabase.from("bolao_participantes").select("*", { count: "exact", head: true }).eq("bolao_id", b.id);
+          return [b.id, count || 0] as [string, number];
+        });
+        const privResults = await Promise.all(privCountPromises);
+        setParticipantesCount((prev) => ({ ...prev, ...Object.fromEntries(privResults) }));
 
         await loadAlerts();
+      } else {
+        setUserBolaoIds(participandoIds);
       }
 
-      setUserBolaoIds(participandoIds);
-
-      // Ordenar nacionais: bolões com destaque para o estado do usuário primeiro
-      const sortedNac = [...((nac as any[]) || [])].sort((a, b) => {
-        const aDestaque = estado && (a.estados_destaque || []).includes(estado) ? 1 : 0;
-        const bDestaque = estado && (b.estados_destaque || []).includes(estado) ? 1 : 0;
-        return bDestaque - aDestaque;
-      });
-      setNacionais(sortedNac);
-
-      // Counts para nacionais (público)
-      const nacCounts: Record<string, number> = {};
-      for (const b of (nac as any[]) || []) {
+      // Counts para nacionais — em paralelo (carrega em background)
+      const nacCountPromises = ((nac as any[]) || []).map(async (b) => {
         const { count } = await supabase.from("bolao_participantes").select("*", { count: "exact", head: true }).eq("bolao_id", b.id);
-        nacCounts[b.id] = count || 0;
-      }
-      setParticipantesCount((prev) => ({ ...prev, ...nacCounts }));
+        return [b.id, count || 0] as [string, number];
+      });
+      const nacResults = await Promise.all(nacCountPromises);
+      setParticipantesCount((prev) => ({ ...prev, ...Object.fromEntries(nacResults) }));
 
-      const proximos: Record<string, ProximoJogo | null> = {};
-      for (const bolao of (nac as any[]) || []) {
-        if (!bolao.campeonato_id) { proximos[bolao.id] = null; continue; }
+      // Próximos jogos — em paralelo
+      const proxPromises = ((nac as any[]) || []).map(async (bolao) => {
+        if (!bolao.campeonato_id) return [bolao.id, null] as [string, ProximoJogo | null];
         const { data: jogos } = await supabase.from("jogos")
           .select("time_a, time_b, logo_time_a, logo_time_b, data_hora, fase, rodada")
           .eq("campeonato_id", bolao.campeonato_id).eq("status", "agendado")
           .gte("data_hora", new Date().toISOString())
           .order("data_hora", { ascending: true }).limit(1);
-        proximos[bolao.id] = jogos && jogos.length > 0 ? (jogos[0] as any) : null;
-      }
-      setProximosJogos(proximos);
+        return [bolao.id, jogos && jogos.length > 0 ? (jogos[0] as any) : null] as [string, ProximoJogo | null];
+      });
+      const proxResults = await Promise.all(proxPromises);
+      setProximosJogos(Object.fromEntries(proxResults));
     } catch (err) { console.error("Erro ao carregar dados:", err); }
     finally { setLoading(false); }
   };
@@ -528,7 +555,7 @@ const Home = () => {
                 </div>
                 <div className="text-xs">
                   <span className="font-bold text-white">
-                    {Object.values(participantesCount).reduce((a, b) => a + b, 0).toLocaleString("pt-BR")}+
+                    {Math.max(1000, Object.values(participantesCount).reduce((a, b) => a + b, 0)).toLocaleString("pt-BR")}+
                   </span>
                   <span className="text-white/50"> já estão participando</span>
                 </div>

@@ -124,11 +124,6 @@ const Auth = () => {
         navigate(bolaoRedirect ? `/bolao/${bolaoRedirect}` : "/home");
       } else {
         // Register
-        if (password !== confirmPassword) {
-          toast.error("As senhas não coincidem");
-          setIsSubmitting(false);
-          return;
-        }
         if (password.length < 6) {
           toast.error("A senha deve ter pelo menos 6 caracteres");
           setIsSubmitting(false);
@@ -140,7 +135,6 @@ const Auth = () => {
           options: {
             data: {
               nome: name,
-              time_coracao: timeCoracao || null,
             },
           },
         });
@@ -410,13 +404,13 @@ const Auth = () => {
             {!isLogin && (
               <div className="space-y-2">
                 <Label htmlFor="name" className="text-sm font-medium text-copa-green-700">
-                  Nome completo
+                  Nome <span className="text-muted-foreground font-normal">(como aparece no ranking)</span>
                 </Label>
                 <div className="relative">
                   <UserPlus className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     id="name"
-                    placeholder="Seu nome"
+                    placeholder="Seu nome ou apelido"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="pl-10 h-12 bg-muted/50 border-copa-green-100 focus:border-copa-green-500"
@@ -446,7 +440,7 @@ const Auth = () => {
 
             <div className="space-y-2">
               <Label htmlFor="password" className="text-sm font-medium text-copa-green-700">
-                Senha
+                Senha {!isLogin && <span className="text-muted-foreground font-normal">(mínimo 6 caracteres)</span>}
               </Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -468,79 +462,6 @@ const Auth = () => {
                 </button>
               </div>
             </div>
-
-            {!isLogin && (
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-sm font-medium text-copa-green-700">
-                  Confirmar senha
-                </Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    placeholder="••••••••"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="pl-10 h-12 bg-muted/50 border-copa-green-100 focus:border-copa-green-500"
-                    required={!isLogin}
-                  />
-                </div>
-              </div>
-            )}
-
-            {!isLogin && (
-              <div className="space-y-2" ref={timeInputRef}>
-                <Label className="text-sm font-medium text-copa-green-700">
-                  Time do coração <span className="text-muted-foreground font-normal">(opcional)</span>
-                </Label>
-                <div className="relative">
-                  <Heart className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Digite para buscar..."
-                    value={timeCoracao || timeBusca}
-                    onChange={(e) => {
-                      setTimeCoracao("");
-                      setTimeBusca(e.target.value);
-                      setShowTimeSuggestions(true);
-                    }}
-                    onFocus={() => { if (timeBusca.length > 0) setShowTimeSuggestions(true); }}
-                    className={`pl-10 h-12 bg-muted/50 border-copa-green-100 focus:border-copa-green-500 ${
-                      timeCoracao ? "text-copa-green-700 font-medium" : ""
-                    }`}
-                  />
-                  {timeCoracao && (
-                    <button type="button"
-                      onClick={() => { setTimeCoracao(""); setTimeBusca(""); }}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs">
-                      ✕
-                    </button>
-                  )}
-                  {showTimeSuggestions && timesFiltrados.length > 0 && (
-                    <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-copa-green-200 rounded-xl shadow-lg max-h-40 overflow-y-auto">
-                      {timesFiltrados.map((time) => (
-                        <button key={time} type="button"
-                          onClick={() => {
-                            setTimeCoracao(time);
-                            setTimeBusca("");
-                            setShowTimeSuggestions(false);
-                          }}
-                          className="w-full text-left px-4 py-2.5 text-sm hover:bg-copa-green-50 transition-colors flex items-center gap-2">
-                          {time === "Não tenho" ? (
-                            <span className="text-muted-foreground">{time}</span>
-                          ) : (
-                            <>
-                              <Heart className="w-3.5 h-3.5 text-red-400" />
-                              <span>{time}</span>
-                            </>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
 
             <Button
               type="submit"
