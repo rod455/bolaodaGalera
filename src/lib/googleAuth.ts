@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════
 // Google Auth Helper
-// - App nativo: usa GoogleAuth plugin via Capacitor.Plugins (sem import direto)
+// - App nativo: usa @capgo/capacitor-social-login (Google nativo)
 // - Web: usa supabase.auth.signInWithOAuth (redirect)
 // ═══════════════════════════════════════════════════════
 
@@ -9,39 +9,44 @@ import { supabase } from "@/integrations/supabase/client";
 
 const WEB_CLIENT_ID = "259731661832-a7v1j6nnd2as7lhdlnkfsmg0fl4jq2sh.apps.googleusercontent.com";
 
-// Registrar o plugin sem import direto do pacote nativo
-// No app nativo, o plugin real é carregado pelo Capacitor
-// Na web, isso cria um proxy que não faz nada
-interface GoogleAuthPlugin {
-  initialize(options: { clientId: string; scopes: string[]; grantOfflineAccess: boolean }): void;
-  signIn(): Promise<{
-    authentication: { idToken: string };
-    email: string;
-    familyName: string;
-    givenName: string;
-    id: string;
-    name: string;
+// Tipagem do plugin
+interface SocialLoginPlugin {
+  initialize(options: { google: { webClientId: string } }): Promise<void>;
+  login(options: { provider: string; options: Record<string, any> }): Promise<{
+    provider: string;
+    result: {
+      idToken: string;
+      accessToken?: string;
+      profile?: {
+        email: string;
+        name: string;
+        imageUrl?: string;
+      };
+    };
   }>;
-  signOut(): Promise<void>;
+  logout(options: { provider: string }): Promise<void>;
 }
 
-let googleAuthPlugin: GoogleAuthPlugin | null = null;
+let socialLogin: SocialLoginPlugin | null = null;
+let initialized = false;
 
 /**
- * Inicializar o Google Auth (chamar uma vez no app startup)
+ * Inicializar o Social Login (chamar uma vez no app startup)
  */
-export function initGoogleAuth() {
+export async function initGoogleAuth() {
   if (!Capacitor.isNativePlatform()) return;
+  if (initialized) return;
 
   try {
-    googleAuthPlugin = registerPlugin<GoogleAuthPlugin>("GoogleAuth");
-    googleAuthPlugin.initialize({
-      clientId: WEB_CLIENT_ID,
-      scopes: ["profile", "email"],
-      grantOfflineAccess: true,
+    socialLogin = registerPlugin<SocialLoginPlugin>("SocialLogin");
+    await socialLogin.initialize({
+      google: {
+        webClientId: WEB_CLIENT_ID,
+      },
     });
+    initialized = true;
   } catch (err) {
-    console.error("Erro ao inicializar GoogleAuth:", err);
+    console.error("Erro ao inicializar SocialLogin:", err);
   }
 }
 
@@ -54,19 +59,31 @@ export async function signInWithGoogle(
   // ═══ APP NATIVO ═══
   if (Capacitor.isNativePlatform()) {
     try {
-      if (!googleAuthPlugin) {
-        return { success: false, error: "Google Auth não inicializado" };
+      if (!socialLogin) {
+        // Tentar inicializar se ainda não foi
+        await initGoogleAuth();
+        if (!socialLogin) {
+          return { success: false, error: "Google Auth não disponível" };
+        }
       }
 
-      const googleUser = await googleAuthPlugin.signIn();
+      const result = await socialLogin.login({
+        provider: "google",
+        options: {
+          scopes: ["profile", "email"],
+        },
+      });
 
-      if (!googleUser?.authentication?.idToken) {
+      const idToken = result?.result?.idToken;
+
+      if (!idToken) {
         return { success: false, error: "Token do Google não recebido" };
       }
 
+      // Usar idToken para autenticar no Supabase
       const { error } = await supabase.auth.signInWithIdToken({
         provider: "google",
-        token: googleUser.authentication.idToken,
+        token: idToken,
       });
 
       if (error) {
@@ -75,7 +92,11 @@ export async function signInWithGoogle(
 
       return { success: true };
     } catch (err: any) {
-      if (err?.message?.includes("canceled") || err?.message?.includes("cancelled") || err?.code === "SIGN_IN_CANCELLED") {
+      if (
+        err?.message?.includes("cancel") ||
+        err?.message?.includes("Cancel") ||
+        err?.code === "SIGN_IN_CANCELLED"
+      ) {
         return { success: false, error: "Login cancelado" };
       }
       return { success: false, error: err?.message || "Erro ao fazer login com Google" };
