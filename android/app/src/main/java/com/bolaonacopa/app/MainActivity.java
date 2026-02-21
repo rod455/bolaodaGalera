@@ -5,10 +5,14 @@ import android.app.NotificationManager;
 import android.os.Build;
 import android.os.Bundle;
 import com.getcapacitor.BridgeActivity;
+import ee.forgr.capacitor.social.login.SocialLoginPlugin;
 
 public class MainActivity extends BridgeActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Registrar o SocialLogin ANTES do super.onCreate()
+        registerPlugin(SocialLoginPlugin.class);
+
         super.onCreate(savedInstanceState);
         createNotificationChannel();
     }
