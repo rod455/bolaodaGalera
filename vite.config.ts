@@ -15,4 +15,18 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      external: [
+        "@codetrix-studio/capacitor-google-auth",
+        "@capacitor/app",
+      ],
+      output: {
+        globals: {
+          "@codetrix-studio/capacitor-google-auth": "CapacitorGoogleAuth",
+          "@capacitor/app": "CapacitorApp",
+        },
+      },
+    },
+  },
 }));
