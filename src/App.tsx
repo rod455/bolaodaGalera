@@ -24,6 +24,7 @@ const queryClient = new QueryClient();
 
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
+import { initGoogleAuth } from "@/lib/googleAuth";
 
 /** Redireciona / para /home preservando o hash (necessário para tokens do Supabase auth) */
 const RootRedirect = () => {
@@ -40,6 +41,11 @@ const App = () => {
   const isNative = Capacitor.isNativePlatform();
   const [showSplash, setShowSplash] = useState(isNative);
   const handleSplashFinish = useCallback(() => setShowSplash(false), []);
+
+  // Inicializar Google Auth nativo
+  useEffect(() => {
+    initGoogleAuth();
+  }, []);
 
   // ── Deep Link: capturar OAuth callback no app nativo ──
   useEffect(() => {
