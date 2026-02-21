@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Trophy, ChevronRight, Loader2 } from "lucide-react";
+import { Trophy, ChevronRight, Loader2, Clock, Hourglass } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,13 +18,11 @@ const PromoBanner = ({ jaParticipa = false, bolaoId }: PromoBannerProps) => {
   const handleClick = async () => {
     if (!bolaoId || !user) return;
 
-    // Já participa — só navegar
     if (jaParticipa) {
       navigate(`/bolao/${bolaoId}`);
       return;
     }
 
-    // Não participa — entrar no bolão e depois navegar
     setJoining(true);
     try {
       const { error } = await supabase
@@ -33,7 +31,6 @@ const PromoBanner = ({ jaParticipa = false, bolaoId }: PromoBannerProps) => {
 
       if (error) {
         if (error.code === "23505") {
-          // Já participava (constraint unique) — só navegar
           toast.info("Você já está participando!");
         } else {
           throw error;
@@ -53,72 +50,81 @@ const PromoBanner = ({ jaParticipa = false, bolaoId }: PromoBannerProps) => {
   return (
     <div
       onClick={handleClick}
-      className={`relative overflow-hidden rounded-2xl cursor-pointer group mb-6 ${joining ? "pointer-events-none opacity-80" : ""}`}
+      className={`relative overflow-hidden rounded-2xl cursor-pointer group mb-4 ${joining ? "pointer-events-none opacity-80" : ""}`}
       style={{
-        background: "linear-gradient(135deg, #92400E 0%, #B45309 25%, #D97706 50%, #F59E0B 75%, #EAB308 100%)",
-        border: "2px solid rgba(250, 204, 21, 0.4)",
-        boxShadow: "0 4px 20px rgba(234, 179, 8, 0.25), inset 0 1px 0 rgba(255,255,255,0.15)",
+        background: "linear-gradient(160deg, #0a0a0a 0%, #1a1a1a 40%, #111111 100%)",
+        border: "1px solid rgba(234, 179, 8, 0.25)",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(234,179,8,0.1)",
       }}
     >
-      {/* Efeito de brilho */}
+      {/* Efeito de brilho dourado sutil */}
       <div
-        className="absolute inset-0 opacity-20"
+        className="absolute inset-0 opacity-30"
         style={{
-          background: "radial-gradient(ellipse at 30% 50%, rgba(255,255,255,0.3) 0%, transparent 60%)",
-        }}
-      />
-      <div
-        className="absolute -top-1/2 -right-1/4 w-1/2 h-[200%] opacity-10 group-hover:opacity-20 transition-opacity duration-500"
-        style={{
-          background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)",
-          transform: "rotate(15deg)",
+          background: "radial-gradient(ellipse at 50% 0%, rgba(234,179,8,0.15) 0%, transparent 60%)",
         }}
       />
 
-      <div className="relative z-10 flex items-center gap-4 p-4 sm:p-5">
-        {/* Ícone */}
-        <div
-          className="flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center"
+      {/* Textura de campo */}
+      <div
+        className="absolute inset-0 opacity-[0.03]"
+        style={{
+          backgroundImage:
+            "repeating-linear-gradient(0deg, transparent, transparent 30px, rgba(255,255,255,0.08) 30px, rgba(255,255,255,0.08) 31px)",
+        }}
+      />
+
+      <div className="relative z-10 flex flex-col items-center text-center px-5 py-6">
+        {/* Troféu */}
+        <div className="text-5xl mb-2 drop-shadow-lg" style={{ filter: "drop-shadow(0 0 12px rgba(234,179,8,0.4))" }}>
+          🏆
+        </div>
+
+        {/* Valor do prêmio */}
+        <h2
+          className="text-3xl sm:text-4xl font-black tracking-tight"
           style={{
-            background: "rgba(255,255,255,0.15)",
-            backdropFilter: "blur(10px)",
-            border: "1px solid rgba(255,255,255,0.2)",
+            color: "#FBBF24",
+            textShadow: "0 0 20px rgba(251,191,36,0.3), 0 2px 4px rgba(0,0,0,0.5)",
+            fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif",
           }}
         >
-          <Trophy className="w-7 h-7 text-white" />
+          R$200 EM PRÊMIO
+        </h2>
+
+        {/* Subtítulo */}
+        <p className="text-white/80 text-sm font-semibold mt-1.5 tracking-wide">
+          Bolão do Paulistão — Quartas de Final
+        </p>
+
+        {/* Badge de urgência */}
+        <div className="flex items-center gap-1.5 mt-3 px-3 py-1 rounded-full"
+          style={{ background: "rgba(234,179,8,0.15)", border: "1px solid rgba(234,179,8,0.25)" }}>
+          <span className="text-amber-400 text-xs">⏳</span>
+          <span className="text-amber-300 text-xs font-bold">
+            {jaParticipa ? "Você já está participando!" : "Últimas vagas - 100% grátis"}
+          </span>
         </div>
 
-        {/* Texto */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-0.5">
-            <span
-              className="text-[10px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-full"
-              style={{
-                background: "rgba(255,255,255,0.2)",
-                color: "rgba(255,255,255,0.9)",
-              }}
-            >
-              🚨 Últimas Vagas
-            </span>
-          </div>
-          <p className="text-white font-bold text-sm sm:text-base leading-snug">
-            <span style={{ color: "#FEF9C3" }}>R$ 200 EM PRÊMIOS</span> — ÚLTIMAS VAGAS!
-          </p>
-          <p className="text-white/70 text-xs mt-1">
-            {jaParticipa
-              ? "Você já está participando! Continue fazendo seus palpites."
-              : "Dispute o Bolão do Paulistão gratuitamente e concorra ao valor total. Prazo final: sábado às 18h. Não fique de fora."}
-          </p>
-          <button
-            className="mt-2 px-4 py-1.5 bg-white text-amber-800 font-bold text-xs rounded-lg hover:bg-white/90 transition-colors shadow-md flex items-center gap-1"
-          >
-            {joining ? (
-              <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Entrando...</>
-            ) : (
-              <>{jaParticipa ? "Ver meus palpites" : "Entrar agora"} <ChevronRight className="w-3.5 h-3.5" /></>
-            )}
-          </button>
-        </div>
+        {/* Botão CTA */}
+        <button
+          className="mt-4 w-full max-w-xs h-12 flex items-center justify-center gap-2 rounded-xl font-black text-sm uppercase tracking-wider transition-all group-hover:scale-[1.02] group-hover:shadow-lg"
+          style={{
+            background: "linear-gradient(135deg, #16a34a 0%, #15803d 100%)",
+            color: "white",
+            boxShadow: "0 4px 16px rgba(22,163,74,0.4), inset 0 1px 0 rgba(255,255,255,0.15)",
+            letterSpacing: "0.08em",
+          }}
+        >
+          {joining ? (
+            <><Loader2 className="w-4 h-4 animate-spin" /> Entrando...</>
+          ) : (
+            <>
+              {jaParticipa ? "VER MEUS PALPITES" : "CRIAR MEU BOLÃO AGORA"}
+              <ChevronRight className="w-4 h-4" />
+            </>
+          )}
+        </button>
       </div>
     </div>
   );
