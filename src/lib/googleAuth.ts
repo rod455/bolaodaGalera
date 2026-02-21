@@ -1,24 +1,41 @@
 // ═══════════════════════════════════════════════════════
 // Google Auth Helper
-// - App nativo: usa @codetrix-studio/capacitor-google-auth (sign-in nativo)
+// - App nativo: usa GoogleAuth plugin via Capacitor.Plugins (sem import direto)
 // - Web: usa supabase.auth.signInWithOAuth (redirect)
 // ═══════════════════════════════════════════════════════
 
-import { Capacitor } from "@capacitor/core";
+import { Capacitor, registerPlugin } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
 
 const WEB_CLIENT_ID = "259731661832-a7v1j6nnd2as7lhdlnkfsmg0fl4jq2sh.apps.googleusercontent.com";
 
+// Registrar o plugin sem import direto do pacote nativo
+// No app nativo, o plugin real é carregado pelo Capacitor
+// Na web, isso cria um proxy que não faz nada
+interface GoogleAuthPlugin {
+  initialize(options: { clientId: string; scopes: string[]; grantOfflineAccess: boolean }): void;
+  signIn(): Promise<{
+    authentication: { idToken: string };
+    email: string;
+    familyName: string;
+    givenName: string;
+    id: string;
+    name: string;
+  }>;
+  signOut(): Promise<void>;
+}
+
+let googleAuthPlugin: GoogleAuthPlugin | null = null;
+
 /**
- * Inicializar o plugin Google Auth (chamar uma vez no app startup)
- * Só executa no app nativo.
+ * Inicializar o Google Auth (chamar uma vez no app startup)
  */
-export async function initGoogleAuth() {
+export function initGoogleAuth() {
   if (!Capacitor.isNativePlatform()) return;
 
   try {
-    const { GoogleAuth } = await import(/* @vite-ignore */ "@codetrix-studio/capacitor-google-auth");
-    GoogleAuth.initialize({
+    googleAuthPlugin = registerPlugin<GoogleAuthPlugin>("GoogleAuth");
+    googleAuthPlugin.initialize({
       clientId: WEB_CLIENT_ID,
       scopes: ["profile", "email"],
       grantOfflineAccess: true,
@@ -30,28 +47,23 @@ export async function initGoogleAuth() {
 
 /**
  * Fazer login com Google.
- * - No app nativo: abre o seletor de conta nativo do Google, retorna idToken,
- *   e usa supabase.auth.signInWithIdToken para autenticar.
- * - Na web: usa signInWithOAuth com redirect.
- *
- * @param redirectPath - path para redirecionar após login na web (ex: "/home")
- * @returns { success: boolean, error?: string }
  */
 export async function signInWithGoogle(
   redirectPath: string = "/home"
 ): Promise<{ success: boolean; error?: string }> {
-  // ═══ APP NATIVO: Google Sign-In nativo ═══
+  // ═══ APP NATIVO ═══
   if (Capacitor.isNativePlatform()) {
     try {
-      const { GoogleAuth } = await import(/* @vite-ignore */ "@codetrix-studio/capacitor-google-auth");
+      if (!googleAuthPlugin) {
+        return { success: false, error: "Google Auth não inicializado" };
+      }
 
-      const googleUser = await GoogleAuth.signIn();
+      const googleUser = await googleAuthPlugin.signIn();
 
       if (!googleUser?.authentication?.idToken) {
         return { success: false, error: "Token do Google não recebido" };
       }
 
-      // Usar idToken para autenticar no Supabase
       const { error } = await supabase.auth.signInWithIdToken({
         provider: "google",
         token: googleUser.authentication.idToken,
@@ -63,15 +75,14 @@ export async function signInWithGoogle(
 
       return { success: true };
     } catch (err: any) {
-      // Usuário cancelou o login
-      if (err?.message?.includes("canceled") || err?.message?.includes("cancelled")) {
+      if (err?.message?.includes("canceled") || err?.message?.includes("cancelled") || err?.code === "SIGN_IN_CANCELLED") {
         return { success: false, error: "Login cancelado" };
       }
       return { success: false, error: err?.message || "Erro ao fazer login com Google" };
     }
   }
 
-  // ═══ WEB: OAuth redirect ═══
+  // ═══ WEB ═══
   try {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
@@ -84,7 +95,6 @@ export async function signInWithGoogle(
       return { success: false, error: error.message };
     }
 
-    // Na web, o redirect acontece automaticamente
     return { success: true };
   } catch (err: any) {
     return { success: false, error: err?.message || "Erro ao fazer login com Google" };
