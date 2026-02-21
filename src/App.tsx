@@ -23,7 +23,6 @@ import { Analytics } from "@vercel/analytics/react";
 const queryClient = new QueryClient();
 
 import { Capacitor } from "@capacitor/core";
-import { App as CapApp } from "@capacitor/app";
 import { supabase } from "@/integrations/supabase/client";
 
 /** Redireciona / para /home preservando o hash (necessário para tokens do Supabase auth) */
@@ -46,38 +45,42 @@ const App = () => {
   useEffect(() => {
     if (!isNative) return;
 
-    const handleDeepLink = async (event: { url: string }) => {
-      const url = event.url;
+    let cleanup: (() => void) | undefined;
 
-      // bolaonacopa://auth/callback#access_token=...&refresh_token=...
-      if (url.includes("auth/callback")) {
-        const hashPart = url.split("#")[1];
-        if (hashPart) {
-          const params = new URLSearchParams(hashPart);
-          const accessToken = params.get("access_token");
-          const refreshToken = params.get("refresh_token");
+    (async () => {
+      const { App: CapApp } = await import("@capacitor/app");
 
-          if (accessToken && refreshToken) {
-            const { error } = await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken,
-            });
-            if (!error) {
-              // Sessão restaurada — redirecionar para /home
-              window.location.replace("/home");
-            } else {
-              console.error("Erro ao restaurar sessão:", error);
+      const handleDeepLink = async (event: { url: string }) => {
+        const url = event.url;
+
+        // bolaonacopa://auth/callback#access_token=...&refresh_token=...
+        if (url.includes("auth/callback")) {
+          const hashPart = url.split("#")[1];
+          if (hashPart) {
+            const params = new URLSearchParams(hashPart);
+            const accessToken = params.get("access_token");
+            const refreshToken = params.get("refresh_token");
+
+            if (accessToken && refreshToken) {
+              const { error } = await supabase.auth.setSession({
+                access_token: accessToken,
+                refresh_token: refreshToken,
+              });
+              if (!error) {
+                window.location.replace("/home");
+              } else {
+                console.error("Erro ao restaurar sessão:", error);
+              }
             }
           }
         }
-      }
-    };
+      };
 
-    CapApp.addListener("appUrlOpen", handleDeepLink);
+      await CapApp.addListener("appUrlOpen", handleDeepLink);
+      cleanup = () => { CapApp.removeAllListeners(); };
+    })();
 
-    return () => {
-      CapApp.removeAllListeners();
-    };
+    return () => { cleanup?.(); };
   }, [isNative]);
 
   return (
