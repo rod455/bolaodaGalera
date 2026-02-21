@@ -48,7 +48,8 @@ const App = () => {
     let cleanup: (() => void) | undefined;
 
     (async () => {
-      const { App: CapApp } = await import("@capacitor/app");
+      const pkg = "@capacitor/" + "app";
+      const { App: CapApp } = await import(/* @vite-ignore */ pkg);
 
       const handleDeepLink = async (event: { url: string }) => {
         const url = event.url;
