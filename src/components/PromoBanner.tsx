@@ -1,22 +1,59 @@
-import { Trophy, ChevronRight } from "lucide-react";
+import { useState } from "react";
+import { Trophy, ChevronRight, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 interface PromoBannerProps {
-  /** Se o usuário já participa do bolão do Paulistão */
   jaParticipa?: boolean;
-  /** ID do bolão do Paulistão (para link direto) */
   bolaoId?: string;
 }
 
 const PromoBanner = ({ jaParticipa = false, bolaoId }: PromoBannerProps) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [joining, setJoining] = useState(false);
+
+  const handleClick = async () => {
+    if (!bolaoId || !user) return;
+
+    // Já participa — só navegar
+    if (jaParticipa) {
+      navigate(`/bolao/${bolaoId}`);
+      return;
+    }
+
+    // Não participa — entrar no bolão e depois navegar
+    setJoining(true);
+    try {
+      const { error } = await supabase
+        .from("bolao_participantes")
+        .insert({ bolao_id: bolaoId, user_id: user.id });
+
+      if (error) {
+        if (error.code === "23505") {
+          // Já participava (constraint unique) — só navegar
+          toast.info("Você já está participando!");
+        } else {
+          throw error;
+        }
+      } else {
+        toast.success("Você entrou no bolão! Faça seus palpites.");
+      }
+
+      navigate(`/bolao/${bolaoId}`);
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao entrar no bolão");
+    } finally {
+      setJoining(false);
+    }
+  };
 
   return (
     <div
-      onClick={() => {
-        if (bolaoId) navigate(`/bolao/${bolaoId}`);
-      }}
-      className="relative overflow-hidden rounded-2xl cursor-pointer group mb-6"
+      onClick={handleClick}
+      className={`relative overflow-hidden rounded-2xl cursor-pointer group mb-6 ${joining ? "pointer-events-none opacity-80" : ""}`}
       style={{
         background: "linear-gradient(135deg, #92400E 0%, #B45309 25%, #D97706 50%, #F59E0B 75%, #EAB308 100%)",
         border: "2px solid rgba(250, 204, 21, 0.4)",
@@ -73,9 +110,13 @@ const PromoBanner = ({ jaParticipa = false, bolaoId }: PromoBannerProps) => {
               : "Dispute o Bolão do Paulistão gratuitamente e concorra ao valor total. Prazo final: sábado às 18h. Não fique de fora."}
           </p>
           <button
-            className="mt-2 px-4 py-1.5 bg-white text-amber-800 font-bold text-xs rounded-lg hover:bg-white/90 transition-colors shadow-md"
+            className="mt-2 px-4 py-1.5 bg-white text-amber-800 font-bold text-xs rounded-lg hover:bg-white/90 transition-colors shadow-md flex items-center gap-1"
           >
-            {jaParticipa ? "Ver meus palpites" : "Entrar agora"} <ChevronRight className="w-3.5 h-3.5 inline ml-0.5" />
+            {joining ? (
+              <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Entrando...</>
+            ) : (
+              <>{jaParticipa ? "Ver meus palpites" : "Entrar agora"} <ChevronRight className="w-3.5 h-3.5" /></>
+            )}
           </button>
         </div>
       </div>
