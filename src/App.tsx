@@ -45,43 +45,39 @@ const App = () => {
   useEffect(() => {
     if (!isNative) return;
 
-    let cleanup: (() => void) | undefined;
+    // No Capacitor, deep links disparam 'appUrlOpen' no window
+    // O plugin @capacitor/app repassa como window event quando configurado
+    // Alternativa: verificar a URL ao abrir o app
+    const checkDeepLink = () => {
+      const hash = window.location.hash;
+      if (hash && hash.includes("access_token")) {
+        const params = new URLSearchParams(hash.substring(1));
+        const accessToken = params.get("access_token");
+        const refreshToken = params.get("refresh_token");
 
-    (async () => {
-      const pkg = "@capacitor/" + "app";
-      const { App: CapApp } = await import(/* @vite-ignore */ pkg);
-
-      const handleDeepLink = async (event: { url: string }) => {
-        const url = event.url;
-
-        // bolaonacopa://auth/callback#access_token=...&refresh_token=...
-        if (url.includes("auth/callback")) {
-          const hashPart = url.split("#")[1];
-          if (hashPart) {
-            const params = new URLSearchParams(hashPart);
-            const accessToken = params.get("access_token");
-            const refreshToken = params.get("refresh_token");
-
-            if (accessToken && refreshToken) {
-              const { error } = await supabase.auth.setSession({
-                access_token: accessToken,
-                refresh_token: refreshToken,
-              });
-              if (!error) {
-                window.location.replace("/home");
-              } else {
-                console.error("Erro ao restaurar sessão:", error);
-              }
+        if (accessToken && refreshToken) {
+          supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          }).then(({ error }) => {
+            if (!error) {
+              window.location.replace("/home");
             }
-          }
+          });
         }
-      };
+      }
+    };
 
-      await CapApp.addListener("appUrlOpen", handleDeepLink);
-      cleanup = () => { CapApp.removeAllListeners(); };
-    })();
+    checkDeepLink();
 
-    return () => { cleanup?.(); };
+    // Também escutar mudanças de URL (quando app volta do browser)
+    window.addEventListener("hashchange", checkDeepLink);
+    document.addEventListener("resume", checkDeepLink);
+
+    return () => {
+      window.removeEventListener("hashchange", checkDeepLink);
+      document.removeEventListener("resume", checkDeepLink);
+    };
   }, [isNative]);
 
   return (
