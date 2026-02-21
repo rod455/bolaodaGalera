@@ -13,10 +13,22 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+// ── CORS restrito aos domínios autorizados ──
+const ALLOWED_ORIGINS = [
+  "https://bolaonacopa.com.br",
+  "https://www.bolaonacopa.com.br",
+  "https://bolaonacopa.lovable.app",
+  "https://bolaodacopa-ten.vercel.app",
+];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("origin") || "";
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  };
+}
 
 // ── Gerar JWT para autenticar com Firebase ──
 async function getFirebaseAccessToken(): Promise<string> {
@@ -138,6 +150,8 @@ async function sendFCM(
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -159,12 +173,12 @@ serve(async (req) => {
 
     if (!user_id || !titulo || !mensagem) {
       return new Response(
-        JSON.stringify({ error: "user_id, titulo, mensagem obrigatórios" }),
+        JSON.stringify({ error: "user_id, titulo, mensagem obrigatorios" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // 1. Criar notificação in-app (com dedup via referencia)
+    // 1. Criar notificacao in-app (com dedup via referencia)
     let notificacaoId = null;
     if (referencia) {
       const { data } = await supabase.rpc("criar_notificacao", {
@@ -191,7 +205,7 @@ serve(async (req) => {
       notificacaoId = data?.id;
     }
 
-    // Se dedup bloqueou (já enviada), retorna ok sem push
+    // Se dedup bloqueou (ja enviada), retorna ok sem push
     if (!notificacaoId) {
       return new Response(
         JSON.stringify({ ok: true, duplicada: true }),
@@ -199,7 +213,7 @@ serve(async (req) => {
       );
     }
 
-    // 2. Verificar preferência do user
+    // 2. Verificar preferencia do user
     const { data: prefs } = await supabase
       .from("notificacao_preferencias")
       .select("push_ativo")
@@ -242,7 +256,7 @@ serve(async (req) => {
       if (success) {
         pushEnviada = true;
       } else {
-        // Desativar token inválido
+        // Desativar token invalido
         await supabase
           .from("push_tokens")
           .update({ ativo: false })
@@ -250,7 +264,7 @@ serve(async (req) => {
       }
     }
 
-    // 5. Marcar notificação como enviada
+    // 5. Marcar notificacao como enviada
     if (pushEnviada) {
       await supabase
         .from("notificacoes")
