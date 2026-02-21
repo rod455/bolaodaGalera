@@ -21,14 +21,20 @@
   <url>
     <loc>https://www.bolaonacopa.com.br/ao-vivo</loc>
     <lastmod>2026-02-21</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
   </url>
   <url>
     <loc>https://www.bolaonacopa.com.br/planos</loc>
     <lastmod>2026-02-21</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.bolaonacopa.com.br/bolao/71851d2a-88fa-4ec4-a780-7c1e450869ef</loc>
+    <lastmod>2026-02-21</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.bolaonacopa.com.br/privacidade.html</loc>
