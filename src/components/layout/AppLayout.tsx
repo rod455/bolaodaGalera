@@ -114,30 +114,32 @@ const AppLayout = () => {
         <Outlet />
       </main>
 
-      {/* ═══ MOBILE: Bottom Navigation Bar ═══ */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-[0_-2px_10px_rgba(0,0,0,0.08)] md:hidden"
-        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
-        <div className="container max-w-4xl mx-auto flex relative">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.path);
-            return (
-              <button key={item.path} onClick={() => navigate(item.path)}
-                className={`flex-1 flex flex-col items-center gap-0.5 py-2 pt-2.5 relative transition-all ${
-                  active ? "text-copa-green-600" : "text-gray-400"
-                }`}>
-                {active && (
-                  <div className="absolute top-0 w-12 h-[3px] bg-copa-green-500 rounded-b-full" />
-                )}
-                <Icon className={`w-5 h-5 ${active ? "stroke-[2.5]" : ""}`} />
-                <span className={`text-[10px] leading-tight ${active ? "font-bold" : "font-medium"}`}>
-                  {item.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </nav>
+      {/* ═══ MOBILE: Bottom Navigation Bar (só logados — guests tem sticky CTA na Home) ═══ */}
+      {isLoggedIn && (
+        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-[0_-2px_10px_rgba(0,0,0,0.08)] md:hidden"
+          style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+          <div className="container max-w-4xl mx-auto flex relative">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.path);
+              return (
+                <button key={item.path} onClick={() => navigate(item.path)}
+                  className={`flex-1 flex flex-col items-center gap-0.5 py-2 pt-2.5 relative transition-all ${
+                    active ? "text-copa-green-600" : "text-gray-400"
+                  }`}>
+                  {active && (
+                    <div className="absolute top-0 w-12 h-[3px] bg-copa-green-500 rounded-b-full" />
+                  )}
+                  <Icon className={`w-5 h-5 ${active ? "stroke-[2.5]" : ""}`} />
+                  <span className={`text-[10px] leading-tight ${active ? "font-bold" : "font-medium"}`}>
+                    {item.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </nav>
+      )}
 
       {/* Footer - desktop only */}
       <footer className="text-center py-4 text-xs text-muted-foreground border-t hidden md:block">
