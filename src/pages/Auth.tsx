@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, Navigate, useSearchParams } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
 import { Trophy, Eye, EyeOff, Mail, Lock, UserPlus, ArrowLeft, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -183,7 +184,9 @@ const Auth = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: window.location.origin + redirectPath,
+          redirectTo: Capacitor.isNativePlatform()
+            ? "bolaonacopa://auth/callback"
+            : window.location.origin + redirectPath,
         },
       });
       if (error) throw error;
