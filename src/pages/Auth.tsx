@@ -141,8 +141,12 @@ const Auth = () => {
         });
         if (error) throw error;
 
-        // Dispara conversão Google Ads
+        // Dispara eventos Google Ads
         if (typeof window.gtag !== 'undefined') {
+          window.gtag('event', 'Criar_Conta', {
+            'event_callback': () => {},
+            'event_timeout': 2000,
+          });
           window.gtag('event', 'conversion', {
             'send_to': 'AW-16846659267/9D4iCMqM7fkbEMO9juE-',
             'value': 0.5,
@@ -169,6 +173,13 @@ const Auth = () => {
 
   const handleGoogleLogin = async () => {
     try {
+      // Dispara evento Criar_Conta com callback atrasado para garantir envio
+      if (typeof window.gtag !== 'undefined') {
+        window.gtag('event', 'Criar_Conta', {
+          'event_callback': () => {},
+          'event_timeout': 2000,
+        });
+      }
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
