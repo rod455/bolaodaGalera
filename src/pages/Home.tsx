@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
+import { signInWithGoogle } from "@/lib/googleAuth";
 import {
   PlusCircle, Keyboard, Users, MapPin, ChevronRight, ChevronUp, ChevronDown, GripVertical,
   Trophy, Globe, LogIn, AlertTriangle, Clock, X, Loader2, Calendar, Search, Info, UserPlus, Crown,
@@ -291,13 +293,17 @@ const Home = () => {
           'event_timeout': 2000,
         });
       }
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: window.location.origin + "/home",
-        },
-      });
-      if (error) throw error;
+      const result = await signInWithGoogle("/home");
+
+      if (result.success && Capacitor.isNativePlatform()) {
+        toast.success("Login realizado com sucesso!");
+        navigate("/home");
+        window.location.reload();
+      } else if (!result.success && result.error) {
+        if (result.error !== "Login cancelado") {
+          toast.error(result.error);
+        }
+      }
     } catch (error: any) {
       toast.error(error.message || "Erro ao fazer login com Google");
     }

@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { signInWithGoogle } from "@/lib/googleAuth";
 
 declare global {
   interface Window {
@@ -173,7 +174,6 @@ const Auth = () => {
 
   const handleGoogleLogin = async () => {
     try {
-      // Dispara evento Criar_Conta com callback atrasado para garantir envio
       if (typeof window.gtag !== 'undefined') {
         window.gtag('event', 'Criar_Conta', {
           'event_callback': () => {},
@@ -181,15 +181,18 @@ const Auth = () => {
         });
       }
       const redirectPath = bolaoRedirect ? `/bolao/${bolaoRedirect}` : "/home";
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: Capacitor.isNativePlatform()
-            ? "bolaonacopa://auth/callback"
-            : window.location.origin + redirectPath,
-        },
-      });
-      if (error) throw error;
+      const result = await signInWithGoogle(redirectPath);
+
+      if (result.success && Capacitor.isNativePlatform()) {
+        // No app nativo, o login já foi feito — navegar
+        toast.success("Login realizado com sucesso!");
+        navigate(redirectPath);
+      } else if (!result.success && result.error) {
+        if (result.error !== "Login cancelado") {
+          toast.error(result.error);
+        }
+      }
+      // Na web, o redirect acontece automaticamente
     } catch (error: any) {
       toast.error(error.message || "Erro ao fazer login com Google");
     }
