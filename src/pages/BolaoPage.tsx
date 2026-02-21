@@ -732,6 +732,13 @@ const BolaoPage = () => {
               onClick={() => {
                 const url = `${window.location.origin}/entrar?codigo=${bolao.codigo_convite}`;
                 const text = `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nÉ só acessar: ${url}`;
+                // Analytics: Convite enviado
+                if (typeof window.gtag !== 'undefined') {
+                  window.gtag('event', 'enviar_convite', {
+                    metodo: navigator.share ? 'share_nativo' : 'copiar_link',
+                    bolao_id: id,
+                  });
+                }
                 if (navigator.share) {
                   navigator.share({ title: `Bolão: ${bolao.nome}`, text }).catch(() => {});
                 } else {
@@ -927,6 +934,13 @@ const BolaoPage = () => {
                 e.stopPropagation();
                 const url = `${window.location.origin}/entrar?codigo=${bolao.codigo_convite}`;
                 const text = `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nÉ só acessar: ${url}`;
+                // Analytics: Convite enviado
+                if (typeof window.gtag !== 'undefined') {
+                  window.gtag('event', 'enviar_convite', {
+                    metodo: navigator.share ? 'share_nativo' : 'copiar_link',
+                    bolao_id: id,
+                  });
+                }
                 if (navigator.share) {
                   navigator.share({ title: `Bolão: ${bolao.nome}`, text }).catch(() => {});
                 } else {
@@ -966,6 +980,13 @@ const BolaoPage = () => {
                     e.stopPropagation();
                     const url = `${window.location.origin}/entrar?codigo=${bolao.codigo_convite}`;
                     const text = `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nÉ só acessar: ${url}`;
+                    // Analytics: Convite enviado
+                    if (typeof window.gtag !== 'undefined') {
+                      window.gtag('event', 'enviar_convite', {
+                        metodo: navigator.share ? 'share_nativo' : 'copiar_link',
+                        bolao_id: id,
+                      });
+                    }
                     if (navigator.share) {
                       navigator.share({ title: `Bolão: ${bolao.nome}`, text }).catch(() => {});
                     } else {

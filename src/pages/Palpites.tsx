@@ -231,6 +231,14 @@ const Palpites = () => {
         }
         if (data) setPalpitesDB((prev) => ({ ...prev, [jogoId]: data as any }));
       }
+      // Analytics: Palpite enviado
+      if (typeof window.gtag !== 'undefined') {
+        window.gtag('event', 'enviar_palpite', {
+          bolao_id: id || '',
+          quantidade: 1,
+        });
+      }
+
       toast.success("Palpite salvo!");
     } catch (err: any) { console.error("Erro ao salvar:", err); toast.error(err.message || "Erro ao salvar palpite"); }
     finally { setSalvando(null); }

@@ -251,6 +251,15 @@ const CriarBolao = () => {
         user_id: user.id,
       });
 
+      // Analytics: Criar Bolão
+      if (typeof window.gtag !== 'undefined') {
+        window.gtag('event', 'Criar_Bolao', {
+          campeonato: campeonatosSelecionados[0] || '',
+          modo: modoSelecionado || '',
+          is_publico: false,
+        });
+      }
+
       toast.success(`Bolão criado! Código: ${codigo}`);
       navigate(`/bolao/${newBolao.id}`);
     } catch (err: any) { console.error("Erro ao criar bolão:", err); toast.error(err.message || "Erro ao criar bolão"); }
