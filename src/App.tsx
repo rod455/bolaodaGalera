@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -23,6 +23,8 @@ import { Analytics } from "@vercel/analytics/react";
 const queryClient = new QueryClient();
 
 import { Capacitor } from "@capacitor/core";
+import { App as CapApp } from "@capacitor/app";
+import { supabase } from "@/integrations/supabase/client";
 
 /** Redireciona / para /home preservando o hash (necessário para tokens do Supabase auth) */
 const RootRedirect = () => {
@@ -39,6 +41,44 @@ const App = () => {
   const isNative = Capacitor.isNativePlatform();
   const [showSplash, setShowSplash] = useState(isNative);
   const handleSplashFinish = useCallback(() => setShowSplash(false), []);
+
+  // ── Deep Link: capturar OAuth callback no app nativo ──
+  useEffect(() => {
+    if (!isNative) return;
+
+    const handleDeepLink = async (event: { url: string }) => {
+      const url = event.url;
+
+      // bolaonacopa://auth/callback#access_token=...&refresh_token=...
+      if (url.includes("auth/callback")) {
+        const hashPart = url.split("#")[1];
+        if (hashPart) {
+          const params = new URLSearchParams(hashPart);
+          const accessToken = params.get("access_token");
+          const refreshToken = params.get("refresh_token");
+
+          if (accessToken && refreshToken) {
+            const { error } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+            if (!error) {
+              // Sessão restaurada — redirecionar para /home
+              window.location.replace("/home");
+            } else {
+              console.error("Erro ao restaurar sessão:", error);
+            }
+          }
+        }
+      }
+    };
+
+    CapApp.addListener("appUrlOpen", handleDeepLink);
+
+    return () => {
+      CapApp.removeAllListeners();
+    };
+  }, [isNative]);
 
   return (
     <QueryClientProvider client={queryClient}>
