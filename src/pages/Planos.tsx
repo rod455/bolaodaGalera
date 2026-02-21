@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import RegrasModal from "@/components/RegrasModal";
 import type { RegraInfo } from "@/lib/types";
 import { MODO_REGRAS } from "@/lib/constants";
+import SEOHead from "@/components/SEOHead";
 
 // ═══ Price IDs do Stripe ═══
 const STRIPE_PRICES = {
@@ -85,6 +86,11 @@ const Planos = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      <SEOHead
+        title="Planos Premium"
+        description="Desbloqueie modos de pontuação exclusivos, bolões ilimitados e mais. Planos a partir de R$9,90/mês."
+        path="/planos"
+      />
       {/* Header */}
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-full">

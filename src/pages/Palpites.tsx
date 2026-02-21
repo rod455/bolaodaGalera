@@ -15,6 +15,7 @@ import { useRewardedAd } from "@/hooks/useRewardedAd";
 import type { Jogo, Palpite } from "@/lib/types";
 import { FASE_ORDER } from "@/lib/constants";
 import { traduzirFase, formatDataJogo, rodadaNum } from "@/lib/formatters";
+import SEOHead from "@/components/SEOHead";
 
 interface PalpiteDB extends Palpite { id: string; }
 
@@ -253,6 +254,7 @@ const Palpites = () => {
 
   return (
     <div className="space-y-5 animate-fade-in">
+      <SEOHead title="Meus Palpites" noindex />
       <AdRewardModal open={showAdModal} onComplete={resolveWebAd} message="Assista para salvar seu palpite" />
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => navigate(`/bolao/${id}`)} className="rounded-full"><ArrowLeft className="w-5 h-5" /></Button>

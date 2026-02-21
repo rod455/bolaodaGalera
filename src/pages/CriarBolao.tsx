@@ -15,6 +15,7 @@ import AdRewardModal from "@/components/AdRewardModal";
 import RegrasModal from "@/components/RegrasModal";
 import type { RegraInfo } from "@/lib/types";
 import { MODO_REGRAS, MODOS_PONTUACAO } from "@/lib/constants";
+import SEOHead from "@/components/SEOHead";
 
 interface Campeonato {
   id: string;
@@ -295,6 +296,7 @@ const CriarBolao = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      <SEOHead title="Criar Novo Bolão" path="/criar" noindex />
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-full">
           <ArrowLeft className="w-5 h-5" />

@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import type { Jogo } from "@/lib/types";
 import { formatHora } from "@/lib/formatters";
+import SEOHead from "@/components/SEOHead";
 
 const AoVivo = () => {
   const navigate = useNavigate();
@@ -223,6 +224,11 @@ const AoVivo = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      <SEOHead
+        title="Placares Ao Vivo"
+        description="Acompanhe placares ao vivo do Paulistão, Brasileirão e outros campeonatos em tempo real."
+        path="/ao-vivo"
+      />
       <div className="flex items-start justify-between">
         <div>
           <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">

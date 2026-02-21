@@ -22,6 +22,7 @@ import PromoCardBorder from "@/components/PromoCardBorder";
 import type { Bolao } from "@/lib/types";
 import { MODO_LABELS, MODO_REGRAS, FALLBACK_IMAGES } from "@/lib/constants";
 import { formatDataJogo } from "@/lib/formatters";
+import SEOHead from "@/components/SEOHead";
 
 // ID do bolão do Paulistão (promoção R$200)
 const PAULISTAO_BOLAO_ID = "71851d2a-88fa-4ec4-a780-7c1e450869ef";
@@ -510,6 +511,11 @@ const Home = () => {
 
   return (
     <div className={`space-y-6 animate-fade-in ${!user ? "pb-20" : ""}`}>
+      <SEOHead
+        title="Bolões de Futebol Grátis"
+        description="Participe de bolões do Paulistão 2026, Brasileirão e mais. R$200 em prêmios. 100% grátis!"
+        path="/home"
+      />
       <AdRewardModal open={showAdModal} onComplete={resolveWebAd} message="Assista para entrar no bolão" />
 
       {/* ═══ BANNER PROMOÇÃO PAULISTÃO (só para logados) ═══ */}

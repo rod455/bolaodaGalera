@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { useUserPlan } from "@/hooks/useUserPlan";
 import type { Bolao } from "@/lib/types";
 import { FALLBACK_IMAGES } from "@/lib/constants";
+import SEOHead from "@/components/SEOHead";
 
 const EntrarBolao = () => {
   const navigate = useNavigate();
@@ -196,6 +197,7 @@ const EntrarBolao = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      <SEOHead title="Entrar em Bolão" path="/entrar" noindex />
       <div>
         <h2 className="text-2xl font-bold text-foreground">Entrar no Bolão</h2>
         <p className="text-sm text-muted-foreground mt-1">

@@ -21,6 +21,7 @@ import PromoBolaoHeader from "@/components/PromoBolaoHeader";
 import type { Bolao, Jogo, Palpite, RankingEntry } from "@/lib/types";
 import { MODO_LABELS, MODO_REGRAS } from "@/lib/constants";
 import { formatDataJogo, traduzirFase, getInitials } from "@/lib/formatters";
+import SEOHead from "@/components/SEOHead";
 
 function getStatusInfo(jogo: Jogo, palpite: Palpite | null, now: Date) {
   const jogoDate = new Date(jogo.data_hora);
@@ -623,6 +624,11 @@ const BolaoPage = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      <SEOHead
+        title={bolao ? `Bolão ${bolao.nome}` : "Bolão"}
+        description={bolao ? `Participe do bolão ${bolao.nome} e faça seus palpites!` : "Bolão na Copa"}
+        path={`/bolao/${id}`}
+      />
       {/* Header */}
       <div className="flex items-center gap-3">
         <Button

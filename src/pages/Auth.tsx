@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { signInWithGoogle } from "@/lib/googleAuth";
+import SEOHead from "@/components/SEOHead";
 
 declare global {
   interface Window {
@@ -224,6 +225,11 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-copa-green-500 flex flex-col items-center justify-center p-6">
+      <SEOHead
+        title="Criar Conta ou Entrar"
+        description="Crie sua conta grátis no Bolão na Copa e comece a fazer seus palpites em segundos."
+        path="/auth"
+      />
       {/* Background pattern */}
       <div className="absolute inset-0 bg-gradient-to-b from-copa-green-400 to-copa-green-700 opacity-80" />
 

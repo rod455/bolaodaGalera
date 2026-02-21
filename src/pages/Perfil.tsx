@@ -13,6 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserPlan } from "@/hooks/useUserPlan";
 import NotificacaoPreferencias from "@/components/NotificacaoPreferencias";
+import SEOHead from "@/components/SEOHead";
 
 const Perfil = () => {
   const navigate = useNavigate();
@@ -188,6 +189,7 @@ const Perfil = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      <SEOHead title="Meu Perfil" path="/perfil" noindex />
       {/* User header with avatar */}
       <div className="flex items-center gap-4">
         <div className="relative group">
