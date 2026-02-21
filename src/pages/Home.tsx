@@ -275,6 +275,26 @@ const Home = () => {
 
   useEffect(() => { loadData(); }, [user]);
 
+  const handleGoogleLogin = async () => {
+    try {
+      if (typeof window.gtag !== 'undefined') {
+        window.gtag('event', 'Criar_Conta', {
+          'event_callback': () => {},
+          'event_timeout': 2000,
+        });
+      }
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: window.location.origin + "/home",
+        },
+      });
+      if (error) throw error;
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao fazer login com Google");
+    }
+  };
+
   const loadData = async () => {
     try {
       // ═══ DADOS PÚBLICOS (sempre carregam) ═══
@@ -528,8 +548,8 @@ const Home = () => {
             </div>
           </div>
 
-          {/* ── Google Login rápido ── */}
-          <button onClick={() => navigate("/auth?modo=cadastro")}
+          {/* ── Google Login rápido — dispara OAuth direto ── */}
+          <button onClick={handleGoogleLogin}
             className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 hover:border-copa-green-400 hover:shadow-md rounded-xl py-3.5 font-semibold text-sm text-gray-600 transition-all">
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
