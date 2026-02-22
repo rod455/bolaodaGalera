@@ -59,14 +59,13 @@ const Palpites = () => {
 
   // ═══ Copiar palpite para outros bolões ═══
   const [showCopyDialog, setShowCopyDialog] = useState(false);
-  const [copyBoloes, setCopyBoloes] = useState<{id: string; nome: string; jaTemPalpite: boolean}[]>([]);
+  const [copyBoloes, setCopyBoloes] = useState<{id: string; nome: string; jaTemPalpite: boolean; temJogo: boolean}[]>([]);
   const [copyingBoloes, setCopyingBoloes] = useState<Record<string, "idle" | "loading" | "done">>({});
   const [pendingCopy, setPendingCopy] = useState<{jogoId: string; placarA: number; placarB: number; timeA: string; timeB: string} | null>(null);
 
   const checkOutrosBoloes = async (jogoId: string, placarA: number, placarB: number) => {
     if (!user) return;
 
-    // Buscar o jogo para ter os nomes dos times
     const jogo = jogos.find(j => j.id === jogoId);
     if (!jogo) return;
 
@@ -76,16 +75,16 @@ const Palpites = () => {
       .select("bolao_id, boloes(id, nome)")
       .eq("user_id", user.id);
 
-    if (!participacoes || participacoes.length <= 1) return; // Só 1 bolão, não mostra
+    if (!participacoes || participacoes.length <= 1) return;
 
-    // Buscar outros bolões que têm este mesmo jogo
-    const outrosBolaoIds = (participacoes || [])
+    // Outros bolões (excluindo o atual)
+    const outrosBoloes = (participacoes || [])
       .filter((p: any) => p.boloes && p.boloes.id !== id)
       .map((p: any) => ({ bolaoId: p.boloes.id, nome: p.boloes.nome }));
 
-    if (outrosBolaoIds.length === 0) return;
+    if (outrosBoloes.length === 0) return;
 
-    // Verificar quais desses bolões têm o mesmo jogo (pela combinação time_a + time_b + data)
+    // Buscar jogos iguais (mesmo time_a + time_b + data)
     const { data: jogosIguais } = await supabase
       .from("jogos")
       .select("id, campeonato_id")
@@ -93,46 +92,44 @@ const Palpites = () => {
       .eq("time_b", jogo.time_b)
       .eq("data_hora", jogo.data_hora);
 
-    if (!jogosIguais || jogosIguais.length === 0) return;
-    const jogoIdsIguais = jogosIguais.map(j => j.id);
+    const jogoIdsIguais = (jogosIguais || []).map(j => j.id);
 
-    // Para cada outro bolão, ver se tem um jogo igual e se já tem palpite
-    const boloesComJogo: {id: string; nome: string; jaTemPalpite: boolean}[] = [];
+    // Para cada bolão, verificar se tem o jogo e se já tem palpite
+    const boloesResult: {id: string; nome: string; jaTemPalpite: boolean; temJogo: boolean}[] = [];
 
-    for (const ob of outrosBolaoIds) {
-      // Verificar se o bolão tem algum dos jogos iguais via campeonato
-      const { data: bolaoJogos } = await supabase
-        .from("palpites")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("bolao_id", ob.bolaoId)
-        .in("jogo_id", jogoIdsIguais)
-        .limit(1);
-
-      // Verificar se o jogo existe nesse bolão (via bolao_campeonatos)
+    for (const ob of outrosBoloes) {
+      // Checar campeonatos do bolão
       const { data: bcData } = await supabase
         .from("bolao_campeonatos")
         .select("campeonato_id")
         .eq("bolao_id", ob.bolaoId);
 
       const campIds = (bcData || []).map((bc: any) => bc.campeonato_id);
-      const jogoNoBolao = jogosIguais.some(j => campIds.includes(j.campeonato_id));
+      const temJogo = jogosIguais ? jogosIguais.some(j => campIds.includes(j.campeonato_id)) : false;
 
-      if (jogoNoBolao) {
-        boloesComJogo.push({
-          id: ob.bolaoId,
-          nome: ob.nome,
-          jaTemPalpite: (bolaoJogos && bolaoJogos.length > 0) || false,
-        });
+      let jaTemPalpite = false;
+      if (temJogo && jogoIdsIguais.length > 0) {
+        const { data: palpExist } = await supabase
+          .from("palpites")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("bolao_id", ob.bolaoId)
+          .in("jogo_id", jogoIdsIguais)
+          .limit(1);
+        jaTemPalpite = (palpExist && palpExist.length > 0) || false;
       }
+
+      boloesResult.push({
+        id: ob.bolaoId,
+        nome: ob.nome,
+        jaTemPalpite,
+        temJogo,
+      });
     }
 
-    if (boloesComJogo.length === 0) return;
-
-    // Tem bolões para copiar! Mostrar dialog
     setPendingCopy({ jogoId, placarA, placarB, timeA: jogo.time_a, timeB: jogo.time_b });
-    setCopyBoloes(boloesComJogo);
-    setCopyingBoloes(Object.fromEntries(boloesComJogo.map(b => [b.id, "idle" as const])));
+    setCopyBoloes(boloesResult);
+    setCopyingBoloes(Object.fromEntries(boloesResult.map(b => [b.id, "idle" as const])));
     setShowCopyDialog(true);
   };
 
@@ -194,7 +191,7 @@ const Palpites = () => {
   };
 
   const copiarParaTodos = async () => {
-    const boloesParaCopiar = copyBoloes.filter(b => !b.jaTemPalpite && copyingBoloes[b.id] !== "done");
+    const boloesParaCopiar = copyBoloes.filter(b => b.temJogo && !b.jaTemPalpite && copyingBoloes[b.id] !== "done");
     for (const b of boloesParaCopiar) {
       await copiarPalpiteParaBolao(b.id);
     }
@@ -448,19 +445,22 @@ const Palpites = () => {
           <div className="space-y-2 mt-2">
             {copyBoloes.map((bolao) => {
               const status = copyingBoloes[bolao.id];
+              const canCopy = bolao.temJogo && !bolao.jaTemPalpite && status !== "done";
               return (
                 <div
                   key={bolao.id}
                   className={`flex items-center justify-between rounded-xl px-3 py-2.5 border ${
                     status === "done"
                       ? "bg-copa-green-50 border-copa-green-200"
+                      : !bolao.temJogo
+                      ? "bg-gray-50 border-gray-100 opacity-50"
                       : bolao.jaTemPalpite
-                      ? "bg-gray-50 border-gray-100"
+                      ? "bg-copa-green-50/50 border-copa-green-100"
                       : "bg-white border-gray-200"
                   }`}
                 >
                   <span className={`text-sm font-medium truncate flex-1 mr-2 ${
-                    bolao.jaTemPalpite ? "text-muted-foreground" : ""
+                    !bolao.temJogo ? "text-muted-foreground" : ""
                   }`}>
                     {bolao.nome}
                   </span>
@@ -469,8 +469,12 @@ const Palpites = () => {
                     <span className="flex items-center gap-1 text-xs font-bold text-copa-green-600">
                       <Check className="w-3.5 h-3.5" /> Copiado
                     </span>
+                  ) : !bolao.temJogo ? (
+                    <span className="text-[10px] text-muted-foreground whitespace-nowrap">Sem esse jogo</span>
                   ) : bolao.jaTemPalpite ? (
-                    <span className="text-[10px] text-muted-foreground">Já tem palpite</span>
+                    <span className="flex items-center gap-1 text-[10px] text-copa-green-600 whitespace-nowrap">
+                      <CheckCircle2 className="w-3 h-3" /> Já tem palpite
+                    </span>
                   ) : status === "loading" ? (
                     <Loader2 className="w-4 h-4 animate-spin text-copa-green-500" />
                   ) : (
@@ -488,7 +492,7 @@ const Palpites = () => {
           </div>
 
           <div className="flex gap-2 mt-3">
-            {copyBoloes.some(b => !b.jaTemPalpite && copyingBoloes[b.id] !== "done") && (
+            {copyBoloes.some(b => b.temJogo && !b.jaTemPalpite && copyingBoloes[b.id] !== "done") && (
               <Button
                 onClick={copiarParaTodos}
                 className="flex-1 h-10 bg-copa-green-500 hover:bg-copa-green-600 text-white font-bold rounded-xl"
@@ -502,7 +506,7 @@ const Palpites = () => {
               onClick={() => setShowCopyDialog(false)}
               className="flex-1 h-10 rounded-xl"
             >
-              {copyBoloes.every(b => b.jaTemPalpite || copyingBoloes[b.id] === "done") ? "Fechar" : "Pular"}
+              {copyBoloes.every(b => !b.temJogo || b.jaTemPalpite || copyingBoloes[b.id] === "done") ? "Fechar" : "Pular"}
             </Button>
           </div>
         </DialogContent>
