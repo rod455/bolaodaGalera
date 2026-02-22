@@ -94,7 +94,7 @@ const PromoBanner = ({ jaParticipa = false, bolaoId }: PromoBannerProps) => {
 
         {/* Subtítulo */}
         <p className="text-white/80 text-sm font-semibold mt-1.5 tracking-wide">
-          Bolão do Paulistão — Quartas de Final
+          Bolão do Paulistão — Semifinais
         </p>
 
         {/* Badge de urgência */}
