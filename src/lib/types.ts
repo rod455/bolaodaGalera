@@ -54,6 +54,7 @@ export interface RankingEntry {
   avatar: string;
   pontos: number;
   isCurrentUser: boolean;
+  userId?: string;
 }
 
 export interface RegraInfo {
