@@ -357,7 +357,7 @@ const Perfil = () => {
                         body: { priceId: "price_1T1TzjC1YtBHMBc2CGkzhsUe" },
                       });
                       if (error) throw error;
-                      if (data?.url) window.location.href = data.url;
+                      if (data?.url) { if (Capacitor.isNativePlatform()) { window.open(data.url, "_system"); } else { window.location.href = data.url; } }
                     } catch {
                       toast.error("Erro ao iniciar pagamento.");
                     } finally {
@@ -378,7 +378,7 @@ const Perfil = () => {
                   try {
                     const { data, error } = await supabase.functions.invoke("create-portal");
                     if (error) throw error;
-                    if (data?.url) window.location.href = data.url;
+                    if (data?.url) { if (Capacitor.isNativePlatform()) { window.open(data.url, "_system"); } else { window.location.href = data.url; } }
                   } catch {
                     toast.error("Erro ao abrir cancelamento.");
                   } finally {
@@ -455,7 +455,7 @@ const Perfil = () => {
                   try {
                     const { data, error } = await supabase.functions.invoke("create-portal");
                     if (error) throw error;
-                    if (data?.url) window.location.href = data.url;
+                    if (data?.url) { if (Capacitor.isNativePlatform()) { window.open(data.url, "_system"); } else { window.location.href = data.url; } }
                   } catch {
                     toast.error("Erro ao abrir cancelamento.");
                   } finally {
@@ -642,7 +642,7 @@ const Perfil = () => {
                   navigator.share({ title: "Bolão na Copa", text, url }).catch(() => {});
                 } else {
                   const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
-                  window.open(whatsappUrl, "_blank");
+                  if (Capacitor.isNativePlatform()) { window.open(whatsappUrl, "_system"); } else { window.open(whatsappUrl, "_blank"); }
                 }
               }}
               className="flex-1 h-11 bg-copa-green-500 hover:bg-copa-green-600 text-white font-semibold rounded-xl"

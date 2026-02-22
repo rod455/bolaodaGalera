@@ -232,7 +232,7 @@ const Auth = () => {
     setIsSubmitting(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + "/auth?modo=reset",
+        redirectTo: "https://www.bolaonacopa.com.br/auth?modo=reset",
       });
       if (error) throw error;
       setResetEmailSent(true);

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { Capacitor } from "@capacitor/core";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserPlan } from "@/hooks/useUserPlan";
 import { supabase } from "@/integrations/supabase/client";
@@ -86,7 +87,12 @@ const Planos = () => {
           });
         }
 
-        window.location.href = data.url;
+        // No app nativo, abrir no browser externo (Chrome) para Stripe funcionar
+        if (Capacitor.isNativePlatform()) {
+          window.open(data.url, "_system");
+        } else {
+          window.location.href = data.url;
+        }
       } else {
         throw new Error("URL de checkout não retornada");
       }
