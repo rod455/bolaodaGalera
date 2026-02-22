@@ -23,8 +23,6 @@ import type { Bolao } from "@/lib/types";
 import { MODO_LABELS, MODO_REGRAS, FALLBACK_IMAGES } from "@/lib/constants";
 import { formatDataJogo } from "@/lib/formatters";
 import SEOHead from "@/components/SEOHead";
-import { useGamification } from "@/hooks/useGamification";
-import XPProgressCard from "@/components/XPProgressCard";
 
 // ID do bolão do Paulistão (promoção R$200)
 const PAULISTAO_BOLAO_ID = "71851d2a-88fa-4ec4-a780-7c1e450869ef";
@@ -282,7 +280,6 @@ const Home = () => {
   const [joiningByCode, setJoiningByCode] = useState(false);
   const { showAd, resolveWebAd, needsAd } = useRewardedAd();
   const { plano: userPlano } = useUserPlan();
-  const { userXP, referralCode } = useGamification();
   const [showAdModal, setShowAdModal] = useState(false);
   const [regrasModal, setRegrasModal] = useState<string | null>(null);
   const [userEstado, setUserEstado] = useState<string | null>(null);
@@ -521,10 +518,6 @@ const Home = () => {
       />
       <AdRewardModal open={showAdModal} onComplete={resolveWebAd} message="Assista para entrar no bolão" />
 
-      {/* ═══ NÍVEL & XP ═══ */}
-      {user && userXP && (
-        <XPProgressCard userXP={userXP} referralCode={referralCode} variant="compact" />
-      )}
 
       {/* ═══ BANNER PROMOÇÃO PAULISTÃO (só para logados) ═══ */}
       {user && (
