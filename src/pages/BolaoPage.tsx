@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
+import { Capacitor } from "@capacitor/core";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -752,8 +753,10 @@ const BolaoPage = () => {
               variant="outline"
               size="icon"
               onClick={() => {
-                const url = `${window.location.origin}/entrar?codigo=${bolao.codigo_convite}`;
-                const text = `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nÉ só acessar: ${url}`;
+                const url = Capacitor.isNativePlatform() ? "https://play.google.com/store/apps/details?id=com.bolaonacopa.app" : `https://www.bolaonacopa.com.br/entrar?codigo=${bolao.codigo_convite}`;
+                const text = Capacitor.isNativePlatform()
+                  ? `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nBaixe o app: ${url}`
+                  : `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nÉ só acessar: ${url}`;
                 // Analytics: Convite enviado
                 if (typeof window.gtag !== 'undefined') {
                   window.gtag('event', 'enviar_convite', {
@@ -961,8 +964,10 @@ const BolaoPage = () => {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                const url = `${window.location.origin}/entrar?codigo=${bolao.codigo_convite}`;
-                const text = `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nÉ só acessar: ${url}`;
+                const url = Capacitor.isNativePlatform() ? "https://play.google.com/store/apps/details?id=com.bolaonacopa.app" : `https://www.bolaonacopa.com.br/entrar?codigo=${bolao.codigo_convite}`;
+                const text = Capacitor.isNativePlatform()
+                  ? `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nBaixe o app: ${url}`
+                  : `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nÉ só acessar: ${url}`;
                 // Analytics: Convite enviado
                 if (typeof window.gtag !== 'undefined') {
                   window.gtag('event', 'enviar_convite', {
@@ -1000,19 +1005,21 @@ const BolaoPage = () => {
       {/* ═══ 2. PALPITES - Próximos jogos clicáveis ═══ */}
       <Card className="rounded-2xl shadow-sm border-copa-gold-200 bg-copa-gold-50">
         <CardContent className="p-5">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-bold text-copa-green-700">
+          <div className="flex items-start justify-between gap-2 mb-3">
+            <h3 className="text-lg font-bold text-copa-green-700 flex-shrink-0">
               Faça seus palpites
             </h3>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 flex-wrap justify-end">
               {bolao.codigo_convite && (
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={(e) => {
                     e.stopPropagation();
-                    const url = `${window.location.origin}/entrar?codigo=${bolao.codigo_convite}`;
-                    const text = `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nÉ só acessar: ${url}`;
+                    const url = Capacitor.isNativePlatform() ? "https://play.google.com/store/apps/details?id=com.bolaonacopa.app" : `https://www.bolaonacopa.com.br/entrar?codigo=${bolao.codigo_convite}`;
+                    const text = Capacitor.isNativePlatform()
+                  ? `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nBaixe o app: ${url}`
+                  : `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nÉ só acessar: ${url}`;
                     // Analytics: Convite enviado
                     if (typeof window.gtag !== 'undefined') {
                       window.gtag('event', 'enviar_convite', {
@@ -1031,7 +1038,7 @@ const BolaoPage = () => {
                       toast.success("Link copiado para compartilhar!");
                     }
                   }}
-                  className="text-copa-gold-600 border-copa-gold-400 bg-copa-gold-100 hover:bg-copa-gold-200 font-semibold rounded-lg text-xs"
+                  className="text-copa-gold-600 border-copa-gold-400 bg-copa-gold-100 hover:bg-copa-gold-200 font-semibold rounded-lg text-xs h-8 px-2"
                 >
                   <Users className="w-3.5 h-3.5 mr-1" /> Convidar
                 </Button>
@@ -1040,16 +1047,16 @@ const BolaoPage = () => {
                 size="sm"
                 variant="outline"
                 onClick={openCopyDialog}
-                className="text-copa-green-600 border-copa-green-300 hover:bg-copa-green-50 font-semibold rounded-lg text-xs"
+                className="text-copa-green-600 border-copa-green-300 hover:bg-copa-green-50 font-semibold rounded-lg text-xs h-8 px-2"
               >
                 <Copy className="w-3.5 h-3.5 mr-1" /> Copiar
               </Button>
               <Button
                 size="sm"
                 onClick={() => navigate(`/bolao/${id}/palpites`)}
-                className="bg-copa-green-500 hover:bg-copa-green-600 text-white font-semibold rounded-lg"
+                className="bg-copa-green-500 hover:bg-copa-green-600 text-white font-semibold rounded-lg h-8 px-2.5"
               >
-                Ver todos <ChevronRight className="w-4 h-4 ml-1" />
+                Ver todos <ChevronRight className="w-4 h-4 ml-0.5" />
               </Button>
             </div>
           </div>
