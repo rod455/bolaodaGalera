@@ -1466,15 +1466,14 @@ const ExpandableJogoRow = ({
                 Palpite: {palpite!.placar_time_a} x {palpite!.placar_time_b}
               </Badge>
             ) : onNavigate ? (
-              <Badge
-                variant="secondary"
-                className="text-[10px] font-medium border-0 px-2 py-0.5 text-amber-600 bg-amber-50 cursor-pointer"
+              <button
                 onClick={(e) => { e.stopPropagation(); onNavigate(); }}
+                className="flex items-center gap-1.5 bg-copa-green-500 hover:bg-copa-green-600 text-white font-bold text-xs rounded-lg px-3 py-1.5 shadow-sm transition-colors"
               >
-                <Clock className="w-3 h-3 mr-1" />
+                <Clock className="w-3.5 h-3.5" />
                 Fazer palpite
-                <ChevronRight className="w-3 h-3 ml-0.5" />
-              </Badge>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
             ) : null}
           </div>
         </div>
