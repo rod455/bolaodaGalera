@@ -23,6 +23,7 @@ const Perfil = () => {
   const { user, signOut } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { plano: userPlano, loading: loadingPlano } = useUserPlan();
+  const { userXP, referralCode } = useGamification();
   const [loadingPortal, setLoadingPortal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
