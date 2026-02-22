@@ -16,6 +16,8 @@ import RegrasModal from "@/components/RegrasModal";
 import type { RegraInfo } from "@/lib/types";
 import { MODO_REGRAS, MODOS_PONTUACAO } from "@/lib/constants";
 import SEOHead from "@/components/SEOHead";
+import { useGamification } from "@/hooks/useGamification";
+import XPToast from "@/components/XPToast";
 
 interface Campeonato {
   id: string;
@@ -83,6 +85,8 @@ const CriarBolao = () => {
   const [loadingTimes, setLoadingTimes] = useState(false);
   const [buscaTime, setBuscaTime] = useState("");
   const [timeModalOpen, setTimeModalOpen] = useState(false);
+  const { darXP } = useGamification();
+  const [xpToast, setXPToast] = useState<{xp: number, msg: string} | null>(null);
 
   const { plano: userPlano } = useUserPlan();
   const { showAd, adLoading, resolveWebAd, needsAd } = useRewardedAd();
@@ -259,6 +263,11 @@ const CriarBolao = () => {
           is_publico: false,
         });
       }
+
+      // Gamificação: +20 XP por criar bolão
+      darXP("criar_bolao", 20, newBolao.id).then((ganhou) => {
+        if (ganhou) setXPToast({ xp: 20, msg: "Bolão criado!" });
+      });
 
       toast.success(`Bolão criado! Código: ${codigo}`);
       navigate(`/bolao/${newBolao.id}`);

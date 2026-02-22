@@ -14,6 +14,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useUserPlan } from "@/hooks/useUserPlan";
 import NotificacaoPreferencias from "@/components/NotificacaoPreferencias";
 import SEOHead from "@/components/SEOHead";
+import { useGamification } from "@/hooks/useGamification";
+import XPProgressCard from "@/components/XPProgressCard";
+import NivelBadge from "@/components/NivelBadge";
 
 const Perfil = () => {
   const navigate = useNavigate();
@@ -219,10 +222,20 @@ const Perfil = () => {
           </button>
         </div>
         <div>
-          <h2 className="text-2xl font-bold">Olá, {nome || "Jogador"}</h2>
+          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h2 className="text-2xl font-bold">Olá, {nome || "Jogador"}</h2>
+            {userXP && <NivelBadge nivel={userXP.nivel} size="md" showTitulo />}
+          </div>
           <p className="text-sm text-muted-foreground">{email}</p>
         </div>
       </div>
+      {/* ═══ GAMIFICAÇÃO ═══ */}
+      {userXP && (
+        <XPProgressCard userXP={userXP} referralCode={referralCode} />
+      )}
+
+
 
       {/* Plan Card */}
       <Card className="rounded-2xl shadow-sm border-copa-gold-200 overflow-hidden">

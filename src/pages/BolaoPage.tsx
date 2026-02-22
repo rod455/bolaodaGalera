@@ -22,6 +22,9 @@ import type { Bolao, Jogo, Palpite, RankingEntry } from "@/lib/types";
 import { MODO_LABELS, MODO_REGRAS } from "@/lib/constants";
 import { formatDataJogo, traduzirFase, getInitials } from "@/lib/formatters";
 import SEOHead from "@/components/SEOHead";
+import { useGamification } from "@/hooks/useGamification";
+import NivelBadge from "@/components/NivelBadge";
+import XPToast from "@/components/XPToast";
 
 function getStatusInfo(jogo: Jogo, palpite: Palpite | null, now: Date) {
   const jogoDate = new Date(jogo.data_hora);
@@ -95,6 +98,9 @@ const BolaoPage = () => {
   const [palpites, setPalpites] = useState<Record<string, Palpite>>({});
   const [ranking, setRanking] = useState<RankingEntry[]>([]);
   const [showFullRanking, setShowFullRanking] = useState(false);
+  const { darXP } = useGamification();
+  const [xpToast, setXPToast] = useState<{xp: number, msg: string} | null>(null);
+  const [niveisRanking, setNiveisRanking] = useState<Record<string, number>>({});
   const [totalParticipantes, setTotalParticipantes] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
@@ -333,10 +339,25 @@ const BolaoPage = () => {
             avatar: getInitials(nome),
             pontos: p.pontuacao_total || 0,
             isCurrentUser: p.user_id === user!.id,
+            userId: p.user_id,
           };
         }
       );
       setRanking(rankingList);
+
+      // Buscar níveis dos participantes para o ranking
+      const userIds = (participantes || []).map((p: any) => p.user_id);
+      if (userIds.length > 0) {
+        const { data: xpData } = await supabase
+          .from("user_xp")
+          .select("user_id, nivel")
+          .in("user_id", userIds);
+        if (xpData) {
+          const niveis: Record<string, number> = {};
+          xpData.forEach((x: any) => { niveis[x.user_id] = x.nivel; });
+          setNiveisRanking(niveis);
+        }
+      }
     } catch (err) {
       console.error("Erro ao carregar bolão:", err);
     } finally {
@@ -624,6 +645,7 @@ const BolaoPage = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {xpToast && <XPToast xp={xpToast.xp} message={xpToast.msg} onDone={() => setXPToast(null)} />}
       <SEOHead
         title={bolao ? `Bolão ${bolao.nome}` : "Bolão"}
         description={bolao ? `Participe do bolão ${bolao.nome} e faça seus palpites!` : "Bolão na Copa"}
@@ -739,6 +761,10 @@ const BolaoPage = () => {
                     bolao_id: id,
                   });
                 }
+                // Gamificação: +10 XP por compartilhar
+                darXP("compartilhar", 10).then((ganhou) => {
+                  if (ganhou) setXPToast({ xp: 10, msg: "Resultado compartilhado!" });
+                });
                 if (navigator.share) {
                   navigator.share({ title: `Bolão: ${bolao.nome}`, text }).catch(() => {});
                 } else {
@@ -920,6 +946,9 @@ const BolaoPage = () => {
                         (você)
                       </span>
                     )}
+                    {niveisRanking[player.userId || ""] > 1 && (
+                      <NivelBadge nivel={niveisRanking[player.userId || ""]} size="sm" />
+                    )}
                   </span>
                 </div>
                 <span className="text-sm font-bold text-copa-green-600">
@@ -941,6 +970,10 @@ const BolaoPage = () => {
                     bolao_id: id,
                   });
                 }
+                // Gamificação: +10 XP por compartilhar
+                darXP("compartilhar", 10).then((ganhou) => {
+                  if (ganhou) setXPToast({ xp: 10, msg: "Resultado compartilhado!" });
+                });
                 if (navigator.share) {
                   navigator.share({ title: `Bolão: ${bolao.nome}`, text }).catch(() => {});
                 } else {
@@ -987,6 +1020,10 @@ const BolaoPage = () => {
                         bolao_id: id,
                       });
                     }
+                    // Gamificação: +10 XP por compartilhar
+                    darXP("compartilhar", 10).then((ganhou) => {
+                      if (ganhou) setXPToast({ xp: 10, msg: "Resultado compartilhado!" });
+                    });
                     if (navigator.share) {
                       navigator.share({ title: `Bolão: ${bolao.nome}`, text }).catch(() => {});
                     } else {

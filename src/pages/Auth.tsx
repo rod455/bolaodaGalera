@@ -102,6 +102,7 @@ const Auth = () => {
   };
 
   const bolaoRedirect = searchParams.get("bolao");
+  const refCode = searchParams.get("ref");
 
   // If already logged in AND not resetting password, redirect
   if (!loading && session && !isResettingPassword) {
@@ -143,6 +144,16 @@ const Auth = () => {
         });
         if (error) throw error;
 
+        // Processar referral se veio com código de convite
+        if (refCode && data?.user?.id) {
+          try {
+            await supabase.rpc("processar_referral", {
+              p_referred_id: data.user.id,
+              p_referral_code: refCode,
+            });
+          } catch (e) { console.error("Erro referral:", e); }
+        }
+
         // Dispara eventos Google Ads
         if (typeof window.gtag !== 'undefined') {
           window.gtag('event', 'Criar_Conta', {
@@ -183,6 +194,19 @@ const Auth = () => {
       }
       const redirectPath = bolaoRedirect ? `/bolao/${bolaoRedirect}` : "/home";
       const result = await signInWithGoogle(redirectPath);
+
+      // Processar referral se veio com código de convite (Google login)
+      if (result.success && refCode) {
+        try {
+          const { data: { user: currentUser } } = await supabase.auth.getUser();
+          if (currentUser) {
+            await supabase.rpc("processar_referral", {
+              p_referred_id: currentUser.id,
+              p_referral_code: refCode,
+            });
+          }
+        } catch (e) { console.error("Erro referral Google:", e); }
+      }
 
       if (result.success && Capacitor.isNativePlatform()) {
         // No app nativo, o login já foi feito — navegar

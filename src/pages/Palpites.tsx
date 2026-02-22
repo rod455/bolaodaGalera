@@ -16,6 +16,8 @@ import type { Jogo, Palpite } from "@/lib/types";
 import { FASE_ORDER } from "@/lib/constants";
 import { traduzirFase, formatDataJogo, rodadaNum } from "@/lib/formatters";
 import SEOHead from "@/components/SEOHead";
+import { useGamification } from "@/hooks/useGamification";
+import XPToast from "@/components/XPToast";
 
 interface PalpiteDB extends Palpite { id: string; }
 
@@ -48,6 +50,8 @@ const Palpites = () => {
   const [timeFavorito, setTimeFavorito] = useState<string | null>(null);
   const [isFanatico, setIsFanatico] = useState(false);
   const { showAd, resolveWebAd, needsAd } = useRewardedAd();
+  const { darXP } = useGamification();
+  const [xpToast, setXPToast] = useState<{xp: number, msg: string} | null>(null);
   const [showAdModal, setShowAdModal] = useState(false);
 
   useEffect(() => { if (id && user) loadData(); }, [id, user]);
@@ -239,6 +243,11 @@ const Palpites = () => {
         });
       }
 
+      // Gamificação: +5 XP por palpite
+      darXP("palpite", 5, jogoId).then((ganhou) => {
+        if (ganhou) setXPToast({ xp: 5, msg: "Palpite feito!" });
+      });
+
       toast.success("Palpite salvo!");
     } catch (err: any) { console.error("Erro ao salvar:", err); toast.error(err.message || "Erro ao salvar palpite"); }
     finally { setSalvando(null); }
@@ -264,6 +273,7 @@ const Palpites = () => {
     <div className="space-y-5 animate-fade-in">
       <SEOHead title="Meus Palpites" noindex />
       <AdRewardModal open={showAdModal} onComplete={resolveWebAd} message="Assista para salvar seu palpite" />
+      {xpToast && <XPToast xp={xpToast.xp} message={xpToast.msg} onDone={() => setXPToast(null)} />}
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => navigate(`/bolao/${id}`)} className="rounded-full"><ArrowLeft className="w-5 h-5" /></Button>
         <div className="flex-1">
