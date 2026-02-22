@@ -9,6 +9,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { Capacitor } from "@capacitor/core";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserPlan } from "@/hooks/useUserPlan";
@@ -623,7 +624,7 @@ const Perfil = () => {
           <div className="flex gap-2">
             <Button
               onClick={() => {
-                const url = `${window.location.origin}/auth`;
+                const url = Capacitor.isNativePlatform() ? "https://play.google.com/store/apps/details?id=com.bolaonacopa.app" : "https://www.bolaonacopa.com.br/auth";
                 navigator.clipboard.writeText(url);
                 toast.success("Link copiado!");
               }}
@@ -635,7 +636,7 @@ const Perfil = () => {
             </Button>
             <Button
               onClick={() => {
-                const url = `${window.location.origin}/auth`;
+                const url = Capacitor.isNativePlatform() ? "https://play.google.com/store/apps/details?id=com.bolaonacopa.app" : "https://www.bolaonacopa.com.br/auth";
                 const text = `🏆 Vem jogar no Bolão na Copa! Faça seus palpites e dispute com seus amigos. Cadastre-se aqui: ${url}`;
                 if (navigator.share) {
                   navigator.share({ title: "Bolão na Copa", text, url }).catch(() => {});
