@@ -223,7 +223,6 @@ const Perfil = () => {
         </div>
         <div>
           <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex items-center gap-2 flex-wrap">
             <h2 className="text-2xl font-bold">Olá, {nome || "Jogador"}</h2>
             {userXP && <NivelBadge nivel={userXP.nivel} size="md" showTitulo />}
           </div>
