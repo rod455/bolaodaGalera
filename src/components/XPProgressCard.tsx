@@ -31,7 +31,7 @@ const XPProgressCard = ({ userXP, referralCode, variant = "full" }: XPProgressCa
   const handleCopyReferral = () => {
     if (!referralCode) return;
     const url = Capacitor.isNativePlatform() ? "https://play.google.com/store/apps/details?id=com.bolaonacopa.app" : `https://www.bolaonacopa.com.br/auth?modo=cadastro&ref=${referralCode}`;
-    const text = Capacitor.isNativePlatform() ? `🏆 Vem jogar no Bolão na Copa comigo!\n\nUse meu código: ${referralCode}\n\nBaixe o app: ${url}` : `🏆 Vem jogar no Bolão na Copa comigo!\n\nUse meu código: ${referralCode}\n\nCadastre aqui: ${url}`;
+    const text = Capacitor.isNativePlatform() ? `🏆 Vem jogar no Bolão na Copa comigo!\n\nQuero ver quem sabe mais do que eu!\n\nBaixe o app: ${url}` : `🏆 Vem jogar no Bolão na Copa comigo!\n\nUse meu código: ${referralCode}\n\nCadastre aqui: ${url}`;
 
     if (navigator.share) {
       navigator.share({ title: "Bolão na Copa", text }).catch(() => {});
