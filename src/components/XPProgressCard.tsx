@@ -1,3 +1,4 @@
+import { Capacitor } from "@capacitor/core";
 import { Trophy, Star, Users, Gift, ChevronRight, Copy, Share2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,8 +30,8 @@ const XPProgressCard = ({ userXP, referralCode, variant = "full" }: XPProgressCa
 
   const handleCopyReferral = () => {
     if (!referralCode) return;
-    const url = `${window.location.origin}/auth?modo=cadastro&ref=${referralCode}`;
-    const text = `🏆 Vem jogar no Bolão na Copa comigo!\n\nUse meu código: ${referralCode}\n\nCadastre aqui: ${url}`;
+    const url = Capacitor.isNativePlatform() ? "https://play.google.com/store/apps/details?id=com.bolaonacopa.app" : `https://www.bolaonacopa.com.br/auth?modo=cadastro&ref=${referralCode}`;
+    const text = Capacitor.isNativePlatform() ? `🏆 Vem jogar no Bolão na Copa comigo!\n\nUse meu código: ${referralCode}\n\nBaixe o app: ${url}` : `🏆 Vem jogar no Bolão na Copa comigo!\n\nUse meu código: ${referralCode}\n\nCadastre aqui: ${url}`;
 
     if (navigator.share) {
       navigator.share({ title: "Bolão na Copa", text }).catch(() => {});
