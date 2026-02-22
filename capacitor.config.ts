@@ -5,8 +5,8 @@ const config: CapacitorConfig = {
   appName: 'Bolão na Copa',
   webDir: 'dist',
   server: {
-    // Permite que o deep link bolaonacopa:// seja tratado pelo app
     androidScheme: 'https',
+    url: 'https://www.bolaonacopa.com.br',
   },
 };
 
