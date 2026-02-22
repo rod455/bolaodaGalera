@@ -3,6 +3,7 @@ import { Home, PlusCircle, Radio, User, LogOut, LogIn } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import NotificationCenter from "@/components/NotificationCenter";
+import InstallAppBanner from "@/components/InstallAppBanner";
 
 const LOGO_URL = "https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/604913%20(512%20x%20512%20px).png";
 
@@ -140,6 +141,9 @@ const AppLayout = () => {
           </div>
         </nav>
       )}
+
+      {/* ═══ Banner instalar app (só Android mobile, não no app nativo) ═══ */}
+      <InstallAppBanner />
 
       {/* Footer - desktop only */}
       <footer className="text-center py-4 text-xs text-muted-foreground border-t hidden md:block">
