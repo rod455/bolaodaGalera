@@ -1005,11 +1005,11 @@ const BolaoPage = () => {
       {/* ═══ 2. PALPITES - Próximos jogos clicáveis ═══ */}
       <Card className="rounded-2xl shadow-sm border-copa-gold-200 bg-copa-gold-50">
         <CardContent className="p-5">
-          <div className="flex items-start justify-between gap-2 mb-3">
-            <h3 className="text-lg font-bold text-copa-green-700 flex-shrink-0">
+          <div className="mb-3">
+            <h3 className="text-lg font-bold text-copa-green-700 mb-2">
               Faça seus palpites
             </h3>
-            <div className="flex items-center gap-1.5 flex-wrap justify-end">
+            <div className="flex items-center gap-2">
               {bolao.codigo_convite && (
                 <Button
                   size="sm"
@@ -1038,7 +1038,7 @@ const BolaoPage = () => {
                       toast.success("Link copiado para compartilhar!");
                     }
                   }}
-                  className="text-copa-gold-600 border-copa-gold-400 bg-copa-gold-100 hover:bg-copa-gold-200 font-semibold rounded-lg text-xs h-8 px-2"
+                  className="flex-1 text-copa-gold-600 border-copa-gold-400 bg-copa-gold-100 hover:bg-copa-gold-200 font-semibold rounded-lg text-xs h-9"
                 >
                   <Users className="w-3.5 h-3.5 mr-1" /> Convidar
                 </Button>
@@ -1047,14 +1047,14 @@ const BolaoPage = () => {
                 size="sm"
                 variant="outline"
                 onClick={openCopyDialog}
-                className="text-copa-green-600 border-copa-green-300 hover:bg-copa-green-50 font-semibold rounded-lg text-xs h-8 px-2"
+                className="flex-1 text-copa-green-600 border-copa-green-300 hover:bg-copa-green-50 font-semibold rounded-lg text-xs h-9"
               >
                 <Copy className="w-3.5 h-3.5 mr-1" /> Copiar
               </Button>
               <Button
                 size="sm"
                 onClick={() => navigate(`/bolao/${id}/palpites`)}
-                className="bg-copa-green-500 hover:bg-copa-green-600 text-white font-semibold rounded-lg h-8 px-2.5"
+                className="flex-1 bg-copa-green-500 hover:bg-copa-green-600 text-white font-semibold rounded-lg h-9"
               >
                 Ver todos <ChevronRight className="w-4 h-4 ml-0.5" />
               </Button>
