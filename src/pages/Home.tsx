@@ -543,19 +543,35 @@ const Home = () => {
             <div className="absolute bottom-0 left-0 w-32 h-32 bg-copa-gold-400/10 rounded-full translate-y-14 -translate-x-10 blur-xl" />
 
             <div className="relative z-10 p-5 pb-4">
-              {/* Badge */}
-              <div className="inline-flex items-center gap-1.5 bg-copa-green-500/20 border border-copa-green-400/30 rounded-full px-3 py-1 mb-3">
-                <span className="w-2 h-2 bg-copa-green-400 rounded-full animate-pulse" />
-                <span className="text-[10px] font-bold text-copa-green-300 uppercase tracking-wider">Bolão gratuito</span>
-              </div>
 
-              <h2 className="text-2xl font-extrabold leading-tight">
-                Dê seu palpite e concorra a{" "}
-                <span className="text-copa-gold-400">R$ 200</span>
+              {/* Proposta de valor */}
+              <h2 className="text-[22px] font-extrabold leading-tight">
+                Desafie seus amigos,{" "}
+                <span className="text-copa-gold-400">prove que você entende de bola</span>{" "}
+                e concorra a prêmios!
               </h2>
-              <p className="text-white/60 text-sm mt-1.5 leading-relaxed">
-                Fase final do Paulistão 2026. Sem taxa de inscrição.
+              <p className="text-white/60 text-sm mt-2 leading-relaxed">
+                Crie seu bolão, faça seus palpites e veja quem acerta mais. Grátis pra jogar.
               </p>
+
+              {/* Banner prêmio — estilo da Home logada */}
+              <div className="mt-4 rounded-xl overflow-hidden"
+                style={{
+                  background: "linear-gradient(135deg, #92400E 0%, #B45309 30%, #D97706 60%, #EAB308 100%)",
+                  border: "1px solid rgba(250, 204, 21, 0.3)",
+                }}>
+                <div className="flex items-center gap-3 px-4 py-3">
+                  <span className="text-2xl">🏆</span>
+                  <div className="flex-1">
+                    <p className="text-white font-bold text-sm leading-snug">
+                      Valendo <span style={{ color: "#FEF9C3" }}>R$ 200</span> em prêmio!
+                    </p>
+                    <p className="text-white/60 text-[11px] mt-0.5">
+                      Bolão do Paulistão — Semifinais
+                    </p>
+                  </div>
+                </div>
+              </div>
 
               {/* Social proof */}
               <div className="flex items-center gap-3 mt-4">
@@ -570,7 +586,7 @@ const Home = () => {
                   <span className="font-bold text-white">
                     {Math.max(1000, Object.values(participantesCount).reduce((a, b) => a + b, 0)).toLocaleString("pt-BR")}+
                   </span>
-                  <span className="text-white/50"> já estão participando</span>
+                  <span className="text-white/50"> já estão jogando</span>
                 </div>
               </div>
 
