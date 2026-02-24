@@ -59,7 +59,7 @@ const Palpites = () => {
 
   // ═══ Copiar palpite para outros bolões ═══
   const [showCopyDialog, setShowCopyDialog] = useState(false);
-  const [copyBoloes, setCopyBoloes] = useState<{id: string; nome: string; jaTemPalpite: boolean; temJogo: boolean}[]>([]);
+  const [copyBoloes, setCopyBoloes] = useState<{id: string; nome: string; jaTemPalpite: boolean; temJogo: boolean; palpiteAtual?: string}[]>([]);
   const [copyingBoloes, setCopyingBoloes] = useState<Record<string, "idle" | "loading" | "done">>({});
   const [pendingCopy, setPendingCopy] = useState<{jogoId: string; placarA: number; placarB: number; timeA: string; timeB: string} | null>(null);
 
@@ -95,7 +95,7 @@ const Palpites = () => {
     const jogoIdsIguais = (jogosIguais || []).map(j => j.id);
 
     // Para cada bolão, verificar se tem o jogo e se já tem palpite
-    const boloesResult: {id: string; nome: string; jaTemPalpite: boolean; temJogo: boolean}[] = [];
+    const boloesResult: {id: string; nome: string; jaTemPalpite: boolean; temJogo: boolean; palpiteAtual?: string}[] = [];
 
     for (const ob of outrosBoloes) {
       // Checar campeonatos do bolão
@@ -108,15 +108,19 @@ const Palpites = () => {
       const temJogo = jogosIguais ? jogosIguais.some(j => campIds.includes(j.campeonato_id)) : false;
 
       let jaTemPalpite = false;
+      let palpiteAtual: string | undefined = undefined;
       if (temJogo && jogoIdsIguais.length > 0) {
         const { data: palpExist } = await supabase
           .from("palpites")
-          .select("id")
+          .select("id, placar_a, placar_b")
           .eq("user_id", user.id)
           .eq("bolao_id", ob.bolaoId)
           .in("jogo_id", jogoIdsIguais)
           .limit(1);
         jaTemPalpite = (palpExist && palpExist.length > 0) || false;
+        if (jaTemPalpite && palpExist && palpExist[0]) {
+          palpiteAtual = `${palpExist[0].placar_a} x ${palpExist[0].placar_b}`;
+        }
       }
 
       boloesResult.push({
@@ -124,6 +128,7 @@ const Palpites = () => {
         nome: ob.nome,
         jaTemPalpite,
         temJogo,
+        palpiteAtual,
       });
     }
 
@@ -191,13 +196,17 @@ const Palpites = () => {
   };
 
   const copiarParaTodos = async () => {
-    const boloesParaCopiar = copyBoloes.filter(b => b.temJogo && !b.jaTemPalpite && copyingBoloes[b.id] !== "done");
+    const novo = pendingCopy ? `${pendingCopy.placarA} x ${pendingCopy.placarB}` : "";
+    const boloesParaCopiar = copyBoloes.filter(b => {
+      const igual = b.jaTemPalpite && b.palpiteAtual === novo;
+      return b.temJogo && !igual && copyingBoloes[b.id] !== "done";
+    });
     for (const b of boloesParaCopiar) {
       await copiarPalpiteParaBolao(b.id);
     }
     setTimeout(() => {
       setShowCopyDialog(false);
-      toast.success("Palpites copiados!");
+      toast.success("Palpites atualizados!");
     }, 500);
   };
 
@@ -445,7 +454,9 @@ const Palpites = () => {
           <div className="space-y-2 mt-2">
             {copyBoloes.map((bolao) => {
               const status = copyingBoloes[bolao.id];
-              const canCopy = bolao.temJogo && !bolao.jaTemPalpite && status !== "done";
+              const novoPalpite = pendingCopy ? `${pendingCopy.placarA} x ${pendingCopy.placarB}` : "";
+              const palpiteIgual = bolao.jaTemPalpite && bolao.palpiteAtual === novoPalpite;
+              const podeCopiar = bolao.temJogo && !palpiteIgual && status !== "done";
               return (
                 <div
                   key={bolao.id}
@@ -454,29 +465,44 @@ const Palpites = () => {
                       ? "bg-copa-green-50 border-copa-green-200"
                       : !bolao.temJogo
                       ? "bg-gray-50 border-gray-100 opacity-50"
-                      : bolao.jaTemPalpite
+                      : palpiteIgual
                       ? "bg-copa-green-50/50 border-copa-green-100"
                       : "bg-white border-gray-200"
                   }`}
                 >
-                  <span className={`text-sm font-medium truncate flex-1 mr-2 ${
-                    !bolao.temJogo ? "text-muted-foreground" : ""
-                  }`}>
-                    {bolao.nome}
-                  </span>
+                  <div className="flex-1 mr-2 min-w-0">
+                    <span className={`text-sm font-medium truncate block ${
+                      !bolao.temJogo ? "text-muted-foreground" : ""
+                    }`}>
+                      {bolao.nome}
+                    </span>
+                    {bolao.jaTemPalpite && bolao.palpiteAtual && !palpiteIgual && status !== "done" && (
+                      <span className="text-[10px] text-amber-600">
+                        Palpite atual: {bolao.palpiteAtual}
+                      </span>
+                    )}
+                  </div>
 
                   {status === "done" ? (
-                    <span className="flex items-center gap-1 text-xs font-bold text-copa-green-600">
-                      <Check className="w-3.5 h-3.5" /> Copiado
+                    <span className="flex items-center gap-1 text-xs font-bold text-copa-green-600 whitespace-nowrap">
+                      <Check className="w-3.5 h-3.5" /> {bolao.jaTemPalpite ? "Atualizado" : "Copiado"}
                     </span>
                   ) : !bolao.temJogo ? (
                     <span className="text-[10px] text-muted-foreground whitespace-nowrap">Sem esse jogo</span>
-                  ) : bolao.jaTemPalpite ? (
+                  ) : palpiteIgual ? (
                     <span className="flex items-center gap-1 text-[10px] text-copa-green-600 whitespace-nowrap">
-                      <CheckCircle2 className="w-3 h-3" /> Já tem palpite
+                      <CheckCircle2 className="w-3 h-3" /> Mesmo palpite
                     </span>
                   ) : status === "loading" ? (
                     <Loader2 className="w-4 h-4 animate-spin text-copa-green-500" />
+                  ) : bolao.jaTemPalpite ? (
+                    <Button
+                      size="sm"
+                      onClick={() => copiarPalpiteParaBolao(bolao.id)}
+                      className="h-7 px-3 text-xs bg-amber-500 hover:bg-amber-600 text-white rounded-lg whitespace-nowrap"
+                    >
+                      Atualizar
+                    </Button>
                   ) : (
                     <Button
                       size="sm"
@@ -492,7 +518,11 @@ const Palpites = () => {
           </div>
 
           <div className="flex gap-2 mt-3">
-            {copyBoloes.some(b => b.temJogo && !b.jaTemPalpite && copyingBoloes[b.id] !== "done") && (
+            {copyBoloes.some(b => {
+              const novo = pendingCopy ? `${pendingCopy.placarA} x ${pendingCopy.placarB}` : "";
+              const igual = b.jaTemPalpite && b.palpiteAtual === novo;
+              return b.temJogo && !igual && copyingBoloes[b.id] !== "done";
+            }) && (
               <Button
                 onClick={copiarParaTodos}
                 className="flex-1 h-10 bg-copa-green-500 hover:bg-copa-green-600 text-white font-bold rounded-xl"
@@ -506,7 +536,11 @@ const Palpites = () => {
               onClick={() => setShowCopyDialog(false)}
               className="flex-1 h-10 rounded-xl"
             >
-              {copyBoloes.every(b => !b.temJogo || b.jaTemPalpite || copyingBoloes[b.id] === "done") ? "Fechar" : "Pular"}
+              {copyBoloes.every(b => {
+                const novo = pendingCopy ? `${pendingCopy.placarA} x ${pendingCopy.placarB}` : "";
+                const igual = b.jaTemPalpite && b.palpiteAtual === novo;
+                return !b.temJogo || igual || copyingBoloes[b.id] === "done";
+              }) ? "Fechar" : "Pular"}
             </Button>
           </div>
         </DialogContent>
