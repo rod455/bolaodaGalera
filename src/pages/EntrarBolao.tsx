@@ -136,10 +136,14 @@ const EntrarBolao = () => {
       }
 
       // Mostrar ad antes de entrar
-      const adResult = await showAd("entrar");
-      if (!adResult) {
-        setBuscando(false);
-        return;
+      if (needsAd) {
+        setShowAdModal(true);
+        const adResult = await showAd("entrar");
+        setShowAdModal(false);
+        if (!adResult) {
+          setBuscando(false);
+          return;
+        }
       }
 
       await ensureProfile();
@@ -177,10 +181,14 @@ const EntrarBolao = () => {
 
     try {
       // Mostrar ad antes de entrar
-      const adResult = await showAd("entrar");
-      if (!adResult) {
-        setJoining(null);
-        return;
+      if (needsAd) {
+        setShowAdModal(true);
+        const adResult = await showAd("entrar");
+        setShowAdModal(false);
+        if (!adResult) {
+          setJoining(null);
+          return;
+        }
       }
 
       await ensureProfile();
