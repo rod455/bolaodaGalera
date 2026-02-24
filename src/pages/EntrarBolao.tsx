@@ -10,6 +10,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useUserPlan } from "@/hooks/useUserPlan";
+import { useRewardedAd } from "@/hooks/useRewardedAd";
+import AdRewardModal from "@/components/AdRewardModal";
 import type { Bolao } from "@/lib/types";
 import { FALLBACK_IMAGES } from "@/lib/constants";
 import SEOHead from "@/components/SEOHead";
@@ -25,6 +27,8 @@ const EntrarBolao = () => {
   const [joining, setJoining] = useState<string | null>(null);
   const [buscando, setBuscando] = useState(false);
   const { plano: userPlano } = useUserPlan();
+  const { showAd, resolveWebAd, needsAd } = useRewardedAd();
+  const [showAdModal, setShowAdModal] = useState(false);
 
   const checkPrivateLimit = async (): Promise<boolean> => {
     if (userPlano !== "free" && userPlano) return true;
@@ -131,6 +135,13 @@ const EntrarBolao = () => {
         return;
       }
 
+      // Mostrar ad antes de entrar
+      const adResult = await showAd("entrar");
+      if (!adResult) {
+        setBuscando(false);
+        return;
+      }
+
       await ensureProfile();
 
       // Try to join
@@ -165,6 +176,13 @@ const EntrarBolao = () => {
     setJoining(bolaoId);
 
     try {
+      // Mostrar ad antes de entrar
+      const adResult = await showAd("entrar");
+      if (!adResult) {
+        setJoining(null);
+        return;
+      }
+
       await ensureProfile();
 
       const { error } = await supabase
@@ -359,6 +377,8 @@ const EntrarBolao = () => {
           </div>
         )}
       </div>
+
+      <AdRewardModal open={showAdModal} onComplete={resolveWebAd} message="Assista para entrar no bolão" />
     </div>
   );
 };
