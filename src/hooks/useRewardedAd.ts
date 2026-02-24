@@ -1,26 +1,15 @@
 import { useState, useCallback, useRef } from "react";
+import { Capacitor } from "@capacitor/core";
 import { useUserPlan } from "./useUserPlan";
 
 // Chave localStorage para controle diário
 const LAST_PALPITE_AD_KEY = "bolao_last_palpite_ad";
 const getToday = () => new Date().toISOString().split("T")[0];
 
-// Tipo global para o AdMob (disponível apenas no app nativo)
-declare global {
-  interface Window {
-    Capacitor?: { isNativePlatform?: () => boolean };
-    AdMobPlugin?: {
-      prepareRewardVideoAd: (opts: { adId: string }) => Promise<void>;
-      showRewardVideoAd: () => Promise<void>;
-      addListener: (event: string, cb: () => void) => void;
-    };
-  }
-}
-
 /**
  * Hook para gerenciar Rewarded Ads
- * - Web: usa modal de countdown (AdRewardModal)
- * - Nativo: usa Google AdMob via Capacitor (carregado em runtime)
+ * - Nativo (Capacitor): usa Google AdMob via @capacitor-community/admob
+ * - Web: sem ads (retorna true direto)
  * - Premium: nunca vê ads
  * - Palpites: só mostra ad no primeiro do dia
  */
@@ -40,47 +29,50 @@ export const useRewardedAd = () => {
     try { localStorage.setItem(LAST_PALPITE_AD_KEY, getToday()); } catch {}
   }, []);
 
-  const isNative = () => {
-    try { return !!window.Capacitor?.isNativePlatform?.(); }
-    catch { return false; }
-  };
-
   const showNativeAd = useCallback(async (tipo: string): Promise<boolean> => {
     try {
-      // Import dinâmico só no nativo — Vite ignora em build web pois nunca entra aqui
-      const mod = await (Function('return import("@capacitor-community/admob")')() as Promise<any>);
-      const AdMob = mod.AdMob;
+      // Import dinâmico do AdMob — funciona tanto no build local quanto remoto
+      // porque @capacitor-community/admob está no package.json
+      const { AdMob } = await import("@capacitor-community/admob");
 
       await AdMob.prepareRewardVideoAd({
         adId: "ca-app-pub-8494311740043165/9218959284", // Reward Bolão - Produção
       });
 
       return new Promise<boolean>((resolve) => {
-        AdMob.addListener("onRewardedVideoAdDismissed", () => {
+        const onDismiss = AdMob.addListener("onRewardedVideoAdDismissed", () => {
           if (tipo === "palpite") markPalpiteAdWatched();
           setAdLoading(false);
+          onDismiss.remove();
+          onFail.remove();
           resolve(true);
         });
-        AdMob.addListener("onRewardedVideoAdFailedToLoad", () => {
+        const onFail = AdMob.addListener("onRewardedVideoAdFailedToLoad", () => {
           setAdLoading(false);
+          onDismiss.remove();
+          onFail.remove();
           resolve(true); // Deixa continuar se falhar
         });
         AdMob.showRewardVideoAd();
       });
-    } catch {
+    } catch (err) {
+      console.warn("AdMob error:", err);
       setAdLoading(false);
       return true; // Fallback: deixa continuar
     }
   }, [markPalpiteAdWatched]);
 
   const showAd = useCallback(async (tipo: "criar" | "palpite" | "entrar"): Promise<boolean> => {
+    // Premium: sem ads
     if (isPremium) return true;
-    if (!isNative()) return true; // Web: sem ads
+
+    // Web (navegador): sem ads
+    if (!Capacitor.isNativePlatform()) return true;
+
+    // Palpite: só mostra ad no primeiro do dia
     if (tipo === "palpite" && hasWatchedPalpiteAdToday()) return true;
 
     setAdLoading(true);
-
-    // App nativo: usa AdMob real
     return showNativeAd(tipo);
   }, [isPremium, hasWatchedPalpiteAdToday, showNativeAd]);
 
