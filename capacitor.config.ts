@@ -8,6 +8,20 @@ const config: CapacitorConfig = {
     androidScheme: 'https',
     url: 'https://www.bolaonacopa.com.br',
   },
+  plugins: {
+    AdMob: {
+      appId: 'ca-app-pub-8494311740043165~4855337174',
+    },
+  },
+  includePlugins: [
+    '@capacitor-community/admob',
+    '@capacitor-firebase/analytics',
+    '@capacitor/push-notifications',
+    '@capacitor/share',
+    '@capacitor/splash-screen',
+    '@capacitor/status-bar',
+    '@capgo/capacitor-social-login',
+  ],
 };
 
 export default config;
