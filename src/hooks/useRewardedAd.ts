@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { Capacitor } from "@capacitor/core";
 import { useUserPlan } from "./useUserPlan";
 
@@ -9,101 +9,77 @@ const getToday = () => new Date().toISOString().split("T")[0];
 // ═══ Seu Ad Unit ID de Rewarded ═══
 const AD_ID = "ca-app-pub-8494311740043165/9218959284";
 
-let adMobInitialized = false;
-let adMobInitializing = false;
-
-// ═══════════════════════════════════════════════════════════
-// Detecção robusta de plataforma nativa
-// Quando se usa server.url remoto, Capacitor.isNativePlatform()
-// pode retornar false. Múltiplos fallbacks.
-// ═══════════════════════════════════════════════════════════
+// ═══ Detecção de plataforma nativa ═══
 function isRunningInNativeApp(): boolean {
-  // Método 1: API oficial do Capacitor
+  try { if (Capacitor.isNativePlatform()) return true; } catch {}
   try {
-    if (Capacitor.isNativePlatform()) return true;
+    const p = Capacitor.getPlatform();
+    if (p === "android" || p === "ios") return true;
   } catch {}
-
-  // Método 2: Capacitor.getPlatform()
-  try {
-    const platform = Capacitor.getPlatform();
-    if (platform === "android" || platform === "ios") return true;
-  } catch {}
-
-  // Método 3: window.Capacitor injetado pelo bridge nativo
   try {
     const cap = (window as any).Capacitor;
     if (cap?.isNativePlatform?.()) return true;
     if (cap?.platform === "android" || cap?.platform === "ios") return true;
   } catch {}
-
-  // Método 4: Verificar se o bridge nativo existe
-  try {
-    if ((window as any).androidBridge || (window as any).webkit?.messageHandlers?.bridge) return true;
-  } catch {}
-
-  // Método 5: User-Agent indica WebView Android
+  try { if ((window as any).androidBridge) return true; } catch {}
   try {
     const ua = navigator.userAgent || "";
-    if (/wv\)/.test(ua) || /; wv\)/.test(ua)) return true;
+    if (/wv\)/.test(ua)) return true;
   } catch {}
-
   return false;
 }
 
-// Log de debug — REMOVER após confirmar que funciona
-const _isNative = isRunningInNativeApp();
-const _capPlatform = (() => { try { return Capacitor.getPlatform(); } catch { return "error"; } })();
-const _hasPlugin = (() => { try { return !!(Capacitor as any).Plugins?.AdMob; } catch { return false; } })();
-const _hasWindowCap = (() => { try { return !!(window as any).Capacitor; } catch { return false; } })();
-const _hasBridge = (() => { try { return !!(window as any).androidBridge; } catch { return false; } })();
-console.log(`[AdMob DEBUG] isNative=${_isNative}, platform=${_capPlatform}, hasPlugin=${_hasPlugin}, hasWindowCap=${_hasWindowCap}, hasBridge=${_hasBridge}, ua=${navigator.userAgent?.substring(0, 80)}`);
-
-// ═══════════════════════════════════════════════════════════
-// Acesso ao plugin AdMob via Capacitor bridge
-// Com server.url remoto, o import direto pode não funcionar.
-// O bridge nativo injeta os plugins em window.Capacitor.Plugins.
-// ═══════════════════════════════════════════════════════════
+// ═══ Acesso ao plugin AdMob via bridge nativo ═══
 function getAdMobPlugin(): any | null {
   try {
-    // Tenta via Capacitor.Plugins (bridge nativo)
-    const plugins = (Capacitor as any).Plugins;
-    if (plugins?.AdMob) return plugins.AdMob;
+    const p = (Capacitor as any).Plugins;
+    if (p?.AdMob) return p.AdMob;
   } catch {}
   try {
-    // Tenta via window.Capacitor (fallback)
     const cap = (window as any).Capacitor;
     if (cap?.Plugins?.AdMob) return cap.Plugins.AdMob;
   } catch {}
   return null;
 }
 
-// ═══════════════════════════════════════════════════════════
-// Nomes dos eventos do RewardAdPluginEvents
-// Definidos manualmente para não depender do import do pacote
-// (que pode falhar com server.url remoto)
-// ═══════════════════════════════════════════════════════════
+// ═══ Nomes dos eventos (strings, sem depender do pacote npm) ═══
 const REWARD_EVENTS = {
   Loaded: "onRewardedVideoAdLoaded",
   Rewarded: "onRewardedVideoAdReward",
   Dismissed: "onRewardedVideoAdDismissed",
   FailedToLoad: "onRewardedVideoAdFailedToLoad",
   FailedToShow: "onRewardedVideoAdFailedToShow",
-  Showed: "onRewardedVideoAdShowed",
 } as const;
+
+// ═══ Estado global de inicialização ═══
+let adMobInitialized = false;
+
+/**
+ * Inicializa o AdMob SE ainda não foi inicializado.
+ * Chamado de forma lazy na hora de mostrar o ad.
+ */
+async function ensureAdMobReady(): Promise<boolean> {
+  if (adMobInitialized) return true;
+
+  const AdMob = getAdMobPlugin();
+  if (!AdMob) {
+    console.warn("[AdMob] Plugin not found");
+    return false;
+  }
+
+  try {
+    await AdMob.initialize({ initializeForTesting: false });
+    adMobInitialized = true;
+    console.log("[AdMob] ✅ Initialized");
+    return true;
+  } catch (err) {
+    console.warn("[AdMob] ❌ Init failed:", err);
+    return false;
+  }
+}
 
 /**
  * Hook para gerenciar Rewarded Ads (Google AdMob)
- *
- * Funciona com server.url remoto (Vercel) porque:
- * 1. Detecta plataforma nativa via user-agent (fallback)
- * 2. Acessa AdMob via Capacitor.Plugins bridge (não import direto)
- * 3. Usa nomes de eventos como strings (não depende do pacote npm)
- *
- * Fluxo:
- * - Premium: sem ads
- * - Web (browser real): sem ads
- * - App nativo: prepareRewardVideoAd → showRewardVideoAd (fullscreen ~30s)
- * - Palpites: só 1 ad por dia
  */
 export const useRewardedAd = () => {
   const { plano } = useUserPlan();
@@ -112,64 +88,32 @@ export const useRewardedAd = () => {
   const isPremium = plano === "premium" || plano === "premium_pro";
   const isNative = isRunningInNativeApp();
 
-  // Inicializar AdMob ao montar (só no nativo, uma vez)
-  useEffect(() => {
-    if (!isNative || adMobInitialized || adMobInitializing) return;
-
-    const init = async () => {
-      adMobInitializing = true;
-      const AdMob = getAdMobPlugin();
-
-      if (!AdMob) {
-        console.warn("[AdMob] ❌ Plugin not found in bridge");
-        adMobInitializing = false;
-        return;
-      }
-
-      try {
-        await AdMob.initialize({ initializeForTesting: false });
-        adMobInitialized = true;
-        console.log("[AdMob] ✅ Initialized successfully");
-      } catch (err) {
-        console.warn("[AdMob] ❌ Initialize failed:", err);
-      } finally {
-        adMobInitializing = false;
-      }
-    };
-
-    init();
-  }, [isNative]);
-
   const hasWatchedPalpiteAdToday = useCallback(() => {
-    try {
-      return localStorage.getItem(LAST_PALPITE_AD_KEY) === getToday();
-    } catch {
-      return false;
-    }
+    try { return localStorage.getItem(LAST_PALPITE_AD_KEY) === getToday(); } catch { return false; }
   }, []);
 
   const markPalpiteAdWatched = useCallback(() => {
-    try {
-      localStorage.setItem(LAST_PALPITE_AD_KEY, getToday());
-    } catch {}
+    try { localStorage.setItem(LAST_PALPITE_AD_KEY, getToday()); } catch {}
   }, []);
 
   /**
-   * Mostra AdMob Rewarded fullscreen no app nativo.
-   * Acessa o plugin via bridge nativo (Capacitor.Plugins.AdMob).
+   * Mostra AdMob Rewarded fullscreen.
+   * Inicializa o AdMob na hora se necessário (lazy init).
    */
   const showNativeRewardedAd = useCallback(
     async (tipo: string): Promise<boolean> => {
+      // Passo 0: Garantir que o AdMob está inicializado
+      const ready = await ensureAdMobReady();
       const AdMob = getAdMobPlugin();
 
-      if (!AdMob || !adMobInitialized) {
-        console.warn("[AdMob] Not available or not initialized, skipping");
+      if (!ready || !AdMob) {
+        console.warn("[AdMob] Not ready, skipping ad");
+        // DEBUG — remover depois
+        alert(`[DEBUG] AdMob not ready: plugin=${!!AdMob}, initialized=${adMobInitialized}`);
         return true;
       }
 
       try {
-        console.log("[AdMob] 🔄 Preparing rewarded ad...");
-
         return new Promise<boolean>(async (resolve) => {
           let resolved = false;
           let userRewarded = false;
@@ -177,9 +121,7 @@ export const useRewardedAd = () => {
 
           const cleanup = () => {
             listeners.forEach((l) => {
-              try {
-                if (l && typeof l.remove === "function") l.remove();
-              } catch {}
+              try { if (l?.remove) l.remove(); } catch {}
             });
           };
 
@@ -188,97 +130,78 @@ export const useRewardedAd = () => {
             resolved = true;
             cleanup();
             if (tipo === "palpite" && success) markPalpiteAdWatched();
-            console.log(`[AdMob] ${success ? "✅" : "❌"} Ad finished (rewarded: ${userRewarded})`);
+            console.log(`[AdMob] Ad finished (rewarded: ${userRewarded})`);
             resolve(success);
           };
 
           // Timeout de segurança (60s)
           const timeout = setTimeout(() => {
-            console.warn("[AdMob] ⏰ Timeout 60s — granting reward");
+            console.warn("[AdMob] Timeout 60s");
             finish(true);
           }, 60000);
 
           try {
-            // ═══ Registrar listeners ANTES de preparar o ad ═══
-
-            // Evento: Usuário assistiu e ganhou recompensa
-            const l1 = await AdMob.addListener(
-              REWARD_EVENTS.Rewarded,
-              (reward: any) => {
-                console.log("[AdMob] 🎁 User rewarded:", reward);
-                userRewarded = true;
-                // NÃO resolve aqui — espera o Dismissed
-              }
-            );
+            // Registrar listeners
+            const l1 = await AdMob.addListener(REWARD_EVENTS.Rewarded, (r: any) => {
+              console.log("[AdMob] 🎁 Rewarded:", r);
+              userRewarded = true;
+            });
             listeners.push(l1);
 
-            // Evento: Anúncio fechado pelo usuário
-            const l2 = await AdMob.addListener(
-              REWARD_EVENTS.Dismissed,
-              () => {
-                console.log("[AdMob] 👋 Ad dismissed by user");
-                clearTimeout(timeout);
-                finish(true);
-              }
-            );
+            const l2 = await AdMob.addListener(REWARD_EVENTS.Dismissed, () => {
+              console.log("[AdMob] 👋 Dismissed");
+              clearTimeout(timeout);
+              finish(true);
+            });
             listeners.push(l2);
 
-            // Evento: Falha ao carregar
-            const l3 = await AdMob.addListener(
-              REWARD_EVENTS.FailedToLoad,
-              (error: any) => {
-                console.warn("[AdMob] ❌ Failed to load:", error);
-                clearTimeout(timeout);
-                finish(true);
-              }
-            );
+            const l3 = await AdMob.addListener(REWARD_EVENTS.FailedToLoad, (e: any) => {
+              console.warn("[AdMob] FailedToLoad:", e);
+              // DEBUG — remover depois
+              alert(`[DEBUG] Ad failed to load: ${JSON.stringify(e)}`);
+              clearTimeout(timeout);
+              finish(true);
+            });
             listeners.push(l3);
 
-            // Evento: Falha ao exibir
-            const l4 = await AdMob.addListener(
-              REWARD_EVENTS.FailedToShow,
-              (error: any) => {
-                console.warn("[AdMob] ❌ Failed to show:", error);
-                clearTimeout(timeout);
-                finish(true);
-              }
-            );
+            const l4 = await AdMob.addListener(REWARD_EVENTS.FailedToShow, (e: any) => {
+              console.warn("[AdMob] FailedToShow:", e);
+              alert(`[DEBUG] Ad failed to show: ${JSON.stringify(e)}`);
+              clearTimeout(timeout);
+              finish(true);
+            });
             listeners.push(l4);
 
-            // Passo 1: Preparar (carrega o vídeo rewarded)
+            // Preparar e mostrar
+            console.log("[AdMob] Preparing...");
             await AdMob.prepareRewardVideoAd({
               adId: AD_ID,
-              isTesting: false,
+              isTesting: true, // TODO: mudar para false antes de publicar
             });
-            console.log("[AdMob] ✅ Ad prepared, showing fullscreen...");
 
-            // Passo 2: Mostrar (exibe fullscreen — vídeo ~30s)
+            console.log("[AdMob] Showing...");
             await AdMob.showRewardVideoAd();
-            console.log("[AdMob] 📺 Ad is now showing");
 
-          } catch (err) {
-            console.warn("[AdMob] ❌ Error prepare/show:", err);
+          } catch (err: any) {
+            console.warn("[AdMob] Error:", err);
+            alert(`[DEBUG] Ad error: ${err?.message || err}`);
             clearTimeout(timeout);
             finish(true);
           }
         });
-
       } catch (err) {
-        console.warn("[AdMob] ❌ Unexpected error:", err);
+        console.warn("[AdMob] Unexpected error:", err);
         return true;
       }
     },
     [markPalpiteAdWatched]
   );
 
-  /**
-   * Função principal: decide se precisa mostrar ad e mostra
-   */
   const showAd = useCallback(
     async (tipo: "criar" | "palpite" | "entrar"): Promise<boolean> => {
       if (isPremium) return true;
       if (tipo === "palpite" && hasWatchedPalpiteAdToday()) return true;
-      if (!isNative) return true; // Web real: sem ads
+      if (!isNative) return true;
 
       setAdLoading(true);
       try {
@@ -290,19 +213,7 @@ export const useRewardedAd = () => {
     [isPremium, isNative, hasWatchedPalpiteAdToday, showNativeRewardedAd]
   );
 
-  /**
-   * Placeholder para compatibilidade com AdRewardModal nas páginas.
-   * O ad nativo é fullscreen, não precisa de modal web.
-   */
-  const resolveWebAd = useCallback((_watched: boolean) => {
-    console.log("[AdMob] resolveWebAd called (no-op)");
-  }, []);
+  const resolveWebAd = useCallback((_watched: boolean) => {}, []);
 
-  return {
-    showAd,
-    adLoading,
-    isPremium,
-    needsAd: !isPremium && isNative,
-    resolveWebAd,
-  };
+  return { showAd, adLoading, isPremium, needsAd: !isPremium && isNative, resolveWebAd };
 };
