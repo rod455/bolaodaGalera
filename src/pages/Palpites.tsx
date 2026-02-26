@@ -21,6 +21,7 @@ import { traduzirFase, formatDataJogo, rodadaNum } from "@/lib/formatters";
 import SEOHead from "@/components/SEOHead";
 import { useGamification } from "@/hooks/useGamification";
 import XPToast from "@/components/XPToast";
+import { trackEvent } from "@/lib/analytics";
 
 interface PalpiteDB extends Palpite { id: string; }
 
@@ -392,12 +393,10 @@ const Palpites = () => {
         if (data) setPalpitesDB((prev) => ({ ...prev, [jogoId]: data as any }));
       }
       // Analytics: Palpite enviado
-      if (typeof window.gtag !== 'undefined') {
-        window.gtag('event', 'enviar_palpite', {
-          bolao_id: id || '',
-          quantidade: 1,
-        });
-      }
+      trackEvent('enviar_palpite', {
+        bolao_id: id || '',
+        quantidade: 1,
+      });
 
       // Gamificação: +5 XP por palpite
       darXP("palpite", 5, jogoId).then((ganhou) => {

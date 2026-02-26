@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { signInWithGoogle } from "@/lib/googleAuth";
+import { trackEvent, trackConversion } from "@/lib/analytics";
 import SEOHead from "@/components/SEOHead";
 
 declare global {
@@ -155,17 +156,8 @@ const Auth = () => {
         }
 
         // Dispara eventos Google Ads
-        if (typeof window.gtag !== 'undefined') {
-          window.gtag('event', 'Criar_Conta', {
-            'event_callback': () => {},
-            'event_timeout': 2000,
-          });
-          window.gtag('event', 'conversion', {
-            'send_to': 'AW-16846659267/9D4iCMqM7fkbEMO9juE-',
-            'value': 0.5,
-            'currency': 'BRL',
-          });
-        }
+        trackEvent('Criar_Conta', { metodo: 'email' });
+        trackConversion('AW-16846659267/9D4iCMqM7fkbEMO9juE-');
 
         toast.success("Conta criada! Verifique seu email (olhe também a pasta Spam/Lixo eletrônico).", { duration: 8000 });
         setIsLogin(true);
@@ -186,12 +178,7 @@ const Auth = () => {
 
   const handleGoogleLogin = async () => {
     try {
-      if (typeof window.gtag !== 'undefined') {
-        window.gtag('event', 'Criar_Conta', {
-          'event_callback': () => {},
-          'event_timeout': 2000,
-        });
-      }
+      trackEvent('Criar_Conta', { metodo: 'google' });
       const redirectPath = bolaoRedirect ? `/bolao/${bolaoRedirect}` : "/home";
       const result = await signInWithGoogle(redirectPath);
 

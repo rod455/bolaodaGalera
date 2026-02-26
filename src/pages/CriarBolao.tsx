@@ -18,6 +18,7 @@ import { MODO_REGRAS, MODOS_PONTUACAO } from "@/lib/constants";
 import SEOHead from "@/components/SEOHead";
 import { useGamification } from "@/hooks/useGamification";
 import XPToast from "@/components/XPToast";
+import { trackEvent } from "@/lib/analytics";
 
 interface Campeonato {
   id: string;
@@ -256,13 +257,11 @@ const CriarBolao = () => {
       });
 
       // Analytics: Criar Bolão
-      if (typeof window.gtag !== 'undefined') {
-        window.gtag('event', 'Criar_Bolao', {
-          campeonato: campeonatosSelecionados[0] || '',
-          modo: modoSelecionado || '',
-          is_publico: false,
-        });
-      }
+      trackEvent('Criar_Bolao', {
+        campeonato: campeonatosSelecionados[0] || '',
+        modo: modoSelecionado || '',
+        is_publico: false,
+      });
 
       // Gamificação: +20 XP por criar bolão
       darXP("criar_bolao", 20, newBolao.id).then((ganhou) => {

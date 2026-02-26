@@ -25,6 +25,7 @@ const queryClient = new QueryClient();
 import { Capacitor } from "@capacitor/core";
 import { App as CapApp } from "@capacitor/app";
 import { supabase } from "@/integrations/supabase/client";
+import { initAnalytics } from "@/lib/analytics";
 
 /** Redireciona / para /home preservando o hash (necessário para tokens do Supabase auth) */
 const RootRedirect = () => {
@@ -41,6 +42,11 @@ const App = () => {
   const isNative = Capacitor.isNativePlatform();
   const [showSplash, setShowSplash] = useState(isNative);
   const handleSplashFinish = useCallback(() => setShowSplash(false), []);
+
+  // Inicializar Analytics (Firebase nativo + web)
+  useEffect(() => {
+    initAnalytics();
+  }, []);
 
   // ── Deep Link: capturar OAuth callback no app nativo ──
   useEffect(() => {

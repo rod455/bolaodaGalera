@@ -23,6 +23,7 @@ import type { Bolao } from "@/lib/types";
 import { MODO_LABELS, MODO_REGRAS, FALLBACK_IMAGES } from "@/lib/constants";
 import { formatDataJogo } from "@/lib/formatters";
 import SEOHead from "@/components/SEOHead";
+import { trackEvent } from "@/lib/analytics";
 
 // ID do bolão do Paulistão (promoção R$200)
 const PAULISTAO_BOLAO_ID = "71851d2a-88fa-4ec4-a780-7c1e450869ef";
@@ -288,12 +289,7 @@ const Home = () => {
 
   const handleGoogleLogin = async () => {
     try {
-      if (typeof window.gtag !== 'undefined') {
-        window.gtag('event', 'Criar_Conta', {
-          'event_callback': () => {},
-          'event_timeout': 2000,
-        });
-      }
+      trackEvent('Criar_Conta', { metodo: 'google_home' });
       const result = await signInWithGoogle("/home");
 
       if (result.success && Capacitor.isNativePlatform()) {

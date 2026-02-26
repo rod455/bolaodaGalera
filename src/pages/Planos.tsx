@@ -13,6 +13,7 @@ import RegrasModal from "@/components/RegrasModal";
 import type { RegraInfo } from "@/lib/types";
 import { MODO_REGRAS } from "@/lib/constants";
 import SEOHead from "@/components/SEOHead";
+import { trackEvent } from "@/lib/analytics";
 
 // ═══ Price IDs do Stripe ═══
 const STRIPE_PRICES = {
@@ -61,31 +62,29 @@ const Planos = () => {
       if (error) throw error;
       if (data?.url) {
         // Analytics: Assinatura Premium
-        if (typeof window.gtag !== 'undefined') {
-          const planoMap: Record<string, string> = {
-            [STRIPE_PRICES.premium_mensal]: 'premium',
-            [STRIPE_PRICES.premium_anual]: 'premium',
-            [STRIPE_PRICES.premium_pro_mensal]: 'premium_pro',
-            [STRIPE_PRICES.premium_pro_anual]: 'premium_pro',
-          };
-          const periodoMap: Record<string, string> = {
-            [STRIPE_PRICES.premium_mensal]: 'mensal',
-            [STRIPE_PRICES.premium_anual]: 'anual',
-            [STRIPE_PRICES.premium_pro_mensal]: 'mensal',
-            [STRIPE_PRICES.premium_pro_anual]: 'anual',
-          };
-          const valorMap: Record<string, number> = {
-            [STRIPE_PRICES.premium_mensal]: 9.90,
-            [STRIPE_PRICES.premium_anual]: 79.90,
-            [STRIPE_PRICES.premium_pro_mensal]: 14.90,
-            [STRIPE_PRICES.premium_pro_anual]: 119.90,
-          };
-          window.gtag('event', 'iniciar_premium', {
-            plano: planoMap[priceId] || 'premium',
-            periodo: periodoMap[priceId] || 'mensal',
-            valor: valorMap[priceId] || 0,
-          });
-        }
+        const planoMap: Record<string, string> = {
+          [STRIPE_PRICES.premium_mensal]: 'premium',
+          [STRIPE_PRICES.premium_anual]: 'premium',
+          [STRIPE_PRICES.premium_pro_mensal]: 'premium_pro',
+          [STRIPE_PRICES.premium_pro_anual]: 'premium_pro',
+        };
+        const periodoMap: Record<string, string> = {
+          [STRIPE_PRICES.premium_mensal]: 'mensal',
+          [STRIPE_PRICES.premium_anual]: 'anual',
+          [STRIPE_PRICES.premium_pro_mensal]: 'mensal',
+          [STRIPE_PRICES.premium_pro_anual]: 'anual',
+        };
+        const valorMap: Record<string, number> = {
+          [STRIPE_PRICES.premium_mensal]: 9.90,
+          [STRIPE_PRICES.premium_anual]: 79.90,
+          [STRIPE_PRICES.premium_pro_mensal]: 14.90,
+          [STRIPE_PRICES.premium_pro_anual]: 119.90,
+        };
+        trackEvent('iniciar_premium', {
+          plano: planoMap[priceId] || 'premium',
+          periodo: periodoMap[priceId] || 'mensal',
+          valor: valorMap[priceId] || 0,
+        });
 
         // No app nativo, abrir no browser externo (Chrome) para Stripe funcionar
         if (Capacitor.isNativePlatform()) {

@@ -26,6 +26,7 @@ import SEOHead from "@/components/SEOHead";
 import { useGamification } from "@/hooks/useGamification";
 import NivelBadge from "@/components/NivelBadge";
 import XPToast from "@/components/XPToast";
+import { trackEvent } from "@/lib/analytics";
 
 function getStatusInfo(jogo: Jogo, palpite: Palpite | null, now: Date) {
   const jogoDate = new Date(jogo.data_hora);
@@ -758,12 +759,10 @@ const BolaoPage = () => {
                   ? `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nBaixe o app: ${url}`
                   : `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nÉ só acessar: ${url}`;
                 // Analytics: Convite enviado
-                if (typeof window.gtag !== 'undefined') {
-                  window.gtag('event', 'enviar_convite', {
-                    metodo: navigator.share ? 'share_nativo' : 'copiar_link',
-                    bolao_id: id,
-                  });
-                }
+                trackEvent('enviar_convite', {
+                  metodo: navigator.share ? 'share_nativo' : 'copiar_link',
+                  bolao_id: id || '',
+                });
                 // Gamificação: +10 XP por compartilhar
                 darXP("compartilhar", 10).then((ganhou) => {
                   if (ganhou) setXPToast({ xp: 10, msg: "Resultado compartilhado!" });
@@ -969,12 +968,10 @@ const BolaoPage = () => {
                   ? `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nBaixe o app: ${url}`
                   : `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nÉ só acessar: ${url}`;
                 // Analytics: Convite enviado
-                if (typeof window.gtag !== 'undefined') {
-                  window.gtag('event', 'enviar_convite', {
-                    metodo: navigator.share ? 'share_nativo' : 'copiar_link',
-                    bolao_id: id,
-                  });
-                }
+                trackEvent('enviar_convite', {
+                  metodo: navigator.share ? 'share_nativo' : 'copiar_link',
+                  bolao_id: id || '',
+                });
                 // Gamificação: +10 XP por compartilhar
                 darXP("compartilhar", 10).then((ganhou) => {
                   if (ganhou) setXPToast({ xp: 10, msg: "Resultado compartilhado!" });
@@ -1021,12 +1018,10 @@ const BolaoPage = () => {
                   ? `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nBaixe o app: ${url}`
                   : `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nÉ só acessar: ${url}`;
                     // Analytics: Convite enviado
-                    if (typeof window.gtag !== 'undefined') {
-                      window.gtag('event', 'enviar_convite', {
-                        metodo: navigator.share ? 'share_nativo' : 'copiar_link',
-                        bolao_id: id,
-                      });
-                    }
+                    trackEvent('enviar_convite', {
+                      metodo: navigator.share ? 'share_nativo' : 'copiar_link',
+                      bolao_id: id || '',
+                    });
                     // Gamificação: +10 XP por compartilhar
                     darXP("compartilhar", 10).then((ganhou) => {
                       if (ganhou) setXPToast({ xp: 10, msg: "Resultado compartilhado!" });
