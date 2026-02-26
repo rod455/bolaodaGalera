@@ -205,6 +205,11 @@ const CriarBolao = () => {
       }
     }
 
+    // DEBUG — remover depois
+    const debugInfo = `needsAd=${needsAd}, isPremium=${isPremium}`;
+    console.log("[AdMob DEBUG CriarBolao]", debugInfo);
+    alert(`[DEBUG AdMob] ${debugInfo}`);
+
     // Mostrar ad para usuários free
     if (needsAd) {
       const adResult = await showAd("criar");
