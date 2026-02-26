@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { X, Download, Star } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
+import { trackEvent } from "@/lib/analytics";
 
 const DISMISSED_KEY = "install_banner_dismissed";
 const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.bolaonacopa.app";
@@ -37,11 +38,7 @@ const InstallAppBanner = () => {
 
   const handleInstall = () => {
     // Analytics
-    if (typeof window.gtag !== "undefined") {
-      window.gtag("event", "click_install_app", {
-        source: "banner_android",
-      });
-    }
+    trackEvent('click_install_app', { source: 'banner_android' });
     window.open(PLAY_STORE_URL, "_blank");
     handleDismiss();
   };
