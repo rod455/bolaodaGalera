@@ -108,8 +108,6 @@ export const useRewardedAd = () => {
 
       if (!ready || !AdMob) {
         console.warn("[AdMob] Not ready, skipping ad");
-        // DEBUG — remover depois
-        alert(`[DEBUG] AdMob not ready: plugin=${!!AdMob}, initialized=${adMobInitialized}`);
         return true;
       }
 
@@ -157,8 +155,6 @@ export const useRewardedAd = () => {
 
             const l3 = await AdMob.addListener(REWARD_EVENTS.FailedToLoad, (e: any) => {
               console.warn("[AdMob] FailedToLoad:", e);
-              // DEBUG — remover depois
-              alert(`[DEBUG] Ad failed to load: ${JSON.stringify(e)}`);
               clearTimeout(timeout);
               finish(true);
             });
@@ -166,7 +162,6 @@ export const useRewardedAd = () => {
 
             const l4 = await AdMob.addListener(REWARD_EVENTS.FailedToShow, (e: any) => {
               console.warn("[AdMob] FailedToShow:", e);
-              alert(`[DEBUG] Ad failed to show: ${JSON.stringify(e)}`);
               clearTimeout(timeout);
               finish(true);
             });
@@ -176,7 +171,7 @@ export const useRewardedAd = () => {
             console.log("[AdMob] Preparing...");
             await AdMob.prepareRewardVideoAd({
               adId: AD_ID,
-              isTesting: true, // TODO: mudar para false antes de publicar
+              isTesting: false,
             });
 
             console.log("[AdMob] Showing...");
@@ -184,7 +179,6 @@ export const useRewardedAd = () => {
 
           } catch (err: any) {
             console.warn("[AdMob] Error:", err);
-            alert(`[DEBUG] Ad error: ${err?.message || err}`);
             clearTimeout(timeout);
             finish(true);
           }
