@@ -15,16 +15,48 @@ let adMobInitializing = false;
 // ═══════════════════════════════════════════════════════════
 // Detecção robusta de plataforma nativa
 // Quando se usa server.url remoto, Capacitor.isNativePlatform()
-// pode retornar false. Usamos o user agent como fallback.
+// pode retornar false. Múltiplos fallbacks.
 // ═══════════════════════════════════════════════════════════
 function isRunningInNativeApp(): boolean {
+  // Método 1: API oficial do Capacitor
   try {
     if (Capacitor.isNativePlatform()) return true;
   } catch {}
-  // Fallback: detectar se está em WebView Android do Capacitor
-  const ua = navigator.userAgent || "";
-  return /wv\)/.test(ua) || /; wv\)/.test(ua);
+
+  // Método 2: Capacitor.getPlatform()
+  try {
+    const platform = Capacitor.getPlatform();
+    if (platform === "android" || platform === "ios") return true;
+  } catch {}
+
+  // Método 3: window.Capacitor injetado pelo bridge nativo
+  try {
+    const cap = (window as any).Capacitor;
+    if (cap?.isNativePlatform?.()) return true;
+    if (cap?.platform === "android" || cap?.platform === "ios") return true;
+  } catch {}
+
+  // Método 4: Verificar se o bridge nativo existe
+  try {
+    if ((window as any).androidBridge || (window as any).webkit?.messageHandlers?.bridge) return true;
+  } catch {}
+
+  // Método 5: User-Agent indica WebView Android
+  try {
+    const ua = navigator.userAgent || "";
+    if (/wv\)/.test(ua) || /; wv\)/.test(ua)) return true;
+  } catch {}
+
+  return false;
 }
+
+// Log de debug — REMOVER após confirmar que funciona
+const _isNative = isRunningInNativeApp();
+const _capPlatform = (() => { try { return Capacitor.getPlatform(); } catch { return "error"; } })();
+const _hasPlugin = (() => { try { return !!(Capacitor as any).Plugins?.AdMob; } catch { return false; } })();
+const _hasWindowCap = (() => { try { return !!(window as any).Capacitor; } catch { return false; } })();
+const _hasBridge = (() => { try { return !!(window as any).androidBridge; } catch { return false; } })();
+console.log(`[AdMob DEBUG] isNative=${_isNative}, platform=${_capPlatform}, hasPlugin=${_hasPlugin}, hasWindowCap=${_hasWindowCap}, hasBridge=${_hasBridge}, ua=${navigator.userAgent?.substring(0, 80)}`);
 
 // ═══════════════════════════════════════════════════════════
 // Acesso ao plugin AdMob via Capacitor bridge
