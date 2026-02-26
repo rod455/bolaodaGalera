@@ -367,9 +367,7 @@ const Palpites = () => {
 
     // Ad no primeiro palpite do dia (free users)
     if (needsAd) {
-      setShowAdModal(true);
       const adResult = await showAd("palpite");
-      setShowAdModal(false);
       if (!adResult) return;
     }
 

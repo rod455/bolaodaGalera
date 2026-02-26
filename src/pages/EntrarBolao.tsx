@@ -137,9 +137,7 @@ const EntrarBolao = () => {
 
       // Mostrar ad antes de entrar
       if (needsAd) {
-        setShowAdModal(true);
         const adResult = await showAd("entrar");
-        setShowAdModal(false);
         if (!adResult) {
           setBuscando(false);
           return;
@@ -182,9 +180,7 @@ const EntrarBolao = () => {
     try {
       // Mostrar ad antes de entrar
       if (needsAd) {
-        setShowAdModal(true);
         const adResult = await showAd("entrar");
-        setShowAdModal(false);
         if (!adResult) {
           setJoining(null);
           return;

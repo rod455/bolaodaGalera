@@ -473,9 +473,7 @@ const Home = () => {
 
     // Mostrar ad para usuários free
     if (needsAd) {
-      setShowAdModal(true);
       const adResult = await showAd("entrar");
-      setShowAdModal(false);
       if (!adResult) return;
     }
 

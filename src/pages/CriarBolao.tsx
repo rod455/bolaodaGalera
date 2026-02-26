@@ -207,9 +207,7 @@ const CriarBolao = () => {
 
     // Mostrar ad para usuários free
     if (needsAd) {
-      setShowAdModal(true);
       const adResult = await showAd("criar");
-      setShowAdModal(false);
       if (!adResult) return;
     }
 
