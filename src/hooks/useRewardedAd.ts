@@ -7,7 +7,7 @@ const LAST_PALPITE_AD_KEY = "bolao_last_palpite_ad";
 const getToday = () => new Date().toISOString().split("T")[0];
 
 // ═══ Seu Ad Unit ID de Rewarded ═══
-const AD_ID = "ca-app-pub-8494311740043165/9218959284";
+const AD_ID = "ca-app-pub-9316035916536420/8143495428";
 
 // ═══ Detecção de plataforma nativa ═══
 function isRunningInNativeApp(): boolean {
