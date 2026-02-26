@@ -205,13 +205,6 @@ const CriarBolao = () => {
       }
     }
 
-    // DEBUG — remover depois
-    const _plugin = (() => { try { return !!(window as any).Capacitor?.Plugins?.AdMob; } catch { return false; } })();
-    const _platform = (() => { try { return (window as any).Capacitor?.getPlatform?.() || "unknown"; } catch { return "error"; } })();
-    const debugInfo = `needsAd=${needsAd}, plugin=${_plugin}, platform=${_platform}`;
-    console.log("[AdMob DEBUG CriarBolao]", debugInfo);
-    alert(`[DEBUG] ${debugInfo}`);
-
     // Mostrar ad para usuários free
     if (needsAd) {
       const adResult = await showAd("criar");
