@@ -4,12 +4,11 @@ import { Capacitor } from "@capacitor/core";
  * Analytics Helper — dispara eventos em 3 plataformas:
  * 1. gtag (Google Analytics / Google Ads) — web
  * 2. fbq (Meta Pixel) — web
- * 3. Firebase Analytics nativo — app Android
+ * 3. Firebase Analytics nativo — app Android (via Capacitor.Plugins)
  *
  * NOTA: Não importa @capacitor-firebase/analytics diretamente
  * para não quebrar o build web no Vercel.
- * O plugin é registrado automaticamente pelo Capacitor no app nativo
- * e acessado via Capacitor.Plugins em runtime.
+ * O plugin é acessado via Capacitor.Plugins em runtime.
  */
 
 declare global {
@@ -19,23 +18,59 @@ declare global {
   }
 }
 
-// Acessa Firebase Analytics via Capacitor.Plugins (sem import direto)
+// ═══ Detecção robusta de plataforma nativa ═══
+function isNativeApp(): boolean {
+  try { if (Capacitor.isNativePlatform()) return true; } catch {}
+  try {
+    const p = Capacitor.getPlatform();
+    if (p === "android" || p === "ios") return true;
+  } catch {}
+  try {
+    const cap = (window as any).Capacitor;
+    if (cap?.isNativePlatform?.()) return true;
+    if (cap?.platform === "android" || cap?.platform === "ios") return true;
+  } catch {}
+  try { if ((window as any).androidBridge) return true; } catch {}
+  return false;
+}
+
+// ═══ Acessa Firebase Analytics via Capacitor.Plugins (sem import direto) ═══
 function getFirebaseAnalytics(): any | null {
   try {
-    if (Capacitor.isNativePlatform()) {
-      return (Capacitor as any).Plugins?.FirebaseAnalytics ?? null;
-    }
+    const plugins = (Capacitor as any).Plugins;
+    if (plugins?.FirebaseAnalytics) return plugins.FirebaseAnalytics;
+  } catch {}
+  try {
+    const cap = (window as any).Capacitor;
+    if (cap?.Plugins?.FirebaseAnalytics) return cap.Plugins.FirebaseAnalytics;
   } catch {}
   return null;
 }
 
+/**
+ * Inicializa Analytics.
+ * No app nativo: habilita coleta do Firebase Analytics.
+ */
 export async function initAnalytics() {
+  if (!isNativeApp()) return;
+
   const FA = getFirebaseAnalytics();
   if (FA) {
-    console.log("[Analytics] Firebase Analytics available via Capacitor.Plugins");
+    try {
+      await FA.setEnabled({ enabled: true });
+      await FA.setCollectionEnabled({ enabled: true });
+      console.log("[Analytics] ✅ Firebase Analytics initialized");
+    } catch (err) {
+      console.warn("[Analytics] Firebase init error:", err);
+    }
+  } else {
+    console.warn("[Analytics] Firebase Analytics plugin not found");
   }
 }
 
+/**
+ * Dispara evento customizado em todas as plataformas.
+ */
 export async function trackEvent(
   eventName: string,
   params: Record<string, any> = {}
@@ -54,7 +89,7 @@ export async function trackEvent(
     }
   } catch {}
 
-  // 3. Firebase Analytics nativo (via Capacitor.Plugins, sem import)
+  // 3. Firebase Analytics nativo
   try {
     const FA = getFirebaseAnalytics();
     if (FA) {
@@ -63,6 +98,9 @@ export async function trackEvent(
   } catch {}
 }
 
+/**
+ * Define o User ID em todas as plataformas.
+ */
 export async function setAnalyticsUser(userId: string) {
   try {
     if (typeof window !== "undefined" && typeof window.gtag !== "undefined") {
@@ -78,6 +116,46 @@ export async function setAnalyticsUser(userId: string) {
   } catch {}
 }
 
+/**
+ * Define propriedades do usuário no Firebase Analytics.
+ * Útil para segmentação (plano, nível, etc).
+ */
+export async function setUserProperty(key: string, value: string) {
+  try {
+    const FA = getFirebaseAnalytics();
+    if (FA) {
+      await FA.setUserProperty({ key, value });
+    }
+  } catch {}
+
+  try {
+    if (typeof window !== "undefined" && typeof window.gtag !== "undefined") {
+      window.gtag("set", "user_properties", { [key]: value });
+    }
+  } catch {}
+}
+
+/**
+ * Registra a tela atual no Firebase Analytics.
+ */
+export async function trackScreenView(screenName: string) {
+  try {
+    const FA = getFirebaseAnalytics();
+    if (FA) {
+      await FA.setCurrentScreen({ screenName });
+    }
+  } catch {}
+
+  try {
+    if (typeof window !== "undefined" && typeof window.gtag !== "undefined") {
+      window.gtag("event", "screen_view", { screen_name: screenName });
+    }
+  } catch {}
+}
+
+/**
+ * Rastreia conversão do Google Ads.
+ */
 export function trackConversion(sendTo: string) {
   try {
     if (typeof window !== "undefined" && typeof window.gtag !== "undefined") {
