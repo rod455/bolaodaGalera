@@ -25,7 +25,8 @@ const queryClient = new QueryClient();
 import { Capacitor } from "@capacitor/core";
 import { App as CapApp } from "@capacitor/app";
 import { supabase } from "@/integrations/supabase/client";
-import { initAnalytics } from "@/lib/analytics";
+import { initAnalytics, setAnalyticsUser, setUserProperty } from "@/lib/analytics";
+import { initUTMTracker } from "@/lib/utm-tracker";
 
 /** Redireciona / para /home preservando o hash (necessário para tokens do Supabase auth) */
 const RootRedirect = () => {
@@ -43,9 +44,27 @@ const App = () => {
   const [showSplash, setShowSplash] = useState(isNative);
   const handleSplashFinish = useCallback(() => setShowSplash(false), []);
 
-  // Inicializar Analytics (Firebase nativo + web)
+  // Inicializar Analytics + UTM Tracker
   useEffect(() => {
     initAnalytics();
+    initUTMTracker();
+
+    // Vincular user ID ao analytics quando logado
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session?.user?.id) {
+        setAnalyticsUser(data.session.user.id);
+      }
+    });
+
+    // Escutar mudanças de auth para manter o user ID atualizado
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user?.id) {
+        setAnalyticsUser(session.user.id);
+        setUserProperty("auth_method", session.user.app_metadata?.provider || "email");
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   // ── Deep Link: capturar OAuth callback no app nativo ──
