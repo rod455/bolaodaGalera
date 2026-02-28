@@ -55,7 +55,7 @@ const NotificationCenter = () => {
   // Escutar navegação vinda de push notification tap
   useEffect(() => {
     const handler = (e: CustomEvent) => {
-      if (e.detail?.rota) {
+      if (e.detail?.rota && e.detail.rota.startsWith("/")) {
         navigate(e.detail.rota);
       }
     };
@@ -70,7 +70,7 @@ const NotificationCenter = () => {
 
     // Navegar se tiver rota
     const rota = notificacao.dados?.rota;
-    if (rota) {
+    if (rota && rota.startsWith("/")) {
       setOpen(false);
       navigate(rota);
     }

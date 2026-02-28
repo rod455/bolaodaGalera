@@ -82,7 +82,7 @@ const NotificationToast = () => {
 
   const handleClick = (toast: ToastItem) => {
     const rota = toast.notificacao.dados?.rota;
-    if (rota) navigate(rota);
+    if (rota && rota.startsWith("/")) navigate(rota);
     removeToast(toast.id);
   };
 
