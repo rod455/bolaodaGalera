@@ -507,6 +507,19 @@ const BolaoPage = () => {
 
   const handleDeleteBolao = async () => {
     if (!user || !id || !bolao) return;
+
+    // Proteção: não permite excluir bolões nacionais
+    if (bolao.is_nacional) {
+      toast.error("Bolões nacionais não podem ser excluídos.");
+      return;
+    }
+
+    // Proteção: só criador pode excluir
+    if (bolao.criador_id !== user.id) {
+      toast.error("Apenas o criador pode excluir este bolão.");
+      return;
+    }
+
     setDeleting(true);
     try {
       // Delete all palpites for this bolão
