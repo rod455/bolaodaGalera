@@ -24,6 +24,7 @@ import { MODO_LABELS, MODO_REGRAS, FALLBACK_IMAGES } from "@/lib/constants";
 import { formatDataJogo } from "@/lib/formatters";
 import SEOHead from "@/components/SEOHead";
 import { trackEvent } from "@/lib/analytics";
+import Onboarding, { isOnboardingDone, markOnboardingDone } from "@/components/Onboarding";
 
 // ID do bolão do Paulistão (promoção R$200)
 const PAULISTAO_BOLAO_ID = "71851d2a-88fa-4ec4-a780-7c1e450869ef";
@@ -284,6 +285,7 @@ const Home = () => {
   const [showAdModal, setShowAdModal] = useState(false);
   const [regrasModal, setRegrasModal] = useState<string | null>(null);
   const [userEstado, setUserEstado] = useState<string | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => { loadData(); }, [user]);
 
@@ -349,6 +351,11 @@ const Home = () => {
         setPrivados(sorted);
         setUserPosicoes(posicoes);
         setUserBolaoIds(participandoIds);
+
+        // ═══ ONBOARDING: mostrar para novos usuários sem bolões ═══
+        if (participandoIds.size === 0 && !isOnboardingDone()) {
+          setShowOnboarding(true);
+        }
 
         // Re-sort nacionais com estado
         if (estado) {
@@ -502,6 +509,19 @@ const Home = () => {
   };
 
   if (loading) return <LoadingSpinner />;
+
+  // ═══ ONBOARDING para novos usuários ═══
+  if (showOnboarding && user) {
+    return (
+      <Onboarding
+        onComplete={() => {
+          setShowOnboarding(false);
+          markOnboardingDone();
+          loadData(); // Recarregar dados após onboarding (pode ter criado bolão)
+        }}
+      />
+    );
+  }
 
   return (
     <div className={`space-y-6 animate-fade-in ${!user ? "pb-20" : ""}`}>
