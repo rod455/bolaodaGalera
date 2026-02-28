@@ -98,7 +98,12 @@ const WelcomeStep = ({ onNext, onSkip }: { onNext: () => void; onSkip: () => voi
 const ModesStep = ({ onNext, onBack, onSkip }: { onNext: () => void; onBack: () => void; onSkip: () => void }) => {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [tutorialStep, setTutorialStep] = useState(0);
-  // 0 = highlight Casual, 1 = highlight Fanático, 2 = free
+  const [transitioning, setTransitioning] = useState(false);
+  // 0 = destaca Casual (fechado) → toque para abrir
+  // 1 = Casual aberto, lendo regras → botão "Entendi" aparece
+  // 2 = transição → destaca Fanático (fechado)
+  // 3 = Fanático aberto, lendo regras → botão "Entendi"
+  // 4 = tudo liberado
 
   const modes = [
     { id: "casual", name: "Casual", emoji: "🎮", tag: "Grátis", tagColor: "bg-copa-green-100 text-copa-green-700", free: true },
@@ -109,25 +114,44 @@ const ModesStep = ({ onNext, onBack, onSkip }: { onNext: () => void; onBack: () 
     { id: "fanatico", name: "Torcedor Fanático", emoji: "🔥", tag: "PRO", tagColor: "bg-copa-green-600 text-white", free: false },
   ];
 
-  const highlightId = tutorialStep === 0 ? "casual" : tutorialStep === 1 ? "fanatico" : null;
+  const highlightId = tutorialStep <= 1 ? "casual" : tutorialStep <= 3 ? "fanatico" : null;
+  const isTutorial = tutorialStep < 4;
 
   const handleModeClick = (modeId: string) => {
     if (tutorialStep === 0 && modeId === "casual") {
       setExpanded("casual");
       setTutorialStep(1);
-    } else if (tutorialStep === 1 && modeId === "fanatico") {
+    } else if (tutorialStep === 2 && modeId === "fanatico") {
       setExpanded("fanatico");
-      setTutorialStep(2);
-    } else if (tutorialStep >= 2) {
+      setTutorialStep(3);
+    } else if (tutorialStep >= 4) {
       setExpanded(expanded === modeId ? null : modeId);
     }
   };
 
-  const tooltipText = tutorialStep === 0
-    ? "👆 Toque no Casual para ver as regras"
-    : tutorialStep === 1
-    ? "👆 Agora toque no Torcedor Fanático"
-    : null;
+  const handleEntendi = () => {
+    if (tutorialStep === 1) {
+      // Fecha Casual com transição suave antes de destacar Fanático
+      setExpanded(null);
+      setTransitioning(true);
+      setTimeout(() => {
+        setTransitioning(false);
+        setTutorialStep(2);
+      }, 600);
+    } else if (tutorialStep === 3) {
+      // Fecha Fanático e libera tudo
+      setExpanded(null);
+      setTutorialStep(4);
+    }
+  };
+
+  const tooltipText = 
+    tutorialStep === 0 ? "👆 Toque no Casual para ver como funciona" :
+    tutorialStep === 1 ? "👀 Este é o modo mais simples! Veja as regras abaixo" :
+    transitioning ? "✅ Ótimo! Agora vamos ver o modo mais completo..." :
+    tutorialStep === 2 ? "🔥 Agora toque no Torcedor Fanático para comparar" :
+    tutorialStep === 3 ? "👀 Este é o modo mais completo! Compare as regras" :
+    null;
 
   return (
     <div className="space-y-4 animate-fade-in relative">
@@ -140,30 +164,36 @@ const ModesStep = ({ onNext, onBack, onSkip }: { onNext: () => void; onBack: () 
       </div>
 
       {tooltipText && (
-        <div className="bg-copa-green-600 text-white text-xs font-semibold px-4 py-2.5 rounded-xl text-center animate-pulse">
+        <div className={`text-white text-xs font-semibold px-4 py-2.5 rounded-xl text-center transition-all duration-300 ${
+          transitioning ? "bg-copa-green-500" :
+          tutorialStep === 1 || tutorialStep === 3 ? "bg-copa-gold-500" : 
+          "bg-copa-green-600 animate-pulse"
+        }`}>
           {tooltipText}
         </div>
       )}
 
-      {tutorialStep < 2 && (
+      {isTutorial && (
         <div className="fixed inset-0 bg-black/40 pointer-events-none" style={{ zIndex: 10 }} />
       )}
 
-      <div className="space-y-2 relative" style={{ zIndex: tutorialStep < 2 ? 20 : "auto" }}>
+      <div className="space-y-2 relative" style={{ zIndex: isTutorial ? 20 : "auto" }}>
         {modes.map((mode) => {
           const regras = MODO_REGRAS[mode.id];
           const isHighlighted = highlightId === mode.id;
-          const isClickable = tutorialStep >= 2 || isHighlighted;
+          const isClickable = (!isTutorial || isHighlighted) && !transitioning;
+          // Quando expandido no tutorial, não deixar fechar clicando no card (só pelo botão Entendi)
+          const shouldHandleClick = isClickable && !(isTutorial && expanded === mode.id);
 
           return (
             <div
               key={mode.id}
-              onClick={() => isClickable && handleModeClick(mode.id)}
-              className={`rounded-xl border p-3 transition-all ${
-                isHighlighted
+              onClick={() => shouldHandleClick && handleModeClick(mode.id)}
+              className={`rounded-xl border p-3 transition-all duration-300 ${
+                isHighlighted && !transitioning
                   ? "bg-white border-copa-green-500 shadow-lg shadow-copa-green-200 ring-2 ring-copa-green-400 cursor-pointer"
-                  : tutorialStep < 2
-                  ? "bg-gray-100 border-gray-200 opacity-40 pointer-events-none"
+                  : isTutorial || transitioning
+                  ? "bg-gray-100 border-gray-200 opacity-30 pointer-events-none"
                   : "bg-white border-gray-200 cursor-pointer hover:shadow-sm"
               }`}
             >
@@ -176,10 +206,10 @@ const ModesStep = ({ onNext, onBack, onSkip }: { onNext: () => void; onBack: () 
                   </div>
                   <p className="text-[11px] text-muted-foreground">{regras?.descricao}</p>
                 </div>
-                <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform ${expanded === mode.id ? "rotate-90" : ""}`} />
+                <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform duration-300 ${expanded === mode.id ? "rotate-90" : ""}`} />
               </div>
               {expanded === mode.id && regras && (
-                <div className="mt-2 bg-muted/50 rounded-lg p-2.5 space-y-1">
+                <div className="mt-2 bg-muted/50 rounded-lg p-2.5 space-y-1 animate-fade-in">
                   {regras.regras.map((r: any, i: number) => (
                     <div key={i} className="flex items-center justify-between text-xs">
                       <span className={r.acerto ? "text-copa-green-700" : "text-muted-foreground"}>
@@ -188,6 +218,14 @@ const ModesStep = ({ onNext, onBack, onSkip }: { onNext: () => void; onBack: () 
                       <span className="font-bold">{r.pontos}</span>
                     </div>
                   ))}
+                  {isTutorial && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleEntendi(); }}
+                      className="w-full mt-3 py-2 bg-copa-green-600 hover:bg-copa-green-700 text-white text-xs font-bold rounded-lg active:scale-95 transition-all"
+                    >
+                      ✓ Entendi, continuar
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -197,7 +235,7 @@ const ModesStep = ({ onNext, onBack, onSkip }: { onNext: () => void; onBack: () 
 
       <div className="space-y-2 pt-2 relative" style={{ zIndex: 30 }}>
         <ProgressDots current={1} total={5} />
-        <Button onClick={onNext} disabled={tutorialStep < 2} className="w-full h-11 bg-copa-green-600 hover:bg-copa-green-700 text-white font-bold rounded-xl disabled:opacity-40">
+        <Button onClick={onNext} disabled={isTutorial} className="w-full h-11 bg-copa-green-600 hover:bg-copa-green-700 text-white font-bold rounded-xl disabled:opacity-40">
           Entendi os modos →
         </Button>
         <button onClick={onSkip} className="w-full text-muted-foreground text-[11px] hover:text-foreground transition-colors">
@@ -634,9 +672,7 @@ const DoneStep = ({
   const [showAdModal, setShowAdModal] = useState(false);
 
   const handlePalpites = async () => {
-    // Primeiro finalizar onboarding para sair do portal overlay
-    onFinish();
-
+    // 1) Mostrar ad ANTES de desmontar o portal
     if (needsAd) {
       try {
         await showAd("onboarding_palpites");
@@ -645,14 +681,16 @@ const DoneStep = ({
       }
     }
 
-    // Navegar com delay para garantir que o portal foi desmontado
+    // 2) Salvar destino antes de desmontar
+    const destination = bolaoId ? `/bolao/${bolaoId}/palpites` : "/home";
+
+    // 3) Finalizar onboarding (desmonta o portal)
+    onFinish();
+
+    // 4) Navegar com delay para garantir desmontagem limpa
     setTimeout(() => {
-      if (bolaoId) {
-        navigate(`/bolao/${bolaoId}`);
-      } else {
-        navigate("/home");
-      }
-    }, 300);
+      navigate(destination);
+    }, 150);
   };
 
   const handleGoHome = () => {
