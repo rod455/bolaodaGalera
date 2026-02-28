@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { createPortal } from "react-dom";
 import { Capacitor } from "@capacitor/core";
 import { signInWithGoogle } from "@/lib/googleAuth";
 import {
@@ -512,14 +513,20 @@ const Home = () => {
 
   // ═══ ONBOARDING para novos usuários ═══
   if (showOnboarding && user) {
-    return (
-      <Onboarding
-        onComplete={() => {
-          setShowOnboarding(false);
-          markOnboardingDone();
-          loadData(); // Recarregar dados após onboarding (pode ter criado bolão)
-        }}
-      />
+    return createPortal(
+      <div
+        className="fixed top-0 left-0 right-0 bottom-0 bg-white overflow-y-auto"
+        style={{ zIndex: 99999 }}
+      >
+        <Onboarding
+          onComplete={() => {
+            setShowOnboarding(false);
+            markOnboardingDone();
+            loadData();
+          }}
+        />
+      </div>,
+      document.body
     );
   }
 
