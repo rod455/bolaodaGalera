@@ -47,19 +47,23 @@ const ProgressDots = ({ current, total }: { current: number; total: number }) =>
   </div>
 );
 
+const LOGO_URL = "https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/604913%20(512%20x%20512%20px).png";
+
 // ═══════════════════════════════════════════════════════
 // Step 1: Welcome
 // ═══════════════════════════════════════════════════════
 const WelcomeStep = ({ onNext, onSkip }: { onNext: () => void; onSkip: () => void }) => (
   <div className="min-h-screen flex flex-col bg-gradient-to-br from-copa-green-600 via-copa-green-700 to-copa-green-900 relative overflow-hidden"
-    style={{ paddingTop: "max(1rem, env(safe-area-inset-top, 1rem))" }}>
+    style={{ paddingTop: "max(1.5rem, env(safe-area-inset-top, 1.5rem))" }}>
     <div className="absolute top-20 -right-10 w-40 h-40 bg-copa-gold-400/10 rounded-full blur-3xl" />
     <div className="absolute bottom-40 -left-10 w-32 h-32 bg-copa-green-400/20 rounded-full blur-2xl" />
 
+    <div className="text-center pt-4 px-8">
+      <p className="text-copa-green-200/50 text-xs font-medium tracking-widest uppercase">Configuração inicial</p>
+    </div>
+
     <div className="flex-1 flex flex-col items-center justify-center px-8">
-      <div className="w-20 h-20 bg-white/10 backdrop-blur-sm rounded-3xl flex items-center justify-center mb-5 border border-white/20">
-        <span className="text-4xl">⚽</span>
-      </div>
+      <img src={LOGO_URL} alt="Bolão na Copa" className="w-20 h-20 object-contain mb-5 drop-shadow-lg" />
       <h1 className="text-2xl font-black text-white text-center leading-tight">
         Bem-vindo ao<br />
         <span className="text-copa-gold-400">Bolão na Copa!</span>
@@ -82,7 +86,7 @@ const WelcomeStep = ({ onNext, onSkip }: { onNext: () => void; onSkip: () => voi
       </Button>
       <p className="text-copa-green-200/60 text-center text-xs mt-2">Configuração rápida · 1 minuto</p>
       <button onClick={onSkip} className="w-full mt-1 text-copa-green-200/40 text-[11px] hover:text-copa-green-200/70 transition-colors">
-        Pular configuração →
+        Pular onboarding →
       </button>
     </div>
   </div>
@@ -93,6 +97,8 @@ const WelcomeStep = ({ onNext, onSkip }: { onNext: () => void; onSkip: () => voi
 // ═══════════════════════════════════════════════════════
 const ModesStep = ({ onNext, onBack, onSkip }: { onNext: () => void; onBack: () => void; onSkip: () => void }) => {
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [tutorialStep, setTutorialStep] = useState(0);
+  // 0 = highlight Casual, 1 = highlight Fanático, 2 = free
 
   const modes = [
     { id: "casual", name: "Casual", emoji: "🎮", tag: "Grátis", tagColor: "bg-copa-green-100 text-copa-green-700", free: true },
@@ -103,24 +109,63 @@ const ModesStep = ({ onNext, onBack, onSkip }: { onNext: () => void; onBack: () 
     { id: "fanatico", name: "Torcedor Fanático", emoji: "🔥", tag: "PRO", tagColor: "bg-copa-green-600 text-white", free: false },
   ];
 
+  const highlightId = tutorialStep === 0 ? "casual" : tutorialStep === 1 ? "fanatico" : null;
+
+  const handleModeClick = (modeId: string) => {
+    if (tutorialStep === 0 && modeId === "casual") {
+      setExpanded("casual");
+      setTutorialStep(1);
+    } else if (tutorialStep === 1 && modeId === "fanatico") {
+      setExpanded("fanatico");
+      setTutorialStep(2);
+    } else if (tutorialStep >= 2) {
+      setExpanded(expanded === modeId ? null : modeId);
+    }
+  };
+
+  const tooltipText = tutorialStep === 0
+    ? "👆 Toque no Casual para ver as regras"
+    : tutorialStep === 1
+    ? "👆 Agora toque no Torcedor Fanático"
+    : null;
+
   return (
-    <div className="space-y-4 animate-fade-in">
+    <div className="space-y-4 animate-fade-in relative">
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={onBack} className="rounded-full"><ArrowLeft className="w-5 h-5" /></Button>
         <div>
           <h2 className="text-xl font-black">Modos de Jogo</h2>
-          <p className="text-xs text-muted-foreground">Escolha como quer pontuar nos seus bolões</p>
+          <p className="text-xs text-muted-foreground">Conheça os modos de pontuação</p>
         </div>
       </div>
 
-      <div className="space-y-2">
+      {tooltipText && (
+        <div className="bg-copa-green-600 text-white text-xs font-semibold px-4 py-2.5 rounded-xl text-center animate-pulse">
+          {tooltipText}
+        </div>
+      )}
+
+      {tutorialStep < 2 && (
+        <div className="fixed inset-0 bg-black/40 pointer-events-none" style={{ zIndex: 10 }} />
+      )}
+
+      <div className="space-y-2 relative" style={{ zIndex: tutorialStep < 2 ? 20 : "auto" }}>
         {modes.map((mode) => {
           const regras = MODO_REGRAS[mode.id];
+          const isHighlighted = highlightId === mode.id;
+          const isClickable = tutorialStep >= 2 || isHighlighted;
+
           return (
             <div
               key={mode.id}
-              onClick={() => setExpanded(expanded === mode.id ? null : mode.id)}
-              className="rounded-xl border bg-white p-3 cursor-pointer hover:shadow-sm transition-all"
+              onClick={() => isClickable && handleModeClick(mode.id)}
+              className={`rounded-xl border p-3 transition-all ${
+                isHighlighted
+                  ? "bg-white border-copa-green-500 shadow-lg shadow-copa-green-200 ring-2 ring-copa-green-400 cursor-pointer"
+                  : tutorialStep < 2
+                  ? "bg-gray-100 border-gray-200 opacity-40 pointer-events-none"
+                  : "bg-white border-gray-200 cursor-pointer hover:shadow-sm"
+              }`}
             >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-xl">{mode.emoji}</div>
@@ -135,7 +180,7 @@ const ModesStep = ({ onNext, onBack, onSkip }: { onNext: () => void; onBack: () 
               </div>
               {expanded === mode.id && regras && (
                 <div className="mt-2 bg-muted/50 rounded-lg p-2.5 space-y-1">
-                  {regras.regras.map((r, i) => (
+                  {regras.regras.map((r: any, i: number) => (
                     <div key={i} className="flex items-center justify-between text-xs">
                       <span className={r.acerto ? "text-copa-green-700" : "text-muted-foreground"}>
                         {r.acerto ? "✓" : "✗"} {r.texto}
@@ -150,13 +195,13 @@ const ModesStep = ({ onNext, onBack, onSkip }: { onNext: () => void; onBack: () 
         })}
       </div>
 
-      <div className="space-y-2 pt-2">
+      <div className="space-y-2 pt-2 relative" style={{ zIndex: 30 }}>
         <ProgressDots current={1} total={5} />
-        <Button onClick={onNext} className="w-full h-11 bg-copa-green-600 hover:bg-copa-green-700 text-white font-bold rounded-xl">
+        <Button onClick={onNext} disabled={tutorialStep < 2} className="w-full h-11 bg-copa-green-600 hover:bg-copa-green-700 text-white font-bold rounded-xl disabled:opacity-40">
           Entendi os modos →
         </Button>
         <button onClick={onSkip} className="w-full text-muted-foreground text-[11px] hover:text-foreground transition-colors">
-          Pular configuração →
+          Pular onboarding →
         </button>
       </div>
     </div>
@@ -221,7 +266,7 @@ const FidelityStep = ({ onNext, onBack, onSkip }: { onNext: () => void; onBack: 
         Quero ganhar Premium! 🎁
       </Button>
       <button onClick={onSkip} className="w-full text-muted-foreground text-[11px] hover:text-foreground transition-colors">
-        Pular configuração →
+        Pular onboarding →
       </button>
     </div>
   </div>
@@ -446,7 +491,7 @@ const CreateBolaoStep = ({
           {creating ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Criando...</> : "Criar bolão →"}
         </Button>
         <button onClick={onSkip} className="w-full text-muted-foreground text-[11px] hover:text-foreground transition-colors">
-          Pular configuração →
+          Pular onboarding →
         </button>
       </div>
     </div>
@@ -556,13 +601,20 @@ const InviteFriendsStep = ({
       <div className="space-y-2 pt-2">
         <ProgressDots current={4} total={5} />
         <Button
-          onClick={() => { if (!shared) { handleWhatsApp(); } else { onNext(); } }}
+          onClick={handleWhatsApp}
           className="w-full h-11 bg-copa-green-600 hover:bg-copa-green-700 text-white font-bold rounded-xl"
         >
-          {shared ? "Continuar →" : "💬 Compartilhar no WhatsApp"}
+          💬 Convidar agora
+        </Button>
+        <Button
+          variant="outline"
+          onClick={onNext}
+          className="w-full h-11 border-gray-300 text-gray-600 font-semibold rounded-xl"
+        >
+          Convidar mais tarde →
         </Button>
         <button onClick={onSkip} className="w-full text-muted-foreground text-[11px] hover:text-foreground transition-colors">
-          Pular configuração →
+          Pular onboarding →
         </button>
       </div>
     </div>
@@ -578,32 +630,43 @@ const DoneStep = ({
   onFinish: () => void; bolaoId: string; bolaoName: string;
 }) => {
   const navigate = useNavigate();
-  const { showAd, needsAd } = useRewardedAd();
+  const { showAd, needsAd, resolveWebAd } = useRewardedAd();
   const [showAdModal, setShowAdModal] = useState(false);
-  const { resolveWebAd } = useRewardedAd();
 
   const handlePalpites = async () => {
-    if (needsAd) {
-      setShowAdModal(true);
-      const adResult = await showAd("onboarding_palpites");
-      setShowAdModal(false);
-      if (!adResult) return;
-    }
+    // Primeiro finalizar onboarding para sair do portal overlay
     onFinish();
-    if (bolaoId) {
-      navigate(`/bolao/${bolaoId}/palpites`);
-    } else {
-      navigate("/home");
+
+    if (needsAd) {
+      try {
+        await showAd("onboarding_palpites");
+      } catch (e) {
+        console.warn("Ad failed, continuing:", e);
+      }
     }
+
+    // Navegar com delay para garantir que o portal foi desmontado
+    setTimeout(() => {
+      if (bolaoId) {
+        navigate(`/bolao/${bolaoId}`);
+      } else {
+        navigate("/home");
+      }
+    }, 300);
+  };
+
+  const handleGoHome = () => {
+    onFinish();
+    setTimeout(() => navigate("/home"), 100);
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-copa-green-600 via-copa-green-700 to-copa-green-900 overflow-hidden relative animate-fade-in"
-      style={{ paddingTop: "max(1rem, env(safe-area-inset-top, 1rem))" }}>
-      <AdRewardModal open={showAdModal} onComplete={resolveWebAd} message="Assista para acessar seus palpites" />
+      style={{ paddingTop: "max(1.5rem, env(safe-area-inset-top, 1.5rem))" }}>
 
       <div className="flex-1 flex flex-col items-center justify-center px-8">
-        <div className="text-6xl mb-5">🎊</div>
+        <img src={LOGO_URL} alt="Bolão na Copa" className="w-16 h-16 object-contain mb-3 drop-shadow-lg" />
+        <div className="text-5xl mb-4">🎊</div>
         <h1 className="text-2xl font-black text-white text-center">Tudo pronto!</h1>
         <p className="text-copa-green-100 text-center mt-3 text-sm px-4 leading-relaxed">
           {bolaoName
@@ -631,7 +694,7 @@ const DoneStep = ({
           Fazer meus palpites 🎯
         </Button>
         <button
-          onClick={() => { onFinish(); navigate("/home"); }}
+          onClick={handleGoHome}
           className="w-full text-copa-green-200 text-sm font-medium hover:text-white transition-colors"
         >
           Ir para a Home
