@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useRewardedAd } from "@/hooks/useRewardedAd";
+import { trackEvent } from "@/lib/analytics";
 import { useUserPlan } from "@/hooks/useUserPlan";
 import { MODO_LABELS, MODO_REGRAS, MODOS_PONTUACAO } from "@/lib/constants";
 import type { Campeonato } from "@/lib/types";
@@ -784,12 +785,21 @@ const Onboarding = ({ onComplete }: OnboardingProps) => {
 
   const userCode = user?.id?.substring(0, 8).toUpperCase() || "REF";
 
-  const goNext = () => setStep((s) => Math.min(s + 1, STEPS.length - 1));
-  const goBack = () => setStep((s) => Math.max(s - 1, 0));
+  const goNext = () => {
+    const nextStep = Math.min(step + 1, STEPS.length - 1);
+    trackEvent("onboarding_step", { from: STEPS[step], to: STEPS[nextStep], direction: "next" });
+    setStep(nextStep);
+  };
+  const goBack = () => {
+    const prevStep = Math.max(step - 1, 0);
+    trackEvent("onboarding_step", { from: STEPS[step], to: STEPS[prevStep], direction: "back" });
+    setStep(prevStep);
+  };
 
   const trySkip = () => setShowSkipConfirm(true);
   const confirmSkip = () => {
     setShowSkipConfirm(false);
+    trackEvent("onboarding_skip", { skipped_at_step: STEPS[step] });
     markOnboardingDone();
     onComplete();
   };
@@ -799,10 +809,12 @@ const Onboarding = ({ onComplete }: OnboardingProps) => {
     setCreatedBolaoId(bolaoId);
     setCreatedBolaoName(name);
     setCreatedBolaoCode(code);
+    trackEvent("onboarding_bolao_criado", { bolao_id: bolaoId, bolao_name: name });
     goNext();
   };
 
   const handleFinish = () => {
+    trackEvent("onboarding_completo", { criou_bolao: !!createdBolaoId });
     markOnboardingDone();
     onComplete();
   };
