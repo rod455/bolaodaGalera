@@ -157,6 +157,19 @@ const BolaoPage = () => {
 
   const handleSaveCapa = async () => {
     if (!capaEditor || !id) return;
+
+    // Validação de tipo e tamanho do arquivo
+    const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+    if (!ALLOWED_TYPES.includes(capaEditor.file.type)) {
+      toast.error("Formato inválido. Use JPG, PNG ou WebP.");
+      return;
+    }
+    if (capaEditor.file.size > MAX_SIZE) {
+      toast.error("Imagem muito grande. Máximo 5MB.");
+      return;
+    }
+
     setUploadingCapa(true);
     try {
       const ext = capaEditor.file.name.split(".").pop() || "jpg";

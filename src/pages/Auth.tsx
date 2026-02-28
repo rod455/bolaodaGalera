@@ -84,8 +84,12 @@ const Auth = () => {
       toast.error("As senhas não coincidem");
       return;
     }
-    if (newPassword.length < 6) {
-      toast.error("A senha deve ter pelo menos 6 caracteres");
+    if (newPassword.length < 8) {
+      toast.error("A senha deve ter pelo menos 8 caracteres");
+      return;
+    }
+    if (!/[A-Z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+      toast.error("A senha deve ter pelo menos 1 letra maiúscula e 1 número");
       return;
     }
     setIsSubmitting(true);
@@ -129,8 +133,13 @@ const Auth = () => {
         navigate(bolaoRedirect ? `/bolao/${bolaoRedirect}` : "/home");
       } else {
         // Register
-        if (password.length < 6) {
-          toast.error("A senha deve ter pelo menos 6 caracteres");
+        if (password.length < 8) {
+          toast.error("A senha deve ter pelo menos 8 caracteres");
+          setIsSubmitting(false);
+          return;
+        }
+        if (!/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+          toast.error("A senha deve ter pelo menos 1 letra maiúscula e 1 número");
           setIsSubmitting(false);
           return;
         }
@@ -164,10 +173,8 @@ const Auth = () => {
       }
     } catch (error: any) {
       const msg = error.message;
-      if (msg.includes("Invalid login")) {
-        toast.error("Email ou senha incorretos");
-      } else if (msg.includes("already registered")) {
-        toast.error("Este email já está cadastrado");
+      if (msg.includes("Invalid login") || msg.includes("already registered")) {
+        toast.error("Credenciais inválidas. Verifique seu email e senha.");
       } else {
         toast.error(msg || "Erro ao processar. Tente novamente.");
       }
@@ -463,7 +470,7 @@ const Auth = () => {
 
             <div className="space-y-2">
               <Label htmlFor="password" className="text-sm font-medium text-copa-green-700">
-                Senha {!isLogin && <span className="text-muted-foreground font-normal">(mínimo 6 caracteres)</span>}
+                Senha {!isLogin && <span className="text-muted-foreground font-normal">(mínimo 8 caracteres, 1 maiúscula e 1 número)</span>}
               </Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
