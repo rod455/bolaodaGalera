@@ -154,10 +154,11 @@ async function syncFull() {
   console.log('🔄 Sync COMPLETO - Atualizando todos os campeonatos\n');
 
   const CAMPEONATOS = [
-    { code: 'BSA', id: 2013, nome: 'Brasileirão', season: 2026 },
-    { code: 'WC',  id: 2000, nome: 'Copa do Mundo', season: 2026 },
-    { code: 'CL',  id: 2001, nome: 'Champions League', season: 2025 },
-  ];
+  { code: 'BSA', id: 2013, nome: 'Brasileirão', season: 2026 },
+  { code: 'WC',  id: 2000, nome: 'Copa do Mundo', season: 2026 },
+  { code: 'CL',  id: 2001, nome: 'Champions League', season: 2025 },
+  { code: 'CLI', id: 2152, nome: 'Libertadores', season: 2026 },
+];
 
   let totalUpdated = 0;
 
