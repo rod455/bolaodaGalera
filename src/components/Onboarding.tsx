@@ -51,7 +51,8 @@ const ProgressDots = ({ current, total }: { current: number; total: number }) =>
 // Step 1: Welcome
 // ═══════════════════════════════════════════════════════
 const WelcomeStep = ({ onNext, onSkip }: { onNext: () => void; onSkip: () => void }) => (
-  <div className="min-h-[80vh] flex flex-col bg-gradient-to-br from-copa-green-600 via-copa-green-700 to-copa-green-900 rounded-2xl mx-2 mt-2 overflow-hidden relative">
+  <div className="min-h-screen flex flex-col bg-gradient-to-br from-copa-green-600 via-copa-green-700 to-copa-green-900 relative overflow-hidden"
+    style={{ paddingTop: "max(1rem, env(safe-area-inset-top, 1rem))" }}>
     <div className="absolute top-20 -right-10 w-40 h-40 bg-copa-gold-400/10 rounded-full blur-3xl" />
     <div className="absolute bottom-40 -left-10 w-32 h-32 bg-copa-green-400/20 rounded-full blur-2xl" />
 
@@ -375,23 +376,39 @@ const CreateBolaoStep = ({
           <div className="flex justify-center py-4"><Loader2 className="w-5 h-5 animate-spin text-copa-green-500" /></div>
         ) : (
           <div className="space-y-1.5">
-            {campeonatos.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => toggleChamp(c.id!)}
-                className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${
-                  selectedChamps.has(c.id!) ? "border-copa-green-500 bg-copa-green-50" : "border-gray-200 bg-white"
-                }`}
-              >
-                {c.logo_url && <img src={c.logo_url} alt="" className="w-6 h-6 object-contain" />}
-                <span className="flex-1 text-left font-semibold text-xs">{c.nome_popular}</span>
-                <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center ${
-                  selectedChamps.has(c.id!) ? "border-copa-green-500 bg-copa-green-500" : "border-gray-300"
-                }`}>
-                  {selectedChamps.has(c.id!) && <Check className="w-3 h-3 text-white" />}
-                </div>
-              </button>
-            ))}
+            {campeonatos.map((c) => {
+              const emojiMap: Record<string, string> = {
+                "paulistão": "🏴",
+                "mineiro": "⛰️",
+                "brasileirão": "🇧🇷",
+                "copa do brasil": "🏆",
+                "copa do mundo": "🌍",
+                "champions": "⭐",
+                "libertadores": "🏅",
+              };
+              const key = Object.keys(emojiMap).find((k) => (c.nome_popular || "").toLowerCase().includes(k));
+              const emoji = key ? emojiMap[key] : "⚽";
+
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => toggleChamp(c.id!)}
+                  className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${
+                    selectedChamps.has(c.id!) ? "border-copa-green-500 bg-copa-green-50" : "border-gray-200 bg-white"
+                  }`}
+                >
+                  <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-lg flex-shrink-0">
+                    {c.logo_url ? <img src={c.logo_url} alt="" className="w-6 h-6 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).parentElement!.textContent = emoji; }} /> : emoji}
+                  </div>
+                  <span className="flex-1 text-left font-semibold text-xs">{c.nome_popular}</span>
+                  <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center ${
+                    selectedChamps.has(c.id!) ? "border-copa-green-500 bg-copa-green-500" : "border-gray-300"
+                  }`}>
+                    {selectedChamps.has(c.id!) && <Check className="w-3 h-3 text-white" />}
+                  </div>
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
@@ -581,7 +598,8 @@ const DoneStep = ({
   };
 
   return (
-    <div className="min-h-[80vh] flex flex-col bg-gradient-to-br from-copa-green-600 via-copa-green-700 to-copa-green-900 rounded-2xl mx-2 mt-2 overflow-hidden relative animate-fade-in">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-copa-green-600 via-copa-green-700 to-copa-green-900 overflow-hidden relative animate-fade-in"
+      style={{ paddingTop: "max(1rem, env(safe-area-inset-top, 1rem))" }}>
       <AdRewardModal open={showAdModal} onComplete={resolveWebAd} message="Assista para acessar seus palpites" />
 
       <div className="flex-1 flex flex-col items-center justify-center px-8">
@@ -716,9 +734,17 @@ const Onboarding = ({ onComplete }: OnboardingProps) => {
     }
   };
 
+  const isFullscreenStep = STEPS[step] === "welcome" || STEPS[step] === "done";
+
   return (
-    <div className="animate-fade-in">
-      {renderStep()}
+    <div className="min-h-screen bg-white">
+      {isFullscreenStep ? (
+        renderStep()
+      ) : (
+        <div className="max-w-lg mx-auto px-4 py-6" style={{ paddingTop: "max(1.5rem, env(safe-area-inset-top, 1.5rem))" }}>
+          {renderStep()}
+        </div>
+      )}
       {showSkipConfirm && <SkipConfirmModal onConfirm={confirmSkip} onCancel={cancelSkip} />}
     </div>
   );
