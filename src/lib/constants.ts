@@ -92,12 +92,12 @@ export const MODO_REGRAS: Record<string, RegraInfo> = {
 // ── Configuração dos modos para CriarBolao (com plano requerido) ──
 export const MODOS_PONTUACAO: ModoConfig[] = [
   { id: "casual", nome: "Casual", subtitulo: "Iniciantes", plano: "free" },
+  { id: "mata_mata", nome: "Mata a Mata", subtitulo: "Último sobrevivente pontua", plano: "free" },
   { id: "placar_correto", nome: "Placar Correto", subtitulo: "Acertou o placar ou zero", plano: "free" },
   { id: "amador", nome: "Amador", subtitulo: "Intermediário", plano: "premium" },
   { id: "vencedor_ou_nada", nome: "Vencedor ou Nada", subtitulo: "Acerte o vencedor", plano: "premium" },
   { id: "profissional", nome: "Profissional", subtitulo: "Avançado", plano: "premium_pro" },
   { id: "fanatico", nome: "Torcedor Fanático", subtitulo: "Só jogos do seu time", plano: "premium_pro" },
-  { id: "mata_mata", nome: "Mata a Mata", subtitulo: "Último sobrevivente pontua", plano: "free" },
 ];
 
 // ── Tradução de fases (football-data.org → PT-BR) ──
