@@ -108,12 +108,12 @@ const ModesStep = ({ onNext, onBack, onSkip }: { onNext: () => void; onBack: () 
 
   const modes = [
     { id: "casual", name: "Casual", emoji: "🎮", tag: "Grátis", tagColor: "bg-copa-green-100 text-copa-green-700", free: true },
+    { id: "mata_mata", name: "Mata a Mata", emoji: "💀", tag: "Novo!", tagColor: "bg-red-100 text-red-600", free: true },
     { id: "placar_correto", name: "Placar Correto", emoji: "🎯", tag: "Grátis", tagColor: "bg-copa-green-100 text-copa-green-700", free: true },
     { id: "amador", name: "Amador", emoji: "⚡", tag: "Premium", tagColor: "bg-copa-gold-100 text-copa-gold-700", free: false },
     { id: "vencedor_ou_nada", name: "Vencedor ou Nada", emoji: "🏅", tag: "Premium", tagColor: "bg-copa-gold-100 text-copa-gold-700", free: false },
     { id: "profissional", name: "Profissional", emoji: "🏟️", tag: "PRO", tagColor: "bg-copa-green-600 text-white", free: false },
     { id: "fanatico", name: "Torcedor Fanático", emoji: "🔥", tag: "PRO", tagColor: "bg-copa-green-600 text-white", free: false },
-    { id: "mata_mata", name: "Mata a Mata", emoji: "💀", tag: "Grátis", tagColor: "bg-copa-green-100 text-copa-green-700", free: true },
   ];
 
   const highlightId = tutorialStep <= 1 ? "casual" : tutorialStep <= 3 ? "fanatico" : null;
@@ -342,12 +342,12 @@ const CreateBolaoStep = ({
 
   const modes = [
     { id: "casual", name: "Casual", emoji: "🎮", tag: "Grátis", tagColor: "bg-copa-green-100 text-copa-green-700", plano: "free" },
+    { id: "mata_mata", name: "Mata a Mata", emoji: "💀", tag: "Novo!", tagColor: "bg-red-100 text-red-600", plano: "free" },
     { id: "placar_correto", name: "Placar Correto", emoji: "🎯", tag: "Grátis", tagColor: "bg-copa-green-100 text-copa-green-700", plano: "free" },
     { id: "amador", name: "Amador", emoji: "⚡", tag: "Premium", tagColor: "bg-copa-gold-100 text-copa-gold-700", plano: "premium" },
     { id: "vencedor_ou_nada", name: "Vencedor ou Nada", emoji: "🏅", tag: "Premium", tagColor: "bg-copa-gold-100 text-copa-gold-700", plano: "premium" },
     { id: "profissional", name: "Profissional", emoji: "🏟️", tag: "PRO", tagColor: "bg-copa-green-600 text-white", plano: "premium_pro" },
     { id: "fanatico", name: "Torcedor Fanático", emoji: "🔥", tag: "PRO", tagColor: "bg-copa-green-600 text-white", plano: "premium_pro" },
-    { id: "mata_mata", name: "Mata a Mata", emoji: "💀", tag: "Grátis", tagColor: "bg-copa-green-100 text-copa-green-700", plano: "free" },
   ];
 
   const canUseMode = (plano: string) => {

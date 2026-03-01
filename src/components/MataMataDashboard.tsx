@@ -69,6 +69,18 @@ const MataMataDashboard = ({ bolaoId, campeonatoId }: Props) => {
 
   const loadData = async () => {
     try {
+      // 0. Buscar pontos_iniciais configurados no bolão (guardado na descrição como "mata_mata:XX")
+      let pontosConfig = 20;
+      const { data: bolaoData } = await supabase
+        .from("boloes")
+        .select("descricao")
+        .eq("id", bolaoId)
+        .single();
+      if (bolaoData?.descricao?.startsWith("mata_mata:")) {
+        const parsed = parseInt(bolaoData.descricao.split(":")[1]);
+        if (!isNaN(parsed) && parsed > 0) pontosConfig = parsed;
+      }
+
       // 1. Buscar ciclo ativo
       let { data: cicloAtivo } = await supabase
         .from("mata_mata_ciclos")
@@ -81,7 +93,7 @@ const MataMataDashboard = ({ bolaoId, campeonatoId }: Props) => {
 
       // Se não existe ciclo ativo, criar o primeiro
       if (!cicloAtivo) {
-        cicloAtivo = await criarNovoCiclo(1);
+        cicloAtivo = await criarNovoCiclo(1, pontosConfig);
       }
 
       if (!cicloAtivo) {
@@ -187,7 +199,7 @@ const MataMataDashboard = ({ bolaoId, campeonatoId }: Props) => {
     }
   };
 
-  const criarNovoCiclo = async (numero: number) => {
+  const criarNovoCiclo = async (numero: number, pontosIniciais: number = 20) => {
     try {
       // Criar ciclo
       const { data: novoCiclo, error } = await supabase
@@ -197,7 +209,7 @@ const MataMataDashboard = ({ bolaoId, campeonatoId }: Props) => {
           ciclo_numero: numero,
           rodada_atual: 1,
           status: "ativo",
-          pontos_iniciais: 20,
+          pontos_iniciais: pontosIniciais,
         })
         .select("*")
         .single();
