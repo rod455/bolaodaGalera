@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Capacitor } from "@capacitor/core";
 import { useUserPlan } from "./useUserPlan";
 
@@ -53,10 +53,10 @@ const REWARD_EVENTS = {
 
 // ═══ Estado global de inicialização ═══
 let adMobInitialized = false;
+let adPreloaded = false;
 
 /**
  * Inicializa o AdMob SE ainda não foi inicializado.
- * Chamado de forma lazy na hora de mostrar o ad.
  */
 async function ensureAdMobReady(): Promise<boolean> {
   if (adMobInitialized) return true;
@@ -79,6 +79,25 @@ async function ensureAdMobReady(): Promise<boolean> {
 }
 
 /**
+ * Pré-carrega o ad para que esteja pronto quando o usuário salvar.
+ */
+async function preloadAd(): Promise<void> {
+  if (adPreloaded) return;
+
+  const AdMob = getAdMobPlugin();
+  if (!AdMob) return;
+
+  try {
+    await ensureAdMobReady();
+    await AdMob.prepareRewardVideoAd({ adId: AD_ID, isTesting: false });
+    adPreloaded = true;
+    console.log("[AdMob] ✅ Ad preloaded");
+  } catch (err) {
+    console.warn("[AdMob] Preload failed:", err);
+  }
+}
+
+/**
  * Hook para gerenciar Rewarded Ads (Google AdMob)
  */
 export const useRewardedAd = () => {
@@ -87,6 +106,15 @@ export const useRewardedAd = () => {
 
   const isPremium = plano === "premium" || plano === "premium_pro";
   const isNative = isRunningInNativeApp();
+
+  // Pré-carregar o ad quando o hook monta (se for nativo + free)
+  const preloadDone = useRef(false);
+  useEffect(() => {
+    if (!isPremium && isNative && !preloadDone.current) {
+      preloadDone.current = true;
+      preloadAd();
+    }
+  }, [isPremium, isNative]);
 
   const hasWatchedPalpiteAdToday = useCallback(() => {
     try { return localStorage.getItem(LAST_PALPITE_AD_KEY) === getToday(); } catch { return false; }
@@ -102,7 +130,6 @@ export const useRewardedAd = () => {
    */
   const showNativeRewardedAd = useCallback(
     async (tipo: string): Promise<boolean> => {
-      // Passo 0: Garantir que o AdMob está inicializado
       const ready = await ensureAdMobReady();
       const AdMob = getAdMobPlugin();
 
@@ -128,6 +155,10 @@ export const useRewardedAd = () => {
             resolved = true;
             cleanup();
             if (tipo === "palpite" && success) markPalpiteAdWatched();
+            // Marcar para re-preload na próxima vez
+            adPreloaded = false;
+            // Pré-carregar o próximo ad em background
+            setTimeout(() => preloadAd(), 2000);
             console.log(`[AdMob] Ad finished (rewarded: ${userRewarded})`);
             resolve(success);
           };
@@ -167,14 +198,17 @@ export const useRewardedAd = () => {
             });
             listeners.push(l4);
 
-            // Preparar e mostrar
-            console.log("[AdMob] Preparing...");
-            await AdMob.prepareRewardVideoAd({
-              adId: AD_ID,
-              isTesting: false,
-            });
+            // Se não foi preloaded, preparar agora
+            if (!adPreloaded) {
+              console.log("[AdMob] Preparing (not preloaded)...");
+              await AdMob.prepareRewardVideoAd({
+                adId: AD_ID,
+                isTesting: false,
+              });
+            }
 
             console.log("[AdMob] Showing...");
+            adPreloaded = false;
             await AdMob.showRewardVideoAd();
 
           } catch (err: any) {
