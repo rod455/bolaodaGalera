@@ -104,7 +104,8 @@ const CriarBolao = () => {
     if (modoSelecionado && MODO_REGRAS[modoSelecionado]) {
       if (modoSelecionado === "mata_mata") {
         setRegrasAtivas(["mata_mata"]);
-        // Não abre modal de regras para mata_mata
+        // Scroll para o painel explicativo
+        scrollToSection("section-mata-mata");
       } else {
         const todasRegras = MODO_REGRAS[modoSelecionado].regras
           .filter((r) => r.acerto)
@@ -417,7 +418,7 @@ const CriarBolao = () => {
 
       {/* 2.5 Configuração Mata a Mata (antes do campeonato) */}
       {isMataMata && (
-        <Card className="rounded-2xl shadow-sm border-copa-green-200 bg-copa-green-50/30 animate-fade-in">
+        <Card id="section-mata-mata" className="rounded-2xl shadow-sm border-copa-green-200 bg-copa-green-50/30 animate-fade-in">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-bold flex items-center gap-2">
               <span className="text-lg">💀</span>
