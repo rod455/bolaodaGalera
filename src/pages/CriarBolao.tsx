@@ -86,6 +86,10 @@ const CriarBolao = () => {
   const [loadingTimes, setLoadingTimes] = useState(false);
   const [buscaTime, setBuscaTime] = useState("");
   const [timeModalOpen, setTimeModalOpen] = useState(false);
+
+  // Mata a Mata - pontuação inicial
+  const [pontosIniciais, setPontosIniciais] = useState(20);
+
   const { darXP } = useGamification();
   const [xpToast, setXPToast] = useState<{xp: number, msg: string} | null>(null);
 
@@ -229,8 +233,12 @@ const CriarBolao = () => {
       }
 
       // Criar bolão com o primeiro campeonato como referência (legacy)
+      const descFinal = isMataMata
+        ? `mata_mata:${pontosIniciais}`
+        : (descricao || null);
+
       const { data: newBolao, error } = await supabase.from("boloes").insert({
-        nome, descricao: descricao || null, imagem_url: imagemUrl,
+        nome, descricao: descFinal, imagem_url: imagemUrl,
         codigo_convite: codigo, criador_id: user.id, campeonato_id: campeonatosSelecionados[0],
         modo_pontuacao: modoSelecionado, regras_ativas: isMataMata ? ["mata_mata"] : regrasAtivas,
         is_publico: false, is_nacional: false,
@@ -516,6 +524,77 @@ const CriarBolao = () => {
             {timeFavorito ? "Alterar" : "Escolher"}
           </button>
         </div>
+      )}
+
+      {/* 3.6 Configuração Mata a Mata */}
+      {isMataMata && (
+        <Card className="rounded-2xl shadow-sm border-copa-green-200 bg-copa-green-50/30 animate-fade-in">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-bold flex items-center gap-2">
+              <span className="text-lg">💀</span>
+              Como funciona o Mata a Mata
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2.5">
+              {[
+                { icon: "🎯", text: "Cada rodada, escolha 1 time para apostar na vitória" },
+                { icon: "✅", text: "Se o time vencer, você sobrevive e avança" },
+                { icon: "❌", text: "Se perder ou empatar, você é eliminado" },
+                { icon: "🔒", text: "Não pode repetir o mesmo time em rodadas diferentes" },
+                { icon: "🏆", text: "Último sobrevivente marca os pontos da rodada" },
+                { icon: "🔄", text: "Depois, recomeça uma nova temporada com todos de volta" },
+              ].map((item, i) => (
+                <div key={i} className="flex items-start gap-2.5">
+                  <span className="text-sm mt-0.5">{item.icon}</span>
+                  <span className="text-sm text-gray-700">{item.text}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="border-t pt-4">
+              <h4 className="text-sm font-bold text-gray-700 mb-1">Como funciona a pontuação?</h4>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                O jogo começa valendo <strong>{pontosIniciais} pontos</strong>. A cada rodada que passa, vale 1 ponto a menos.
+                Exemplo: se a temporada começar com {pontosIniciais} pontos e o vencedor sobreviver até a rodada 5, ele ganha <strong>{pontosIniciais - 5} pontos</strong>.
+                Se todos forem eliminados na mesma rodada, os sobreviventes da rodada anterior dividem os pontos.
+              </p>
+            </div>
+
+            <div className="border-t pt-4">
+              <label className="text-sm font-bold text-gray-700 mb-2 block">
+                Pontuação inicial por temporada
+              </label>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setPontosIniciais(Math.max(5, pontosIniciais - 5))}
+                  className="w-10 h-10 rounded-xl bg-white border-2 border-gray-200 hover:border-copa-green-400 font-bold text-lg transition-colors"
+                >−</button>
+                <div className="flex-1 text-center">
+                  <span className="text-3xl font-black text-copa-green-600">{pontosIniciais}</span>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">pontos</p>
+                </div>
+                <button
+                  onClick={() => setPontosIniciais(Math.min(50, pontosIniciais + 5))}
+                  className="w-10 h-10 rounded-xl bg-white border-2 border-gray-200 hover:border-copa-green-400 font-bold text-lg transition-colors"
+                >+</button>
+              </div>
+              <div className="flex justify-between mt-2">
+                {[10, 15, 20, 30, 50].map((v) => (
+                  <button
+                    key={v}
+                    onClick={() => setPontosIniciais(v)}
+                    className={`text-xs font-semibold px-2.5 py-1 rounded-full transition-all ${
+                      pontosIniciais === v
+                        ? "bg-copa-green-500 text-white"
+                        : "bg-white border border-gray-200 text-gray-500 hover:border-copa-green-300"
+                    }`}
+                  >{v} pts</button>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* 4. Upload Cover */}
