@@ -130,6 +130,7 @@ const BolaoPage = () => {
   const [dragStartPos, setDragStartPos] = useState(50);
   const [showGerenciarCampeonatos, setShowGerenciarCampeonatos] = useState(false);
   const [campeonatosVinculados, setCampeonatosVinculados] = useState<{id: string; nome_popular: string; logo_url: string}[]>([]);
+  const [showCampeonatosModal, setShowCampeonatosModal] = useState(false);
 
   const handleCapaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -755,51 +756,27 @@ const BolaoPage = () => {
             )}
           </div>
           <div className="flex items-center gap-2 flex-wrap">
+            {/* Botão Modo de Jogo */}
             <button
               onClick={() => setShowRegrasModal(true)}
-              className="flex items-center gap-1 text-[10px] font-bold bg-copa-green-100 text-copa-green-700 rounded-full px-2 py-0.5 hover:bg-copa-green-200 transition-colors"
+              className="flex items-center gap-1.5 text-[11px] font-bold bg-copa-green-100 text-copa-green-700 rounded-full px-2.5 py-1 hover:bg-copa-green-200 transition-colors"
             >
-              {MODO_LABELS[bolao.modo_pontuacao] || bolao.modo_pontuacao}
-              <Info className="w-3 h-3" />
+              <Trophy className="w-3 h-3" />
+              Modo de Jogo
+              <ChevronRight className="w-3 h-3" />
             </button>
-            {/* Badges dos campeonatos vinculados */}
-            {campeonatosVinculados.length > 0 ? (
-              <div className="flex items-center gap-1 flex-wrap">
-                {campeonatosVinculados.map((camp) => (
-                  <span key={camp.id} className="flex items-center gap-1 text-[10px] font-semibold bg-muted text-muted-foreground rounded-full px-2 py-0.5">
-                    {camp.logo_url && (
-                      <img src={camp.logo_url} alt="" className="w-3 h-3 object-contain"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                    )}
-                    {camp.nome_popular}
-                  </span>
-                ))}
-                {bolao.criador_id === user?.id && !bolao.is_nacional && (
-                  <button
-                    onClick={() => setShowGerenciarCampeonatos(true)}
-                    className="w-5 h-5 rounded-full bg-copa-green-100 hover:bg-copa-green-200 flex items-center justify-center transition-colors"
-                    title="Adicionar campeonato"
-                  >
-                    <Plus className="w-3 h-3 text-copa-green-600" />
-                  </button>
-                )}
-              </div>
-            ) : bolao.campeonatos?.nome_popular ? (
-              <div className="flex items-center gap-1">
-                <span className="text-[10px] font-semibold bg-muted text-muted-foreground rounded-full px-2 py-0.5">
-                  {bolao.campeonatos.nome_popular}
-                </span>
-                {bolao.criador_id === user?.id && !bolao.is_nacional && (
-                  <button
-                    onClick={() => setShowGerenciarCampeonatos(true)}
-                    className="w-5 h-5 rounded-full bg-copa-green-100 hover:bg-copa-green-200 flex items-center justify-center transition-colors"
-                    title="Adicionar campeonato"
-                  >
-                    <Plus className="w-3 h-3 text-copa-green-600" />
-                  </button>
-                )}
-              </div>
-            ) : null}
+            {/* Botão Campeonatos */}
+            <button
+              onClick={() => setShowCampeonatosModal(true)}
+              className="flex items-center gap-1.5 text-[11px] font-bold bg-muted text-muted-foreground rounded-full px-2.5 py-1 hover:bg-gray-200 transition-colors"
+            >
+              <Users className="w-3 h-3" />
+              {campeonatosVinculados.length > 0
+                ? `${campeonatosVinculados.length} Campeonato${campeonatosVinculados.length > 1 ? "s" : ""}`
+                : "Campeonatos"
+              }
+              <ChevronRight className="w-3 h-3" />
+            </button>
             <p className="text-sm text-muted-foreground">
               {totalParticipantes.toLocaleString("pt-BR")} participantes
             </p>
@@ -1420,6 +1397,61 @@ const BolaoPage = () => {
         open={showRegrasModal}
         onClose={() => setShowRegrasModal(false)}
       />
+
+      {/* Modal Campeonatos Vinculados */}
+      <Dialog open={showCampeonatosModal} onOpenChange={setShowCampeonatosModal}>
+        <DialogContent className="max-w-sm rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-copa-green-500" />
+              Campeonatos
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Este bolão inclui jogos dos seguintes campeonatos:
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 mt-2">
+            {campeonatosVinculados.length > 0 ? (
+              campeonatosVinculados.map((camp) => (
+                <div key={camp.id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-muted/50">
+                  {camp.logo_url ? (
+                    <img src={camp.logo_url} alt="" className="w-7 h-7 object-contain flex-shrink-0"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                  ) : (
+                    <div className="w-7 h-7 bg-copa-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Trophy className="w-3.5 h-3.5 text-copa-green-600" />
+                    </div>
+                  )}
+                  <span className="text-sm font-semibold">{camp.nome_popular}</span>
+                </div>
+              ))
+            ) : bolao?.campeonatos?.nome_popular ? (
+              <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-muted/50">
+                {(bolao.campeonatos as any)?.logo_url && (
+                  <img src={(bolao.campeonatos as any).logo_url} alt="" className="w-7 h-7 object-contain flex-shrink-0" />
+                )}
+                <span className="text-sm font-semibold">{bolao.campeonatos.nome_popular}</span>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-4">Nenhum campeonato vinculado.</p>
+            )}
+          </div>
+          {bolao && bolao.criador_id === user?.id && !bolao.is_nacional && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setShowCampeonatosModal(false);
+                setShowGerenciarCampeonatos(true);
+              }}
+              className="w-full mt-2 rounded-xl text-copa-green-600 border-copa-green-200 hover:bg-copa-green-50"
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              Gerenciar campeonatos
+            </Button>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Modal Gerenciar Campeonatos */}
       {bolao && bolao.criador_id === user?.id && (
