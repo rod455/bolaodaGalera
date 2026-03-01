@@ -78,11 +78,11 @@ export const MODO_REGRAS: Record<string, RegraInfo> = {
   },
   mata_mata: {
     titulo: "Modo Mata a Mata",
-    descricao: "Escolha um time por rodada. Se vencer, você continua. Se perder ou empatar, está fora!",
+    descricao: "Escolha um time por rodada. Se vencer ou empatar, você continua. Se perder, está fora!",
     regras: [
       { texto: "Escolha 1 time por rodada para vencer", pontos: "✅", acerto: true },
-      { texto: "Time venceu → você sobrevive", pontos: "✅", acerto: true },
-      { texto: "Time perdeu ou empatou → eliminado", pontos: "❌", acerto: false },
+      { texto: "Time venceu ou empatou → você sobrevive", pontos: "✅", acerto: true },
+      { texto: "Time perdeu → eliminado", pontos: "❌", acerto: false },
       { texto: "Não pode repetir time já escolhido", pontos: "🔒", acerto: false },
       { texto: "Último sobrevivente marca pontos (20 − rodadas)", pontos: "🏆", acerto: true },
     ],
