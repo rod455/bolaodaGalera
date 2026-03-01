@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import AdRewardModal from "@/components/AdRewardModal";
+import AdLoadingOverlay from "@/components/AdLoadingOverlay";
 import { useRewardedAd } from "@/hooks/useRewardedAd";
 import type { Jogo, Palpite } from "@/lib/types";
 import { FASE_ORDER } from "@/lib/constants";
@@ -53,7 +54,7 @@ const Palpites = () => {
   const [activeTab, setActiveTab] = useState<string>("Todos");
   const [timeFavorito, setTimeFavorito] = useState<string | null>(null);
   const [isFanatico, setIsFanatico] = useState(false);
-  const { showAd, resolveWebAd, needsAd } = useRewardedAd();
+  const { showAd, adLoading, resolveWebAd, needsAd } = useRewardedAd();
   const { darXP } = useGamification();
   const [xpToast, setXPToast] = useState<{xp: number, msg: string} | null>(null);
   const [showAdModal, setShowAdModal] = useState(false);
@@ -429,6 +430,7 @@ const Palpites = () => {
     <div className="space-y-5 animate-fade-in">
       <SEOHead title="Meus Palpites" noindex />
       <AdRewardModal open={showAdModal} onComplete={resolveWebAd} message="Assista para salvar seu palpite" />
+      {adLoading && <AdLoadingOverlay />}
       {xpToast && <XPToast xp={xpToast.xp} message={xpToast.msg} onDone={() => setXPToast(null)} />}
 
       {/* ═══ Dialog: Copiar palpite para outros bolões ═══ */}
