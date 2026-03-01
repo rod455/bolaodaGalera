@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft, Trophy, Users, ChevronRight, Medal, Loader2, Clock,
-  CheckCircle2, AlertCircle, Lock, Share2, Copy, LogOut, Trash2, Eye, ChevronDown, ChevronUp, Info, Pencil, Camera,
+  CheckCircle2, AlertCircle, Lock, Share2, Copy, LogOut, Trash2, Eye, ChevronDown, ChevronUp, Info, Pencil, Camera, Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,7 @@ import { useGamification } from "@/hooks/useGamification";
 import NivelBadge from "@/components/NivelBadge";
 import XPToast from "@/components/XPToast";
 import { trackEvent } from "@/lib/analytics";
+import GerenciarCampeonatos from "@/components/GerenciarCampeonatos";
 
 function getStatusInfo(jogo: Jogo, palpite: Palpite | null, now: Date) {
   const jogoDate = new Date(jogo.data_hora);
@@ -127,6 +128,8 @@ const BolaoPage = () => {
   const [isDraggingCapa, setIsDraggingCapa] = useState(false);
   const [dragStartY, setDragStartY] = useState(0);
   const [dragStartPos, setDragStartPos] = useState(50);
+  const [showGerenciarCampeonatos, setShowGerenciarCampeonatos] = useState(false);
+  const [campeonatosVinculados, setCampeonatosVinculados] = useState<{id: string; nome_popular: string; logo_url: string}[]>([]);
 
   const handleCapaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -244,6 +247,17 @@ const BolaoPage = () => {
       const campIds = bcData && bcData.length > 0
         ? bcData.map((bc: any) => bc.campeonato_id)
         : bolaoData.campeonato_id ? [bolaoData.campeonato_id] : [];
+
+      // Carregar nomes dos campeonatos vinculados (para exibir badges)
+      if (campIds.length > 0) {
+        const { data: campsInfo } = await supabase
+          .from("campeonatos")
+          .select("id, nome_popular, logo_url")
+          .in("id", campIds);
+        setCampeonatosVinculados((campsInfo || []) as any);
+      } else {
+        setCampeonatosVinculados([]);
+      }
 
       if (campIds.length > 0) {
         const now = new Date();
@@ -748,11 +762,44 @@ const BolaoPage = () => {
               {MODO_LABELS[bolao.modo_pontuacao] || bolao.modo_pontuacao}
               <Info className="w-3 h-3" />
             </button>
-            {bolao.campeonatos?.nome_popular && (
-              <span className="text-[10px] font-semibold bg-muted text-muted-foreground rounded-full px-2 py-0.5">
-                {bolao.campeonatos.nome_popular}
-              </span>
-            )}
+            {/* Badges dos campeonatos vinculados */}
+            {campeonatosVinculados.length > 0 ? (
+              <div className="flex items-center gap-1 flex-wrap">
+                {campeonatosVinculados.map((camp) => (
+                  <span key={camp.id} className="flex items-center gap-1 text-[10px] font-semibold bg-muted text-muted-foreground rounded-full px-2 py-0.5">
+                    {camp.logo_url && (
+                      <img src={camp.logo_url} alt="" className="w-3 h-3 object-contain"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                    )}
+                    {camp.nome_popular}
+                  </span>
+                ))}
+                {bolao.criador_id === user?.id && !bolao.is_nacional && (
+                  <button
+                    onClick={() => setShowGerenciarCampeonatos(true)}
+                    className="w-5 h-5 rounded-full bg-copa-green-100 hover:bg-copa-green-200 flex items-center justify-center transition-colors"
+                    title="Adicionar campeonato"
+                  >
+                    <Plus className="w-3 h-3 text-copa-green-600" />
+                  </button>
+                )}
+              </div>
+            ) : bolao.campeonatos?.nome_popular ? (
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] font-semibold bg-muted text-muted-foreground rounded-full px-2 py-0.5">
+                  {bolao.campeonatos.nome_popular}
+                </span>
+                {bolao.criador_id === user?.id && !bolao.is_nacional && (
+                  <button
+                    onClick={() => setShowGerenciarCampeonatos(true)}
+                    className="w-5 h-5 rounded-full bg-copa-green-100 hover:bg-copa-green-200 flex items-center justify-center transition-colors"
+                    title="Adicionar campeonato"
+                  >
+                    <Plus className="w-3 h-3 text-copa-green-600" />
+                  </button>
+                )}
+              </div>
+            ) : null}
             <p className="text-sm text-muted-foreground">
               {totalParticipantes.toLocaleString("pt-BR")} participantes
             </p>
@@ -1373,6 +1420,16 @@ const BolaoPage = () => {
         open={showRegrasModal}
         onClose={() => setShowRegrasModal(false)}
       />
+
+      {/* Modal Gerenciar Campeonatos */}
+      {bolao && bolao.criador_id === user?.id && (
+        <GerenciarCampeonatos
+          bolaoId={bolao.id}
+          isOpen={showGerenciarCampeonatos}
+          onClose={() => setShowGerenciarCampeonatos(false)}
+          onUpdated={() => loadBolao()}
+        />
+      )}
     </div>
   );
 };
