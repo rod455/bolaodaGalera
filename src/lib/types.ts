@@ -69,3 +69,37 @@ export interface ModoConfig {
   subtitulo: string;
   plano: string;
 }
+
+// ── Mata a Mata ──
+
+export interface MataMataCiclo {
+  id: string;
+  bolao_id: string;
+  ciclo_numero: number;
+  rodada_atual: number;
+  status: "ativo" | "finalizado";
+  pontos_iniciais: number;
+  vencedor_id: string | null;
+  pontos_vencedor: number | null;
+  created_at: string;
+  finalizado_em: string | null;
+}
+
+export interface MataMataParticipante {
+  id: string;
+  ciclo_id: string;
+  user_id: string;
+  status: "vivo" | "eliminado" | "vencedor";
+  eliminado_na_rodada: number | null;
+  pontos_ganhos: number;
+}
+
+export interface MataMataEscolha {
+  id: string;
+  ciclo_id: string;
+  user_id: string;
+  rodada: number;
+  time_escolhido: string;
+  jogo_id: string;
+  resultado: "vitoria" | "derrota" | "empate" | null;
+}

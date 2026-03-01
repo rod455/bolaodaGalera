@@ -10,6 +10,7 @@ export const MODO_LABELS: Record<string, string> = {
   vencedor_ou_nada: "Vencedor ou Nada",
   profissional: "Profissional",
   fanatico: "Torcedor Fanático",
+  mata_mata: "Mata a Mata",
 };
 
 // ── Regras detalhadas de cada modo (versão unificada) ──
@@ -75,6 +76,17 @@ export const MODO_REGRAS: Record<string, RegraInfo> = {
       { texto: "Gols do perdedor", pontos: "2 pts", acerto: true },
     ],
   },
+  mata_mata: {
+    titulo: "Modo Mata a Mata",
+    descricao: "Escolha um time por rodada. Se vencer, você continua. Se perder ou empatar, está fora!",
+    regras: [
+      { texto: "Escolha 1 time por rodada para vencer", pontos: "✅", acerto: true },
+      { texto: "Time venceu → você sobrevive", pontos: "✅", acerto: true },
+      { texto: "Time perdeu ou empatou → eliminado", pontos: "❌", acerto: false },
+      { texto: "Não pode repetir time já escolhido", pontos: "🔒", acerto: false },
+      { texto: "Último sobrevivente marca pontos (20 − rodadas)", pontos: "🏆", acerto: true },
+    ],
+  },
 };
 
 // ── Configuração dos modos para CriarBolao (com plano requerido) ──
@@ -85,6 +97,7 @@ export const MODOS_PONTUACAO: ModoConfig[] = [
   { id: "vencedor_ou_nada", nome: "Vencedor ou Nada", subtitulo: "Acerte o vencedor", plano: "premium" },
   { id: "profissional", nome: "Profissional", subtitulo: "Avançado", plano: "premium_pro" },
   { id: "fanatico", nome: "Torcedor Fanático", subtitulo: "Só jogos do seu time", plano: "premium_pro" },
+  { id: "mata_mata", nome: "Mata a Mata", subtitulo: "Último sobrevivente pontua", plano: "free" },
 ];
 
 // ── Tradução de fases (football-data.org → PT-BR) ──
