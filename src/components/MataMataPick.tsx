@@ -147,7 +147,7 @@ const MataMataPick = ({
           <div>
             <p className="text-xs font-semibold text-amber-700">Atenção:</p>
             <p className="text-xs text-amber-600">
-              Toque no time que vai <strong>vencer</strong>. Se ele perder ou empatar, você será eliminado.
+              Toque no time que vai <strong>vencer</strong>. Se ele perder, você será eliminado. Empate mantém você no jogo!
               Times já usados ficam bloqueados.
             </p>
           </div>

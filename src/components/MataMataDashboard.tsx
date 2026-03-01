@@ -372,9 +372,9 @@ const MataMataDashboard = ({ bolaoId, campeonatoId }: Props) => {
               <div
                 key={escolha.rodada}
                 className={`flex items-center justify-between px-3 py-2 rounded-xl ${
-                  escolha.resultado === "vitoria"
+                  escolha.resultado === "vitoria" || escolha.resultado === "empate"
                     ? "bg-copa-green-50 border border-copa-green-200"
-                    : escolha.resultado === "derrota" || escolha.resultado === "empate"
+                    : escolha.resultado === "derrota"
                     ? "bg-red-50 border border-red-200"
                     : "bg-muted/50 border border-gray-200"
                 }`}
@@ -385,21 +385,19 @@ const MataMataDashboard = ({ bolaoId, campeonatoId }: Props) => {
                 </div>
                 <span
                   className={`text-xs font-bold rounded-full px-2 py-0.5 ${
-                    escolha.resultado === "vitoria"
+                    escolha.resultado === "vitoria" || escolha.resultado === "empate"
                       ? "bg-copa-green-100 text-copa-green-700"
                       : escolha.resultado === "derrota"
                       ? "bg-red-100 text-red-700"
-                      : escolha.resultado === "empate"
-                      ? "bg-orange-100 text-orange-700"
                       : "bg-gray-100 text-gray-500"
                   }`}
                 >
                   {escolha.resultado === "vitoria"
                     ? "✅ Vitória"
+                    : escolha.resultado === "empate"
+                    ? "🤝 Empate — Sobreviveu"
                     : escolha.resultado === "derrota"
                     ? "❌ Derrota"
-                    : escolha.resultado === "empate"
-                    ? "⚠️ Empate"
                     : "⏳ Pendente"}
                 </span>
               </div>
@@ -492,8 +490,8 @@ const MataMataDashboard = ({ bolaoId, campeonatoId }: Props) => {
         <CardContent className="space-y-2">
           {[
             "Cada rodada, escolha 1 time para apostar na vitória",
-            "Se o time vencer, você sobrevive",
-            "Se perder ou empatar, você é eliminado",
+            "Se o time vencer ou empatar, você sobrevive",
+            "Se o time perder, você é eliminado",
             "Não pode repetir time já escolhido",
             `Último sobrevivente marca ${pontosEmJogo} pontos`,
             "Depois, recomeça uma nova temporada",
