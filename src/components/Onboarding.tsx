@@ -113,6 +113,7 @@ const ModesStep = ({ onNext, onBack, onSkip }: { onNext: () => void; onBack: () 
     { id: "vencedor_ou_nada", name: "Vencedor ou Nada", emoji: "🏅", tag: "Premium", tagColor: "bg-copa-gold-100 text-copa-gold-700", free: false },
     { id: "profissional", name: "Profissional", emoji: "🏟️", tag: "PRO", tagColor: "bg-copa-green-600 text-white", free: false },
     { id: "fanatico", name: "Torcedor Fanático", emoji: "🔥", tag: "PRO", tagColor: "bg-copa-green-600 text-white", free: false },
+    { id: "mata_mata", name: "Mata a Mata", emoji: "💀", tag: "Grátis", tagColor: "bg-copa-green-100 text-copa-green-700", free: true },
   ];
 
   const highlightId = tutorialStep <= 1 ? "casual" : tutorialStep <= 3 ? "fanatico" : null;
@@ -346,6 +347,7 @@ const CreateBolaoStep = ({
     { id: "vencedor_ou_nada", name: "Vencedor ou Nada", emoji: "🏅", tag: "Premium", tagColor: "bg-copa-gold-100 text-copa-gold-700", plano: "premium" },
     { id: "profissional", name: "Profissional", emoji: "🏟️", tag: "PRO", tagColor: "bg-copa-green-600 text-white", plano: "premium_pro" },
     { id: "fanatico", name: "Torcedor Fanático", emoji: "🔥", tag: "PRO", tagColor: "bg-copa-green-600 text-white", plano: "premium_pro" },
+    { id: "mata_mata", name: "Mata a Mata", emoji: "💀", tag: "Grátis", tagColor: "bg-copa-green-100 text-copa-green-700", plano: "free" },
   ];
 
   const canUseMode = (plano: string) => {
@@ -376,7 +378,9 @@ const CreateBolaoStep = ({
     setCreating(true);
     try {
       const codigo = Math.random().toString(36).substring(2, 8).toUpperCase();
-      const regrasAtivas = MODO_REGRAS[selectedMode]?.regras.filter((r) => r.acerto).map((r) => r.texto) || [];
+      const regrasAtivas = selectedMode === "mata_mata"
+        ? ["mata_mata"]
+        : MODO_REGRAS[selectedMode]?.regras.filter((r) => r.acerto).map((r) => r.texto) || [];
 
       const { data: newBolao, error } = await supabase.from("boloes").insert({
         nome: bolaoName,
