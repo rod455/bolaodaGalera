@@ -27,6 +27,7 @@ import { useGamification } from "@/hooks/useGamification";
 import NivelBadge from "@/components/NivelBadge";
 import XPToast from "@/components/XPToast";
 import { trackEvent } from "@/lib/analytics";
+import MataMataDashboard from "@/components/MataMataDashboard";
 import GerenciarCampeonatos from "@/components/GerenciarCampeonatos";
 
 function getStatusInfo(jogo: Jogo, palpite: Palpite | null, now: Date) {
@@ -1049,7 +1050,10 @@ const BolaoPage = () => {
         />
       )}
 
-      {/* ═══ 2. PALPITES - Próximos jogos clicáveis ═══ */}
+      {/* ═══ 2. PALPITES ou MATA A MATA ═══ */}
+      {bolao?.modo_pontuacao === "mata_mata" ? (
+        <MataMataDashboard bolaoId={id!} campeonatoId={bolao.campeonato_id} />
+      ) : (
       <Card className="rounded-2xl shadow-sm border-copa-gold-200 bg-copa-gold-50">
         <CardContent className="p-5">
           <div className="mb-3">
@@ -1225,6 +1229,7 @@ const BolaoPage = () => {
           )}
         </CardContent>
       </Card>
+      )}
 
       {/* ═══ 4. ÚLTIMOS RESULTADOS ═══ */}
       {jogosEncerrados.length > 0 && (

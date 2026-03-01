@@ -182,12 +182,14 @@ const CriarBolao = () => {
   };
 
   const isFanatico = modoSelecionado === "fanatico";
+  const isMataMata = modoSelecionado === "mata_mata";
 
   const handleCriar = async () => {
     if (campeonatosSelecionados.length === 0) { toast.error("Selecione pelo menos um campeonato"); return; }
     if (!nome) { toast.error("Informe o nome do bolão"); return; }
     if (!modoSelecionado) { toast.error("Selecione o modo de pontuação"); return; }
-    if (regrasAtivas.length === 0) { toast.error("Selecione pelo menos uma regra de pontuação"); return; }
+    if (!isMataMata && regrasAtivas.length === 0) { toast.error("Selecione pelo menos uma regra de pontuação"); return; }
+    if (isMataMata && campeonatosSelecionados.length > 1) { toast.error("Mata a Mata permite apenas 1 campeonato"); return; }
     if (isFanatico && !timeFavorito) { toast.error("Escolha seu time do coração"); return; }
     if (!user) { toast.error("Você precisa estar logado"); return; }
 
@@ -230,7 +232,7 @@ const CriarBolao = () => {
       const { data: newBolao, error } = await supabase.from("boloes").insert({
         nome, descricao: descricao || null, imagem_url: imagemUrl,
         codigo_convite: codigo, criador_id: user.id, campeonato_id: campeonatosSelecionados[0],
-        modo_pontuacao: modoSelecionado, regras_ativas: regrasAtivas,
+        modo_pontuacao: modoSelecionado, regras_ativas: isMataMata ? ["mata_mata"] : regrasAtivas,
         is_publico: false, is_nacional: false,
         ...(isFanatico ? { time_favorito: timeFavorito } : {}),
       }).select("id").single();
@@ -377,11 +379,16 @@ const CriarBolao = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {selected && (
+                  {selected && modoSelecionado !== "mata_mata" && (
                     <button onClick={(e) => { e.stopPropagation(); setRegrasModalOpen(true); }}
                       className="text-[10px] font-bold text-copa-green-600 bg-copa-green-100 hover:bg-copa-green-200 rounded-full px-2 py-0.5 transition-colors">
                       {regrasAtivas.length}/{totalRegrasPositivas} regras
                     </button>
+                  )}
+                  {selected && modoSelecionado === "mata_mata" && (
+                    <span className="text-[10px] font-bold text-copa-green-600 bg-copa-green-100 rounded-full px-2 py-0.5">
+                      Regras fixas
+                    </span>
                   )}
                   <button onClick={(e) => { e.stopPropagation(); setInfoModal(MODO_REGRAS[modo.id]); }}
                     className="w-6 h-6 rounded-full bg-copa-green-100 hover:bg-copa-green-200 flex items-center justify-center transition-colors" title="Ver regras">
