@@ -395,9 +395,19 @@ const Home = () => {
       const proxPromises = ((nac as any[]) || []).map(async (bolao) => {
         if (!bolao.campeonato_id) return [bolao.id, null] as [string, ProximoJogo | null];
         const isFanatico = bolao.modo_pontuacao === "fanatico" && bolao.time_favorito;
+
+        // Buscar todos os campeonatos vinculados (multi-campeonato)
+        const { data: bcData } = await supabase
+          .from("bolao_campeonatos")
+          .select("campeonato_id")
+          .eq("bolao_id", bolao.id);
+        const campIds = bcData && bcData.length > 0
+          ? bcData.map((bc: any) => bc.campeonato_id)
+          : [bolao.campeonato_id];
+
         let query = supabase.from("jogos")
           .select("time_a, time_b, logo_time_a, logo_time_b, data_hora, fase, rodada")
-          .eq("campeonato_id", bolao.campeonato_id).eq("status", "agendado")
+          .in("campeonato_id", campIds).eq("status", "agendado")
           .gte("data_hora", new Date().toISOString())
           .order("data_hora", { ascending: true }).limit(1);
         if (isFanatico) {
