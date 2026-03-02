@@ -394,11 +394,16 @@ const Home = () => {
       // Próximos jogos — em paralelo
       const proxPromises = ((nac as any[]) || []).map(async (bolao) => {
         if (!bolao.campeonato_id) return [bolao.id, null] as [string, ProximoJogo | null];
-        const { data: jogos } = await supabase.from("jogos")
+        const isFanatico = bolao.modo_pontuacao === "fanatico" && bolao.time_favorito;
+        let query = supabase.from("jogos")
           .select("time_a, time_b, logo_time_a, logo_time_b, data_hora, fase, rodada")
           .eq("campeonato_id", bolao.campeonato_id).eq("status", "agendado")
           .gte("data_hora", new Date().toISOString())
           .order("data_hora", { ascending: true }).limit(1);
+        if (isFanatico) {
+          query = query.or(`time_a.eq.${bolao.time_favorito},time_b.eq.${bolao.time_favorito}`);
+        }
+        const { data: jogos } = await query;
         return [bolao.id, jogos && jogos.length > 0 ? (jogos[0] as any) : null] as [string, ProximoJogo | null];
       });
       const proxResults = await Promise.all(proxPromises);
