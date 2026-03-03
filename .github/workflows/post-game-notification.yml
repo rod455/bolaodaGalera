@@ -1,0 +1,32 @@
+name: Post-Game Notification
+
+on:
+  schedule:
+    # A cada 30min — verifica jogos recém-encerrados e notifica
+    - cron: '5,35 * * * *'
+  workflow_dispatch:
+
+jobs:
+  post-game-notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Disparar notificações pós-jogo
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            "${SUPABASE_URL}/functions/v1/post-game-notification" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_KEY}" \
+            -H "Content-Type: application/json")
+          
+          http_code=$(echo "$response" | tail -1)
+          body=$(echo "$response" | sed '$d')
+          
+          echo "⚽ Post-Game Notification - Status: $http_code"
+          echo "Response: $body"
+          
+          if [ "$http_code" -ge 400 ]; then
+            echo "::error::Falha nas notificações pós-jogo (HTTP $http_code)"
+            exit 1
+          fi

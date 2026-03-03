@@ -1,0 +1,32 @@
+name: Email Resumo Semanal
+
+on:
+  schedule:
+    # Toda segunda-feira às 10h BRT (13h UTC)
+    - cron: '0 13 * * 1'
+  workflow_dispatch:
+
+jobs:
+  send-weekly-recap:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Disparar email resumo semanal
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            "${SUPABASE_URL}/functions/v1/email-resumo-semanal" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_KEY}" \
+            -H "Content-Type: application/json")
+          
+          http_code=$(echo "$response" | tail -1)
+          body=$(echo "$response" | sed '$d')
+          
+          echo "📊 Email Resumo Semanal - Status: $http_code"
+          echo "Response: $body"
+          
+          if [ "$http_code" -ge 400 ]; then
+            echo "::error::Falha no email resumo semanal (HTTP $http_code)"
+            exit 1
+          fi
