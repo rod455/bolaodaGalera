@@ -19,6 +19,7 @@ import AdRewardModal from "@/components/AdRewardModal";
 import { useRewardedAd } from "@/hooks/useRewardedAd";
 import { useUserPlan } from "@/hooks/useUserPlan";
 import DynamicBanner from "@/components/DynamicBanner";
+import type { UserBannerContext } from "@/components/DynamicBanner";
 import GuestHeroCarousel from "@/components/GuestHeroCarousel";
 import PromoCardBorder from "@/components/PromoCardBorder";
 import type { Bolao } from "@/lib/types";
@@ -288,6 +289,7 @@ const Home = () => {
   const [regrasModal, setRegrasModal] = useState<string | null>(null);
   const [userEstado, setUserEstado] = useState<string | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [userBannerCtx, setUserBannerCtx] = useState<UserBannerContext | undefined>(undefined);
 
   useEffect(() => { loadData(); }, [user]);
 
@@ -353,6 +355,35 @@ const Home = () => {
         setPrivados(sorted);
         setUserPosicoes(posicoes);
         setUserBolaoIds(participandoIds);
+
+        // ═══ Contexto para segmentação de banners ═══
+        const diasCadastro = user.created_at
+          ? Math.floor((Date.now() - new Date(user.created_at).getTime()) / (1000 * 60 * 60 * 24))
+          : 0;
+        let maxParticipantes = 0;
+        let temSolitario = false;
+        if (privList.length > 0) {
+          const privIds = privList.map(b => b.id);
+          const { data: countData } = await supabase
+            .from("bolao_participantes")
+            .select("bolao_id")
+            .in("bolao_id", privIds);
+          if (countData) {
+            const counts: Record<string, number> = {};
+            countData.forEach((p: any) => {
+              counts[p.bolao_id] = (counts[p.bolao_id] || 0) + 1;
+            });
+            maxParticipantes = Math.max(...Object.values(counts), 0);
+            const meusBoloesIds = privList.filter(b => b.criador_id === user.id).map(b => b.id);
+            temSolitario = meusBoloesIds.some(id => (counts[id] || 0) <= 1);
+          }
+        }
+        setUserBannerCtx({
+          diasDesdeCadastro: diasCadastro,
+          temBolaoPrivado: privList.length > 0,
+          qtdParticipantesMax: maxParticipantes,
+          temBolaoSolitario: temSolitario,
+        });
 
         // ═══ ONBOARDING: mostrar para novos usuários sem bolões ═══
         if (participandoIds.size === 0 && !isOnboardingDone()) {
@@ -558,7 +589,7 @@ const Home = () => {
 
       {/* ═══ BANNERS DINÂMICOS — carrossel (só logados) ═══ */}
       {user && (
-        <DynamicBanner userBolaoIds={userBolaoIds} />
+        <DynamicBanner userBolaoIds={userBolaoIds} userContext={userBannerCtx} />
       )}
 
       {/* ═══ GUEST: Countdown + Hero Carrossel ═══ */}
