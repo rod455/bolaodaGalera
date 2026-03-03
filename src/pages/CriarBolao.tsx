@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Upload, Lock, Info, Check, Trophy, Loader2, X, ChevronDown, Heart, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,6 +65,7 @@ const categorizeCampeonato = (camp: Campeonato): string => {
 
 const CriarBolao = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const [nome, setNome] = useState("");
   const [descricao, setDescricao] = useState("");
@@ -78,7 +79,7 @@ const CriarBolao = () => {
   const [infoModal, setInfoModal] = useState<RegraInfo | null>(null);
   const [regrasAtivas, setRegrasAtivas] = useState<string[]>([]);
   const [regrasModalOpen, setRegrasModalOpen] = useState(false);
-  const [categoriaAberta, setCategoriaAberta] = useState<string | null>("estaduais");
+  const [categoriaAberta, setCategoriaAberta] = useState<string | null>(null);
 
   // Fanático - time do coração
   const [timeFavorito, setTimeFavorito] = useState("");
@@ -99,6 +100,29 @@ const CriarBolao = () => {
   const [adCallback, setAdCallback] = useState<(() => void) | null>(null);
 
   useEffect(() => { loadCampeonatos(); }, []);
+
+  // Pre-selecionar modo e campeonato via query params (?modo=mata_mata&campeonato=finais-estaduais)
+  useEffect(() => {
+    if (loadingCampeonatos || campeonatos.length === 0) return;
+
+    const modoParam = searchParams.get("modo");
+    if (modoParam && !modoSelecionado) {
+      setModoSelecionado(modoParam);
+    }
+
+    const campParam = searchParams.get("campeonato");
+    if (campParam && campeonatosSelecionados.length === 0) {
+      const busca = campParam.replace(/-/g, " ").toLowerCase();
+      const match = campeonatos.find(
+        (c) => (c.nome_popular || c.nome || "").toLowerCase().includes(busca)
+      );
+      if (match) {
+        setCampeonatosSelecionados([match.id]);
+        const catId = categorizeCampeonato(match);
+        setCategoriaAberta(catId);
+      }
+    }
+  }, [loadingCampeonatos, campeonatos, searchParams]);
 
   useEffect(() => {
     if (modoSelecionado && MODO_REGRAS[modoSelecionado]) {
@@ -552,14 +576,7 @@ const CriarBolao = () => {
                               </div>
                             )}
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-1.5">
-                                <span className="text-sm font-medium block truncate">{camp.nome_popular || camp.nome}</span>
-                                {(camp.nome_popular || camp.nome || "").toLowerCase().includes("finais estaduais") && (
-                                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-600 animate-pulse flex-shrink-0">
-                                    🔥 NOVO
-                                  </span>
-                                )}
-                              </div>
+                              <span className="text-sm font-medium block truncate">{camp.nome_popular || camp.nome}</span>
                               <span className="text-[10px] text-muted-foreground">Temporada {camp.temporada}</span>
                             </div>
                           </div>
