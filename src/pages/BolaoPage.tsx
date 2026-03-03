@@ -92,6 +92,56 @@ function getStatusInfo(jogo: Jogo, palpite: Palpite | null, now: Date) {
   };
 }
 
+// ── Mensagem contextual do ranking (motivacional) ──
+function getRankingMessage(ranking: RankingEntry[], userId: string | undefined): { emoji: string; text: string; color: string } | null {
+  if (!userId || ranking.length === 0) return null;
+  const me = ranking.find((r) => r.isCurrentUser);
+  if (!me) return null;
+
+  const total = ranking.length;
+  const pos = me.pos;
+  const pontos = me.pontos;
+
+  // Sem pontos ainda
+  if (pontos === 0) {
+    return { emoji: "🎯", text: "Faça seus palpites para entrar no ranking!", color: "text-amber-600 bg-amber-50 border-amber-200" };
+  }
+
+  // 1º lugar
+  if (pos === 1) {
+    if (total === 1) return { emoji: "👑", text: "Você é o único! Convide amigos para competir.", color: "text-copa-gold-600 bg-copa-gold-50 border-copa-gold-200" };
+    const segundo = ranking.find((r) => r.pos === 2);
+    const diff = segundo ? pontos - segundo.pontos : 0;
+    if (diff === 0) return { emoji: "⚔️", text: "Empatado na liderança! Cada ponto conta.", color: "text-copa-green-600 bg-copa-green-50 border-copa-green-200" };
+    if (diff <= 3) return { emoji: "👑", text: `Liderando por apenas ${diff} ponto${diff > 1 ? "s" : ""}! Mantenha o foco.`, color: "text-copa-gold-600 bg-copa-gold-50 border-copa-gold-200" };
+    return { emoji: "🏆", text: `Liderando com ${diff} pontos de vantagem! Dominando o bolão.`, color: "text-copa-gold-600 bg-copa-gold-50 border-copa-gold-200" };
+  }
+
+  // Pódio (2º ou 3º)
+  if (pos <= 3) {
+    const lider = ranking.find((r) => r.pos === 1);
+    const diff = lider ? lider.pontos - pontos : 0;
+    if (diff === 0) return { emoji: "🔥", text: `${pos}º lugar empatado com o líder! Tudo aberto.`, color: "text-copa-green-600 bg-copa-green-50 border-copa-green-200" };
+    if (diff <= 5) return { emoji: "🔥", text: `${pos}º lugar — a ${diff} ponto${diff > 1 ? "s" : ""} do líder. Dá pra virar!`, color: "text-copa-green-600 bg-copa-green-50 border-copa-green-200" };
+    return { emoji: "💪", text: `No pódio! ${pos}º lugar com ${pontos} pontos.`, color: "text-copa-green-600 bg-copa-green-50 border-copa-green-200" };
+  }
+
+  // Top metade
+  if (pos <= Math.ceil(total / 2)) {
+    const acima = ranking.find((r) => r.pos === pos - 1);
+    const diff = acima ? acima.pontos - pontos : 0;
+    if (diff <= 2) return { emoji: "📈", text: `${pos}º lugar — a ${diff} ponto${diff > 1 ? "s" : ""} de subir! Continue palpitando.`, color: "text-blue-600 bg-blue-50 border-blue-200" };
+    const percentBetter = Math.round(((total - pos) / total) * 100);
+    return { emoji: "📊", text: `${pos}º de ${total} — melhor que ${percentBetter}% dos participantes!`, color: "text-blue-600 bg-blue-50 border-blue-200" };
+  }
+
+  // Metade inferior
+  const acima = ranking.find((r) => r.pos === pos - 1);
+  const diff = acima ? acima.pontos - pontos : 0;
+  if (diff <= 3) return { emoji: "⬆️", text: `${pos}º lugar — só ${diff} ponto${diff > 1 ? "s" : ""} para subir. Não desista!`, color: "text-amber-600 bg-amber-50 border-amber-200" };
+  return { emoji: "💡", text: `${pos}º de ${total} — ainda dá tempo de recuperar! Palpite todo jogo.`, color: "text-amber-600 bg-amber-50 border-amber-200" };
+}
+
 const BolaoPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -1010,6 +1060,17 @@ const BolaoPage = () => {
               </div>
             ))
           )}
+          {/* ═══ Mensagem motivacional contextual ═══ */}
+          {ranking.length > 0 && (() => {
+            const msg = getRankingMessage(ranking, user?.id);
+            if (!msg) return null;
+            return (
+              <div className={`flex items-center gap-2.5 rounded-xl px-4 py-2.5 border text-[13px] font-medium mt-1 ${msg.color}`}>
+                <span className="text-base flex-shrink-0">{msg.emoji}</span>
+                <span>{msg.text}</span>
+              </div>
+            );
+          })()}
           {ranking.length > 0 && bolao.codigo_convite && (
             <button
               onClick={(e) => {
