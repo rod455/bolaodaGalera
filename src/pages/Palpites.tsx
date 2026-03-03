@@ -293,7 +293,14 @@ const Palpites = () => {
             if (orderA !== orderB) return orderA - orderB;
             return a.includes("Ida") && !b.includes("Ida") ? -1 : !a.includes("Ida") && b.includes("Ida") ? 1 : 0;
           });
-          setFases(["Todos", ...sortedTabs]);
+          // Reordenar: fases com jogos futuros primeiro, passadas ao final
+          const fasesComFuturo = sortedTabs.filter((tab) =>
+            uniqueJogos.some((j) => getTabKey(j) === tab && (j.status === "agendado" || j.status === "ao_vivo"))
+          );
+          const fasesSoPassado = sortedTabs.filter((tab) =>
+            !uniqueJogos.some((j) => getTabKey(j) === tab && (j.status === "agendado" || j.status === "ao_vivo"))
+          );
+          setFases(["Todos", ...fasesComFuturo, ...fasesSoPassado]);
           setIsLeague(false); // Tratar como copa para UI de tabs
           if (targetJogoId) {
             const tj = uniqueJogos.find((j) => j.id === targetJogoId);
@@ -303,12 +310,15 @@ const Palpites = () => {
           // Modo liga puro: usar rodadas
           const rodadaSet = new Set<string>();
           uniqueJogos.forEach((j) => { if (j.rodada) rodadaSet.add(j.rodada); });
-          const sorted = Array.from(rodadaSet).sort((a, b) => rodadaNum(a) - rodadaNum(b));
-          setRodadas(sorted);
+          const cronologico = Array.from(rodadaSet).sort((a, b) => rodadaNum(a) - rodadaNum(b));
           const now = new Date();
-          const currentRodada = sorted.find((r) =>
+          const currentRodada = cronologico.find((r) =>
             uniqueJogos.some((j) => j.rodada === r && j.status === "agendado" && new Date(j.data_hora) > now)
           );
+          // Reordenar: rodada atual primeiro, futuras em seguida, passadas ao final
+          const currentIdx = currentRodada ? cronologico.indexOf(currentRodada) : cronologico.length;
+          const sorted = [...cronologico.slice(currentIdx), ...cronologico.slice(0, currentIdx)];
+          setRodadas(sorted);
           if (targetJogoId) {
             const tj = uniqueJogos.find((j) => j.id === targetJogoId);
             setActiveTab(tj?.rodada || currentRodada || sorted[sorted.length - 1] || "Todos");
@@ -326,7 +336,14 @@ const Palpites = () => {
           if (orderA !== orderB) return orderA - orderB;
           return a.includes("Ida") && !b.includes("Ida") ? -1 : !a.includes("Ida") && b.includes("Ida") ? 1 : 0;
         });
-        setFases(["Todos", ...sortedTabs]);
+        // Reordenar: fases com jogos futuros primeiro, passadas ao final
+        const fasesComFuturo2 = sortedTabs.filter((tab) =>
+          uniqueJogos.some((j) => getTabKey(j) === tab && (j.status === "agendado" || j.status === "ao_vivo"))
+        );
+        const fasesSoPassado2 = sortedTabs.filter((tab) =>
+          !uniqueJogos.some((j) => getTabKey(j) === tab && (j.status === "agendado" || j.status === "ao_vivo"))
+        );
+        setFases(["Todos", ...fasesComFuturo2, ...fasesSoPassado2]);
         if (targetJogoId) {
           const tj = uniqueJogos.find((j) => j.id === targetJogoId);
           setActiveTab(tj ? getTabKey(tj) : "Todos");
