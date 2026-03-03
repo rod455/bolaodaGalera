@@ -151,6 +151,10 @@ const BolaoPage = () => {
   const [jogos, setJogos] = useState<Jogo[]>([]);
   const [palpites, setPalpites] = useState<Record<string, Palpite>>({});
   const [ranking, setRanking] = useState<RankingEntry[]>([]);
+  const [rankingRodada, setRankingRodada] = useState<RankingEntry[]>([]);
+  const [rankingTab, setRankingTab] = useState<"geral" | "rodada">("geral");
+  const [rodadaAtualLabel, setRodadaAtualLabel] = useState<string>("");
+  const [loadingRodada, setLoadingRodada] = useState(false);
   const [showFullRanking, setShowFullRanking] = useState(false);
   const { darXP } = useGamification();
   const [xpToast, setXPToast] = useState<{xp: number, msg: string} | null>(null);
@@ -443,6 +447,84 @@ const BolaoPage = () => {
       console.error("Erro ao carregar bolão:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ═══ Ranking por rodada (busca sob demanda) ═══
+  const fetchRankingRodada = async () => {
+    if (!id || !user || rankingRodada.length > 0) return;
+    setLoadingRodada(true);
+    try {
+      // 1. Buscar campeonatos do bolão
+      const { data: bcData } = await supabase
+        .from("bolao_campeonatos")
+        .select("campeonato_id")
+        .eq("bolao_id", id);
+      const campIds = (bcData || []).map((bc: any) => bc.campeonato_id);
+      if (campIds.length === 0 && bolao?.campeonato_id) campIds.push(bolao.campeonato_id);
+
+      // 2. Descobrir rodada atual (último jogo encerrado)
+      const { data: ultimoJogo } = await supabase
+        .from("jogos")
+        .select("rodada")
+        .in("campeonato_id", campIds)
+        .eq("status", "encerrado")
+        .order("data_hora", { ascending: false })
+        .limit(1);
+
+      const rodadaAtual = ultimoJogo?.[0]?.rodada;
+      if (!rodadaAtual) { setLoadingRodada(false); return; }
+      setRodadaAtualLabel(rodadaAtual);
+
+      // 3. Buscar jogos desta rodada
+      const { data: jogosRodada } = await supabase
+        .from("jogos")
+        .select("id")
+        .in("campeonato_id", campIds)
+        .eq("rodada", rodadaAtual);
+
+      const jogoIds = (jogosRodada || []).map((j: any) => j.id);
+      if (jogoIds.length === 0) { setLoadingRodada(false); return; }
+
+      // 4. Buscar palpites de todos os participantes nestes jogos
+      const { data: palpitesRodada } = await supabase
+        .from("palpites")
+        .select("user_id, pontos")
+        .eq("bolao_id", id)
+        .in("jogo_id", jogoIds);
+
+      // 5. Somar pontos por user
+      const pontosMap: Record<string, number> = {};
+      (palpitesRodada || []).forEach((p: any) => {
+        pontosMap[p.user_id] = (pontosMap[p.user_id] || 0) + (p.pontos || 0);
+      });
+
+      // 6. Mapear nomes dos participantes do ranking geral
+      const nomeMap: Record<string, { nome: string; avatar: string }> = {};
+      ranking.forEach((r) => {
+        if (r.userId) nomeMap[r.userId] = { nome: r.nome, avatar: r.avatar };
+      });
+
+      // 7. Montar ranking da rodada
+      const rodadaList = Object.entries(pontosMap)
+        .map(([uid, pts]) => ({
+          userId: uid,
+          nome: nomeMap[uid]?.nome || "Usuário",
+          avatar: nomeMap[uid]?.avatar || "??",
+          pontos: pts,
+          isCurrentUser: uid === user.id,
+        }))
+        .sort((a, b) => b.pontos - a.pontos)
+        .map((item, idx) => ({
+          ...item,
+          pos: idx + 1,
+        }));
+
+      setRankingRodada(rodadaList);
+    } catch (err) {
+      console.error("Erro ranking rodada:", err);
+    } finally {
+      setLoadingRodada(false);
     }
   };
 
@@ -1003,22 +1085,63 @@ const BolaoPage = () => {
               <Trophy className="w-4 h-4 text-copa-gold-400" />
               Ranking
             </CardTitle>
-            {ranking.length > 5 && (
+            {(rankingTab === "geral" ? ranking : rankingRodada).length > 5 && (
               <button onClick={() => setShowFullRanking(!showFullRanking)} className="text-sm text-copa-green-500 font-medium hover:underline">
                 {showFullRanking ? "Ver menos" : "Ver ranking completo"}
               </button>
             )}
           </div>
+          {/* ── Tabs: Geral | Esta Rodada ── */}
+          {ranking.length > 0 && (
+            <div className="flex gap-1 mt-2 bg-muted/50 rounded-lg p-0.5">
+              <button
+                onClick={() => { setRankingTab("geral"); setShowFullRanking(false); }}
+                className={`flex-1 text-xs font-bold py-1.5 rounded-md transition-all ${
+                  rankingTab === "geral"
+                    ? "bg-white text-copa-green-700 shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Geral
+              </button>
+              <button
+                onClick={() => {
+                  setRankingTab("rodada");
+                  setShowFullRanking(false);
+                  if (rankingRodada.length === 0) fetchRankingRodada();
+                }}
+                className={`flex-1 text-xs font-bold py-1.5 rounded-md transition-all ${
+                  rankingTab === "rodada"
+                    ? "bg-white text-copa-green-700 shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {rodadaAtualLabel ? `Rodada ${rodadaAtualLabel}` : "Esta Rodada"}
+              </button>
+            </div>
+          )}
         </CardHeader>
         <CardContent className="space-y-2">
-          {ranking.length === 0 ? (
+          {/* ── Conteúdo do ranking (Geral ou Rodada) ── */}
+          {rankingTab === "rodada" && loadingRodada ? (
+            <div className="flex items-center justify-center py-6 gap-2 text-sm text-muted-foreground">
+              <Loader2 className="w-4 h-4 animate-spin" /> Calculando rodada...
+            </div>
+          ) : rankingTab === "rodada" && rankingRodada.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              Nenhum palpite pontuado nesta rodada ainda.
+            </p>
+          ) : (rankingTab === "geral" && ranking.length === 0) ? (
             <p className="text-sm text-muted-foreground text-center py-4">
               Ranking será atualizado após os primeiros jogos.
             </p>
           ) : (
-            (showFullRanking ? ranking : ranking.slice(0, 5)).map((player) => (
+            (showFullRanking
+              ? (rankingTab === "geral" ? ranking : rankingRodada)
+              : (rankingTab === "geral" ? ranking : rankingRodada).slice(0, 5)
+            ).map((player) => (
               <div
-                key={player.pos}
+                key={`${rankingTab}-${player.pos}`}
                 className={`flex items-center justify-between rounded-xl px-4 py-3 ${
                   player.isCurrentUser
                     ? "bg-copa-green-50 border border-copa-green-200"
@@ -1061,8 +1184,9 @@ const BolaoPage = () => {
             ))
           )}
           {/* ═══ Mensagem motivacional contextual ═══ */}
-          {ranking.length > 0 && (() => {
-            const msg = getRankingMessage(ranking, user?.id);
+          {(rankingTab === "geral" ? ranking : rankingRodada).length > 0 && (() => {
+            const activeRanking = rankingTab === "geral" ? ranking : rankingRodada;
+            const msg = getRankingMessage(activeRanking, user?.id);
             if (!msg) return null;
             return (
               <div className={`flex items-center gap-2.5 rounded-xl px-4 py-2.5 border text-[13px] font-medium mt-1 ${msg.color}`}>
