@@ -64,8 +64,10 @@ const DynamicBanner = ({ userBolaoIds }: DynamicBannerProps) => {
   const [isPaused, setIsPaused] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Touch/swipe
+  // Touch/swipe + mouse drag
   const touchStartX = useRef(0);
+  const mouseStartX = useRef(0);
+  const isDragging = useRef(false);
 
   useEffect(() => {
     const fetchBanners = async () => {
@@ -131,7 +133,37 @@ const DynamicBanner = ({ userBolaoIds }: DynamicBannerProps) => {
     setTimeout(() => setIsPaused(false), 3000);
   };
 
+  // Mouse drag handlers (web)
+  const handleMouseDown = (e: React.MouseEvent) => {
+    mouseStartX.current = e.clientX;
+    isDragging.current = false;
+    setIsPaused(true);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (mouseStartX.current === 0) return;
+    if (Math.abs(e.clientX - mouseStartX.current) > 10) {
+      isDragging.current = true;
+    }
+  };
+
+  const handleMouseUp = (e: React.MouseEvent) => {
+    if (mouseStartX.current === 0) return;
+    const diff = mouseStartX.current - e.clientX;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) goNext();
+      else goPrev();
+    }
+    mouseStartX.current = 0;
+    setTimeout(() => setIsPaused(false), 4000);
+  };
+
   const handleClick = async (banner: BannerData) => {
+    // Ignorar click se foi drag
+    if (isDragging.current) {
+      isDragging.current = false;
+      return;
+    }
     // Link direto (sem bolão)
     if (!banner.bolao_id && banner.link) {
       navigate(banner.link);
@@ -192,11 +224,15 @@ const DynamicBanner = ({ userBolaoIds }: DynamicBannerProps) => {
 
   return (
     <div
-      className="relative mb-4"
+      className="relative mb-4" style={{ cursor: banners.length > 1 ? "grab" : undefined }}
       onMouseEnter={() => banners.length > 1 && setIsPaused(true)}
       onMouseLeave={() => banners.length > 1 && setIsPaused(false)}
       onTouchStart={banners.length > 1 ? handleTouchStart : undefined}
       onTouchEnd={banners.length > 1 ? handleTouchEnd : undefined}
+      onMouseDown={banners.length > 1 ? handleMouseDown : undefined}
+      onMouseMove={banners.length > 1 ? handleMouseMove : undefined}
+      onMouseUp={banners.length > 1 ? handleMouseUp : undefined}
+      onMouseLeave={(e) => { if (banners.length > 1) { setIsPaused(false); if (mouseStartX.current) { handleMouseUp(e); } } }}
     >
       <div
         onClick={() => handleClick(banner)}
