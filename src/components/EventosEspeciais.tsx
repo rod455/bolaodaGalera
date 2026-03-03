@@ -248,7 +248,12 @@ const CreateEventoModal = ({ open, onClose, bolaoId, campeonatoId, campeonatos, 
       setJogos(allJogos);
 
       const rodadaSet = new Set<string>();
-      allJogos.forEach((j) => { if (j.rodada) rodadaSet.add(j.rodada); });
+      const now = new Date();
+      allJogos.forEach((j) => {
+        if (j.rodada && (j.status === "agendado" || new Date(j.data_hora) > now)) {
+          rodadaSet.add(j.rodada);
+        }
+      });
       const sorted = Array.from(rodadaSet).sort((a, b) => {
         const na = parseInt(a.replace(/\D/g, "")) || 0;
         const nb = parseInt(b.replace(/\D/g, "")) || 0;
