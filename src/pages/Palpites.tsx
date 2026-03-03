@@ -23,6 +23,7 @@ import SEOHead from "@/components/SEOHead";
 import { useGamification } from "@/hooks/useGamification";
 import XPToast from "@/components/XPToast";
 import { trackEvent } from "@/lib/analytics";
+import FirstPalpiteCelebration from "@/components/FirstPalpiteCelebration";
 
 interface PalpiteDB extends Palpite { id: string; }
 
@@ -58,6 +59,14 @@ const Palpites = () => {
   const { darXP } = useGamification();
   const [xpToast, setXPToast] = useState<{xp: number, msg: string} | null>(null);
   const [showAdModal, setShowAdModal] = useState(false);
+
+  // ═══ Celebração primeiro palpite (onboarding) ═══
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationData, setCelebrationData] = useState<{
+    bolaoCode: string; palpiteResumo: string;
+  } | null>(null);
+  const isFirstTime = searchParams.get("firstTime") === "true";
+  const firstPalpiteDone = useRef(false);
 
   // ═══ Copiar palpite para outros bolões ═══
   const [showCopyDialog, setShowCopyDialog] = useState(false);
@@ -421,6 +430,20 @@ const Palpites = () => {
 
       toast.success("Palpite salvo!");
 
+      // ═══ Celebração do primeiro palpite (onboarding) ═══
+      if (isFirstTime && !firstPalpiteDone.current) {
+        firstPalpiteDone.current = true;
+        const jogoInfo = jogos.find(j => j.id === jogoId);
+        const resumo = jogoInfo ? `${jogoInfo.time_a} ${placarA} x ${placarB} ${jogoInfo.time_b}` : "";
+        const { data: bolaoInfo } = await supabase
+          .from("boloes").select("codigo_convite").eq("id", id).single();
+        setCelebrationData({
+          bolaoCode: bolaoInfo?.codigo_convite || "",
+          palpiteResumo: resumo,
+        });
+        setTimeout(() => setShowCelebration(true), 800);
+      }
+
       // Verificar se há outros bolões para copiar este palpite
       checkOutrosBoloes(jogoId, placarA, placarB);
     } catch (err: any) { console.error("Erro ao salvar:", err); toast.error(err.message || "Erro ao salvar palpite"); }
@@ -447,6 +470,15 @@ const Palpites = () => {
     <div className="space-y-5 animate-fade-in">
       <SEOHead title="Meus Palpites" noindex />
       <AdRewardModal open={showAdModal} onComplete={resolveWebAd} message="Assista para salvar seu palpite" />
+      {/* ═══ Celebração primeiro palpite (onboarding) ═══ */}
+      <FirstPalpiteCelebration
+        open={showCelebration}
+        onClose={() => setShowCelebration(false)}
+        bolaoId={id || ""}
+        bolaoNome={bolaoNome}
+        bolaoCode={celebrationData?.bolaoCode || ""}
+        palpiteResumo={celebrationData?.palpiteResumo}
+      />
       {adLoading && <AdLoadingOverlay />}
       {xpToast && <XPToast xp={xpToast.xp} message={xpToast.msg} onDone={() => setXPToast(null)} />}
 
