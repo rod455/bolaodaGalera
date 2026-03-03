@@ -19,6 +19,8 @@ interface BannerData {
   cor_fundo: string | null;
   cor_texto: string | null;
   mostrar_para: string;
+  imagem_url: string | null;
+  imagem_fundo_url: string | null;
 }
 
 interface DynamicBannerProps {
@@ -69,8 +71,6 @@ const DynamicBanner = ({ userBolaoIds }: DynamicBannerProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const userInteracted = useRef(false);
-
-  // Mouse drag state
   const isMouseDown = useRef(false);
   const dragStartX = useRef(0);
   const dragScrollLeft = useRef(0);
@@ -80,7 +80,7 @@ const DynamicBanner = ({ userBolaoIds }: DynamicBannerProps) => {
       const now = new Date().toISOString();
       const { data } = await supabase
         .from("banners_home")
-        .select("id, titulo, subtitulo, emoji, badge_texto, cta_texto, cta_texto_participando, bolao_id, link, estilo, cor_fundo, cor_texto, mostrar_para")
+        .select("id, titulo, subtitulo, emoji, badge_texto, cta_texto, cta_texto_participando, bolao_id, link, estilo, cor_fundo, cor_texto, mostrar_para, imagem_url, imagem_fundo_url")
         .eq("ativo", true)
         .or(`data_fim.is.null,data_fim.gt.${now}`)
         .lte("data_inicio", now)
@@ -121,7 +121,7 @@ const DynamicBanner = ({ userBolaoIds }: DynamicBannerProps) => {
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [banners.length, scrollToIndex]);
 
-  // Sync indicador com scroll manual
+  // Sync indicador
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -151,7 +151,7 @@ const DynamicBanner = ({ userBolaoIds }: DynamicBannerProps) => {
     return () => { el.removeEventListener("scroll", onScroll); el.removeEventListener("pointerdown", markInteraction); clearTimeout(timeout); };
   }, [banners.length, scrollToIndex]);
 
-  // ── Mouse drag handlers ──
+  // Mouse drag
   const onMouseDown = (e: React.MouseEvent) => {
     const el = scrollRef.current;
     if (!el || banners.length <= 1) return;
@@ -170,9 +170,7 @@ const DynamicBanner = ({ userBolaoIds }: DynamicBannerProps) => {
     if (!el) return;
     const x = e.pageX - el.offsetLeft;
     const delta = x - dragStartX.current;
-    if (Math.abs(delta) > DRAG_THRESHOLD && !clickBlocked) {
-      setClickBlocked(true);
-    }
+    if (Math.abs(delta) > DRAG_THRESHOLD && !clickBlocked) setClickBlocked(true);
     el.scrollLeft = dragScrollLeft.current - delta * 1.5;
   };
 
@@ -182,22 +180,15 @@ const DynamicBanner = ({ userBolaoIds }: DynamicBannerProps) => {
     isMouseDown.current = false;
     el.style.cursor = "grab";
     el.style.scrollSnapType = "x mandatory";
-
     const width = el.offsetWidth;
     let idx = Math.round(el.scrollLeft / width);
-
-    // Loop: se arrastou além do último, volta ao primeiro
     if (idx >= banners.length) idx = 0;
     if (idx < 0) idx = banners.length - 1;
-
     el.scrollTo({ left: idx * width, behavior: "smooth" });
-
-    // Desbloquear clicks com delay (após o click event ter sido ignorado)
     setTimeout(() => setClickBlocked(false), 300);
   };
 
   const handleClick = async (banner: BannerData) => {
-    // Bloquear click se foi drag
     if (clickBlocked) return;
 
     if (!banner.bolao_id && banner.link) {
@@ -209,21 +200,11 @@ const DynamicBanner = ({ userBolaoIds }: DynamicBannerProps) => {
       return;
     }
 
-    if (!user && banner.bolao_id) {
-      navigate("/auth?modo=cadastro");
-      return;
-    }
-
-    if (!banner.bolao_id || !user) {
-      if (!user) navigate("/auth?modo=cadastro");
-      return;
-    }
+    if (!user && banner.bolao_id) { navigate("/auth?modo=cadastro"); return; }
+    if (!banner.bolao_id || !user) { if (!user) navigate("/auth?modo=cadastro"); return; }
 
     const jaParticipa = userBolaoIds.has(banner.bolao_id);
-    if (jaParticipa) {
-      navigate(`/bolao/${banner.bolao_id}`);
-      return;
-    }
+    if (jaParticipa) { navigate(`/bolao/${banner.bolao_id}`); return; }
 
     setJoining(banner.id);
     try {
@@ -246,6 +227,148 @@ const DynamicBanner = ({ userBolaoIds }: DynamicBannerProps) => {
 
   if (loading || banners.length === 0) return null;
 
+  // ── Render: Modo POSTER (imagem completa) ──
+  const renderPoster = (banner: BannerData) => (
+    <div
+      onClick={() => handleClick(banner)}
+      className="relative overflow-hidden rounded-2xl cursor-pointer group"
+      style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}
+    >
+      <img
+        src={banner.imagem_url!}
+        alt={banner.titulo}
+        className="w-full object-cover rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]"
+        style={{ minHeight: "180px", maxHeight: "320px" }}
+        draggable={false}
+      />
+    </div>
+  );
+
+  // ── Render: Modo BACKGROUND (imagem fundo + conteúdo) ──
+  const renderBackground = (banner: BannerData) => {
+    const estiloConfig = ESTILOS[banner.estilo] || ESTILOS.premium;
+    const titleColor = banner.cor_texto || estiloConfig.titleColor;
+
+    return (
+      <div
+        onClick={() => !joining && handleClick(banner)}
+        className={`relative overflow-hidden rounded-2xl cursor-pointer group ${joining === banner.id ? "pointer-events-none opacity-80" : ""}`}
+        style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.5)" }}
+      >
+        {/* Imagem de fundo */}
+        <img
+          src={banner.imagem_fundo_url!}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
+          draggable={false}
+        />
+        {/* Overlay escuro para legibilidade */}
+        <div className="absolute inset-0 bg-black/55" />
+        {/* Gradiente embaixo para CTA */}
+        <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 50%)" }} />
+
+        <div className="relative z-10 flex flex-col items-center text-center px-5 py-6">
+          <div className="text-5xl mb-2 drop-shadow-lg">{banner.emoji}</div>
+          <h2 className="text-3xl sm:text-4xl font-black tracking-tight drop-shadow-lg"
+            style={{ color: titleColor, fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+            {banner.titulo}
+          </h2>
+          {banner.subtitulo && (
+            <p className="text-sm font-semibold mt-1.5 tracking-wide text-white/90 drop-shadow">
+              {banner.subtitulo}
+            </p>
+          )}
+          {banner.badge_texto && (
+            <div className="flex items-center gap-1.5 mt-3 px-3 py-1 rounded-full bg-black/30 backdrop-blur-sm border border-white/20">
+              <span className="text-xs text-white/80">⏳</span>
+              <span className="text-xs font-bold text-white/90">
+                {banner.bolao_id && userBolaoIds.has(banner.bolao_id) ? "Você já está participando!" : banner.badge_texto}
+              </span>
+            </div>
+          )}
+          <button className="mt-4 w-full max-w-xs h-12 flex items-center justify-center gap-2 rounded-xl font-black text-sm uppercase tracking-wider transition-all group-hover:scale-[1.02] group-hover:shadow-lg"
+            style={{ background: "linear-gradient(135deg, #16a34a 0%, #15803d 100%)", color: "white", boxShadow: "0 4px 16px rgba(22,163,74,0.4), inset 0 1px 0 rgba(255,255,255,0.15)", letterSpacing: "0.08em" }}>
+            {joining === banner.id ? (
+              <><Loader2 className="w-4 h-4 animate-spin" /> Entrando...</>
+            ) : (
+              <>
+                {banner.bolao_id && userBolaoIds.has(banner.bolao_id)
+                  ? banner.cta_texto_participando
+                  : banner.cta_texto}
+                <ChevronRight className="w-4 h-4" />
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // ── Render: Modo NORMAL (gradiente) ──
+  const renderNormal = (banner: BannerData) => {
+    const jaParticipa = banner.bolao_id ? userBolaoIds.has(banner.bolao_id) : false;
+    const isJoining = joining === banner.id;
+    const estiloConfig = ESTILOS[banner.estilo] || ESTILOS.premium;
+    const bgStyle = banner.cor_fundo || estiloConfig.bg;
+    const titleColor = banner.cor_texto || estiloConfig.titleColor;
+
+    return (
+      <div
+        onClick={() => !isJoining && handleClick(banner)}
+        className={`relative overflow-hidden rounded-2xl cursor-pointer group ${isJoining ? "pointer-events-none opacity-80" : ""}`}
+        style={{
+          background: bgStyle,
+          border: `1px solid ${estiloConfig.badgeBorder}`,
+          boxShadow: "0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(234,179,8,0.1)",
+        }}
+      >
+        <div className="absolute inset-0 opacity-30"
+          style={{ background: "radial-gradient(ellipse at 50% 0%, rgba(234,179,8,0.15) 0%, transparent 60%)" }} />
+        <div className="absolute inset-0 opacity-[0.03]"
+          style={{ backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 30px, rgba(255,255,255,0.08) 30px, rgba(255,255,255,0.08) 31px)" }} />
+
+        <div className="relative z-10 flex flex-col items-center text-center px-5 py-6">
+          <div className="text-5xl mb-2 drop-shadow-lg" style={{ filter: "drop-shadow(0 0 12px rgba(234,179,8,0.4))" }}>
+            {banner.emoji}
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-black tracking-tight"
+            style={{ color: titleColor, textShadow: "0 0 20px rgba(251,191,36,0.3), 0 2px 4px rgba(0,0,0,0.5)", fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+            {banner.titulo}
+          </h2>
+          {banner.subtitulo && (
+            <p className="text-sm font-semibold mt-1.5 tracking-wide" style={{ color: estiloConfig.subtitleColor }}>
+              {banner.subtitulo}
+            </p>
+          )}
+          {banner.badge_texto && (
+            <div className="flex items-center gap-1.5 mt-3 px-3 py-1 rounded-full"
+              style={{ background: estiloConfig.badgeBg, border: `1px solid ${estiloConfig.badgeBorder}` }}>
+              <span className="text-xs" style={{ color: estiloConfig.badgeText }}>⏳</span>
+              <span className="text-xs font-bold" style={{ color: estiloConfig.badgeText }}>
+                {jaParticipa ? "Você já está participando!" : banner.badge_texto}
+              </span>
+            </div>
+          )}
+          <button className="mt-4 w-full max-w-xs h-12 flex items-center justify-center gap-2 rounded-xl font-black text-sm uppercase tracking-wider transition-all group-hover:scale-[1.02] group-hover:shadow-lg"
+            style={{ background: "linear-gradient(135deg, #16a34a 0%, #15803d 100%)", color: "white", boxShadow: "0 4px 16px rgba(22,163,74,0.4), inset 0 1px 0 rgba(255,255,255,0.15)", letterSpacing: "0.08em" }}>
+            {isJoining ? (
+              <><Loader2 className="w-4 h-4 animate-spin" /> Entrando...</>
+            ) : (
+              <>{jaParticipa ? banner.cta_texto_participando : banner.cta_texto}<ChevronRight className="w-4 h-4" /></>
+            )}
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // ── Decidir qual modo renderizar ──
+  const renderBanner = (banner: BannerData) => {
+    if (banner.imagem_url) return renderPoster(banner);
+    if (banner.imagem_fundo_url) return renderBackground(banner);
+    return renderNormal(banner);
+  };
+
   return (
     <div className="relative mb-4">
       <div
@@ -263,64 +386,11 @@ const DynamicBanner = ({ userBolaoIds }: DynamicBannerProps) => {
         onMouseUp={onMouseUpOrLeave}
         onMouseLeave={onMouseUpOrLeave}
       >
-        {banners.map((banner) => {
-          const jaParticipa = banner.bolao_id ? userBolaoIds.has(banner.bolao_id) : false;
-          const isJoining = joining === banner.id;
-          const estiloConfig = ESTILOS[banner.estilo] || ESTILOS.premium;
-          const bgStyle = banner.cor_fundo || estiloConfig.bg;
-          const titleColor = banner.cor_texto || estiloConfig.titleColor;
-
-          return (
-            <div key={banner.id} className="flex-shrink-0 w-full" style={{ scrollSnapAlign: "start" }}>
-              <div
-                onClick={() => !isJoining && handleClick(banner)}
-                className={`relative overflow-hidden rounded-2xl cursor-pointer group ${isJoining ? "pointer-events-none opacity-80" : ""}`}
-                style={{
-                  background: bgStyle,
-                  border: `1px solid ${estiloConfig.badgeBorder}`,
-                  boxShadow: "0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(234,179,8,0.1)",
-                }}
-              >
-                <div className="absolute inset-0 opacity-30"
-                  style={{ background: "radial-gradient(ellipse at 50% 0%, rgba(234,179,8,0.15) 0%, transparent 60%)" }} />
-                <div className="absolute inset-0 opacity-[0.03]"
-                  style={{ backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 30px, rgba(255,255,255,0.08) 30px, rgba(255,255,255,0.08) 31px)" }} />
-
-                <div className="relative z-10 flex flex-col items-center text-center px-5 py-6">
-                  <div className="text-5xl mb-2 drop-shadow-lg" style={{ filter: "drop-shadow(0 0 12px rgba(234,179,8,0.4))" }}>
-                    {banner.emoji}
-                  </div>
-                  <h2 className="text-3xl sm:text-4xl font-black tracking-tight"
-                    style={{ color: titleColor, textShadow: "0 0 20px rgba(251,191,36,0.3), 0 2px 4px rgba(0,0,0,0.5)", fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
-                    {banner.titulo}
-                  </h2>
-                  {banner.subtitulo && (
-                    <p className="text-sm font-semibold mt-1.5 tracking-wide" style={{ color: estiloConfig.subtitleColor }}>
-                      {banner.subtitulo}
-                    </p>
-                  )}
-                  {banner.badge_texto && (
-                    <div className="flex items-center gap-1.5 mt-3 px-3 py-1 rounded-full"
-                      style={{ background: estiloConfig.badgeBg, border: `1px solid ${estiloConfig.badgeBorder}` }}>
-                      <span className="text-xs" style={{ color: estiloConfig.badgeText }}>⏳</span>
-                      <span className="text-xs font-bold" style={{ color: estiloConfig.badgeText }}>
-                        {jaParticipa ? "Você já está participando!" : banner.badge_texto}
-                      </span>
-                    </div>
-                  )}
-                  <button className="mt-4 w-full max-w-xs h-12 flex items-center justify-center gap-2 rounded-xl font-black text-sm uppercase tracking-wider transition-all group-hover:scale-[1.02] group-hover:shadow-lg"
-                    style={{ background: "linear-gradient(135deg, #16a34a 0%, #15803d 100%)", color: "white", boxShadow: "0 4px 16px rgba(22,163,74,0.4), inset 0 1px 0 rgba(255,255,255,0.15)", letterSpacing: "0.08em" }}>
-                    {isJoining ? (
-                      <><Loader2 className="w-4 h-4 animate-spin" /> Entrando...</>
-                    ) : (
-                      <>{jaParticipa ? banner.cta_texto_participando : banner.cta_texto}<ChevronRight className="w-4 h-4" /></>
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+        {banners.map((banner) => (
+          <div key={banner.id} className="flex-shrink-0 w-full" style={{ scrollSnapAlign: "start" }}>
+            {renderBanner(banner)}
+          </div>
+        ))}
       </div>
 
       {banners.length > 1 && (
