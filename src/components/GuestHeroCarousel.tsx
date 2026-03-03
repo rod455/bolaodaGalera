@@ -24,9 +24,10 @@ interface GuestHeroCarouselProps {
 
 const AUTO_ROTATE_MS = 4000;
 
-const ESTILOS: Record<string, { bg: string; titleColor: string; subtitleColor: string; badgeBg: string; badgeBorder: string; badgeText: string }> = {
+const ESTILOS: Record<string, { bg: string; bgFallback: string; titleColor: string; subtitleColor: string; badgeBg: string; badgeBorder: string; badgeText: string }> = {
   premium: {
     bg: "linear-gradient(160deg, #0a0a0a 0%, #1a1a1a 40%, #111111 100%)",
+    bgFallback: "#0a0a0a",
     titleColor: "#FBBF24",
     subtitleColor: "rgba(255,255,255,0.8)",
     badgeBg: "rgba(234,179,8,0.15)",
@@ -34,7 +35,8 @@ const ESTILOS: Record<string, { bg: string; titleColor: string; subtitleColor: s
     badgeText: "#FCD34D",
   },
   verde: {
-    bg: "linear-gradient(to br, #14532d, #166534, #15803d)",
+    bg: "linear-gradient(160deg, #14532d 0%, #166534 40%, #15803d 100%)",
+    bgFallback: "#14532d",
     titleColor: "#FFFFFF",
     subtitleColor: "rgba(255,255,255,0.8)",
     badgeBg: "rgba(255,255,255,0.15)",
@@ -42,7 +44,8 @@ const ESTILOS: Record<string, { bg: string; titleColor: string; subtitleColor: s
     badgeText: "#BBF7D0",
   },
   laranja: {
-    bg: "linear-gradient(to br, #7c2d12, #9a3412, #c2410c)",
+    bg: "linear-gradient(160deg, #7c2d12 0%, #9a3412 40%, #c2410c 100%)",
+    bgFallback: "#7c2d12",
     titleColor: "#FEF3C7",
     subtitleColor: "rgba(255,255,255,0.8)",
     badgeBg: "rgba(254,243,199,0.15)",
@@ -195,6 +198,7 @@ const GuestHeroCarousel = ({ participantesCount, handleGoogleLogin }: GuestHeroC
         className="relative overflow-hidden rounded-2xl text-white shadow-xl cursor-pointer"
         onClick={() => banner.link && navigate(banner.link)}
         style={{
+          backgroundColor: estiloConfig.bgFallback,
           background: bgStyle,
           border: `1px solid ${estiloConfig.badgeBorder}`,
         }}
