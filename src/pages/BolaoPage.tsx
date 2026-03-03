@@ -159,6 +159,7 @@ const BolaoPage = () => {
   const { darXP } = useGamification();
   const [xpToast, setXPToast] = useState<{xp: number, msg: string} | null>(null);
   const [niveisRanking, setNiveisRanking] = useState<Record<string, number>>({});
+  const [streaksRanking, setStreaksRanking] = useState<Record<string, number>>({});
   const [totalParticipantes, setTotalParticipantes] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
@@ -411,7 +412,7 @@ const BolaoPage = () => {
       // Fetch ranking (all participants)
       const { data: participantes } = await supabase
         .from("bolao_participantes")
-        .select("user_id, pontuacao_total, posicao_ranking, profiles(nome, avatar_url)")
+        .select("user_id, pontuacao_total, posicao_ranking, streak_atual, profiles(nome, avatar_url)")
         .eq("bolao_id", id!)
         .order("pontuacao_total", { ascending: false });
 
@@ -429,6 +430,13 @@ const BolaoPage = () => {
         }
       );
       setRanking(rankingList);
+
+      // Mapear streaks
+      const streaks: Record<string, number> = {};
+      (participantes || []).forEach((p: any) => {
+        if (p.streak_atual && p.streak_atual >= 2) streaks[p.user_id] = p.streak_atual;
+      });
+      setStreaksRanking(streaks);
 
       // Buscar níveis dos participantes para o ranking
       const userIds = (participantes || []).map((p: any) => p.user_id);
@@ -1174,6 +1182,11 @@ const BolaoPage = () => {
                     )}
                     {niveisRanking[player.userId || ""] > 1 && (
                       <NivelBadge nivel={niveisRanking[player.userId || ""]} size="sm" />
+                    )}
+                    {streaksRanking[player.userId || ""] >= 2 && (
+                      <span className="ml-1 inline-flex items-center gap-0.5 text-[10px] font-bold text-orange-500 bg-orange-50 border border-orange-200 rounded-full px-1.5 py-0.5">
+                        🔥 {streaksRanking[player.userId || ""]}
+                      </span>
                     )}
                   </span>
                 </div>
