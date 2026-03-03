@@ -18,6 +18,7 @@ interface BannerData {
   estilo: string;
   cor_fundo: string | null;
   cor_texto: string | null;
+  mostrar_para: string;
 }
 
 interface DynamicBannerProps {
@@ -51,7 +52,7 @@ const ESTILOS: Record<string, { bg: string; titleColor: string; subtitleColor: s
   },
 };
 
-const AUTO_ROTATE_MS = 5000;
+const AUTO_ROTATE_MS = 4000;
 
 const DynamicBanner = ({ userBolaoIds }: DynamicBannerProps) => {
   const navigate = useNavigate();
@@ -71,19 +72,24 @@ const DynamicBanner = ({ userBolaoIds }: DynamicBannerProps) => {
       const now = new Date().toISOString();
       const { data } = await supabase
         .from("banners_home")
-        .select("id, titulo, subtitulo, emoji, badge_texto, cta_texto, cta_texto_participando, bolao_id, link, estilo, cor_fundo, cor_texto")
+        .select("id, titulo, subtitulo, emoji, badge_texto, cta_texto, cta_texto_participando, bolao_id, link, estilo, cor_fundo, cor_texto, mostrar_para")
         .eq("ativo", true)
         .or(`data_fim.is.null,data_fim.gt.${now}`)
         .lte("data_inicio", now)
         .order("posicao", { ascending: true });
 
       if (data) {
-        setBanners(data as BannerData[]);
+        // Filtrar por público-alvo
+        const contexto = user ? "logados" : "deslogados";
+        const filtrados = (data as BannerData[]).filter(
+          (b) => b.mostrar_para === "todos" || b.mostrar_para === contexto
+        );
+        setBanners(filtrados);
       }
       setLoading(false);
     };
     fetchBanners();
-  }, []);
+  }, [user]);
 
   // Auto-rotate
   const goNext = useCallback(() => {
@@ -105,6 +111,11 @@ const DynamicBanner = ({ userBolaoIds }: DynamicBannerProps) => {
     };
   }, [banners.length, isPaused, goNext]);
 
+  // Reset current ao mudar banners
+  useEffect(() => {
+    setCurrent(0);
+  }, [banners.length]);
+
   // Touch handlers para swipe
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
@@ -121,12 +132,23 @@ const DynamicBanner = ({ userBolaoIds }: DynamicBannerProps) => {
   };
 
   const handleClick = async (banner: BannerData) => {
+    // Link direto (sem bolão)
     if (!banner.bolao_id && banner.link) {
       navigate(banner.link);
       return;
     }
 
-    if (!banner.bolao_id || !user) return;
+    // Visitante clicando em banner com bolão → login
+    if (!user && banner.bolao_id) {
+      navigate("/auth?modo=cadastro");
+      return;
+    }
+
+    if (!banner.bolao_id || !user) {
+      // Banner sem destino: visitante → login
+      if (!user) navigate("/auth?modo=cadastro");
+      return;
+    }
 
     const jaParticipa = userBolaoIds.has(banner.bolao_id);
 
