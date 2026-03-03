@@ -1045,6 +1045,7 @@ const BolaoPage = () => {
         <EventosEspeciais
           bolaoId={id!}
           campeonatoId={bolao.campeonato_id}
+          campeonatos={campeonatosVinculados}
           isCriador={bolao.criador_id === user?.id}
           userId={user?.id || ""}
         />
