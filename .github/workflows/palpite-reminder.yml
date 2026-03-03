@@ -1,0 +1,32 @@
+name: Palpite Reminder
+
+on:
+  schedule:
+    # Roda a cada 2 horas, das 8h às 22h BRT (11h às 01h UTC)
+    - cron: '0 11,13,15,17,19,21,23,1 * * *'
+  workflow_dispatch:
+
+jobs:
+  send-reminders:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Disparar Edge Function de lembretes
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            "${SUPABASE_URL}/functions/v1/send-palpite-reminder" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_KEY}" \
+            -H "Content-Type: application/json")
+          
+          http_code=$(echo "$response" | tail -1)
+          body=$(echo "$response" | sed '$d')
+          
+          echo "Status: $http_code"
+          echo "Response: $body"
+          
+          if [ "$http_code" -ge 400 ]; then
+            echo "::error::Falha ao enviar lembretes (HTTP $http_code)"
+            exit 1
+          fi
