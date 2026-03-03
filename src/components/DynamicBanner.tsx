@@ -67,6 +67,9 @@ const DynamicBanner = ({ userBolaoIds }: DynamicBannerProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const userInteracted = useRef(false);
+  const isMouseDown = useRef(false);
+  const dragStartX = useRef(0);
+  const dragScrollLeft = useRef(0);
 
   useEffect(() => {
     const fetchBanners = async () => {
@@ -158,6 +161,40 @@ const DynamicBanner = ({ userBolaoIds }: DynamicBannerProps) => {
     };
   }, [banners.length, scrollToIndex]);
 
+  // Mouse drag para desktop
+  const onMouseDown = (e: React.MouseEvent) => {
+    const el = scrollRef.current;
+    if (!el || banners.length <= 1) return;
+    isMouseDown.current = true;
+    dragStartX.current = e.pageX - el.offsetLeft;
+    dragScrollLeft.current = el.scrollLeft;
+    el.style.cursor = "grabbing";
+    el.style.scrollSnapType = "none";
+    userInteracted.current = true;
+  };
+
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (!isMouseDown.current) return;
+    e.preventDefault();
+    const el = scrollRef.current;
+    if (!el) return;
+    const x = e.pageX - el.offsetLeft;
+    const walk = (x - dragStartX.current) * 1.5;
+    el.scrollLeft = dragScrollLeft.current - walk;
+  };
+
+  const onMouseUpOrLeave = () => {
+    const el = scrollRef.current;
+    if (!el || !isMouseDown.current) return;
+    isMouseDown.current = false;
+    el.style.cursor = "grab";
+    el.style.scrollSnapType = "x mandatory";
+    // Snap para o mais próximo
+    const width = el.offsetWidth;
+    const idx = Math.round(el.scrollLeft / width);
+    el.scrollTo({ left: idx * width, behavior: "smooth" });
+  };
+
   const handleClick = async (banner: BannerData) => {
     if (!banner.bolao_id && banner.link) {
       if (!user && !banner.link.startsWith("/auth")) {
@@ -210,11 +247,16 @@ const DynamicBanner = ({ userBolaoIds }: DynamicBannerProps) => {
       {/* Scroll container com snap */}
       <div
         ref={scrollRef}
-        className="flex overflow-x-auto no-scrollbar"
+        className="flex overflow-x-auto no-scrollbar select-none"
+        onMouseDown={onMouseDown}
+        onMouseMove={onMouseMove}
+        onMouseUp={onMouseUpOrLeave}
+        onMouseLeave={onMouseUpOrLeave}
         style={{
           scrollSnapType: "x mandatory",
           WebkitOverflowScrolling: "touch",
           scrollbarWidth: "none",
+          cursor: banners.length > 1 ? "grab" : undefined,
           msOverflowStyle: "none",
         }}
       >
