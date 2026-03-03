@@ -201,6 +201,9 @@ const CreateEventoModal = ({ open, onClose, bolaoId, campeonatoId, campeonatos, 
   // Conta no bolão principal?
   const [contaPrincipal, setContaPrincipal] = useState(true);
 
+  // Seletor de campeonato
+  const [campSelecionadoId, setCampSelecionadoId] = useState<string | null>(null);
+
   // Campeonatos disponiveis
   const campsDisponiveis = campeonatos.length > 0
     ? campeonatos
