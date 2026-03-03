@@ -102,10 +102,16 @@ const AppLayout = () => {
           {isLoggedIn ? (
             <NotificationCenter />
           ) : (
-            <button onClick={() => navigate("/auth?modo=cadastro")}
-              className="bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800 font-bold text-xs px-3 py-1.5 rounded-lg transition-colors">
-              Criar Conta
-            </button>
+            <div className="flex items-center gap-2">
+              <button onClick={() => navigate("/auth")}
+                className="text-white/80 hover:text-white transition-colors text-xs font-medium">
+                Entrar
+              </button>
+              <button onClick={() => navigate("/auth?modo=cadastro")}
+                className="bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800 font-bold text-xs px-3 py-1.5 rounded-lg transition-colors">
+                Criar Conta
+              </button>
+            </div>
           )}
         </div>
       </header>
