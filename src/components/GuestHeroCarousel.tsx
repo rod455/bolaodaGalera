@@ -23,6 +23,7 @@ interface GuestHeroCarouselProps {
 }
 
 const AUTO_ROTATE_MS = 4000;
+const DRAG_THRESHOLD = 8;
 
 const ESTILOS: Record<string, {
   bg: string; titleColor: string; subtitleColor: string;
@@ -58,9 +59,12 @@ const GuestHeroCarousel = ({ participantesCount, handleGoogleLogin }: GuestHeroC
   const navigate = useNavigate();
   const [extraBanners, setExtraBanners] = useState<BannerData[]>([]);
   const [current, setCurrent] = useState(0);
+  const [clickBlocked, setClickBlocked] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const userInteracted = useRef(false);
+
+  // Mouse drag
   const isMouseDown = useRef(false);
   const dragStartX = useRef(0);
   const dragScrollLeft = useRef(0);
@@ -98,7 +102,6 @@ const GuestHeroCarousel = ({ participantesCount, handleGoogleLogin }: GuestHeroC
   // Auto-rotate
   useEffect(() => {
     if (totalSlides <= 1) return;
-
     const startTimer = () => {
       if (timerRef.current) clearInterval(timerRef.current);
       timerRef.current = setInterval(() => {
@@ -109,25 +112,21 @@ const GuestHeroCarousel = ({ participantesCount, handleGoogleLogin }: GuestHeroC
         });
       }, AUTO_ROTATE_MS);
     };
-
     startTimer();
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [totalSlides, scrollToIndex]);
 
-  // Detectar scroll manual
+  // Sync indicador
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-
-    let scrollTimeout: ReturnType<typeof setTimeout>;
-    const handleScroll = () => {
-      clearTimeout(scrollTimeout);
-      scrollTimeout = setTimeout(() => {
-        const width = el.offsetWidth;
-        if (width === 0) return;
-        const idx = Math.round(el.scrollLeft / width);
-        setCurrent(idx);
-
+    let timeout: ReturnType<typeof setTimeout>;
+    const onScroll = () => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        const w = el.offsetWidth;
+        if (w === 0) return;
+        setCurrent(Math.round(el.scrollLeft / w));
         if (userInteracted.current && timerRef.current) {
           clearInterval(timerRef.current);
           timerRef.current = setInterval(() => {
@@ -141,19 +140,13 @@ const GuestHeroCarousel = ({ participantesCount, handleGoogleLogin }: GuestHeroC
         }
       }, 50);
     };
-
     const markInteraction = () => { userInteracted.current = true; };
-
-    el.addEventListener("scroll", handleScroll, { passive: true });
+    el.addEventListener("scroll", onScroll, { passive: true });
     el.addEventListener("pointerdown", markInteraction);
-    return () => {
-      el.removeEventListener("scroll", handleScroll);
-      el.removeEventListener("pointerdown", markInteraction);
-      clearTimeout(scrollTimeout);
-    };
+    return () => { el.removeEventListener("scroll", onScroll); el.removeEventListener("pointerdown", markInteraction); clearTimeout(timeout); };
   }, [totalSlides, scrollToIndex]);
 
-  // Mouse drag para desktop
+  // ── Mouse drag ──
   const onMouseDown = (e: React.MouseEvent) => {
     const el = scrollRef.current;
     if (!el || totalSlides <= 1) return;
@@ -171,8 +164,11 @@ const GuestHeroCarousel = ({ participantesCount, handleGoogleLogin }: GuestHeroC
     const el = scrollRef.current;
     if (!el) return;
     const x = e.pageX - el.offsetLeft;
-    const walk = (x - dragStartX.current) * 1.5;
-    el.scrollLeft = dragScrollLeft.current - walk;
+    const delta = x - dragStartX.current;
+    if (Math.abs(delta) > DRAG_THRESHOLD && !clickBlocked) {
+      setClickBlocked(true);
+    }
+    el.scrollLeft = dragScrollLeft.current - delta * 1.5;
   };
 
   const onMouseUpOrLeave = () => {
@@ -181,9 +177,14 @@ const GuestHeroCarousel = ({ participantesCount, handleGoogleLogin }: GuestHeroC
     isMouseDown.current = false;
     el.style.cursor = "grab";
     el.style.scrollSnapType = "x mandatory";
+
     const width = el.offsetWidth;
-    const idx = Math.round(el.scrollLeft / width);
+    let idx = Math.round(el.scrollLeft / width);
+    if (idx >= totalSlides) idx = 0;
+    if (idx < 0) idx = totalSlides - 1;
     el.scrollTo({ left: idx * width, behavior: "smooth" });
+
+    setTimeout(() => setClickBlocked(false), 300);
   };
 
   // ── Slide 0: Hero card original ──
@@ -231,11 +232,13 @@ const GuestHeroCarousel = ({ participantesCount, handleGoogleLogin }: GuestHeroC
           </div>
 
           <div className="flex gap-2.5 mt-4">
-            <Button onClick={() => navigate("/auth?modo=cadastro")}
+            <Button
+              onClick={(e) => { if (clickBlocked) { e.stopPropagation(); return; } navigate("/auth?modo=cadastro"); }}
               className="flex-1 h-12 bg-copa-gold-400 hover:bg-copa-gold-500 text-gray-900 font-extrabold text-sm rounded-xl shadow-lg shadow-copa-gold-400/20 transition-all hover:scale-[1.02]">
               <UserPlus className="w-4 h-4 mr-1.5" /> Criar conta grátis
             </Button>
-            <button onClick={() => navigate("/auth")}
+            <button
+              onClick={(e) => { if (clickBlocked) { e.stopPropagation(); return; } navigate("/auth"); }}
               className="px-5 h-12 text-sm font-semibold rounded-xl border-2 border-white/20 text-white/80 hover:bg-white/10 hover:border-white/40 transition-all">
               Entrar
             </button>
@@ -294,11 +297,13 @@ const GuestHeroCarousel = ({ participantesCount, handleGoogleLogin }: GuestHeroC
             </div>
 
             <div className="flex gap-2.5 mt-4">
-              <Button onClick={() => navigate(banner.link || "/auth?modo=cadastro")}
+              <Button
+                onClick={(e) => { if (clickBlocked) { e.stopPropagation(); return; } navigate(banner.link || "/auth?modo=cadastro"); }}
                 className="flex-1 h-12 bg-copa-gold-400 hover:bg-copa-gold-500 text-gray-900 font-extrabold text-sm rounded-xl shadow-lg shadow-copa-gold-400/20 transition-all hover:scale-[1.02]">
                 <UserPlus className="w-4 h-4 mr-1.5" /> {banner.cta_texto}
               </Button>
-              <button onClick={() => navigate("/auth")}
+              <button
+                onClick={(e) => { if (clickBlocked) { e.stopPropagation(); return; } navigate("/auth"); }}
                 className="px-5 h-12 text-sm font-semibold rounded-xl border-2 border-white/20 text-white/80 hover:bg-white/10 hover:border-white/40 transition-all">
                 Entrar
               </button>
@@ -311,44 +316,39 @@ const GuestHeroCarousel = ({ participantesCount, handleGoogleLogin }: GuestHeroC
 
   return (
     <div className="relative">
-      {/* Scroll container com snap */}
       <div
         ref={scrollRef}
         className="flex overflow-x-auto no-scrollbar select-none"
-        onMouseDown={onMouseDown}
-        onMouseMove={onMouseMove}
-        onMouseUp={onMouseUpOrLeave}
-        onMouseLeave={onMouseUpOrLeave}
         style={{
           scrollSnapType: "x mandatory",
           WebkitOverflowScrolling: "touch",
           scrollbarWidth: "none",
-          cursor: totalSlides > 1 ? "grab" : undefined,
           msOverflowStyle: "none",
+          cursor: totalSlides > 1 ? "grab" : undefined,
         }}
+        onMouseDown={onMouseDown}
+        onMouseMove={onMouseMove}
+        onMouseUp={onMouseUpOrLeave}
+        onMouseLeave={onMouseUpOrLeave}
       >
         {renderHeroSlide()}
         {extraBanners.map((b) => renderDynamicSlide(b))}
       </div>
 
-      {/* Indicadores */}
       {totalSlides > 1 && (
         <div className="flex justify-center gap-2 mt-3">
           {Array.from({ length: totalSlides }).map((_, idx) => (
-            <button
-              key={idx}
+            <button key={idx}
               onClick={() => { scrollToIndex(idx); setCurrent(idx); }}
               className={`transition-all duration-300 rounded-full ${
                 idx === current ? "w-6 h-2 bg-copa-gold-400" : "w-2 h-2 bg-white/30 hover:bg-white/50"
-              }`}
-            />
+              }`} />
           ))}
         </div>
       )}
 
-      {/* Google Login */}
       {!/FBAN|FBAV|Instagram|Line|TikTok|Snapchat/i.test(navigator.userAgent) && (
-        <button onClick={handleGoogleLogin}
+        <button onClick={(e) => { if (clickBlocked) return; handleGoogleLogin(); }}
           className="w-full mt-4 flex items-center justify-center gap-3 bg-white border border-gray-200 hover:border-copa-green-400 hover:shadow-md rounded-xl py-3.5 font-semibold text-sm text-gray-600 transition-all">
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>

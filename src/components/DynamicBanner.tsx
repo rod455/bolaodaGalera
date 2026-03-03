@@ -56,6 +56,7 @@ const ESTILOS: Record<string, {
 };
 
 const AUTO_ROTATE_MS = 4000;
+const DRAG_THRESHOLD = 8;
 
 const DynamicBanner = ({ userBolaoIds }: DynamicBannerProps) => {
   const navigate = useNavigate();
@@ -64,9 +65,12 @@ const DynamicBanner = ({ userBolaoIds }: DynamicBannerProps) => {
   const [joining, setJoining] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [current, setCurrent] = useState(0);
+  const [clickBlocked, setClickBlocked] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const userInteracted = useRef(false);
+
+  // Mouse drag state
   const isMouseDown = useRef(false);
   const dragStartX = useRef(0);
   const dragScrollLeft = useRef(0);
@@ -94,18 +98,15 @@ const DynamicBanner = ({ userBolaoIds }: DynamicBannerProps) => {
     fetchBanners();
   }, [user]);
 
-  // Scroll para o banner pelo index
   const scrollToIndex = useCallback((idx: number) => {
     const el = scrollRef.current;
     if (!el) return;
-    const width = el.offsetWidth;
-    el.scrollTo({ left: idx * width, behavior: "smooth" });
+    el.scrollTo({ left: idx * el.offsetWidth, behavior: "smooth" });
   }, []);
 
   // Auto-rotate
   useEffect(() => {
     if (banners.length <= 1) return;
-
     const startTimer = () => {
       if (timerRef.current) clearInterval(timerRef.current);
       timerRef.current = setInterval(() => {
@@ -116,26 +117,21 @@ const DynamicBanner = ({ userBolaoIds }: DynamicBannerProps) => {
         });
       }, AUTO_ROTATE_MS);
     };
-
     startTimer();
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [banners.length, scrollToIndex]);
 
-  // Detectar scroll manual (snap) e atualizar indicador
+  // Sync indicador com scroll manual
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-
-    let scrollTimeout: ReturnType<typeof setTimeout>;
-    const handleScroll = () => {
-      clearTimeout(scrollTimeout);
-      scrollTimeout = setTimeout(() => {
-        const width = el.offsetWidth;
-        if (width === 0) return;
-        const idx = Math.round(el.scrollLeft / width);
-        setCurrent(idx);
-
-        // Reset timer ao interagir manualmente
+    let timeout: ReturnType<typeof setTimeout>;
+    const onScroll = () => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        const w = el.offsetWidth;
+        if (w === 0) return;
+        setCurrent(Math.round(el.scrollLeft / w));
         if (userInteracted.current && timerRef.current) {
           clearInterval(timerRef.current);
           timerRef.current = setInterval(() => {
@@ -149,19 +145,13 @@ const DynamicBanner = ({ userBolaoIds }: DynamicBannerProps) => {
         }
       }, 50);
     };
-
     const markInteraction = () => { userInteracted.current = true; };
-
-    el.addEventListener("scroll", handleScroll, { passive: true });
+    el.addEventListener("scroll", onScroll, { passive: true });
     el.addEventListener("pointerdown", markInteraction);
-    return () => {
-      el.removeEventListener("scroll", handleScroll);
-      el.removeEventListener("pointerdown", markInteraction);
-      clearTimeout(scrollTimeout);
-    };
+    return () => { el.removeEventListener("scroll", onScroll); el.removeEventListener("pointerdown", markInteraction); clearTimeout(timeout); };
   }, [banners.length, scrollToIndex]);
 
-  // Mouse drag para desktop
+  // ── Mouse drag handlers ──
   const onMouseDown = (e: React.MouseEvent) => {
     const el = scrollRef.current;
     if (!el || banners.length <= 1) return;
@@ -179,8 +169,11 @@ const DynamicBanner = ({ userBolaoIds }: DynamicBannerProps) => {
     const el = scrollRef.current;
     if (!el) return;
     const x = e.pageX - el.offsetLeft;
-    const walk = (x - dragStartX.current) * 1.5;
-    el.scrollLeft = dragScrollLeft.current - walk;
+    const delta = x - dragStartX.current;
+    if (Math.abs(delta) > DRAG_THRESHOLD && !clickBlocked) {
+      setClickBlocked(true);
+    }
+    el.scrollLeft = dragScrollLeft.current - delta * 1.5;
   };
 
   const onMouseUpOrLeave = () => {
@@ -189,13 +182,24 @@ const DynamicBanner = ({ userBolaoIds }: DynamicBannerProps) => {
     isMouseDown.current = false;
     el.style.cursor = "grab";
     el.style.scrollSnapType = "x mandatory";
-    // Snap para o mais próximo
+
     const width = el.offsetWidth;
-    const idx = Math.round(el.scrollLeft / width);
+    let idx = Math.round(el.scrollLeft / width);
+
+    // Loop: se arrastou além do último, volta ao primeiro
+    if (idx >= banners.length) idx = 0;
+    if (idx < 0) idx = banners.length - 1;
+
     el.scrollTo({ left: idx * width, behavior: "smooth" });
+
+    // Desbloquear clicks com delay (após o click event ter sido ignorado)
+    setTimeout(() => setClickBlocked(false), 300);
   };
 
   const handleClick = async (banner: BannerData) => {
+    // Bloquear click se foi drag
+    if (clickBlocked) return;
+
     if (!banner.bolao_id && banner.link) {
       if (!user && !banner.link.startsWith("/auth")) {
         navigate("/auth?modo=cadastro");
@@ -244,21 +248,20 @@ const DynamicBanner = ({ userBolaoIds }: DynamicBannerProps) => {
 
   return (
     <div className="relative mb-4">
-      {/* Scroll container com snap */}
       <div
         ref={scrollRef}
         className="flex overflow-x-auto no-scrollbar select-none"
-        onMouseDown={onMouseDown}
-        onMouseMove={onMouseMove}
-        onMouseUp={onMouseUpOrLeave}
-        onMouseLeave={onMouseUpOrLeave}
         style={{
           scrollSnapType: "x mandatory",
           WebkitOverflowScrolling: "touch",
           scrollbarWidth: "none",
-          cursor: banners.length > 1 ? "grab" : undefined,
           msOverflowStyle: "none",
+          cursor: banners.length > 1 ? "grab" : undefined,
         }}
+        onMouseDown={onMouseDown}
+        onMouseMove={onMouseMove}
+        onMouseUp={onMouseUpOrLeave}
+        onMouseLeave={onMouseUpOrLeave}
       >
         {banners.map((banner) => {
           const jaParticipa = banner.bolao_id ? userBolaoIds.has(banner.bolao_id) : false;
@@ -268,24 +271,18 @@ const DynamicBanner = ({ userBolaoIds }: DynamicBannerProps) => {
           const titleColor = banner.cor_texto || estiloConfig.titleColor;
 
           return (
-            <div
-              key={banner.id}
-              className="flex-shrink-0 w-full"
-              style={{ scrollSnapAlign: "start" }}
-            >
+            <div key={banner.id} className="flex-shrink-0 w-full" style={{ scrollSnapAlign: "start" }}>
               <div
                 onClick={() => !isJoining && handleClick(banner)}
-                className={`relative overflow-hidden rounded-2xl cursor-pointer group mx-0 ${isJoining ? "pointer-events-none opacity-80" : ""}`}
+                className={`relative overflow-hidden rounded-2xl cursor-pointer group ${isJoining ? "pointer-events-none opacity-80" : ""}`}
                 style={{
                   background: bgStyle,
                   border: `1px solid ${estiloConfig.badgeBorder}`,
                   boxShadow: "0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(234,179,8,0.1)",
                 }}
               >
-                {/* Efeito de brilho */}
                 <div className="absolute inset-0 opacity-30"
                   style={{ background: "radial-gradient(ellipse at 50% 0%, rgba(234,179,8,0.15) 0%, transparent 60%)" }} />
-                {/* Textura */}
                 <div className="absolute inset-0 opacity-[0.03]"
                   style={{ backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 30px, rgba(255,255,255,0.08) 30px, rgba(255,255,255,0.08) 31px)" }} />
 
@@ -326,22 +323,18 @@ const DynamicBanner = ({ userBolaoIds }: DynamicBannerProps) => {
         })}
       </div>
 
-      {/* Indicadores */}
       {banners.length > 1 && (
         <div className="flex justify-center gap-2 mt-3">
           {banners.map((_, idx) => (
-            <button
-              key={idx}
+            <button key={idx}
               onClick={() => { scrollToIndex(idx); setCurrent(idx); }}
               className={`transition-all duration-300 rounded-full ${
                 idx === current ? "w-6 h-2 bg-copa-green-500" : "w-2 h-2 bg-gray-300 hover:bg-gray-400"
-              }`}
-            />
+              }`} />
           ))}
         </div>
       )}
 
-      {/* Hide scrollbar CSS */}
       <style>{`.no-scrollbar::-webkit-scrollbar { display: none; }`}</style>
     </div>
   );
