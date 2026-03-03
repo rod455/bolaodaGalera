@@ -10,6 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Jogo } from "@/lib/types";
+import { traduzirFase } from "@/lib/formatters";
+import { FASE_ORDER } from "@/lib/constants";
 
 interface EventoEspecial {
   id: string;
@@ -175,6 +177,13 @@ const EventosEspeciais = ({ bolaoId, campeonatoId, campeonatos, isCriador, userI
   );
 };
 
+/* ═══ Tipo para rodadas com label descritivo ═══ */
+interface RodadaOption {
+  value: string;       // valor original armazenado (ex: "Rodada 1")
+  label: string;       // label exibido (ex: "Oitavas - R1" ou "R1")
+  faseLabel?: string;  // nome da fase para ordenação
+}
+
 /* ═══ Modal de Criação de Evento ═══ */
 const CreateEventoModal = ({ open, onClose, bolaoId, campeonatoId, campeonatos, userId, onCreated }: {
   open: boolean; onClose: () => void; bolaoId: string;
@@ -212,7 +221,7 @@ const CreateEventoModal = ({ open, onClose, bolaoId, campeonatoId, campeonatos, 
       : [];
 
   // Dados do campeonato
-  const [rodadas, setRodadas] = useState<string[]>([]);
+  const [rodadas, setRodadas] = useState<RodadaOption[]>([]);
   const [jogos, setJogos] = useState<Jogo[]>([]);
   const [loadingData, setLoadingData] = useState(false);
 
@@ -247,19 +256,66 @@ const CreateEventoModal = ({ open, onClose, bolaoId, campeonatoId, campeonatos, 
       const allJogos = (data || []) as Jogo[];
       setJogos(allJogos);
 
-      const rodadaSet = new Set<string>();
       const now = new Date();
-      allJogos.forEach((j) => {
-        if (j.rodada && (j.status === "agendado" || new Date(j.data_hora) > now)) {
-          rodadaSet.add(j.rodada);
-        }
+      const jogosFuturos = allJogos.filter(
+        (j) => j.rodada && (j.status === "agendado" || new Date(j.data_hora) > now)
+      );
+
+      // Detectar se é campeonato estilo copa (tem fases mata-mata)
+      const fasesUnicas = new Set<string>();
+      jogosFuturos.forEach((j) => {
+        const faseTrad = traduzirFase(j.fase) || j.fase || "";
+        if (faseTrad) fasesUnicas.add(faseTrad);
       });
-      const sorted = Array.from(rodadaSet).sort((a, b) => {
-        const na = parseInt(a.replace(/\D/g, "")) || 0;
-        const nb = parseInt(b.replace(/\D/g, "")) || 0;
-        return na - nb;
-      });
-      setRodadas(sorted);
+
+      // É estilo copa se tem fases típicas de mata-mata OU múltiplas fases distintas (excluindo Liga/Grupos)
+      const FASES_LIGA = ["Liga", "Fase de Grupos", ""];
+      const fasesNaoLiga = [...fasesUnicas].filter((f) => !FASES_LIGA.includes(f));
+      const isCupStyle = fasesNaoLiga.length >= 1;
+
+      if (isCupStyle) {
+        // Campeonato estilo copa: agrupar por fase + rodada
+        // Usar chave composta para evitar duplicatas (ex: "Oitavas::Rodada 1")
+        const rodadaMap = new Map<string, RodadaOption>();
+        jogosFuturos.forEach((j) => {
+          const faseTrad = traduzirFase(j.fase) || j.fase || "Outros";
+          const rodadaShort = (j.rodada || "").replace("Rodada ", "R").replace("Matchday ", "R");
+          const key = `${faseTrad}::${j.rodada}`;
+          if (!rodadaMap.has(key)) {
+            rodadaMap.set(key, {
+              value: key,  // usar chave composta como value para distinguir "R1 das Oitavas" de "R1 das Quartas"
+              label: `${faseTrad} - ${rodadaShort}`,
+              faseLabel: faseTrad,
+            });
+          }
+        });
+
+        // Ordenar por FASE_ORDER e depois por número de rodada
+        const sorted = Array.from(rodadaMap.values()).sort((a, b) => {
+          const ia = FASE_ORDER.indexOf(a.faseLabel || "");
+          const ib = FASE_ORDER.indexOf(b.faseLabel || "");
+          const orderA = ia === -1 ? 99 : ia;
+          const orderB = ib === -1 ? 99 : ib;
+          if (orderA !== orderB) return orderA - orderB;
+          const na = parseInt((a.value || "").replace(/\D/g, "")) || 0;
+          const nb = parseInt((b.value || "").replace(/\D/g, "")) || 0;
+          return na - nb;
+        });
+        setRodadas(sorted);
+      } else {
+        // Campeonato estilo liga: manter comportamento original
+        const rodadaSet = new Set<string>();
+        jogosFuturos.forEach((j) => { if (j.rodada) rodadaSet.add(j.rodada); });
+        const sorted = Array.from(rodadaSet).sort((a, b) => {
+          const na = parseInt(a.replace(/\D/g, "")) || 0;
+          const nb = parseInt(b.replace(/\D/g, "")) || 0;
+          return na - nb;
+        });
+        setRodadas(sorted.map((r) => ({
+          value: r,
+          label: r.replace("Rodada ", "R"),
+        })));
+      }
     } catch (err) { console.error(err); }
     finally { setLoadingData(false); }
   };
@@ -367,33 +423,26 @@ const CreateEventoModal = ({ open, onClose, bolaoId, campeonatoId, campeonatos, 
               <label className="text-xs font-medium text-muted-foreground">Nome do evento</label>
               <Input placeholder={
                 tipoSelecionado === "multiplicador" ? "Ex: Rodada Dobrada R5"
-                : tipoSelecionado === "mini_campeonato" ? "Ex: Mini Liga Fevereiro"
-                : "Ex: Clássico Mineiro"
-              } value={nome} onChange={(e) => setNome(e.target.value)}
-                className="h-10 rounded-xl" />
+                : tipoSelecionado === "mini_campeonato" ? "Ex: Mini Campeonato Quartas"
+                : "Ex: Desafio Clássico"
+              } value={nome} onChange={(e) => setNome(e.target.value)} className="rounded-xl" />
             </div>
 
-            {/* Seletor de Campeonato */}
+            {/* Seletor de campeonato */}
             {campsDisponiveis.length > 1 && (
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-muted-foreground">Campeonato</label>
                 <div className="flex flex-wrap gap-1.5">
-                  {campsDisponiveis.map((camp) => {
-                    const sel = campSelecionadoId === camp.id;
+                  {campsDisponiveis.map((c) => {
+                    const sel = campSelecionadoId === c.id;
                     return (
-                      <button key={camp.id}
-                        onClick={() => setCampSelecionadoId(camp.id)}
-                        className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all border ${
-                          sel
-                            ? "border-orange-400 bg-orange-50 text-orange-700"
-                            : "border-gray-200 bg-white text-muted-foreground hover:bg-muted/50"
+                      <button key={c.id} onClick={() => setCampSelecionadoId(c.id)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                          sel ? "bg-copa-green-500 text-white" : "bg-muted text-muted-foreground hover:bg-muted/80"
                         }`}>
-                        {camp.logo_url && (
-                          <img src={camp.logo_url} alt="" className="w-4 h-4 object-contain"
-                            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                        )}
-                        {camp.nome_popular || "Campeonato"}
-                        {sel && <Check className="w-3 h-3 text-orange-500" />}
+                        {c.logo_url && <img src={c.logo_url} alt="" className="w-4 h-4 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />}
+                        {c.nome_popular || "Campeonato"}
+                        {sel && <Check className="w-3 h-3" />}
                       </button>
                     );
                   })}
@@ -401,17 +450,11 @@ const CreateEventoModal = ({ open, onClose, bolaoId, campeonatoId, campeonatos, 
               </div>
             )}
 
-            {campsDisponiveis.length > 1 && !campSelecionadoId && (
-              <div className="text-center py-4 bg-muted/30 rounded-xl">
-                <p className="text-xs text-muted-foreground">Selecione um campeonato acima para ver as rodadas e jogos</p>
-              </div>
-            )}
-
             {loadingData ? (
-              <div className="flex items-center justify-center py-6">
-                <Loader2 className="w-5 h-5 text-orange-400 animate-spin" />
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
               </div>
-            ) : campSelecionadoId ? (
+            ) : (
               <>
                 {/* ═══ MULTIPLICADOR ═══ */}
                 {tipoSelecionado === "multiplicador" && (
@@ -437,13 +480,13 @@ const CreateEventoModal = ({ open, onClose, bolaoId, campeonatoId, campeonatos, 
                       </label>
                       <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto">
                         {rodadas.map((r) => {
-                          const sel = rodadasSelecionadas.includes(r);
+                          const sel = rodadasSelecionadas.includes(r.value);
                           return (
-                            <button key={r} onClick={() => toggleRodada(r, "mult")}
+                            <button key={r.label} onClick={() => toggleRodada(r.value, "mult")}
                               className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                                 sel ? "bg-amber-500 text-white" : "bg-muted text-muted-foreground hover:bg-muted/80"
                               }`}>
-                              {r.replace("Rodada ", "R")}
+                              {r.label}
                             </button>
                           );
                         })}
@@ -460,13 +503,13 @@ const CreateEventoModal = ({ open, onClose, bolaoId, campeonatoId, campeonatos, 
                     </label>
                     <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto">
                       {rodadas.map((r) => {
-                        const sel = miniRodadas.includes(r);
+                        const sel = miniRodadas.includes(r.value);
                         return (
-                          <button key={r} onClick={() => toggleRodada(r, "mini")}
+                          <button key={r.label} onClick={() => toggleRodada(r.value, "mini")}
                             className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                               sel ? "bg-purple-500 text-white" : "bg-muted text-muted-foreground hover:bg-muted/80"
                             }`}>
-                            {r.replace("Rodada ", "R")}
+                            {r.label}
                           </button>
                         );
                       })}
@@ -480,7 +523,7 @@ const CreateEventoModal = ({ open, onClose, bolaoId, campeonatoId, campeonatos, 
                     <div className="space-y-1.5">
                       <label className="text-xs font-medium text-muted-foreground">Bônus por acerto</label>
                       <div className="flex gap-2">
-                        {[10, 15, 20, 25].map((b) => (
+                        {[10, 15, 20, 30].map((b) => (
                           <button key={b} onClick={() => setBonus(b)}
                             className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
                               bonus === b
@@ -495,47 +538,38 @@ const CreateEventoModal = ({ open, onClose, bolaoId, campeonatoId, campeonatos, 
                     <div className="space-y-1.5">
                       <label className="text-xs font-medium text-muted-foreground">Selecione o jogo</label>
                       <div className="space-y-1.5 max-h-48 overflow-y-auto">
-                        {proximosJogos.slice(0, 15).map((jogo) => {
-                          const sel = jogoSelecionado === jogo.id;
-                          return (
-                            <div key={jogo.id} onClick={() => setJogoSelecionado(jogo.id)}
-                              className={`flex items-center gap-2 p-2.5 rounded-xl cursor-pointer transition-all border ${
-                                sel ? "border-red-400 bg-red-50" : "border-gray-100 hover:bg-muted/50"
-                              }`}>
-                              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                                sel ? "border-red-500 bg-red-500" : "border-gray-300"
-                              }`}>
-                                {sel && <Check className="w-2.5 h-2.5 text-white" />}
-                              </div>
-                              <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                                {jogo.logo_time_a && <img src={jogo.logo_time_a} className="w-5 h-5 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />}
-                                <span className="text-xs font-medium truncate">{jogo.time_a}</span>
-                                <span className="text-[10px] text-muted-foreground">vs</span>
-                                <span className="text-xs font-medium truncate">{jogo.time_b}</span>
-                                {jogo.logo_time_b && <img src={jogo.logo_time_b} className="w-5 h-5 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />}
-                              </div>
-                              <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                                {jogo.rodada?.replace("Rodada ", "R")}
-                              </span>
-                            </div>
-                          );
-                        })}
-                        {proximosJogos.length === 0 && (
-                          <p className="text-xs text-muted-foreground text-center py-3">Nenhum jogo agendado</p>
+                        {proximosJogos.length === 0 ? (
+                          <p className="text-xs text-muted-foreground text-center py-4">Nenhum jogo agendado</p>
+                        ) : (
+                          proximosJogos.map((j) => {
+                            const sel = jogoSelecionado === j.id;
+                            return (
+                              <button key={j.id} onClick={() => setJogoSelecionado(sel ? null : j.id)}
+                                className={`w-full flex items-center gap-2 p-2.5 rounded-xl text-left transition-all ${
+                                  sel ? "bg-red-50 border-2 border-red-300" : "bg-muted/50 border-2 border-transparent hover:bg-muted/80"
+                                }`}>
+                                <div className="flex-1">
+                                  <span className="text-xs font-semibold">{j.time_a} x {j.time_b}</span>
+                                  <span className="text-[10px] text-muted-foreground block">
+                                    {j.fase ? `${traduzirFase(j.fase)} • ` : ""}{j.rodada}
+                                  </span>
+                                </div>
+                                {sel && <Check className="w-4 h-4 text-red-500" />}
+                              </button>
+                            );
+                          })
                         )}
                       </div>
                     </div>
                   </>
                 )}
               </>
-            ) : null}
+            )}
 
-            {/* Conta no principal? */}
+            {/* Toggle: Conta no bolão principal */}
             <div onClick={() => setContaPrincipal(!contaPrincipal)}
-              className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border ${
-                contaPrincipal ? "border-copa-green-300 bg-copa-green-50" : "border-gray-200 bg-gray-50"
-              }`}>
-              <div className={`w-[20px] h-[20px] rounded flex items-center justify-center flex-shrink-0 transition-colors ${
+              className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 cursor-pointer hover:bg-muted/80 transition-all">
+              <div className={`w-5 h-5 rounded-md flex items-center justify-center transition-all ${
                 contaPrincipal ? "bg-copa-green-500" : "bg-white border-2 border-gray-300"
               }`}>
                 {contaPrincipal && <Check className="w-3 h-3 text-white" />}
