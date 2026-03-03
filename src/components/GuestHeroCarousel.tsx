@@ -24,10 +24,12 @@ interface GuestHeroCarouselProps {
 
 const AUTO_ROTATE_MS = 4000;
 
-const ESTILOS: Record<string, { bg: string; bgFallback: string; titleColor: string; subtitleColor: string; badgeBg: string; badgeBorder: string; badgeText: string }> = {
+const ESTILOS: Record<string, {
+  bg: string; titleColor: string; subtitleColor: string;
+  badgeBg: string; badgeBorder: string; badgeText: string;
+}> = {
   premium: {
     bg: "linear-gradient(160deg, #0a0a0a 0%, #1a1a1a 40%, #111111 100%)",
-    bgFallback: "#0a0a0a",
     titleColor: "#FBBF24",
     subtitleColor: "rgba(255,255,255,0.8)",
     badgeBg: "rgba(234,179,8,0.15)",
@@ -36,7 +38,6 @@ const ESTILOS: Record<string, { bg: string; bgFallback: string; titleColor: stri
   },
   verde: {
     bg: "linear-gradient(160deg, #14532d 0%, #166534 40%, #15803d 100%)",
-    bgFallback: "#14532d",
     titleColor: "#FFFFFF",
     subtitleColor: "rgba(255,255,255,0.8)",
     badgeBg: "rgba(255,255,255,0.15)",
@@ -45,7 +46,6 @@ const ESTILOS: Record<string, { bg: string; bgFallback: string; titleColor: stri
   },
   laranja: {
     bg: "linear-gradient(160deg, #7c2d12 0%, #9a3412 40%, #c2410c 100%)",
-    bgFallback: "#7c2d12",
     titleColor: "#FEF3C7",
     subtitleColor: "rgba(255,255,255,0.8)",
     badgeBg: "rgba(254,243,199,0.15)",
@@ -58,12 +58,12 @@ const GuestHeroCarousel = ({ participantesCount, handleGoogleLogin }: GuestHeroC
   const navigate = useNavigate();
   const [extraBanners, setExtraBanners] = useState<BannerData[]>([]);
   const [current, setCurrent] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const touchStartX = useRef(0);
+  const userInteracted = useRef(false);
 
-  // Total de slides = 1 (hero original) + extras do banco
   const totalSlides = 1 + extraBanners.length;
+  const totalJogadores = Math.max(1000, Object.values(participantesCount).reduce((a, b) => a + b, 0));
 
   useEffect(() => {
     const fetchBanners = async () => {
@@ -86,180 +86,118 @@ const GuestHeroCarousel = ({ participantesCount, handleGoogleLogin }: GuestHeroC
     fetchBanners();
   }, []);
 
-  const goNext = useCallback(() => {
-    setCurrent((prev) => (prev + 1) % totalSlides);
-  }, [totalSlides]);
+  const scrollToIndex = useCallback((idx: number) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTo({ left: idx * el.offsetWidth, behavior: "smooth" });
+  }, []);
 
-  const goPrev = useCallback(() => {
-    setCurrent((prev) => (prev - 1 + totalSlides) % totalSlides);
-  }, [totalSlides]);
-
+  // Auto-rotate
   useEffect(() => {
-    if (totalSlides <= 1 || isPaused) {
+    if (totalSlides <= 1) return;
+
+    const startTimer = () => {
       if (timerRef.current) clearInterval(timerRef.current);
-      return;
-    }
-    timerRef.current = setInterval(goNext, AUTO_ROTATE_MS);
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
+      timerRef.current = setInterval(() => {
+        setCurrent((prev) => {
+          const next = (prev + 1) % totalSlides;
+          scrollToIndex(next);
+          return next;
+        });
+      }, AUTO_ROTATE_MS);
     };
-  }, [totalSlides, isPaused, goNext]);
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-    setIsPaused(true);
-  };
+    startTimer();
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [totalSlides, scrollToIndex]);
 
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    const diff = touchStartX.current - e.changedTouches[0].clientX;
-    if (Math.abs(diff) > 50) {
-      if (diff > 0) goNext();
-      else goPrev();
-    }
-    setTimeout(() => setIsPaused(false), 4000);
-  };
+  // Detectar scroll manual
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
 
-  const totalJogadores = Math.max(1000, Object.values(participantesCount).reduce((a, b) => a + b, 0));
+    let scrollTimeout: ReturnType<typeof setTimeout>;
+    const handleScroll = () => {
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        const width = el.offsetWidth;
+        if (width === 0) return;
+        const idx = Math.round(el.scrollLeft / width);
+        setCurrent(idx);
 
-  // ── Slide 0: Hero card original (idêntico ao atual) ──
+        if (userInteracted.current && timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = setInterval(() => {
+            setCurrent((prev) => {
+              const next = (prev + 1) % totalSlides;
+              scrollToIndex(next);
+              return next;
+            });
+          }, AUTO_ROTATE_MS);
+          userInteracted.current = false;
+        }
+      }, 50);
+    };
+
+    const markInteraction = () => { userInteracted.current = true; };
+
+    el.addEventListener("scroll", handleScroll, { passive: true });
+    el.addEventListener("pointerdown", markInteraction);
+    return () => {
+      el.removeEventListener("scroll", handleScroll);
+      el.removeEventListener("pointerdown", markInteraction);
+      clearTimeout(scrollTimeout);
+    };
+  }, [totalSlides, scrollToIndex]);
+
+  // ── Slide 0: Hero card original ──
   const renderHeroSlide = () => (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white shadow-xl">
-      <div className="absolute inset-0 opacity-[0.04]"
-        style={{ backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(255,255,255,0.1) 20px, rgba(255,255,255,0.1) 21px)" }} />
-      <div className="absolute top-0 right-0 w-48 h-48 bg-copa-green-500/15 rounded-full -translate-y-20 translate-x-20 blur-2xl" />
-      <div className="absolute bottom-0 left-0 w-32 h-32 bg-copa-gold-400/10 rounded-full translate-y-14 -translate-x-10 blur-xl" />
-
-      <div className="relative z-10 p-5 pb-4">
-        <h2 className="text-[22px] font-extrabold leading-tight">
-          Desafie seus amigos,{" "}
-          <span className="text-copa-gold-400">prove que você entende de bola</span>{" "}
-          e concorra a prêmios!
-        </h2>
-        <p className="text-white/60 text-sm mt-2 leading-relaxed">
-          Crie seu bolão, faça seus palpites e veja quem acerta mais. Grátis pra jogar.
-        </p>
-
-        <div className="mt-4 rounded-xl overflow-hidden"
-          style={{
-            background: "linear-gradient(135deg, #92400E 0%, #B45309 30%, #D97706 60%, #EAB308 100%)",
-            border: "1px solid rgba(250, 204, 21, 0.3)",
-          }}>
-          <div className="flex items-center gap-3 px-4 py-3">
-            <span className="text-2xl">🏆</span>
-            <div className="flex-1">
-              <p className="text-white font-bold text-sm leading-snug">
-                Valendo <span style={{ color: "#FEF9C3" }}>R$ 200</span> em prêmio!
-              </p>
-              <p className="text-white/60 text-[11px] mt-0.5">
-                Bolão do Paulistão — Finais
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3 mt-4">
-          <div className="flex -space-x-2">
-            {["🇧🇷", "⚽", "🏆", "🎯", "🔥"].map((emoji, i) => (
-              <div key={i} className="w-7 h-7 bg-white/10 backdrop-blur rounded-full border-2 border-gray-800 flex items-center justify-center text-xs">
-                {emoji}
-              </div>
-            ))}
-          </div>
-          <div className="text-xs">
-            <span className="font-bold text-white">
-              {totalJogadores.toLocaleString("pt-BR")}+
-            </span>
-            <span className="text-white/50"> já estão jogando</span>
-          </div>
-        </div>
-
-        <div className="flex gap-2.5 mt-4">
-          <Button onClick={() => navigate("/auth?modo=cadastro")}
-            className="flex-1 h-12 bg-copa-gold-400 hover:bg-copa-gold-500 text-gray-900 font-extrabold text-sm rounded-xl shadow-lg shadow-copa-gold-400/20 transition-all hover:scale-[1.02]">
-            <UserPlus className="w-4 h-4 mr-1.5" /> Criar conta grátis
-          </Button>
-          <button onClick={() => navigate("/auth")}
-            className="px-5 h-12 text-sm font-semibold rounded-xl border-2 border-white/20 text-white/80 hover:bg-white/10 hover:border-white/40 transition-all">
-            Entrar
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
-  // ── Slides extras: banners dinâmicos do banco ──
-  const renderDynamicSlide = (banner: BannerData) => {
-    const estiloConfig = ESTILOS[banner.estilo] || ESTILOS.premium;
-    const bgStyle = banner.cor_fundo || estiloConfig.bg;
-    const titleColor = banner.cor_texto || estiloConfig.titleColor;
-
-    return (
-      <div
-        className="relative overflow-hidden rounded-2xl text-white shadow-xl cursor-pointer"
-        onClick={() => banner.link && navigate(banner.link)}
-        style={{
-          backgroundColor: estiloConfig.bgFallback,
-          background: bgStyle,
-          border: `1px solid ${estiloConfig.badgeBorder}`,
-        }}
-      >
+    <div className="flex-shrink-0 w-full" style={{ scrollSnapAlign: "start" }}>
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white shadow-xl">
         <div className="absolute inset-0 opacity-[0.04]"
           style={{ backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(255,255,255,0.1) 20px, rgba(255,255,255,0.1) 21px)" }} />
-        <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -translate-y-20 translate-x-20 blur-2xl" />
+        <div className="absolute top-0 right-0 w-48 h-48 bg-copa-green-500/15 rounded-full -translate-y-20 translate-x-20 blur-2xl" />
+        <div className="absolute bottom-0 left-0 w-32 h-32 bg-copa-gold-400/10 rounded-full translate-y-14 -translate-x-10 blur-xl" />
 
         <div className="relative z-10 p-5 pb-4">
-          {/* Emoji grande */}
-          <div className="text-5xl mb-3" style={{ filter: "drop-shadow(0 0 12px rgba(255,255,255,0.2))" }}>
-            {banner.emoji}
-          </div>
-
-          {/* Título */}
-          <h2 className="text-[22px] font-extrabold leading-tight" style={{ color: titleColor }}>
-            {banner.titulo}
+          <h2 className="text-[22px] font-extrabold leading-tight">
+            Desafie seus amigos,{" "}
+            <span className="text-copa-gold-400">prove que você entende de bola</span>{" "}
+            e concorra a prêmios!
           </h2>
+          <p className="text-white/60 text-sm mt-2 leading-relaxed">
+            Crie seu bolão, faça seus palpites e veja quem acerta mais. Grátis pra jogar.
+          </p>
 
-          {/* Subtítulo */}
-          {banner.subtitulo && (
-            <p className="text-sm mt-2 leading-relaxed" style={{ color: estiloConfig.subtitleColor }}>
-              {banner.subtitulo}
-            </p>
-          )}
-
-          {/* Badge */}
-          {banner.badge_texto && (
-            <div className="mt-4 rounded-xl overflow-hidden"
-              style={{ background: estiloConfig.badgeBg, border: `1px solid ${estiloConfig.badgeBorder}` }}>
-              <div className="flex items-center gap-3 px-4 py-3">
-                <span className="text-xl">⏳</span>
-                <p className="text-sm font-bold" style={{ color: estiloConfig.badgeText }}>
-                  {banner.badge_texto}
+          <div className="mt-4 rounded-xl overflow-hidden"
+            style={{ background: "linear-gradient(135deg, #92400E 0%, #B45309 30%, #D97706 60%, #EAB308 100%)", border: "1px solid rgba(250, 204, 21, 0.3)" }}>
+            <div className="flex items-center gap-3 px-4 py-3">
+              <span className="text-2xl">🏆</span>
+              <div className="flex-1">
+                <p className="text-white font-bold text-sm leading-snug">
+                  Valendo <span style={{ color: "#FEF9C3" }}>R$ 200</span> em prêmio!
                 </p>
+                <p className="text-white/60 text-[11px] mt-0.5">Bolão do Paulistão — Finais</p>
               </div>
             </div>
-          )}
+          </div>
 
-          {/* Social proof (mesmo do hero) */}
           <div className="flex items-center gap-3 mt-4">
             <div className="flex -space-x-2">
               {["🇧🇷", "⚽", "🏆", "🎯", "🔥"].map((emoji, i) => (
-                <div key={i} className="w-7 h-7 bg-white/10 backdrop-blur rounded-full border-2 border-gray-800 flex items-center justify-center text-xs">
-                  {emoji}
-                </div>
+                <div key={i} className="w-7 h-7 bg-white/10 backdrop-blur rounded-full border-2 border-gray-800 flex items-center justify-center text-xs">{emoji}</div>
               ))}
             </div>
             <div className="text-xs">
-              <span className="font-bold text-white">
-                {totalJogadores.toLocaleString("pt-BR")}+
-              </span>
+              <span className="font-bold text-white">{totalJogadores.toLocaleString("pt-BR")}+</span>
               <span className="text-white/50"> já estão jogando</span>
             </div>
           </div>
 
-          {/* CTAs (mesmo estilo do hero) */}
           <div className="flex gap-2.5 mt-4">
-            <Button onClick={() => navigate(banner.link || "/auth?modo=cadastro")}
+            <Button onClick={() => navigate("/auth?modo=cadastro")}
               className="flex-1 h-12 bg-copa-gold-400 hover:bg-copa-gold-500 text-gray-900 font-extrabold text-sm rounded-xl shadow-lg shadow-copa-gold-400/20 transition-all hover:scale-[1.02]">
-              <UserPlus className="w-4 h-4 mr-1.5" /> {banner.cta_texto}
+              <UserPlus className="w-4 h-4 mr-1.5" /> Criar conta grátis
             </Button>
             <button onClick={() => navigate("/auth")}
               className="px-5 h-12 text-sm font-semibold rounded-xl border-2 border-white/20 text-white/80 hover:bg-white/10 hover:border-white/40 transition-all">
@@ -268,23 +206,88 @@ const GuestHeroCarousel = ({ participantesCount, handleGoogleLogin }: GuestHeroC
           </div>
         </div>
       </div>
+    </div>
+  );
+
+  // ── Slides extras ──
+  const renderDynamicSlide = (banner: BannerData) => {
+    const estiloConfig = ESTILOS[banner.estilo] || ESTILOS.premium;
+    const bgStyle = banner.cor_fundo || estiloConfig.bg;
+    const titleColor = banner.cor_texto || estiloConfig.titleColor;
+
+    return (
+      <div key={banner.id} className="flex-shrink-0 w-full" style={{ scrollSnapAlign: "start" }}>
+        <div className="relative overflow-hidden rounded-2xl text-white shadow-xl"
+          style={{ background: bgStyle, border: `1px solid ${estiloConfig.badgeBorder}` }}>
+          <div className="absolute inset-0 opacity-[0.04]"
+            style={{ backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(255,255,255,0.1) 20px, rgba(255,255,255,0.1) 21px)" }} />
+          <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -translate-y-20 translate-x-20 blur-2xl" />
+
+          <div className="relative z-10 p-5 pb-4">
+            <div className="text-5xl mb-3" style={{ filter: "drop-shadow(0 0 12px rgba(255,255,255,0.2))" }}>
+              {banner.emoji}
+            </div>
+            <h2 className="text-[22px] font-extrabold leading-tight" style={{ color: titleColor }}>
+              {banner.titulo}
+            </h2>
+            {banner.subtitulo && (
+              <p className="text-sm mt-2 leading-relaxed" style={{ color: estiloConfig.subtitleColor }}>
+                {banner.subtitulo}
+              </p>
+            )}
+            {banner.badge_texto && (
+              <div className="mt-4 rounded-xl overflow-hidden"
+                style={{ background: estiloConfig.badgeBg, border: `1px solid ${estiloConfig.badgeBorder}` }}>
+                <div className="flex items-center gap-3 px-4 py-3">
+                  <span className="text-xl">⏳</span>
+                  <p className="text-sm font-bold" style={{ color: estiloConfig.badgeText }}>{banner.badge_texto}</p>
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center gap-3 mt-4">
+              <div className="flex -space-x-2">
+                {["🇧🇷", "⚽", "🏆", "🎯", "🔥"].map((emoji, i) => (
+                  <div key={i} className="w-7 h-7 bg-white/10 backdrop-blur rounded-full border-2 border-gray-800 flex items-center justify-center text-xs">{emoji}</div>
+                ))}
+              </div>
+              <div className="text-xs">
+                <span className="font-bold text-white">{totalJogadores.toLocaleString("pt-BR")}+</span>
+                <span className="text-white/50"> já estão jogando</span>
+              </div>
+            </div>
+
+            <div className="flex gap-2.5 mt-4">
+              <Button onClick={() => navigate(banner.link || "/auth?modo=cadastro")}
+                className="flex-1 h-12 bg-copa-gold-400 hover:bg-copa-gold-500 text-gray-900 font-extrabold text-sm rounded-xl shadow-lg shadow-copa-gold-400/20 transition-all hover:scale-[1.02]">
+                <UserPlus className="w-4 h-4 mr-1.5" /> {banner.cta_texto}
+              </Button>
+              <button onClick={() => navigate("/auth")}
+                className="px-5 h-12 text-sm font-semibold rounded-xl border-2 border-white/20 text-white/80 hover:bg-white/10 hover:border-white/40 transition-all">
+                Entrar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     );
   };
 
   return (
-    <div
-      className="relative"
-      onMouseEnter={() => totalSlides > 1 && setIsPaused(true)}
-      onMouseLeave={() => totalSlides > 1 && setIsPaused(false)}
-      onTouchStart={totalSlides > 1 ? handleTouchStart : undefined}
-      onTouchEnd={totalSlides > 1 ? handleTouchEnd : undefined}
-    >
-      {/* Slide atual */}
-      <div className="transition-opacity duration-500 ease-in-out" key={current}>
-        {current === 0
-          ? renderHeroSlide()
-          : renderDynamicSlide(extraBanners[current - 1])
-        }
+    <div className="relative">
+      {/* Scroll container com snap */}
+      <div
+        ref={scrollRef}
+        className="flex overflow-x-auto no-scrollbar"
+        style={{
+          scrollSnapType: "x mandatory",
+          WebkitOverflowScrolling: "touch",
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+        }}
+      >
+        {renderHeroSlide()}
+        {extraBanners.map((b) => renderDynamicSlide(b))}
       </div>
 
       {/* Indicadores */}
@@ -293,22 +296,16 @@ const GuestHeroCarousel = ({ participantesCount, handleGoogleLogin }: GuestHeroC
           {Array.from({ length: totalSlides }).map((_, idx) => (
             <button
               key={idx}
-              onClick={() => {
-                setCurrent(idx);
-                setIsPaused(true);
-                setTimeout(() => setIsPaused(false), 4000);
-              }}
+              onClick={() => { scrollToIndex(idx); setCurrent(idx); }}
               className={`transition-all duration-300 rounded-full ${
-                idx === current
-                  ? "w-6 h-2 bg-copa-gold-400"
-                  : "w-2 h-2 bg-white/30 hover:bg-white/50"
+                idx === current ? "w-6 h-2 bg-copa-gold-400" : "w-2 h-2 bg-white/30 hover:bg-white/50"
               }`}
             />
           ))}
         </div>
       )}
 
-      {/* Google Login rápido — abaixo do carrossel */}
+      {/* Google Login */}
       {!/FBAN|FBAV|Instagram|Line|TikTok|Snapchat/i.test(navigator.userAgent) && (
         <button onClick={handleGoogleLogin}
           className="w-full mt-4 flex items-center justify-center gap-3 bg-white border border-gray-200 hover:border-copa-green-400 hover:shadow-md rounded-xl py-3.5 font-semibold text-sm text-gray-600 transition-all">
@@ -321,6 +318,8 @@ const GuestHeroCarousel = ({ participantesCount, handleGoogleLogin }: GuestHeroC
           Cadastre-se rápido com Google
         </button>
       )}
+
+      <style>{`.no-scrollbar::-webkit-scrollbar { display: none; }`}</style>
     </div>
   );
 };
