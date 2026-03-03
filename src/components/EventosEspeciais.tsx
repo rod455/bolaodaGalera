@@ -21,9 +21,16 @@ interface EventoEspecial {
   created_at: string;
 }
 
+interface CampeonatoInfo {
+  id: string;
+  nome_popular: string;
+  logo_url: string;
+}
+
 interface EventosEspeciaisProps {
   bolaoId: string;
   campeonatoId: string | null;
+  campeonatos?: CampeonatoInfo[];
   isCriador: boolean;
   userId: string;
 }
@@ -55,7 +62,7 @@ const TIPO_CONFIG = {
   },
 };
 
-const EventosEspeciais = ({ bolaoId, campeonatoId, isCriador, userId }: EventosEspeciaisProps) => {
+const EventosEspeciais = ({ bolaoId, campeonatoId, campeonatos, isCriador, userId }: EventosEspeciaisProps) => {
   const [eventos, setEventos] = useState<EventoEspecial[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -160,6 +167,7 @@ const EventosEspeciais = ({ bolaoId, campeonatoId, isCriador, userId }: EventosE
         onClose={() => setShowCreateModal(false)}
         bolaoId={bolaoId}
         campeonatoId={campeonatoId}
+        campeonatos={campeonatos || []}
         userId={userId}
         onCreated={(evento) => { setEventos((prev) => [evento, ...prev]); setShowCreateModal(false); }}
       />
@@ -168,9 +176,10 @@ const EventosEspeciais = ({ bolaoId, campeonatoId, isCriador, userId }: EventosE
 };
 
 /* ═══ Modal de Criação de Evento ═══ */
-const CreateEventoModal = ({ open, onClose, bolaoId, campeonatoId, userId, onCreated }: {
+const CreateEventoModal = ({ open, onClose, bolaoId, campeonatoId, campeonatos, userId, onCreated }: {
   open: boolean; onClose: () => void; bolaoId: string;
-  campeonatoId: string | null; userId: string;
+  campeonatoId: string | null; campeonatos: CampeonatoInfo[];
+  userId: string;
   onCreated: (evento: EventoEspecial) => void;
 }) => {
   const [step, setStep] = useState<"tipo" | "config">("tipo");
@@ -192,29 +201,46 @@ const CreateEventoModal = ({ open, onClose, bolaoId, campeonatoId, userId, onCre
   // Conta no bolão principal?
   const [contaPrincipal, setContaPrincipal] = useState(true);
 
+  // Campeonatos disponiveis
+  const campsDisponiveis = campeonatos.length > 0
+    ? campeonatos
+    : campeonatoId
+      ? [{ id: campeonatoId, nome_popular: "", logo_url: "" }]
+      : [];
+
   // Dados do campeonato
   const [rodadas, setRodadas] = useState<string[]>([]);
   const [jogos, setJogos] = useState<Jogo[]>([]);
   const [loadingData, setLoadingData] = useState(false);
 
   useEffect(() => {
-    if (open && campeonatoId) loadCampeonatoData();
+    if (open) {
+      if (campsDisponiveis.length === 1) {
+        setCampSelecionadoId(campsDisponiveis[0].id);
+      }
+    }
     if (!open) resetForm();
-  }, [open, campeonatoId]);
+  }, [open]);
+
+  useEffect(() => {
+    if (campSelecionadoId && open) loadCampeonatoData(campSelecionadoId);
+  }, [campSelecionadoId, open]);
 
   const resetForm = () => {
     setStep("tipo"); setTipoSelecionado(null); setNome("");
     setMultiplicador(2); setRodadasSelecionadas([]);
     setMiniRodadas([]); setJogoSelecionado(null); setBonus(15);
     setContaPrincipal(true);
+    setCampSelecionadoId(null);
+    setRodadas([]); setJogos([]);
   };
 
-  const loadCampeonatoData = async () => {
-    if (!campeonatoId) return;
+  const loadCampeonatoData = async (campId: string) => {
     setLoadingData(true);
+    setRodadasSelecionadas([]); setMiniRodadas([]); setJogoSelecionado(null);
     try {
       const { data } = await supabase.from("jogos").select("*")
-        .eq("campeonato_id", campeonatoId).order("data_hora", { ascending: true });
+        .eq("campeonato_id", campId).order("data_hora", { ascending: true });
       const allJogos = (data || []) as Jogo[];
       setJogos(allJogos);
 
@@ -339,11 +365,45 @@ const CreateEventoModal = ({ open, onClose, bolaoId, campeonatoId, userId, onCre
                 className="h-10 rounded-xl" />
             </div>
 
+            {/* Seletor de Campeonato */}
+            {campsDisponiveis.length > 1 && (
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Campeonato</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {campsDisponiveis.map((camp) => {
+                    const sel = campSelecionadoId === camp.id;
+                    return (
+                      <button key={camp.id}
+                        onClick={() => setCampSelecionadoId(camp.id)}
+                        className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all border ${
+                          sel
+                            ? "border-orange-400 bg-orange-50 text-orange-700"
+                            : "border-gray-200 bg-white text-muted-foreground hover:bg-muted/50"
+                        }`}>
+                        {camp.logo_url && (
+                          <img src={camp.logo_url} alt="" className="w-4 h-4 object-contain"
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                        )}
+                        {camp.nome_popular || "Campeonato"}
+                        {sel && <Check className="w-3 h-3 text-orange-500" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {campsDisponiveis.length > 1 && !campSelecionadoId && (
+              <div className="text-center py-4 bg-muted/30 rounded-xl">
+                <p className="text-xs text-muted-foreground">Selecione um campeonato acima para ver as rodadas e jogos</p>
+              </div>
+            )}
+
             {loadingData ? (
               <div className="flex items-center justify-center py-6">
                 <Loader2 className="w-5 h-5 text-orange-400 animate-spin" />
               </div>
-            ) : (
+            ) : campSelecionadoId ? (
               <>
                 {/* ═══ MULTIPLICADOR ═══ */}
                 {tipoSelecionado === "multiplicador" && (
@@ -460,7 +520,7 @@ const CreateEventoModal = ({ open, onClose, bolaoId, campeonatoId, userId, onCre
                   </>
                 )}
               </>
-            )}
+            ) : null}
 
             {/* Conta no principal? */}
             <div onClick={() => setContaPrincipal(!contaPrincipal)}
