@@ -1,16 +1,21 @@
-name: Palpite Reminder
+name: Palpite Reminders
 
 on:
   schedule:
-    # Roda a cada 2 horas, das 8h às 22h BRT (11h às 01h UTC)
+    # Email: a cada 2h das 8h às 22h BRT (11h às 01h UTC)
     - cron: '0 11,13,15,17,19,21,23,1 * * *'
+    # Push: a cada 30min (pega jogos na próxima 1h)
+    - cron: '0,30 * * * *'
   workflow_dispatch:
 
 jobs:
-  send-reminders:
+  # ═══ EMAIL — 12h antes do jogo ═══
+  send-email-reminders:
     runs-on: ubuntu-latest
+    # Só roda nos horários de email (horas cheias das 11h-01h UTC)
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'schedule' && contains('0 11,13,15,17,19,21,23,1', format('{0}', github.event.schedule)))
     steps:
-      - name: Disparar Edge Function de lembretes
+      - name: Disparar lembretes por email
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
@@ -23,10 +28,35 @@ jobs:
           http_code=$(echo "$response" | tail -1)
           body=$(echo "$response" | sed '$d')
           
-          echo "Status: $http_code"
+          echo "📧 Email Reminder - Status: $http_code"
           echo "Response: $body"
           
           if [ "$http_code" -ge 400 ]; then
-            echo "::error::Falha ao enviar lembretes (HTTP $http_code)"
+            echo "::error::Falha nos lembretes por email (HTTP $http_code)"
+            exit 1
+          fi
+
+  # ═══ PUSH — 1h antes do jogo ═══
+  send-push-reminders:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Disparar push urgente
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            "${SUPABASE_URL}/functions/v1/push-palpite-urgente" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_KEY}" \
+            -H "Content-Type: application/json")
+          
+          http_code=$(echo "$response" | tail -1)
+          body=$(echo "$response" | sed '$d')
+          
+          echo "📲 Push Reminder - Status: $http_code"
+          echo "Response: $body"
+          
+          if [ "$http_code" -ge 400 ]; then
+            echo "::error::Falha no push urgente (HTTP $http_code)"
             exit 1
           fi
