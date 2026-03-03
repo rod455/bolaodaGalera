@@ -21,10 +21,25 @@ interface BannerData {
   mostrar_para: string;
   imagem_url: string | null;
   imagem_fundo_url: string | null;
+  // ── Segmentação ──
+  segmento: string;
+  dias_desde_cadastro_min: number | null;
+  dias_desde_cadastro_max: number | null;
+  tem_bolao_privado: boolean | null;
+  qtd_participantes_min: number | null;
+}
+
+// Contexto do usuário para segmentação de banners
+export interface UserBannerContext {
+  diasDesdeCadastro: number;
+  temBolaoPrivado: boolean;
+  qtdParticipantesMax: number; // maior nº de participantes entre os bolões privados do user
+  temBolaoSolitario: boolean; // criou bolão privado onde só ele participa
 }
 
 interface DynamicBannerProps {
   userBolaoIds: Set<string>;
+  userContext?: UserBannerContext;
 }
 
 const ESTILOS: Record<string, {
@@ -60,7 +75,7 @@ const ESTILOS: Record<string, {
 const AUTO_ROTATE_MS = 4000;
 const DRAG_THRESHOLD = 8;
 
-const DynamicBanner = ({ userBolaoIds }: DynamicBannerProps) => {
+const DynamicBanner = ({ userBolaoIds, userContext }: DynamicBannerProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [banners, setBanners] = useState<BannerData[]>([]);
@@ -80,7 +95,7 @@ const DynamicBanner = ({ userBolaoIds }: DynamicBannerProps) => {
       const now = new Date().toISOString();
       const { data } = await supabase
         .from("banners_home")
-        .select("id, titulo, subtitulo, emoji, badge_texto, cta_texto, cta_texto_participando, bolao_id, link, estilo, cor_fundo, cor_texto, mostrar_para, imagem_url, imagem_fundo_url")
+        .select("id, titulo, subtitulo, emoji, badge_texto, cta_texto, cta_texto_participando, bolao_id, link, estilo, cor_fundo, cor_texto, mostrar_para, imagem_url, imagem_fundo_url, segmento, dias_desde_cadastro_min, dias_desde_cadastro_max, tem_bolao_privado, qtd_participantes_min")
         .eq("ativo", true)
         .or(`data_fim.is.null,data_fim.gt.${now}`)
         .lte("data_inicio", now)
@@ -88,15 +103,43 @@ const DynamicBanner = ({ userBolaoIds }: DynamicBannerProps) => {
 
       if (data) {
         const contexto = user ? "logados" : "deslogados";
-        const filtrados = (data as BannerData[]).filter(
-          (b) => b.mostrar_para === "todos" || b.mostrar_para === contexto
-        );
+        const filtrados = (data as BannerData[]).filter((b) => {
+          // 1. Filtro logados/deslogados (existente)
+          if (b.mostrar_para !== "todos" && b.mostrar_para !== contexto) return false;
+
+          // 2. Filtro por segmento (novo)
+          const seg = b.segmento || "todos";
+          if (seg === "todos") return true;
+          if (seg === "deslogados") return !user;
+          if (!user || !userContext) return seg === "todos";
+
+          switch (seg) {
+            case "novo":
+              return userContext.diasDesdeCadastro <= 3;
+            case "ativo":
+              return userContext.temBolaoPrivado && userContext.qtdParticipantesMax > 1;
+            case "so_nacional":
+              return !userContext.temBolaoPrivado;
+            case "solitario":
+              return userContext.temBolaoSolitario;
+            default:
+              return true;
+          }
+        }).filter((b) => {
+          // 3. Filtros numéricos opcionais
+          if (!userContext) return true;
+          if (b.dias_desde_cadastro_min != null && userContext.diasDesdeCadastro < b.dias_desde_cadastro_min) return false;
+          if (b.dias_desde_cadastro_max != null && userContext.diasDesdeCadastro > b.dias_desde_cadastro_max) return false;
+          if (b.tem_bolao_privado != null && userContext.temBolaoPrivado !== b.tem_bolao_privado) return false;
+          if (b.qtd_participantes_min != null && userContext.qtdParticipantesMax < b.qtd_participantes_min) return false;
+          return true;
+        });
         setBanners(filtrados);
       }
       setLoading(false);
     };
     fetchBanners();
-  }, [user]);
+  }, [user, userContext]);
 
   const scrollToIndex = useCallback((idx: number) => {
     const el = scrollRef.current;
