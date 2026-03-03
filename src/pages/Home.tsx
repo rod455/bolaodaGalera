@@ -18,7 +18,7 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import AdRewardModal from "@/components/AdRewardModal";
 import { useRewardedAd } from "@/hooks/useRewardedAd";
 import { useUserPlan } from "@/hooks/useUserPlan";
-import PromoBanner from "@/components/PromoBanner";
+import DynamicBanner from "@/components/DynamicBanner";
 import PromoCardBorder from "@/components/PromoCardBorder";
 import type { Bolao } from "@/lib/types";
 import { MODO_LABELS, MODO_REGRAS, FALLBACK_IMAGES } from "@/lib/constants";
@@ -555,12 +555,9 @@ const Home = () => {
       <AdRewardModal open={showAdModal} onComplete={resolveWebAd} message="Assista para entrar no bolão" />
 
 
-      {/* ═══ BANNER PROMOÇÃO PAULISTÃO (só para logados) ═══ */}
+      {/* ═══ BANNERS DINÂMICOS (gerenciados via Supabase) ═══ */}
       {user && (
-        <PromoBanner
-          bolaoId={PAULISTAO_BOLAO_ID}
-          jaParticipa={userBolaoIds.has(PAULISTAO_BOLAO_ID)}
-        />
+        <DynamicBanner userBolaoIds={userBolaoIds} />
       )}
 
       {/* ═══ GUEST: Countdown no topo + hero de conversão ═══ */}
@@ -603,7 +600,7 @@ const Home = () => {
                       Valendo <span style={{ color: "#FEF9C3" }}>R$ 200</span> em prêmio!
                     </p>
                     <p className="text-white/60 text-[11px] mt-0.5">
-                      Bolão do Paulistão — Semifinais
+                      Bolão do Paulistão — Finais
                     </p>
                   </div>
                 </div>
