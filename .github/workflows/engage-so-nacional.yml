@@ -1,0 +1,54 @@
+name: Engage - So Nacional
+
+on:
+  schedule:
+    # Quinta 11h BRT (14h UTC) - Email + Sininho
+    - cron: '0 14 * * 4'
+    # Sabado 11h BRT (14h UTC) - Push
+    - cron: '0 14 * * 6'
+  workflow_dispatch:
+
+jobs:
+  email-sininho:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'schedule' && github.event.schedule == '0 14 * * 4')
+    steps:
+      - name: Email + sininho para quem so tem nacional
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            "${SUPABASE_URL}/functions/v1/notify-only-nacional" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_KEY}" \
+            -H "Content-Type: application/json")
+          http_code=$(echo "$response" | tail -1)
+          body=$(echo "$response" | sed '$d')
+          echo "Status: $http_code"
+          echo "Response: $body"
+          if [ "$http_code" -ge 400 ]; then
+            echo "::error::Falha (HTTP $http_code)"
+            exit 1
+          fi
+
+  push:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' && github.event.schedule == '0 14 * * 6'
+    steps:
+      - name: Push para quem ainda nao criou bolao privado
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            "${SUPABASE_URL}/functions/v1/notify-only-nacional-push" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_KEY}" \
+            -H "Content-Type: application/json")
+          http_code=$(echo "$response" | tail -1)
+          body=$(echo "$response" | sed '$d')
+          echo "Status: $http_code"
+          echo "Response: $body"
+          if [ "$http_code" -ge 400 ]; then
+            echo "::error::Falha (HTTP $http_code)"
+            exit 1
+          fi
