@@ -78,7 +78,7 @@ const CriarBolao = () => {
   const [infoModal, setInfoModal] = useState<RegraInfo | null>(null);
   const [regrasAtivas, setRegrasAtivas] = useState<string[]>([]);
   const [regrasModalOpen, setRegrasModalOpen] = useState(false);
-  const [categoriaAberta, setCategoriaAberta] = useState<string | null>(null);
+  const [categoriaAberta, setCategoriaAberta] = useState<string | null>("estaduais");
 
   // Fanático - time do coração
   const [timeFavorito, setTimeFavorito] = useState("");
@@ -552,7 +552,14 @@ const CriarBolao = () => {
                               </div>
                             )}
                             <div className="flex-1 min-w-0">
-                              <span className="text-sm font-medium block truncate">{camp.nome_popular || camp.nome}</span>
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-sm font-medium block truncate">{camp.nome_popular || camp.nome}</span>
+                                {(camp.nome_popular || camp.nome || "").toLowerCase().includes("finais estaduais") && (
+                                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-600 animate-pulse flex-shrink-0">
+                                    🔥 NOVO
+                                  </span>
+                                )}
+                              </div>
                               <span className="text-[10px] text-muted-foreground">Temporada {camp.temporada}</span>
                             </div>
                           </div>
