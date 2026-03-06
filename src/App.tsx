@@ -20,6 +20,7 @@ import SplashScreen from "./components/SplashScreen";
 import NotificationToast from "./components/NotificationToast";
 import { Analytics } from "@vercel/analytics/react";
 import { Capacitor } from "@capacitor/core";
+import { App as CapApp } from "@capacitor/app";
 import { supabase } from "@/integrations/supabase/client";
 import { initGoogleAuth } from "@/lib/googleAuth";
 
@@ -40,52 +41,39 @@ const EXIT_ROUTES = ["/home", "/auth"];
 
 /**
  * Intercepta o botao voltar nativo do Android.
- * Registra o listener UMA UNICA VEZ e usa ref para
- * sempre ter o pathname atual — evita listeners duplicados
- * e closures stale.
+ * Usa @capacitor/app diretamente (ja instalado).
+ * Listener registrado uma unica vez com pathnameRef para evitar stale closure.
  */
 const BackButtonHandler = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Ref sempre tem o pathname mais recente sem re-registrar o listener
   const pathnameRef = useRef(location.pathname);
   useEffect(() => {
     pathnameRef.current = location.pathname;
   }, [location.pathname]);
 
-  // Registra o listener apenas UMA VEZ na montagem
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
 
-    const AppPlugin = (Capacitor as any).Plugins?.App;
-    if (!AppPlugin) return;
-
-    let listenerHandle: { remove: () => void } | null = null;
-
-    AppPlugin.addListener("backButton", () => {
+    const listener = CapApp.addListener("backButton", () => {
       const currentPath = pathnameRef.current;
-
       const shouldExit = EXIT_ROUTES.some(
         (r) => currentPath === r || currentPath === r + "/"
       );
 
       if (shouldExit) {
-        AppPlugin.exitApp();
+        CapApp.exitApp();
       } else {
         navigate(-1);
       }
-    }).then((handle: { remove: () => void }) => {
-      listenerHandle = handle;
-    }).catch((err: any) => {
-      console.log("[BackButton] Erro:", err);
     });
 
     return () => {
-      listenerHandle?.remove();
+      listener.then((l) => l.remove()).catch(() => {});
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // <-- array vazio: registra apenas uma vez
+  }, []);
 
   return null;
 };
