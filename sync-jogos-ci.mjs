@@ -59,7 +59,7 @@ const FASE_MAP = {
 // ═══════════════════════════════════════════
 // MODO LIVE: Atualiza jogos pendentes
 // - Janela de 5 dias atrás
-// - Buffer +4h no futuro para fuso BRT→UTC
+// - Buffer +4h no futuro para fuso BRT->UTC
 // - Recupera encerrados sem placar
 // ═══════════════════════════════════════════
 async function syncLive() {
@@ -86,7 +86,7 @@ async function syncLive() {
 
   if (!games || games.length === 0) {
     console.log('😴 Nenhum jogo pendente nos últimos 5 dias.');
-    console.log('   (API football-data.org NÃO foi chamada)');
+    console.log('   (API football-data.org NAO foi chamada)');
     return;
   }
 
@@ -124,7 +124,7 @@ async function syncLive() {
       game.placar_time_b !== placarB;
 
     if (!changed) {
-      console.log(`  ⏩ ${game.time_a} vs ${game.time_b} - sem alteração`);
+      console.log(`  ⏩ ${game.time_a} vs ${game.time_b} - sem alteracao`);
       await new Promise(r => setTimeout(r, 7000));
       continue;
     }
@@ -140,7 +140,7 @@ async function syncLive() {
     if (err) {
       console.log(`  ❌ ${game.time_a} vs ${game.time_b}: ${err.message}`);
     } else {
-      console.log(`  ${emoji} ${game.time_a} ${placar} ${game.time_b} [${game.status} → ${newStatus}]`);
+      console.log(`  ${emoji} ${game.time_a} ${placar} ${game.time_b} [${game.status} -> ${newStatus}]`);
       updated++;
     }
 
@@ -164,7 +164,7 @@ async function syncFull() {
   console.log('🔄 Sync COMPLETO - Atualizando todos os campeonatos\n');
 
   const CAMPEONATOS = [
-    { code: 'BSA', id: 2013, nome: 'Brasileirão',      season: 2026 },
+    { code: 'BSA', id: 2013, nome: 'Brasileirao',      season: 2026 },
     { code: 'WC',  id: 2000, nome: 'Copa do Mundo',    season: 2026 },
     { code: 'CL',  id: 2001, nome: 'Champions League', season: 2025 },
     { code: 'CLI', id: 2152, nome: 'Libertadores',     season: 2026 },
@@ -182,7 +182,7 @@ async function syncFull() {
       .single();
 
     if (!campData) {
-      console.log(`  ❌ Campeonato não encontrado no banco`);
+      console.log(`  ❌ Campeonato nao encontrado no banco`);
       continue;
     }
 
@@ -227,7 +227,7 @@ async function syncFull() {
 
   if (totalUpdated > 0) {
     await supabase.from('sync_log').insert({
-      campeonato_acid: 0, tipo: 'github-actions-full', jogos_atualizados: totalUpdated,
+      campeonato_api_id: 0, tipo: 'github-actions-full', jogos_atualizados: totalUpdated,
     });
   }
 
