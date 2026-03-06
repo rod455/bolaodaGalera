@@ -14,6 +14,7 @@ const config: CapacitorConfig = {
     },
   },
   includePlugins: [
+    '@capacitor/app',
     '@capacitor-community/admob',
     '@capacitor-firebase/analytics',
     '@capacitor/push-notifications',
