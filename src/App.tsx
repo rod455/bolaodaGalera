@@ -25,7 +25,7 @@ import { initGoogleAuth } from "@/lib/googleAuth";
 
 const queryClient = new QueryClient();
 
-/** Redireciona / para /home preservando o hash (necessario para tokens do Supabase auth) */
+/** Redireciona / para /home preservando o hash */
 const RootRedirect = () => {
   const hash = window.location.hash;
   if (hash && (hash.includes("access_token") || hash.includes("type=signup") || hash.includes("type=recovery"))) {
@@ -35,14 +35,14 @@ const RootRedirect = () => {
   return <Navigate to="/home" replace />;
 };
 
-// Rotas raiz onde o app deve fechar ao pressionar voltar
-const ROOT_ROUTES = ["/home", "/auth"];
+// Rotas onde o botao voltar deve fechar o app
+const EXIT_ROUTES = ["/home", "/auth"];
 
 /**
  * Intercepta o botao voltar nativo do Android.
- * Usa Capacitor.Plugins.App (igual ao padrao do analytics.ts)
- * para nao crashar no build web.
- * Deve estar dentro do BrowserRouter.
+ * - Nas rotas raiz (home, auth): fecha o app
+ * - Em qualquer outra rota: volta para a pagina anterior
+ * Nao usa canGoBack pois ele nao enxerga o historico do React Router.
  */
 const BackButtonHandler = () => {
   const navigate = useNavigate();
@@ -51,8 +51,6 @@ const BackButtonHandler = () => {
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
 
-    // Acessa o plugin App via Capacitor.Plugins (sem import direto)
-    // igual ao padrao usado em src/lib/analytics.ts
     const AppPlugin = (Capacitor as any).Plugins?.App;
     if (!AppPlugin) return;
 
@@ -62,23 +60,24 @@ const BackButtonHandler = () => {
       try {
         const handle = await AppPlugin.addListener(
           "backButton",
-          ({ canGoBack }: { canGoBack: boolean }) => {
+          () => {
             const currentPath = location.pathname;
-            const isRootRoute = ROOT_ROUTES.some(
+
+            // Verifica se esta em rota de saida
+            const shouldExit = EXIT_ROUTES.some(
               (r) => currentPath === r || currentPath === r + "/"
             );
 
-            if (isRootRoute || !canGoBack) {
+            if (shouldExit) {
               AppPlugin.exitApp();
-              return;
+            } else {
+              navigate(-1);
             }
-
-            navigate(-1);
           }
         );
         listenerHandle = handle;
       } catch (err) {
-        console.log("[BackButton] Erro ao registrar listener:", err);
+        console.log("[BackButton] Erro:", err);
       }
     };
 
@@ -87,6 +86,7 @@ const BackButtonHandler = () => {
     return () => {
       listenerHandle?.remove();
     };
+  // Re-registra o listener quando a rota muda para ter o pathname atualizado
   }, [navigate, location.pathname]);
 
   return null;
@@ -97,7 +97,6 @@ const App = () => {
   const [showSplash, setShowSplash] = useState(isNative);
   const handleSplashFinish = useCallback(() => setShowSplash(false), []);
 
-  // Inicializar Google Auth nativo
   useEffect(() => {
     initGoogleAuth();
   }, []);
@@ -127,7 +126,6 @@ const App = () => {
     };
 
     checkDeepLink();
-
     window.addEventListener("hashchange", checkDeepLink);
     document.addEventListener("resume", checkDeepLink);
 
