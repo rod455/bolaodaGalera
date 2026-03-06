@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -40,14 +40,21 @@ const EXIT_ROUTES = ["/home", "/auth"];
 
 /**
  * Intercepta o botao voltar nativo do Android.
- * - Nas rotas raiz (home, auth): fecha o app
- * - Em qualquer outra rota: volta para a pagina anterior
- * Nao usa canGoBack pois ele nao enxerga o historico do React Router.
+ * Registra o listener UMA UNICA VEZ e usa ref para
+ * sempre ter o pathname atual — evita listeners duplicados
+ * e closures stale.
  */
 const BackButtonHandler = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Ref sempre tem o pathname mais recente sem re-registrar o listener
+  const pathnameRef = useRef(location.pathname);
+  useEffect(() => {
+    pathnameRef.current = location.pathname;
+  }, [location.pathname]);
+
+  // Registra o listener apenas UMA VEZ na montagem
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
 
@@ -56,38 +63,29 @@ const BackButtonHandler = () => {
 
     let listenerHandle: { remove: () => void } | null = null;
 
-    const setupListener = async () => {
-      try {
-        const handle = await AppPlugin.addListener(
-          "backButton",
-          () => {
-            const currentPath = location.pathname;
+    AppPlugin.addListener("backButton", () => {
+      const currentPath = pathnameRef.current;
 
-            // Verifica se esta em rota de saida
-            const shouldExit = EXIT_ROUTES.some(
-              (r) => currentPath === r || currentPath === r + "/"
-            );
+      const shouldExit = EXIT_ROUTES.some(
+        (r) => currentPath === r || currentPath === r + "/"
+      );
 
-            if (shouldExit) {
-              AppPlugin.exitApp();
-            } else {
-              navigate(-1);
-            }
-          }
-        );
-        listenerHandle = handle;
-      } catch (err) {
-        console.log("[BackButton] Erro:", err);
+      if (shouldExit) {
+        AppPlugin.exitApp();
+      } else {
+        navigate(-1);
       }
-    };
-
-    setupListener();
+    }).then((handle: { remove: () => void }) => {
+      listenerHandle = handle;
+    }).catch((err: any) => {
+      console.log("[BackButton] Erro:", err);
+    });
 
     return () => {
       listenerHandle?.remove();
     };
-  // Re-registra o listener quando a rota muda para ter o pathname atualizado
-  }, [navigate, location.pathname]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // <-- array vazio: registra apenas uma vez
 
   return null;
 };
