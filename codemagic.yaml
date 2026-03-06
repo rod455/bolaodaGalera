@@ -1,0 +1,66 @@
+# codemagic.yaml
+workflows:
+  ios-release:
+    name: iOS Release - App Store
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.bolaonacopa.app
+      vars:
+        BUNDLE_ID: com.bolaonacopa.app
+        XCODE_PROJECT: ios/App/App.xcodeproj
+        XCODE_SCHEME: App
+      node: 22.0.0
+      xcode: latest
+
+    triggering:
+      events:
+        - tag
+      tag_patterns:
+        - pattern: 'ios-v*'
+          include: true
+
+    scripts:
+      - name: Install dependencies
+        script: npm ci
+
+      - name: Build web app
+        script: npm run build
+
+      - name: Install Capacitor iOS
+        script: |
+          if [ ! -d "ios" ]; then
+            npx cap add ios
+          fi
+
+      - name: Sync Capacitor
+        script: npx cap sync ios
+
+      - name: Set app version from tag
+        script: |
+          BUILD_NUMBER=$(( $(app-store-connect get-latest-testflight-build-number "$BUNDLE_ID") + 1 ))
+          cd ios/App
+          agvtool new-version -all "$BUILD_NUMBER"
+          # Pega a versão da tag (ex: ios-v1.2.0 → 1.2.0)
+          VERSION=$(echo $CM_TAG | sed 's/ios-v//')
+          agvtool new-marketing-version "$VERSION"
+
+      - name: Build IPA
+        script: |
+          xcode-project use-profiles
+          xcode-project build-ipa \
+            --project "$XCODE_PROJECT" \
+            --scheme "$XCODE_SCHEME"
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        submit_to_app_store: false  # mude para true quando quiser publicar direto
