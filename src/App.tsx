@@ -19,14 +19,13 @@ import ProtectedRoute from "./components/layout/ProtectedRoute";
 import SplashScreen from "./components/SplashScreen";
 import NotificationToast from "./components/NotificationToast";
 import { Analytics } from "@vercel/analytics/react";
-
-const queryClient = new QueryClient();
-
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
 import { initGoogleAuth } from "@/lib/googleAuth";
 
-/** Redireciona / para /home preservando o hash (necessário para tokens do Supabase auth) */
+const queryClient = new QueryClient();
+
+/** Redireciona / para /home preservando o hash (necessario para tokens do Supabase auth) */
 const RootRedirect = () => {
   const hash = window.location.hash;
   if (hash && (hash.includes("access_token") || hash.includes("type=signup") || hash.includes("type=recovery"))) {
@@ -36,12 +35,14 @@ const RootRedirect = () => {
   return <Navigate to="/home" replace />;
 };
 
-// ── Rotas raiz onde o app deve fechar ao pressionar voltar ──
+// Rotas raiz onde o app deve fechar ao pressionar voltar
 const ROOT_ROUTES = ["/home", "/auth"];
 
 /**
- * Componente interno que intercepta o botão voltar do Android/iOS.
- * Precisa estar DENTRO do BrowserRouter para ter acesso ao useNavigate/useLocation.
+ * Intercepta o botao voltar nativo do Android.
+ * Usa Capacitor.Plugins.App (igual ao padrao do analytics.ts)
+ * para nao crashar no build web.
+ * Deve estar dentro do BrowserRouter.
  */
 const BackButtonHandler = () => {
   const navigate = useNavigate();
@@ -50,40 +51,41 @@ const BackButtonHandler = () => {
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
 
-    let AppPlugin: any = null;
+    // Acessa o plugin App via Capacitor.Plugins (sem import direto)
+    // igual ao padrao usado em src/lib/analytics.ts
+    const AppPlugin = (Capacitor as any).Plugins?.App;
+    if (!AppPlugin) return;
 
-    const setupBackButton = async () => {
+    let listenerHandle: { remove: () => void } | null = null;
+
+    const setupListener = async () => {
       try {
-        // Import dinâmico para não quebrar build web
-        const { App } = await import("@capacitor/app");
-        AppPlugin = App;
+        const handle = await AppPlugin.addListener(
+          "backButton",
+          ({ canGoBack }: { canGoBack: boolean }) => {
+            const currentPath = location.pathname;
+            const isRootRoute = ROOT_ROUTES.some(
+              (r) => currentPath === r || currentPath === r + "/"
+            );
 
-        App.addListener("backButton", ({ canGoBack }) => {
-          const currentPath = location.pathname;
+            if (isRootRoute || !canGoBack) {
+              AppPlugin.exitApp();
+              return;
+            }
 
-          // Se estiver em rota raiz ou não puder voltar → fechar app
-          const isRootRoute = ROOT_ROUTES.some(
-            (r) => currentPath === r || currentPath === r + "/"
-          );
-
-          if (isRootRoute || !canGoBack) {
-            App.exitApp();
-            return;
+            navigate(-1);
           }
-
-          // Caso contrário, volta uma página no histórico
-          navigate(-1);
-        });
+        );
+        listenerHandle = handle;
       } catch (err) {
-        console.log("[BackButton] Plugin não disponível:", err);
+        console.log("[BackButton] Erro ao registrar listener:", err);
       }
     };
 
-    setupBackButton();
+    setupListener();
 
     return () => {
-      // Remover listener ao desmontar
-      AppPlugin?.removeAllListeners?.();
+      listenerHandle?.remove();
     };
   }, [navigate, location.pathname]);
 
@@ -100,7 +102,7 @@ const App = () => {
     initGoogleAuth();
   }, []);
 
-  // ── Deep Link: capturar OAuth callback no app nativo ──
+  // Deep Link: capturar OAuth callback no app nativo
   useEffect(() => {
     if (!isNative) return;
 
@@ -142,7 +144,6 @@ const App = () => {
         {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
         <AuthProvider>
           <BrowserRouter>
-            {/* Interceptor do botão voltar nativo — deve estar dentro do BrowserRouter */}
             <BackButtonHandler />
             <Routes>
               <Route path="/" element={<RootRedirect />} />
