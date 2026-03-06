@@ -19,14 +19,22 @@ import ProtectedRoute from "./components/layout/ProtectedRoute";
 import SplashScreen from "./components/SplashScreen";
 import NotificationToast from "./components/NotificationToast";
 import { Analytics } from "@vercel/analytics/react";
-
-const queryClient = new QueryClient();
-
-import { Capacitor } from "@capacitor/core";
+import { Capacitor, registerPlugin } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
 import { initGoogleAuth } from "@/lib/googleAuth";
 
-/** Redireciona / para /home preservando o hash (necessário para tokens do Supabase auth) */
+const queryClient = new QueryClient();
+
+// ── Tipagem mínima do plugin App ──
+interface AppPlugin {
+  addListener(event: "backButton", handler: (data: { canGoBack: boolean }) => void): Promise<{ remove: () => void }>;
+  exitApp(): Promise<void>;
+}
+
+// ── Registrar o plugin App via registerPlugin (padrão do projeto) ──
+const AppCapacitor = registerPlugin<AppPlugin>("App");
+
+/** Redireciona / para /home preservando o hash */
 const RootRedirect = () => {
   const hash = window.location.hash;
   if (hash && (hash.includes("access_token") || hash.includes("type=signup") || hash.includes("type=recovery"))) {
@@ -40,8 +48,8 @@ const RootRedirect = () => {
 const ROOT_ROUTES = ["/home", "/auth"];
 
 /**
- * Componente interno que intercepta o botão voltar do Android/iOS.
- * Precisa estar DENTRO do BrowserRouter para ter acesso ao useNavigate/useLocation.
+ * Intercepta o botão voltar nativo do Android/iOS.
+ * Deve estar dentro do BrowserRouter.
  */
 const BackButtonHandler = () => {
   const navigate = useNavigate();
@@ -50,40 +58,26 @@ const BackButtonHandler = () => {
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
 
-    let AppPlugin: any = null;
+    let listenerHandle: { remove: () => void } | null = null;
 
-    const setupBackButton = async () => {
-      try {
-        // Import dinâmico para não quebrar build web
-        const { App } = await import("@capacitor/app");
-        AppPlugin = App;
+    AppCapacitor.addListener("backButton", ({ canGoBack }) => {
+      const currentPath = location.pathname;
+      const isRootRoute = ROOT_ROUTES.some(
+        (r) => currentPath === r || currentPath === r + "/"
+      );
 
-        App.addListener("backButton", ({ canGoBack }) => {
-          const currentPath = location.pathname;
-
-          // Se estiver em rota raiz ou não puder voltar → fechar app
-          const isRootRoute = ROOT_ROUTES.some(
-            (r) => currentPath === r || currentPath === r + "/"
-          );
-
-          if (isRootRoute || !canGoBack) {
-            App.exitApp();
-            return;
-          }
-
-          // Caso contrário, volta uma página no histórico
-          navigate(-1);
-        });
-      } catch (err) {
-        console.log("[BackButton] Plugin não disponível:", err);
+      if (isRootRoute || !canGoBack) {
+        AppCapacitor.exitApp();
+        return;
       }
-    };
 
-    setupBackButton();
+      navigate(-1);
+    }).then((handle) => {
+      listenerHandle = handle;
+    });
 
     return () => {
-      // Remover listener ao desmontar
-      AppPlugin?.removeAllListeners?.();
+      listenerHandle?.remove();
     };
   }, [navigate, location.pathname]);
 
@@ -95,7 +89,6 @@ const App = () => {
   const [showSplash, setShowSplash] = useState(isNative);
   const handleSplashFinish = useCallback(() => setShowSplash(false), []);
 
-  // Inicializar Google Auth nativo
   useEffect(() => {
     initGoogleAuth();
   }, []);
@@ -125,7 +118,6 @@ const App = () => {
     };
 
     checkDeepLink();
-
     window.addEventListener("hashchange", checkDeepLink);
     document.addEventListener("resume", checkDeepLink);
 
@@ -142,7 +134,6 @@ const App = () => {
         {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
         <AuthProvider>
           <BrowserRouter>
-            {/* Interceptor do botão voltar nativo — deve estar dentro do BrowserRouter */}
             <BackButtonHandler />
             <Routes>
               <Route path="/" element={<RootRedirect />} />
