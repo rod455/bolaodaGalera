@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Auth from "./pages/Auth";
 import Home from "./pages/Home";
@@ -30,11 +30,64 @@ import { initGoogleAuth } from "@/lib/googleAuth";
 const RootRedirect = () => {
   const hash = window.location.hash;
   if (hash && (hash.includes("access_token") || hash.includes("type=signup") || hash.includes("type=recovery"))) {
-    // Supabase auth token no hash — redirecionar preservando o hash
     window.location.replace("/home" + hash);
     return null;
   }
   return <Navigate to="/home" replace />;
+};
+
+// ── Rotas raiz onde o app deve fechar ao pressionar voltar ──
+const ROOT_ROUTES = ["/home", "/auth"];
+
+/**
+ * Componente interno que intercepta o botão voltar do Android/iOS.
+ * Precisa estar DENTRO do BrowserRouter para ter acesso ao useNavigate/useLocation.
+ */
+const BackButtonHandler = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    let AppPlugin: any = null;
+
+    const setupBackButton = async () => {
+      try {
+        // Import dinâmico para não quebrar build web
+        const { App } = await import("@capacitor/app");
+        AppPlugin = App;
+
+        App.addListener("backButton", ({ canGoBack }) => {
+          const currentPath = location.pathname;
+
+          // Se estiver em rota raiz ou não puder voltar → fechar app
+          const isRootRoute = ROOT_ROUTES.some(
+            (r) => currentPath === r || currentPath === r + "/"
+          );
+
+          if (isRootRoute || !canGoBack) {
+            App.exitApp();
+            return;
+          }
+
+          // Caso contrário, volta uma página no histórico
+          navigate(-1);
+        });
+      } catch (err) {
+        console.log("[BackButton] Plugin não disponível:", err);
+      }
+    };
+
+    setupBackButton();
+
+    return () => {
+      // Remover listener ao desmontar
+      AppPlugin?.removeAllListeners?.();
+    };
+  }, [navigate, location.pathname]);
+
+  return null;
 };
 
 const App = () => {
@@ -51,9 +104,6 @@ const App = () => {
   useEffect(() => {
     if (!isNative) return;
 
-    // No Capacitor, deep links disparam 'appUrlOpen' no window
-    // O plugin @capacitor/app repassa como window event quando configurado
-    // Alternativa: verificar a URL ao abrir o app
     const checkDeepLink = () => {
       const hash = window.location.hash;
       if (hash && hash.includes("access_token")) {
@@ -76,7 +126,6 @@ const App = () => {
 
     checkDeepLink();
 
-    // Também escutar mudanças de URL (quando app volta do browser)
     window.addEventListener("hashchange", checkDeepLink);
     document.addEventListener("resume", checkDeepLink);
 
@@ -93,6 +142,8 @@ const App = () => {
         {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
         <AuthProvider>
           <BrowserRouter>
+            {/* Interceptor do botão voltar nativo — deve estar dentro do BrowserRouter */}
+            <BackButtonHandler />
             <Routes>
               <Route path="/" element={<RootRedirect />} />
               <Route path="/auth" element={<Auth />} />
