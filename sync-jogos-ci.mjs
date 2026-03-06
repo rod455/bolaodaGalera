@@ -58,39 +58,26 @@ const FASE_MAP = {
 
 // ═══════════════════════════════════════════
 // MODO LIVE: Atualiza jogos pendentes
-//
-// CORREÇÕES DE FUSO:
-// - Janela ampliada de 3 → 5 dias atrás
-// - Inclui jogos agendados com data_hora até +4h no futuro
-//   (cobre jogos noturnos BRT que viram UTC do dia seguinte)
-// - Inclui jogos encerrados SEM placar (recuperação de falhas anteriores)
+// - Janela de 5 dias atrás
+// - Buffer +4h no futuro para fuso BRT→UTC
+// - Recupera encerrados sem placar
 // ═══════════════════════════════════════════
 async function syncLive() {
   const now = new Date();
   console.log(`⚡ Smart Sync - ${now.toISOString()}\n`);
 
-  // 5 dias atrás (era 3)
   const fiveDaysAgo = new Date(now);
   fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
   fiveDaysAgo.setHours(0, 0, 0, 0);
 
-  // +4h no futuro para capturar jogos noturnos com fuso UTC
   const fourHoursAhead = new Date(now.getTime() + 4 * 60 * 60 * 1000);
 
-  // Busca 3 grupos:
-  // 1. Jogos ao_vivo
-  // 2. Jogos agendados cuja data_hora já passou (incluindo até +4h no futuro para fuso)
-  // 3. Jogos encerrados SEM placar (recuperação)
   const { data: games, error } = await supabase
     .from('jogos')
     .select('id, api_football_id, status, data_hora, time_a, time_b, placar_time_a, placar_time_b')
     .gte('data_hora', fiveDaysAgo.toISOString())
     .lte('data_hora', fourHoursAhead.toISOString())
-    .or(
-      'status.eq.ao_vivo,' +
-      `and(status.eq.agendado,data_hora.lte.${now.toISOString()}),` +
-      'and(status.eq.encerrado,placar_time_a.is.null)'
-    );
+    .or('status.eq.ao_vivo,status.eq.agendado,and(status.eq.encerrado,placar_time_a.is.null)');
 
   if (error) {
     console.log('❌ Erro Supabase:', error.message);
@@ -177,10 +164,10 @@ async function syncFull() {
   console.log('🔄 Sync COMPLETO - Atualizando todos os campeonatos\n');
 
   const CAMPEONATOS = [
-    { code: 'BSA', id: 2013, nome: 'Brasileirão',       season: 2026 },
-    { code: 'WC',  id: 2000, nome: 'Copa do Mundo',     season: 2026 },
-    { code: 'CL',  id: 2001, nome: 'Champions League',  season: 2025 },
-    { code: 'CLI', id: 2152, nome: 'Libertadores',      season: 2026 },
+    { code: 'BSA', id: 2013, nome: 'Brasileirão',      season: 2026 },
+    { code: 'WC',  id: 2000, nome: 'Copa do Mundo',    season: 2026 },
+    { code: 'CL',  id: 2001, nome: 'Champions League', season: 2025 },
+    { code: 'CLI', id: 2152, nome: 'Libertadores',     season: 2026 },
   ];
 
   let totalUpdated = 0;
@@ -217,3 +204,46 @@ async function syncFull() {
       const { error } = await supabase.rpc('upsert_jogo', {
         p_api_football_id: match.id,
         p_campeonato_id: campData.id,
+        p_time_a: home.shortName || home.name || 'TBD',
+        p_time_b: away.shortName || away.name || 'TBD',
+        p_logo_time_a: home.crest || null,
+        p_logo_time_b: away.crest || null,
+        p_data_hora: match.utcDate,
+        p_fase: FASE_MAP[match.stage] || match.stage || null,
+        p_rodada: match.matchday ? `Rodada ${match.matchday}` : null,
+        p_placar_time_a: ft.home ?? null,
+        p_placar_time_b: ft.away ?? null,
+        p_status: mapStatus(match.status),
+      });
+
+      if (!error) count++;
+    }
+
+    console.log(`  ✅ ${count} jogos sincronizados`);
+    totalUpdated += count;
+
+    await new Promise(r => setTimeout(r, 7000));
+  }
+
+  if (totalUpdated > 0) {
+    await supabase.from('sync_log').insert({
+      campeonato_acid: 0, tipo: 'github-actions-full', jogos_atualizados: totalUpdated,
+    });
+  }
+
+  console.log(`\n🎉 Total: ${totalUpdated} jogos sincronizados`);
+}
+
+// ---- Main ----
+async function main() {
+  if (isFullSync) {
+    await syncFull();
+  } else {
+    await syncLive();
+  }
+}
+
+main().catch(err => {
+  console.error('❌ Erro fatal:', err.message);
+  process.exit(1);
+});
