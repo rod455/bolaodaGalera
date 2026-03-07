@@ -16,11 +16,11 @@ jobs:
       - name: Email + sininho para quem so tem nacional
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          CUSTOM_SERVICE_KEY: ${{ secrets.CUSTOM_SERVICE_KEY }}
         run: |
           response=$(curl -s -w "\n%{http_code}" -X POST \
             "${SUPABASE_URL}/functions/v1/notify-only-nacional" \
-            -H "Authorization: Bearer ${SUPABASE_SERVICE_KEY}" \
+            -H "Authorization: Bearer ${CUSTOM_SERVICE_KEY}" \
             -H "Content-Type: application/json")
           http_code=$(echo "$response" | tail -1)
           body=$(echo "$response" | sed '$d')
@@ -38,11 +38,11 @@ jobs:
       - name: Push para quem ainda nao criou bolao privado
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          CUSTOM_SERVICE_KEY: ${{ secrets.CUSTOM_SERVICE_KEY }}
         run: |
           response=$(curl -s -w "\n%{http_code}" -X POST \
             "${SUPABASE_URL}/functions/v1/notify-only-nacional-push" \
-            -H "Authorization: Bearer ${SUPABASE_SERVICE_KEY}" \
+            -H "Authorization: Bearer ${CUSTOM_SERVICE_KEY}" \
             -H "Content-Type: application/json")
           http_code=$(echo "$response" | tail -1)
           body=$(echo "$response" | sed '$d')
