@@ -1,283 +1,54 @@
-// ═══════════════════════════════════════════════════════════════
-// Supabase Edge Function: notify-only-nacional
-//
-// Roda 1x por semana (quinta). Encontra usuarios que participam
-// de pelo menos 1 bolao nacional mas NAO criaram nenhum bolao
-// e NAO participam de nenhum bolao privado.
-// Envia email + sininho incentivando a criar bolao privado.
-// ═══════════════════════════════════════════════════════════════
+name: Engage - So Nacional
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+on:
+  schedule:
+    # Quinta 11h BRT (14h UTC) - Email + Sininho
+    - cron: '0 14 * * 4'
+    # Sabado 11h BRT (14h UTC) - Push
+    - cron: '0 14 * * 6'
+  workflow_dispatch:
 
-const ALLOWED_ORIGINS = [
-  "https://bolaonacopa.com.br",
-  "https://www.bolaonacopa.com.br",
-  "https://bolaonacopa.lovable.app",
-  "https://bolaodacopa-ten.vercel.app",
-];
+jobs:
+  email-sininho:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'schedule' && github.event.schedule == '0 14 * * 4')
+    steps:
+      - name: Email + sininho para quem so tem nacional
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            "${SUPABASE_URL}/functions/v1/notify-only-nacional" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Content-Type: application/json")
+          http_code=$(echo "$response" | tail -1)
+          body=$(echo "$response" | sed '$d')
+          echo "Status: $http_code"
+          echo "Response: $body"
+          if [ "$http_code" -ge 400 ]; then
+            echo "::error::Falha (HTTP $http_code)"
+            exit 1
+          fi
 
-function getCorsHeaders(req: Request) {
-  const origin = req.headers.get("origin") || "";
-  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
-  return {
-    "Access-Control-Allow-Origin": allowedOrigin,
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  };
-}
-
-const DELAY_MS = 600;
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-function firstName(nome: string | null): string {
-  return nome?.split(" ")[0] || "Torcedor";
-}
-
-const MENSAGENS_SININHO = [
-  {
-    titulo: "🔥 Crie um bolão privado e desafie seus amigos!",
-    mensagem: "Você já palpita nos bolões nacionais. Agora imagine disputar com seus amigos e família! Crie seu bolão privado.",
-  },
-  {
-    titulo: "👥 Monte seu próprio bolão!",
-    mensagem: "Palpitar é legal, mas com amigos é muito melhor! Crie um bolão, mande o código no grupo do WhatsApp e veja quem manda bem.",
-  },
-  {
-    titulo: "🏆 Leve a disputa para outro nível!",
-    mensagem: "Você já mostra que entende de futebol nos bolões nacionais. Que tal provar isso pros amigos? Crie seu bolão privado!",
-  },
-];
-
-function randomMsg() {
-  return MENSAGENS_SININHO[Math.floor(Math.random() * MENSAGENS_SININHO.length)];
-}
-
-function buildEmailHtml(nome: string, boloesNacionais: string[]): string {
-  const name = firstName(nome);
-  const boloesHtml = boloesNacionais.slice(0, 3).map((b) => `
-    <div style="background:#f0fdf4;border-radius:8px;padding:10px 14px;margin:6px 0;border-left:4px solid #16a34a;">
-      <p style="font-size:13px;color:#15803d;margin:0;font-weight:600;">&#9917; ${b}</p>
-    </div>
-  `).join("");
-
-  return `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-<body style="margin:0;padding:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-  <div style="max-width:600px;margin:0 auto;padding:20px;">
-    <div style="background:linear-gradient(135deg,#16a34a,#15803d);border-radius:16px 16px 0 0;padding:30px;text-align:center;">
-      <img src="https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/604913%20(512%20x%20512%20px).png" 
-           alt="Bolao na Copa" style="width:60px;height:60px;margin-bottom:12px;">
-      <h1 style="color:white;font-size:20px;margin:0;">Desafie seus amigos!</h1>
-    </div>
-    <div style="background:white;padding:30px;border-radius:0 0 16px 16px;">
-      <p style="font-size:16px;color:#1f2937;margin-top:0;">E ai, <strong>${name}</strong>!</p>
-      <p style="font-size:14px;color:#4b5563;line-height:1.7;">
-        Voce ja esta palpitando nos boloes nacionais:
-      </p>
-      ${boloesHtml}
-      <p style="font-size:14px;color:#4b5563;line-height:1.7;">
-        Mas a diversao fica ainda melhor quando voce disputa com <strong>amigos e familia</strong>! 
-        Crie um bolao privado e mande o codigo no grupo do WhatsApp.
-      </p>
-      <div style="background:#fefce8;border-radius:10px;padding:14px;margin:16px 0;border-left:4px solid #eab308;">
-        <p style="font-size:13px;color:#854d0e;margin:0;">
-          &#128161; <strong>Dica:</strong> Seu bolao privado pode usar os mesmos campeonatos que voce ja acompanha. Os palpites sao compartilhados!
-        </p>
-      </div>
-      <div style="text-align:center;margin:28px 0;">
-        <a href="https://bolaonacopa.com.br/criar" 
-           style="background:#16a34a;color:white;font-weight:700;font-size:15px;padding:14px 32px;border-radius:12px;text-decoration:none;display:inline-block;">
-          Criar meu bolao privado
-        </a>
-      </div>
-      <p style="font-size:12px;color:#9ca3af;line-height:1.5;text-align:center;">
-        Disputar com amigos e muito mais emocionante!
-      </p>
-    </div>
-    <p style="text-align:center;font-size:11px;color:#9ca3af;margin-top:16px;">
-      Bolao na Copa 2026 - Voce recebeu este email porque participa de um bolao ativo.
-    </p>
-  </div>
-</body>
-</html>`;
-}
-
-serve(async (req) => {
-  const corsHeaders = getCorsHeaders(req);
-
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
-
-  try {
-    const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-    if (!RESEND_API_KEY || !SUPABASE_URL) {
-      return new Response(
-        JSON.stringify({ error: "Variaveis de ambiente faltando" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const FROM_EMAIL = "Bolao na Copa <noreply@bolaonacopa.com.br>";
-    const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
-    const logGeral: string[] = [];
-
-    // ── 1. Usuarios em boloes nacionais ──
-    const { data: participantesNacionais } = await supabase
-      .from("bolao_participantes")
-      .select("user_id, bolao_id, boloes!inner(is_nacional, nome)")
-      .eq("boloes.is_nacional", true);
-
-    const userBoloesNacionais = new Map<string, string[]>();
-    for (const p of (participantesNacionais || [])) {
-      const lista = userBoloesNacionais.get(p.user_id) || [];
-      lista.push((p as any).boloes?.nome || "Bolao Nacional");
-      userBoloesNacionais.set(p.user_id, lista);
-    }
-
-    // ── 2. Usuarios em boloes privados ──
-    const { data: participantesPrivados } = await supabase
-      .from("bolao_participantes")
-      .select("user_id, boloes!inner(is_nacional)")
-      .eq("boloes.is_nacional", false);
-
-    const usersEmPrivado = new Set(
-      (participantesPrivados || []).map((p: any) => p.user_id)
-    );
-
-    // ── 3. Usuarios que criaram bolao ──
-    const { data: criadores } = await supabase
-      .from("boloes")
-      .select("criador_id");
-
-    const usersCriadores = new Set(
-      (criadores || []).map((b: any) => b.criador_id)
-    );
-
-    // ── 4. Filtrar: em nacional, mas sem privado e sem ter criado ──
-    const candidatoIds = [...userBoloesNacionais.keys()].filter(
-      (id) => !usersEmPrivado.has(id) && !usersCriadores.has(id)
-    );
-
-    if (candidatoIds.length === 0) {
-      return new Response(
-        JSON.stringify({ ok: true, message: "Nenhum usuario so em nacional", enviados: 0 }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // ── 5. Profiles com email valido ──
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("id, nome, email")
-      .in("id", candidatoIds)
-      .not("email", "is", null)
-      .neq("email", "");
-
-    const candidatos = (profiles || []).filter((p: any) =>
-      p.email && p.email.includes("@") && !p.email.toLowerCase().startsWith("fake")
-    );
-
-    logGeral.push(`${candidatos.length} usuarios so em nacional, sem bolao privado`);
-
-    // ── 6. Dedup: nao enviar mais de 1x a cada 14 dias ──
-    const quatorzeDiasAtras = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
-
-    const { data: jaNotificados } = await supabase
-      .from("notificacoes")
-      .select("user_id")
-      .eq("tipo", "sistema")
-      .gte("created_at", quatorzeDiasAtras)
-      .in("user_id", candidatos.map((c: any) => c.id));
-
-    const jaReceberam = new Set((jaNotificados || []).map((n: any) => n.user_id));
-    const paraEnviar = candidatos.filter((c: any) => !jaReceberam.has(c.id));
-
-    logGeral.push(`${paraEnviar.length} para notificar (${jaReceberam.size} ja receberam)`);
-
-    if (paraEnviar.length === 0) {
-      return new Response(
-        JSON.stringify({ ok: true, message: "Todos ja notificados recentemente", enviados: 0, log: logGeral }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // ── 7. Enviar email + notificacao in-app ──
-    let totalEmails = 0;
-    let totalNotif = 0;
-    let totalErros = 0;
-
-    for (const dest of paraEnviar) {
-      const msg = randomMsg();
-      const boloesDoUser = userBoloesNacionais.get(dest.id) || [];
-      const subject = `${firstName(dest.nome)}, desafie seus amigos! Crie um bolao privado`;
-
-      // Notificacao in-app
-      await supabase.from("notificacoes").insert({
-        user_id: dest.id,
-        tipo: "sistema",
-        titulo: msg.titulo,
-        mensagem: msg.mensagem,
-        dados: { rota: "/criar" },
-        lida: false,
-        push_enviada: false,
-      }).then(() => { totalNotif++; });
-
-      // Email
-      try {
-        const res = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${RESEND_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            from: FROM_EMAIL,
-            to: [dest.email],
-            subject,
-            html: buildEmailHtml(dest.nome || "Torcedor", boloesDoUser),
-          }),
-        });
-
-        if (res.ok) {
-          totalEmails++;
-        } else {
-          totalErros++;
-          const errText = await res.text();
-          logGeral.push(`Erro ${dest.email}: ${errText.substring(0, 150)}`);
-        }
-      } catch (e) {
-        totalErros++;
-        logGeral.push(`Erro ${dest.email}: ${String(e)}`);
-      }
-
-      await sleep(DELAY_MS);
-    }
-
-    logGeral.push(`Total: ${totalEmails} emails, ${totalNotif} notificacoes, ${totalErros} erros`);
-
-    return new Response(
-      JSON.stringify({
-        ok: true,
-        emails_enviados: totalEmails,
-        notificacoes: totalNotif,
-        erros: totalErros,
-        candidatos: candidatos.length,
-        enviados: paraEnviar.length,
-        log: logGeral,
-      }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-  } catch (err) {
-    return new Response(
-      JSON.stringify({ error: String(err) }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-  }
-});
+  push:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' && github.event.schedule == '0 14 * * 6'
+    steps:
+      - name: Push para quem ainda nao criou bolao privado
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            "${SUPABASE_URL}/functions/v1/notify-only-nacional-push" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Content-Type: application/json")
+          http_code=$(echo "$response" | tail -1)
+          body=$(echo "$response" | sed '$d')
+          echo "Status: $http_code"
+          echo "Response: $body"
+          if [ "$http_code" -ge 400 ]; then
+            echo "::error::Falha (HTTP $http_code)"
+            exit 1
+          fi
