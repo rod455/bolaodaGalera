@@ -1,3 +1,4 @@
+// src/components/Onboarding.tsx
 // ═══════════════════════════════════════════════════════
 // Onboarding V2 — Simplificado: Welcome → Quick Bolão → Palpites
 // Removidos: Modes, Fidelity, Invite, Done
@@ -49,11 +50,30 @@ const LOGO_URL = "https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/pub
 // ═══════════════════════════════════════════════════════
 // Step 1: Welcome (simplificado — 5 segundos)
 // ═══════════════════════════════════════════════════════
-const WelcomeStep = ({ onNext, onSkip }: { onNext: () => void; onSkip: () => void }) => (
+const WelcomeStep = ({
+  onNext,
+  onSkip,
+  onSkipDirect,
+}: {
+  onNext: () => void;
+  onSkip: () => void;
+  onSkipDirect: () => void;
+}) => (
   <div className="min-h-screen flex flex-col bg-gradient-to-br from-copa-green-600 via-copa-green-700 to-copa-green-900 relative overflow-hidden"
     style={{ paddingTop: "max(1.5rem, env(safe-area-inset-top, 1.5rem))" }}>
     <div className="absolute top-20 -right-10 w-40 h-40 bg-copa-gold-400/10 rounded-full blur-3xl" />
     <div className="absolute bottom-40 -left-10 w-32 h-32 bg-copa-green-400/20 rounded-full blur-2xl" />
+
+    {/* Botão Pular — canto superior direito, discreto */}
+    <div className="absolute top-4 right-4" style={{ top: "max(1rem, calc(env(safe-area-inset-top, 0px) + 0.75rem))" }}>
+      <button
+        onClick={onSkipDirect}
+        className="flex items-center gap-1 text-white/50 hover:text-white/80 transition-colors text-xs font-medium px-2 py-1 rounded-full"
+      >
+        Pular
+        <X className="w-3 h-3" />
+      </button>
+    </div>
 
     <div className="flex-1 flex flex-col items-center justify-center px-8">
       <img src={LOGO_URL} alt="Bolão na Copa" className="w-24 h-24 object-contain mb-6 drop-shadow-lg" />
@@ -64,134 +84,120 @@ const WelcomeStep = ({ onNext, onSkip }: { onNext: () => void; onSkip: () => voi
         Faça palpites nos jogos com seus amigos.{"\n"}Quem acerta mais, lidera o ranking.
       </p>
 
-      <div className="flex items-center gap-4 mt-8">
-        <div className="flex flex-col items-center gap-1">
-          <span className="text-2xl">🎯</span>
-          <span className="text-[11px] text-copa-green-200 font-medium">Palpite</span>
-        </div>
-        <ChevronRight className="w-4 h-4 text-copa-green-300/50" />
-        <div className="flex flex-col items-center gap-1">
-          <span className="text-2xl">📊</span>
-          <span className="text-[11px] text-copa-green-200 font-medium">Ranking</span>
-        </div>
-        <ChevronRight className="w-4 h-4 text-copa-green-300/50" />
-        <div className="flex flex-col items-center gap-1">
+      <div className="mt-10 w-full max-w-xs space-y-3">
+        <div className="flex items-center gap-3 bg-white/10 rounded-xl px-4 py-3">
           <span className="text-2xl">🏆</span>
-          <span className="text-[11px] text-copa-green-200 font-medium">Conquiste</span>
+          <p className="text-white text-sm font-medium">Crie bolões e convide amigos</p>
+        </div>
+        <div className="flex items-center gap-3 bg-white/10 rounded-xl px-4 py-3">
+          <span className="text-2xl">⚽</span>
+          <p className="text-white text-sm font-medium">Palpite em qualquer campeonato</p>
+        </div>
+        <div className="flex items-center gap-3 bg-white/10 rounded-xl px-4 py-3">
+          <span className="text-2xl">📊</span>
+          <p className="text-white text-sm font-medium">Ranking automático em tempo real</p>
         </div>
       </div>
     </div>
 
-    <div className="px-6 pb-8">
-      <Button onClick={onNext} className="w-full h-14 bg-copa-gold-400 hover:bg-copa-gold-500 text-gray-900 font-extrabold text-base rounded-xl shadow-lg shadow-copa-gold-400/20">
+    <div className="px-8 pb-10 space-y-3">
+      <Button
+        onClick={onNext}
+        className="w-full h-13 bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-900 font-black text-base rounded-xl shadow-lg"
+      >
         Criar meu bolão agora
+        <ChevronRight className="w-5 h-5 ml-1" />
       </Button>
-      <p className="text-copa-green-200/60 text-center text-xs mt-2.5">Leva menos de 30 segundos</p>
-      <button onClick={onSkip} className="w-full mt-1 text-copa-green-200/40 text-[11px] hover:text-copa-green-200/70 transition-colors">
-        Pular e ir para a Home
+      <button
+        onClick={onSkip}
+        className="w-full text-white/50 hover:text-white/70 text-xs transition-colors py-1"
+      >
+        Já tenho um código de convite
       </button>
     </div>
   </div>
 );
 
 // ═══════════════════════════════════════════════════════
-// Step 2: Quick Bolão (formulário mínimo)
+// Step 2: Quick Bolão Creation
 // ═══════════════════════════════════════════════════════
+const QUICK_MODES = [
+  { id: "casual", emoji: "🎮", name: "Casual", desc: "Resultado + placar exato" },
+  { id: "profissional", emoji: "🧠", name: "Profissional", desc: "Inclui gols por time" },
+  { id: "amador", emoji: "😄", name: "Amador", desc: "Só o resultado importa" },
+];
+
 const QuickBolaoStep = ({
-  onCreated, onBack, onSkip,
+  onCreated,
+  onBack,
+  onSkip,
 }: {
-  onCreated: (bolaoId: string) => void;
+  onCreated: (id: string) => void;
   onBack: () => void;
   onSkip: () => void;
 }) => {
   const { user } = useAuth();
   const [bolaoName, setBolaoName] = useState("");
   const [campeonatos, setCampeonatos] = useState<Campeonato[]>([]);
-  const [selectedChamp, setSelectedChamp] = useState<string>("");
+  const [selectedChamp, setSelectedChamp] = useState<string | null>(null);
+  const [selectedMode, setSelectedMode] = useState("casual");
   const [loadingCamps, setLoadingCamps] = useState(true);
   const [creating, setCreating] = useState(false);
   const [showMoreModes, setShowMoreModes] = useState(false);
-  const [selectedMode, setSelectedMode] = useState("casual");
-
-  // Modos: só mostrar os gratuitos por padrão
-  const QUICK_MODES = [
-    { id: "casual", name: "Casual", emoji: "🎮", desc: "Acerte vencedor ou placar e some pontos" },
-    { id: "mata_mata", name: "Mata a Mata", emoji: "⚔️", desc: "Escolha um time por rodada. Errou? Eliminado!" },
-    { id: "placar_correto", name: "Placar Correto", emoji: "🎯", desc: "Só vale ponto se acertar o placar exato" },
-  ];
 
   useEffect(() => {
-    supabase.from("campeonatos").select("id, nome_popular, logo_url, tipo")
-      .then(({ data }) => {
-        const camps = (data as Campeonato[]) || [];
-        setCampeonatos(camps);
-        // Pré-selecionar o campeonato mais popular (estadual > nacional > copa)
-        const estadual = camps.find((c) => c.tipo === "estadual");
-        const nacional = camps.find((c) => c.tipo === "nacional");
-        const firstPick = estadual || nacional || camps[0];
-        if (firstPick?.id) setSelectedChamp(firstPick.id);
+    const loadCamps = async () => {
+      setLoadingCamps(true);
+      try {
+        const { data } = await supabase
+          .from("campeonatos")
+          .select("id, nome_popular, logo_url, ativo")
+          .eq("ativo", true)
+          .order("nome_popular");
+        if (data && data.length > 0) {
+          setCampeonatos(data);
+          setSelectedChamp(data[0].id!);
+        }
+      } catch (err) {
+        console.error("Erro ao carregar campeonatos:", err);
+      } finally {
         setLoadingCamps(false);
-      });
+      }
+    };
+    loadCamps();
   }, []);
-
-  const generateCode = () => {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    let code = "";
-    for (let i = 0; i < 6; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
-    return code;
-  };
 
   const handleCreate = async () => {
     if (!user || !bolaoName.trim() || !selectedChamp) return;
     setCreating(true);
     try {
-      // Garantir profile existe
-      const { data: profile } = await supabase.from("profiles").select("id").eq("id", user.id).single();
-      if (!profile) {
-        await supabase.from("profiles").upsert(
-          { id: user.id, nome: user.user_metadata?.nome || user.email?.split("@")[0] || "Usuário", email: user.email || "" },
-          { onConflict: "id" }
-        );
-      }
-
-      const codigo = generateCode();
-      const isMataMata = selectedMode === "mata_mata";
-      const descFinal = isMataMata ? "mata_mata:20" : null;
-
-      const { data: newBolao, error } = await supabase.from("boloes").insert({
-        nome: bolaoName.trim(),
-        descricao: descFinal,
-        codigo_convite: codigo,
-        criador_id: user.id,
-        campeonato_id: selectedChamp,
-        modo_pontuacao: selectedMode,
-        regras_ativas: isMataMata ? ["mata_mata"] : ["vencedor", "placar_exato", "saldo_gols"],
-        is_publico: false,
-        is_nacional: false,
-      }).select("id").single();
-
+      const codigo = Math.random().toString(36).substring(2, 8).toUpperCase();
+      const { data: newBolao, error } = await supabase
+        .from("boloes")
+        .insert({
+          nome: bolaoName.trim(),
+          campeonato_id: selectedChamp,
+          modo: selectedMode,
+          criador_id: user.id,
+          codigo_convite: codigo,
+          is_publico: false,
+        })
+        .select()
+        .single();
       if (error) throw error;
+      if (!newBolao) throw new Error("Bolão não criado");
 
-      // Inserir na tabela de relação N:N
       await supabase.from("bolao_campeonatos").insert({
         bolao_id: newBolao.id,
         campeonato_id: selectedChamp,
       });
 
-      // Entrar no bolão como participante
       await supabase.from("bolao_participantes").insert({
         bolao_id: newBolao.id,
         user_id: user.id,
       });
 
-      trackEvent("onboarding_bolao_criado", {
-        bolao_id: newBolao.id,
-        bolao_name: bolaoName.trim(),
-        modo: selectedMode,
-        campeonato: selectedChamp,
-      });
-
-      toast.success(`Bolão criado! Código: ${codigo}`);
+      toast.success(`Bolão "${bolaoName.trim()}" criado!\nCódigo: ${codigo}`);
       onCreated(newBolao.id);
     } catch (err: any) {
       console.error("Erro ao criar bolão:", err);
@@ -277,7 +283,6 @@ const QuickBolaoStep = ({
         </div>
 
         {!showMoreModes ? (
-          // Modo Casual pré-selecionado — mostrar resumo compacto
           <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl border-2 border-copa-green-500 bg-copa-green-50">
             <span className="text-xl">🎮</span>
             <div className="flex-1">
@@ -287,7 +292,6 @@ const QuickBolaoStep = ({
             <span className="text-copa-green-500 text-[10px] font-bold bg-copa-green-100 px-2 py-0.5 rounded-full">Grátis</span>
           </div>
         ) : (
-          // Lista expandida de modos
           <div className="space-y-2">
             {QUICK_MODES.map((mode) => (
               <button
@@ -381,10 +385,19 @@ const Onboarding = ({ onComplete }: OnboardingProps) => {
     setStep(prevStep);
   };
 
+  // Pular com confirmação (usado no QuickBolaoStep)
   const trySkip = () => setShowSkipConfirm(true);
+
+  // Pular direto, sem modal (usado no botão "Pular" do WelcomeStep)
+  const directSkip = () => {
+    trackEvent("onboarding_skip", { skipped_at_step: STEPS[step], method: "direct" });
+    markOnboardingDone();
+    onComplete();
+  };
+
   const confirmSkip = () => {
     setShowSkipConfirm(false);
-    trackEvent("onboarding_skip", { skipped_at_step: STEPS[step] });
+    trackEvent("onboarding_skip", { skipped_at_step: STEPS[step], method: "modal" });
     markOnboardingDone();
     onComplete();
   };
@@ -393,7 +406,6 @@ const Onboarding = ({ onComplete }: OnboardingProps) => {
   const handleBolaoCreated = (bolaoId: string) => {
     trackEvent("onboarding_completo", { criou_bolao: true, bolao_id: bolaoId });
     markOnboardingDone();
-    // Finaliza o onboarding e redireciona DIRETO para os palpites com flag firstTime
     onComplete();
     setTimeout(() => {
       navigate(`/bolao/${bolaoId}/palpites?firstTime=true`);
@@ -403,7 +415,7 @@ const Onboarding = ({ onComplete }: OnboardingProps) => {
   const renderStep = () => {
     switch (STEPS[step]) {
       case "welcome":
-        return <WelcomeStep onNext={goNext} onSkip={trySkip} />;
+        return <WelcomeStep onNext={goNext} onSkip={trySkip} onSkipDirect={directSkip} />;
       case "quick_bolao":
         return <QuickBolaoStep onCreated={handleBolaoCreated} onBack={goBack} onSkip={trySkip} />;
       default:
