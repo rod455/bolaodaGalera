@@ -1,19 +1,9 @@
+// src/hooks/useNotifications.ts
 import { useState, useEffect, useCallback, useRef } from "react";
+import { Capacitor } from "@capacitor/core";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import type { Notificacao, NotificacaoPreferencias } from "@/lib/notification-types";
-
-// ── Tipo global Capacitor PushNotifications ──
-declare global {
-  interface Window {
-    Capacitor?: { isNativePlatform?: () => boolean };
-  }
-}
-
-const isNative = () => {
-  try { return !!window.Capacitor?.isNativePlatform?.(); }
-  catch { return false; }
-};
 
 interface UseNotificationsReturn {
   notificacoes: Notificacao[];
@@ -34,82 +24,88 @@ export const useNotifications = (): UseNotificationsReturn => {
   const [preferencias, setPreferencias] = useState<NotificacaoPreferencias | null>(null);
   const [loading, setLoading] = useState(true);
   const subscriptionRef = useRef<any>(null);
+  const pushRegistered = useRef(false);
 
   // ── Registrar token FCM (nativo) ──
   const registerPushToken = useCallback(async () => {
-    if (!user || !isNative()) return;
+    if (!user || !Capacitor.isNativePlatform() || pushRegistered.current) return;
+    pushRegistered.current = true;
 
     try {
-      // Import dinâmico só no nativo
-      const mod = await (Function(
-        'return import("@capacitor/push-notifications")'
-      )() as Promise<any>);
-      const PushNotifications = mod.PushNotifications;
+      // Import estático — funciona corretamente no Capacitor
+      const { PushNotifications } = await import("@capacitor/push-notifications");
 
-      // Pedir permissão
-      const permResult = await PushNotifications.requestPermissions();
-      if (permResult.receive !== "granted") {
-        console.log("Push notifications: permissão negada");
+      // 1. Verificar permissão atual
+      let permStatus = await PushNotifications.checkPermissions();
+
+      // 2. Pedir permissão se ainda não foi decidido
+      if (permStatus.receive === "prompt") {
+        permStatus = await PushNotifications.requestPermissions();
+      }
+
+      if (permStatus.receive !== "granted") {
+        console.log("[Push] Permissão negada pelo usuário");
+        pushRegistered.current = false;
         return;
       }
 
-      // Registrar
-      await PushNotifications.register();
+      // 3. Listener: token recebido → salva no Supabase
+      await PushNotifications.addListener("registration", async (token) => {
+        console.log("[Push] Token FCM:", token.value);
 
-      // Escutar token
-      PushNotifications.addListener("registration", async (token: { value: string }) => {
-        console.log("FCM Token:", token.value);
-        // Salvar token no Supabase (upsert)
-        await supabase.from("push_tokens").upsert(
+        const { error } = await supabase.from("push_tokens").upsert(
           {
             user_id: user.id,
             token: token.value,
-            platform: "android", // TODO: detectar iOS
+            platform: Capacitor.getPlatform(), // "android" ou "ios"
             ativo: true,
             updated_at: new Date().toISOString(),
           },
           { onConflict: "user_id,token" }
         );
+
+        if (error) {
+          console.error("[Push] Erro ao salvar token:", error);
+        } else {
+          console.log("[Push] ✅ Token salvo com sucesso!");
+        }
       });
 
-      // Escutar erro
-      PushNotifications.addListener("registrationError", (err: any) => {
-        console.error("Push registration error:", err);
+      // 4. Listener: erro de registro
+      await PushNotifications.addListener("registrationError", (err) => {
+        console.error("[Push] Erro de registro FCM:", JSON.stringify(err));
+        pushRegistered.current = false;
       });
 
-      // Escutar notificação recebida (app em foreground)
-      PushNotifications.addListener(
-        "pushNotificationReceived",
-        (notification: any) => {
-          console.log("Push received (foreground):", notification);
-          // Refetch notificações para atualizar o badge
-          fetchNotificacoes();
-        }
-      );
+      // 5. Listener: notificação recebida com app aberto (foreground)
+      await PushNotifications.addListener("pushNotificationReceived", (notification) => {
+        console.log("[Push] Recebida (foreground):", notification);
+        fetchNotificacoes();
+      });
 
-      // Escutar tap na notificação (app em background/fechado)
-      PushNotifications.addListener(
-        "pushNotificationActionPerformed",
-        (action: any) => {
-          console.log("Push action:", action);
-          const data = action.notification?.data;
-          if (data?.rota) {
-            // Navegar para a rota (será tratado pelo componente que usa o hook)
-            window.dispatchEvent(
-              new CustomEvent("push-navigate", { detail: { rota: data.rota } })
-            );
-          }
+      // 6. Listener: usuário tocou na notificação (background/fechado)
+      await PushNotifications.addListener("pushNotificationActionPerformed", (action) => {
+        console.log("[Push] Toque na notificação:", action);
+        const rota = action.notification?.data?.rota;
+        if (rota) {
+          window.dispatchEvent(
+            new CustomEvent("push-navigate", { detail: { rota } })
+          );
         }
-      );
+      });
+
+      // 7. Registrar no FCM (dispara o evento "registration" acima)
+      await PushNotifications.register();
+
     } catch (err) {
-      console.log("Push notifications não disponível:", err);
+      console.error("[Push] Erro inesperado:", err);
+      pushRegistered.current = false;
     }
   }, [user]);
 
   // ── Buscar notificações ──
   const fetchNotificacoes = useCallback(async () => {
     if (!user) return;
-
     try {
       const { data, error } = await supabase
         .from("notificacoes")
@@ -117,10 +113,7 @@ export const useNotifications = (): UseNotificationsReturn => {
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(50);
-
-      if (!error && data) {
-        setNotificacoes(data as Notificacao[]);
-      }
+      if (!error && data) setNotificacoes(data as Notificacao[]);
     } catch (err) {
       console.error("Erro ao buscar notificações:", err);
     }
@@ -129,7 +122,6 @@ export const useNotifications = (): UseNotificationsReturn => {
   // ── Buscar preferências ──
   const fetchPreferencias = useCallback(async () => {
     if (!user) return;
-
     const { data } = await supabase
       .from("notificacao_preferencias")
       .select("*")
@@ -139,7 +131,6 @@ export const useNotifications = (): UseNotificationsReturn => {
     if (data) {
       setPreferencias(data as NotificacaoPreferencias);
     } else {
-      // Criar preferências padrão
       const defaultPrefs: Partial<NotificacaoPreferencias> = {
         user_id: user.id,
         push_ativo: true,
@@ -157,30 +148,17 @@ export const useNotifications = (): UseNotificationsReturn => {
   // ── Subscrever em real-time ──
   const subscribeRealtime = useCallback(() => {
     if (!user) return;
-
-    // Limpar subscription anterior
-    if (subscriptionRef.current) {
-      supabase.removeChannel(subscriptionRef.current);
-    }
+    if (subscriptionRef.current) supabase.removeChannel(subscriptionRef.current);
 
     const channel = supabase
       .channel(`notificacoes:${user.id}`)
       .on(
         "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "notificacoes",
-          filter: `user_id=eq.${user.id}`,
-        },
+        { event: "INSERT", schema: "public", table: "notificacoes", filter: `user_id=eq.${user.id}` },
         (payload) => {
           const novaNotificacao = payload.new as Notificacao;
           setNotificacoes((prev) => [novaNotificacao, ...prev]);
-
-          // Disparar evento customizado para o toast
-          window.dispatchEvent(
-            new CustomEvent("nova-notificacao", { detail: novaNotificacao })
-          );
+          window.dispatchEvent(new CustomEvent("nova-notificacao", { detail: novaNotificacao }));
         }
       )
       .subscribe();
@@ -190,48 +168,27 @@ export const useNotifications = (): UseNotificationsReturn => {
 
   // ── Marcar como lida ──
   const marcarComoLida = useCallback(async (id: string) => {
-    await supabase
-      .from("notificacoes")
-      .update({ lida: true })
-      .eq("id", id);
-
-    setNotificacoes((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, lida: true } : n))
-    );
+    await supabase.from("notificacoes").update({ lida: true }).eq("id", id);
+    setNotificacoes((prev) => prev.map((n) => (n.id === id ? { ...n, lida: true } : n)));
   }, []);
 
   // ── Marcar todas como lidas ──
   const marcarTodasComoLidas = useCallback(async () => {
     if (!user) return;
-
-    await supabase
-      .from("notificacoes")
-      .update({ lida: true })
-      .eq("user_id", user.id)
-      .eq("lida", false);
-
+    await supabase.from("notificacoes").update({ lida: true }).eq("user_id", user.id).eq("lida", false);
     setNotificacoes((prev) => prev.map((n) => ({ ...n, lida: true })));
   }, [user]);
 
   // ── Deletar uma notificação ──
   const deletarNotificacao = useCallback(async (id: string) => {
-    await supabase
-      .from("notificacoes")
-      .delete()
-      .eq("id", id);
-
+    await supabase.from("notificacoes").delete().eq("id", id);
     setNotificacoes((prev) => prev.filter((n) => n.id !== id));
   }, []);
 
-  // ── Deletar todas as notificações ──
+  // ── Deletar todas ──
   const deletarTodas = useCallback(async () => {
     if (!user) return;
-
-    await supabase
-      .from("notificacoes")
-      .delete()
-      .eq("user_id", user.id);
-
+    await supabase.from("notificacoes").delete().eq("user_id", user.id);
     setNotificacoes([]);
   }, [user]);
 
@@ -239,19 +196,11 @@ export const useNotifications = (): UseNotificationsReturn => {
   const atualizarPreferencias = useCallback(
     async (prefs: Partial<NotificacaoPreferencias>) => {
       if (!user) return;
-
-      const updated = {
-        ...prefs,
-        updated_at: new Date().toISOString(),
-      };
-
+      const updated = { ...prefs, updated_at: new Date().toISOString() };
       await supabase
         .from("notificacao_preferencias")
         .upsert({ user_id: user.id, ...updated }, { onConflict: "user_id" });
-
-      setPreferencias((prev) =>
-        prev ? { ...prev, ...updated } : null
-      );
+      setPreferencias((prev) => (prev ? { ...prev, ...updated } : null));
     },
     [user]
   );
@@ -262,6 +211,7 @@ export const useNotifications = (): UseNotificationsReturn => {
       setNotificacoes([]);
       setPreferencias(null);
       setLoading(false);
+      pushRegistered.current = false;
       return;
     }
 
@@ -269,25 +219,20 @@ export const useNotifications = (): UseNotificationsReturn => {
       setLoading(true);
       await Promise.all([fetchNotificacoes(), fetchPreferencias()]);
       setLoading(false);
-
-      registerPushToken();
       subscribeRealtime();
+      registerPushToken(); // não await — roda em paralelo
     };
 
     init();
 
     return () => {
-      if (subscriptionRef.current) {
-        supabase.removeChannel(subscriptionRef.current);
-      }
+      if (subscriptionRef.current) supabase.removeChannel(subscriptionRef.current);
     };
   }, [user]);
 
-  const naoLidas = notificacoes.filter((n) => !n.lida).length;
-
   return {
     notificacoes,
-    naoLidas,
+    naoLidas: notificacoes.filter((n) => !n.lida).length,
     loading,
     preferencias,
     marcarComoLida,
