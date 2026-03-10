@@ -315,7 +315,7 @@ const Home = () => {
   const loadData = async () => {
     try {
       // ═══ DADOS PÚBLICOS (sempre carregam) ═══
-      const { data: nac } = await supabase.from("boloes").select("*, campeonatos(*)").eq("is_nacional", true).eq("is_publico", true).order("created_at", { ascending: false });
+      const { data: nac } = await supabase.from("boloes").select("*, campeonatos(*)").eq("is_nacional", true).eq("is_publico", true).order("created_at", { ascending: true });
 
       let estado: string | null = null;
       const participandoIds = new Set<string>();
