@@ -3,9 +3,9 @@ import { useSearchParams } from "react-router-dom";
 
 const MOTIVOS = [
   "Recebo emails demais",
-  "Os emails não são relevantes para mim",
-  "Não lembro de ter me cadastrado",
-  "Prefiro acompanhar só pelo app",
+  "Os emails nao sao relevantes para mim",
+  "Nao lembro de ter me cadastrado",
+  "Prefiro acompanhar so pelo app",
   "Outro motivo",
 ];
 
@@ -28,7 +28,6 @@ export default function Unsubscribe() {
       setEtapa("invalido");
       return;
     }
-
     fetch(`${SUPABASE_URL}/functions/v1/email-unsubscribe?token=${token}`)
       .then((r) => r.json())
       .then((data) => {
@@ -72,63 +71,59 @@ export default function Unsubscribe() {
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md">
 
-        {/* Logo */}
         <div className="flex justify-center mb-6">
           <img
             src="https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/604913%20(512%20x%20512%20px).png"
-            alt="Bolão na Copa"
+            alt="Bolao na Copa"
             className="w-14 h-14"
           />
         </div>
 
-        {/* Carregando */}
         {etapa === "carregando" && (
           <div className="text-center text-gray-500 py-8">Verificando...</div>
         )}
 
-        {/* Token inválido */}
         {etapa === "invalido" && (
           <div className="text-center">
-            <div className="text-5xl mb-4">❌</div>
-            <h1 className="text-xl font-bold text-gray-800 mb-2">Link inválido</h1>
+            <div className="text-5xl mb-4">&#10060;</div>
+            <h1 className="text-xl font-bold text-gray-800 mb-2">Link invalido</h1>
             <p className="text-gray-500 text-sm mb-6">
-              Não encontramos sua conta. O link pode ter expirado.
+              Nao encontramos sua conta. O link pode ter expirado.
             </p>
             
               href="https://bolaonacopa.com.br"
-              className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold text-sm hover:bg-green-700 inline-block"
+              className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold text-sm inline-block"
             >
               Voltar ao app
             </a>
           </div>
         )}
 
-        {/* Já descadastrado */}
         {etapa === "ja_descadastrado" && (
           <div className="text-center">
-            <div className="text-5xl mb-4">✅</div>
-            <h1 className="text-xl font-bold text-gray-800 mb-2">Já descadastrado</h1>
+            <div className="text-5xl mb-4">&#9989;</div>
+            <h1 className="text-xl font-bold text-gray-800 mb-2">Ja descadastrado</h1>
             <p className="text-gray-500 text-sm mb-6">
-              Você já havia solicitado o descadastro. Não enviaremos mais emails de engajamento.
+              Voce ja havia solicitado o descadastro. Nao enviaremos mais emails de engajamento.
             </p>
             
               href="https://bolaonacopa.com.br"
-              className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold text-sm hover:bg-green-700 inline-block"
+              className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold text-sm inline-block"
             >
               Voltar ao app
             </a>
           </div>
         )}
 
-        {/* Seleção de motivo */}
         {etapa === "motivo" && (
           <>
             <h1 className="text-xl font-bold text-gray-800 text-center mb-1">
-              Sentimos sua falta 😔
+              Sentimos sua falta
             </h1>
             <p className="text-sm text-gray-500 text-center mb-6">
-              Antes de sair, pode nos dizer o motivo?<br />
-              Sua opinião nos ajuda a melhorar.
+              Antes de sair, pode nos dizer o motivo?
+              <br />
+              Sua opiniao nos ajuda a melhorar.
             </p>
 
             {erroForm && (
@@ -183,35 +178,33 @@ export default function Unsubscribe() {
           </>
         )}
 
-        {/* Sucesso */}
         {etapa === "sucesso" && (
           <div className="text-center">
-            <div className="text-5xl mb-4">✅</div>
+            <div className="text-5xl mb-4">&#9989;</div>
             <h1 className="text-xl font-bold text-gray-800 mb-2">Descadastro realizado</h1>
             <p className="text-gray-500 text-sm mb-6">
-              Você não receberá mais emails de engajamento do Bolão na Copa.
+              Voce nao recebera mais emails de engajamento do Bolao na Copa.
               Sua conta continua ativa normalmente.
             </p>
             
               href="https://bolaonacopa.com.br"
-              className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold text-sm hover:bg-green-700 inline-block"
+              className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold text-sm inline-block"
             >
               Voltar ao app
             </a>
           </div>
         )}
 
-        {/* Erro */}
         {etapa === "erro" && (
           <div className="text-center">
-            <div className="text-5xl mb-4">❌</div>
+            <div className="text-5xl mb-4">&#10060;</div>
             <h1 className="text-xl font-bold text-gray-800 mb-2">Algo deu errado</h1>
             <p className="text-gray-500 text-sm mb-6">
-              Ocorreu um erro ao processar sua solicitação. Tente novamente.
+              Ocorreu um erro ao processar sua solicitacao. Tente novamente.
             </p>
             <button
               onClick={() => setEtapa("motivo")}
-              className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold text-sm hover:bg-green-700"
+              className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold text-sm"
             >
               Tentar novamente
             </button>
