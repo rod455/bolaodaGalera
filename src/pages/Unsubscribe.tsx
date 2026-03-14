@@ -90,7 +90,7 @@ export default function Unsubscribe() {
             <p className="text-gray-500 text-sm mb-6">
               Nao encontramos sua conta. O link pode ter expirado.
             </p>
-            
+            <a
               href="https://bolaonacopa.com.br"
               className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold text-sm inline-block"
             >
@@ -106,7 +106,7 @@ export default function Unsubscribe() {
             <p className="text-gray-500 text-sm mb-6">
               Voce ja havia solicitado o descadastro. Nao enviaremos mais emails de engajamento.
             </p>
-            
+            <a
               href="https://bolaonacopa.com.br"
               className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold text-sm inline-block"
             >
@@ -186,7 +186,7 @@ export default function Unsubscribe() {
               Voce nao recebera mais emails de engajamento do Bolao na Copa.
               Sua conta continua ativa normalmente.
             </p>
-            
+            <a
               href="https://bolaonacopa.com.br"
               className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold text-sm inline-block"
             >
