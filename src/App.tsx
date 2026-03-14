@@ -158,10 +158,3 @@ const App = () => {
     </QueryClientProvider>
   );
 };
-
-export default App;
-```
-
-Salve os dois arquivos no GitHub (`App.tsx` e `Unsubscribe.tsx`) e o Vercel fará o deploy automático. Depois teste:
-```
-https://bolaonacopa.com.br/unsubscribe?token=feb7b273-7a7a-40b0-9080-326f27fb5125
