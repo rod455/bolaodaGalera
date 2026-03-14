@@ -256,18 +256,3 @@ function paginaErro(mensagem: string): string {
     </div>
   `);
 }
-```
-
----
-
-### Como funciona o fluxo
-```
-Usuário clica no link do email
-        ↓
-GET ?token=UUID → Página com os 4 motivos + "Outro motivo"
-        ↓
-Seleciona um motivo (se "Outro", aparece campo de texto)
-        ↓
-Clica em "Confirmar descadastro"
-        ↓
-POST → Salva email_opt_out=true + motivo → Página de confirmação ✅
