@@ -14,6 +14,7 @@ import BolaoPage from "./pages/BolaoPage";
 import Palpites from "./pages/Palpites";
 import Planos from "./pages/Planos";
 import NotFound from "./pages/NotFound";
+import Unsubscribe from "./pages/Unsubscribe";
 import AppLayout from "./components/layout/AppLayout";
 import ProtectedRoute from "./components/layout/ProtectedRoute";
 import SplashScreen from "./components/SplashScreen";
@@ -39,11 +40,6 @@ const RootRedirect = () => {
 // Rotas onde o botao voltar deve fechar o app
 const EXIT_ROUTES = ["/home", "/auth"];
 
-/**
- * Intercepta o botao voltar nativo do Android.
- * Usa @capacitor/app diretamente (ja instalado).
- * Listener registrado uma unica vez com pathnameRef para evitar stale closure.
- */
 const BackButtonHandler = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -132,6 +128,8 @@ const App = () => {
             <Routes>
               <Route path="/" element={<RootRedirect />} />
               <Route path="/auth" element={<Auth />} />
+              {/* Rota pública de descadastro — sem autenticação */}
+              <Route path="/unsubscribe" element={<Unsubscribe />} />
               <Route path="/home" element={<AppLayout />}>
                 <Route index element={<Home />} />
               </Route>
@@ -162,3 +160,8 @@ const App = () => {
 };
 
 export default App;
+```
+
+Salve os dois arquivos no GitHub (`App.tsx` e `Unsubscribe.tsx`) e o Vercel fará o deploy automático. Depois teste:
+```
+https://bolaonacopa.com.br/unsubscribe?token=feb7b273-7a7a-40b0-9080-326f27fb5125
