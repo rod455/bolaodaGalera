@@ -3,9 +3,9 @@ import { useSearchParams } from "react-router-dom";
 
 const MOTIVOS = [
   "Recebo emails demais",
-  "Os emails nao sao relevantes para mim",
-  "Nao lembro de ter me cadastrado",
-  "Prefiro acompanhar so pelo app",
+  "Os emails n\u00e3o s\u00e3o relevantes para mim",
+  "N\u00e3o lembro de ter me cadastrado",
+  "Prefiro acompanhar s\u00f3 pelo app",
   "Outro motivo",
 ];
 
@@ -74,7 +74,7 @@ export default function Unsubscribe() {
         <div className="flex justify-center mb-6">
           <img
             src="https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/604913%20(512%20x%20512%20px).png"
-            alt="Bolao na Copa"
+            alt="Bol\u00e3o na Copa"
             className="w-14 h-14"
           />
         </div>
@@ -86,9 +86,9 @@ export default function Unsubscribe() {
         {etapa === "invalido" && (
           <div className="text-center">
             <div className="text-5xl mb-4">&#10060;</div>
-            <h1 className="text-xl font-bold text-gray-800 mb-2">Link invalido</h1>
+            <h1 className="text-xl font-bold text-gray-800 mb-2">Link inv\u00e1lido</h1>
             <p className="text-gray-500 text-sm mb-6">
-              Nao encontramos sua conta. O link pode ter expirado.
+              N\u00e3o encontramos sua conta. O link pode ter expirado.
             </p>
             <a
               href="https://bolaonacopa.com.br"
@@ -102,9 +102,9 @@ export default function Unsubscribe() {
         {etapa === "ja_descadastrado" && (
           <div className="text-center">
             <div className="text-5xl mb-4">&#9989;</div>
-            <h1 className="text-xl font-bold text-gray-800 mb-2">Ja descadastrado</h1>
+            <h1 className="text-xl font-bold text-gray-800 mb-2">J\u00e1 descadastrado</h1>
             <p className="text-gray-500 text-sm mb-6">
-              Voce ja havia solicitado o descadastro. Nao enviaremos mais emails de engajamento.
+              Voc\u00ea j\u00e1 havia solicitado o descadastro. N\u00e3o enviaremos mais emails de engajamento.
             </p>
             <a
               href="https://bolaonacopa.com.br"
@@ -118,12 +118,12 @@ export default function Unsubscribe() {
         {etapa === "motivo" && (
           <>
             <h1 className="text-xl font-bold text-gray-800 text-center mb-1">
-              Sentimos sua falta
+              Sentimos sua falta &#128532;
             </h1>
             <p className="text-sm text-gray-500 text-center mb-6">
               Antes de sair, pode nos dizer o motivo?
               <br />
-              Sua opiniao nos ajuda a melhorar.
+              Sua opini\u00e3o nos ajuda a melhorar.
             </p>
 
             {erroForm && (
@@ -183,7 +183,7 @@ export default function Unsubscribe() {
             <div className="text-5xl mb-4">&#9989;</div>
             <h1 className="text-xl font-bold text-gray-800 mb-2">Descadastro realizado</h1>
             <p className="text-gray-500 text-sm mb-6">
-              Voce nao recebera mais emails de engajamento do Bolao na Copa.
+              Voc\u00ea n\u00e3o receber\u00e1 mais emails de engajamento do Bol\u00e3o na Copa.
               Sua conta continua ativa normalmente.
             </p>
             <a
@@ -200,7 +200,7 @@ export default function Unsubscribe() {
             <div className="text-5xl mb-4">&#10060;</div>
             <h1 className="text-xl font-bold text-gray-800 mb-2">Algo deu errado</h1>
             <p className="text-gray-500 text-sm mb-6">
-              Ocorreu um erro ao processar sua solicitacao. Tente novamente.
+              Ocorreu um erro ao processar sua solicita\u00e7\u00e3o. Tente novamente.
             </p>
             <button
               onClick={() => setEtapa("motivo")}
