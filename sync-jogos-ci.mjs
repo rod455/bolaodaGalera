@@ -1,6 +1,11 @@
 // ============================================
 // Bolão na Copa - Smart Live Sync (GitHub Actions)
 // Verifica últimos 5 dias + buffer de fuso horário
+//
+// CORRECOES:
+// 1. Atualiza data_hora quando jogo for remarcado pela API
+// 2. Autoencerramento: jogos agendados com +3h de atraso -> adiado
+//    (evita jogos da Libertadores ficarem presos indefinidamente)
 // ============================================
 
 import { createClient } from '@supabase/supabase-js';
@@ -10,7 +15,7 @@ const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const FOOTBALL_DATA_TOKEN = process.env.FOOTBALL_DATA_TOKEN;
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY || !FOOTBALL_DATA_TOKEN) {
-  console.log('❌ Variáveis de ambiente não configuradas.');
+  console.log('Variaveis de ambiente nao configuradas.');
   process.exit(1);
 }
 
@@ -25,13 +30,13 @@ async function fdFetch(endpoint) {
     headers: { 'X-Auth-Token': FOOTBALL_DATA_TOKEN }
   });
   if (res.status === 429) {
-    console.log('  ⏳ Rate limit. Aguardando 60s...');
+    console.log('  Rate limit. Aguardando 60s...');
     await new Promise(r => setTimeout(r, 60000));
     return fdFetch(endpoint);
   }
   if (!res.ok) {
     const text = await res.text();
-    console.log(`  ❌ HTTP ${res.status}: ${text.substring(0, 200)}`);
+    console.log(`  HTTP ${res.status}: ${text.substring(0, 200)}`);
     return null;
   }
   return res.json();
@@ -50,21 +55,40 @@ function mapStatus(apiStatus) {
 
 const FASE_MAP = {
   GROUP_STAGE: 'Fase de Grupos', LAST_16: 'Oitavas de Final',
-  LAST_32: 'Fase Eliminatória', QUARTER_FINALS: 'Quartas de Final',
+  LAST_32: 'Fase Eliminatoria', QUARTER_FINALS: 'Quartas de Final',
   SEMI_FINALS: 'Semifinal', FINAL: 'Final', THIRD_PLACE: 'Terceiro Lugar',
   PLAYOFF: 'Repescagem', LEAGUE_STAGE: 'Liga', REGULAR_SEASON: 'Liga',
-  ROUND_OF_16: 'Oitavas de Final', ROUND_OF_32: 'Fase Eliminatória',
+  ROUND_OF_16: 'Oitavas de Final', ROUND_OF_32: 'Fase Eliminatoria',
 };
 
-// ═══════════════════════════════════════════
+// ===============================================
 // MODO LIVE: Atualiza jogos pendentes
-// - Janela de 5 dias atrás
+// - Janela de 5 dias atras
 // - Buffer +4h no futuro para fuso BRT->UTC
 // - Recupera encerrados sem placar
-// ═══════════════════════════════════════════
+// - NOVO: atualiza data_hora se remarcado
+// - NOVO: marca como adiado se atrasado +3h
+// ===============================================
 async function syncLive() {
   const now = new Date();
-  console.log(`⚡ Smart Sync - ${now.toISOString()}\n`);
+  console.log(`Smart Sync - ${now.toISOString()}\n`);
+
+  // ── NOVO: Autoencerramento de jogos atrasados ──
+  // Jogos agendados cuja data_hora passou ha mais de 3h sao marcados como adiado.
+  // Isso resolve jogos da Libertadores e outros que ficam presos como "agendado".
+  const tresHorasAtras = new Date(now.getTime() - 3 * 60 * 60 * 1000);
+  const { data: jogosAtrasados, error: atrasadosErr } = await supabase
+    .from('jogos')
+    .update({ status: 'adiado' })
+    .eq('status', 'agendado')
+    .lt('data_hora', tresHorasAtras.toISOString())
+    .select('time_a, time_b, data_hora');
+
+  if (jogosAtrasados && jogosAtrasados.length > 0) {
+    console.log(`Autoencerramento: ${jogosAtrasados.length} jogo(s) marcado(s) como adiado:`);
+    jogosAtrasados.forEach(j => console.log(`  - ${j.time_a} vs ${j.time_b} (previsto: ${new Date(j.data_hora).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })})`));
+    console.log('');
+  }
 
   const fiveDaysAgo = new Date(now);
   fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
@@ -80,22 +104,22 @@ async function syncLive() {
     .or('status.eq.ao_vivo,status.eq.agendado,and(status.eq.encerrado,placar_time_a.is.null)');
 
   if (error) {
-    console.log('❌ Erro Supabase:', error.message);
+    console.log('Erro Supabase:', error.message);
     process.exit(1);
   }
 
   if (!games || games.length === 0) {
-    console.log('😴 Nenhum jogo pendente nos últimos 5 dias.');
-    console.log('   (API football-data.org NAO foi chamada)');
+    console.log('Nenhum jogo pendente nos ultimos 5 dias.');
+    console.log('(API football-data.org NAO foi chamada)');
     return;
   }
 
-  console.log(`📋 ${games.length} jogo(s) pendente(s):\n`);
+  console.log(`${games.length} jogo(s) pendente(s):\n`);
 
   let updated = 0;
   for (const game of games) {
     if (!game.api_football_id) {
-      console.log(`  ⚠️ ${game.time_a} vs ${game.time_b} - sem api_football_id`);
+      console.log(`  ${game.time_a} vs ${game.time_b} - sem api_football_id`);
       continue;
     }
 
@@ -118,13 +142,21 @@ async function syncLive() {
     if (placarA != null) updateData.placar_time_a = placarA;
     if (placarB != null) updateData.placar_time_b = placarB;
 
+    // ── NOVO: Atualiza data_hora se a API retornou uma nova data ──
+    // Isso resolve jogos remarcados que ficavam com a data antiga
+    if (matchData.utcDate && matchData.utcDate !== game.data_hora) {
+      updateData.data_hora = matchData.utcDate;
+      console.log(`  Data remarcada: ${game.time_a} vs ${game.time_b}: ${game.data_hora} -> ${matchData.utcDate}`);
+    }
+
     const changed =
       game.status !== newStatus ||
       game.placar_time_a !== placarA ||
-      game.placar_time_b !== placarB;
+      game.placar_time_b !== placarB ||
+      updateData.data_hora != null; // data remarcada conta como mudanca
 
     if (!changed) {
-      console.log(`  ⏩ ${game.time_a} vs ${game.time_b} - sem alteracao`);
+      console.log(`  ${game.time_a} vs ${game.time_b} - sem alteracao`);
       await new Promise(r => setTimeout(r, 7000));
       continue;
     }
@@ -134,11 +166,11 @@ async function syncLive() {
       .update(updateData)
       .eq('id', game.id);
 
-    const emoji = newStatus === 'ao_vivo' ? '🔴' : newStatus === 'encerrado' ? '✅' : '⏳';
+    const emoji = newStatus === 'ao_vivo' ? '[AO VIVO]' : newStatus === 'encerrado' ? '[OK]' : '[...]';
     const placar = placarA != null ? `${placarA} x ${placarB}` : '? x ?';
 
     if (err) {
-      console.log(`  ❌ ${game.time_a} vs ${game.time_b}: ${err.message}`);
+      console.log(`  ERRO ${game.time_a} vs ${game.time_b}: ${err.message}`);
     } else {
       console.log(`  ${emoji} ${game.time_a} ${placar} ${game.time_b} [${game.status} -> ${newStatus}]`);
       updated++;
@@ -153,15 +185,15 @@ async function syncLive() {
     });
   }
 
-  console.log(`\n🎉 ${updated} jogo(s) atualizado(s)`);
+  console.log(`\n${updated} jogo(s) atualizado(s)`);
 }
 
-// ═══════════════════════════════════════════
+// ===============================================
 // MODO FULL: Sync completo de todos os campeonatos
 // Roda 1x por semana para pegar novos jogos
-// ═══════════════════════════════════════════
+// ===============================================
 async function syncFull() {
-  console.log('🔄 Sync COMPLETO - Atualizando todos os campeonatos\n');
+  console.log('Sync COMPLETO - Atualizando todos os campeonatos\n');
 
   const CAMPEONATOS = [
     { code: 'BSA', id: 2013, nome: 'Brasileirao',      season: 2026 },
@@ -173,7 +205,7 @@ async function syncFull() {
   let totalUpdated = 0;
 
   for (const camp of CAMPEONATOS) {
-    console.log(`\n📡 ${camp.nome} (${camp.code})...`);
+    console.log(`\n${camp.nome} (${camp.code})...`);
 
     const { data: campData } = await supabase
       .from('campeonatos')
@@ -182,17 +214,17 @@ async function syncFull() {
       .single();
 
     if (!campData) {
-      console.log(`  ❌ Campeonato nao encontrado no banco`);
+      console.log(`  Campeonato nao encontrado no banco`);
       continue;
     }
 
     const data = await fdFetch(`/competitions/${camp.code}/matches?season=${camp.season}`);
     if (!data?.matches) {
-      console.log(`  ❌ Sem jogos retornados`);
+      console.log(`  Sem jogos retornados`);
       continue;
     }
 
-    console.log(`  📋 ${data.matches.length} jogos`);
+    console.log(`  ${data.matches.length} jogos`);
     let count = 0;
 
     for (const match of data.matches) {
@@ -219,7 +251,7 @@ async function syncFull() {
       if (!error) count++;
     }
 
-    console.log(`  ✅ ${count} jogos sincronizados`);
+    console.log(`  ${count} jogos sincronizados`);
     totalUpdated += count;
 
     await new Promise(r => setTimeout(r, 7000));
@@ -231,7 +263,7 @@ async function syncFull() {
     });
   }
 
-  console.log(`\n🎉 Total: ${totalUpdated} jogos sincronizados`);
+  console.log(`\nTotal: ${totalUpdated} jogos sincronizados`);
 }
 
 // ---- Main ----
@@ -244,6 +276,6 @@ async function main() {
 }
 
 main().catch(err => {
-  console.error('❌ Erro fatal:', err.message);
+  console.error('Erro fatal:', err.message);
   process.exit(1);
 });
