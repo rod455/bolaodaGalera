@@ -1,20 +1,19 @@
 # Bolão na Copa - robots.txt
 
 User-agent: *
-Allow: /
+Allow: /home
+Allow: /auth
+Allow: /privacidade.html
+Allow: /regulamento-bolao-paulistao.html
 Disallow: /perfil
 Disallow: /criar
 Disallow: /entrar
+Disallow: /ao-vivo
+Disallow: /planos
+Disallow: /bolao/
+Disallow: /unsubscribe
 
 Sitemap: https://www.bolaonacopa.com.br/sitemap.xml
-
-# Google
-User-agent: Googlebot
-Allow: /
-
-# Bing
-User-agent: Bingbot
-Allow: /
 
 # Social Media
 User-agent: Twitterbot
@@ -30,23 +29,4 @@ User-agent: WhatsApp
 Allow: /
 
 User-agent: TelegramBot
-Allow: /
-
-# AI Crawlers
-User-agent: GPTBot
-Allow: /
-
-User-agent: ChatGPT-User
-Allow: /
-
-User-agent: Google-Extended
-Allow: /
-
-User-agent: Claude-Web
-Allow: /
-
-User-agent: PerplexityBot
-Allow: /
-
-User-agent: CCBot
 Allow: /
