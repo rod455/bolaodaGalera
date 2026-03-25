@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { Radio, Clock, Loader2, Calendar, Trophy, CheckCircle2, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
@@ -39,9 +40,8 @@ const AoVivo = () => {
   const triggerLiveSync = async () => {
     try {
       await supabase.functions.invoke('sync-live-scores');
-    } catch (err) {
+    } catch {
       // Silently fail - edge function may not be deployed yet
-      console.log('Live sync not available:', err);
     }
   };
 
@@ -108,7 +108,7 @@ const AoVivo = () => {
         setUserBolaoMap(map);
       }
     } catch (err) {
-      console.error("Erro ao carregar jogos:", err);
+      toast.error("Erro ao carregar jogos. Tente novamente.");
     } finally {
       setLoading(false);
     }

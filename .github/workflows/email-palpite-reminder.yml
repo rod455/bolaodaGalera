@@ -1,9 +1,9 @@
 name: Email Palpite Reminder
 
 on:
-  schedule:
-    # A cada 2h das 8h às 22h BRT (11h às 01h UTC)
-    - cron: '0 11,13,15,17,19,21,23,1 * * *'
+  # DESATIVADO ATÉ VIRAR O MÊS (limite de minutos atingido)
+  # schedule:
+  #   - cron: '0 11,15,19,23 * * *'
   workflow_dispatch:
 
 jobs:
@@ -19,13 +19,13 @@ jobs:
             "${SUPABASE_URL}/functions/v1/send-palpite-reminder" \
             -H "Authorization: Bearer ${SUPABASE_SERVICE_KEY}" \
             -H "Content-Type: application/json")
-          
+
           http_code=$(echo "$response" | tail -1)
           body=$(echo "$response" | sed '$d')
-          
-          echo "📧 Email Reminder - Status: $http_code"
+
+          echo "Email Reminder - Status: $http_code"
           echo "Response: $body"
-          
+
           if [ "$http_code" -ge 400 ]; then
             echo "::error::Falha nos lembretes por email (HTTP $http_code)"
             exit 1

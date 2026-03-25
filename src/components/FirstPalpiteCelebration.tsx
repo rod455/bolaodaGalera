@@ -8,6 +8,7 @@ import { useState, useEffect, useRef } from "react";
 import { X, Share2, Copy, Check, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { Capacitor } from "@capacitor/core";
 
 interface FirstPalpiteCelebrationProps {
   open: boolean;
@@ -94,7 +95,8 @@ const FirstPalpiteCelebration = ({
   ].join("");
 
   const handleWhatsApp = () => {
-    window.open(`https://wa.me/?text=${encodeURIComponent(whatsappText)}`, "_blank");
+    const url = `https://wa.me/?text=${encodeURIComponent(whatsappText)}`;
+    window.open(url, Capacitor.isNativePlatform() ? "_system" : "_blank");
   };
 
   const handleCopyCode = () => {

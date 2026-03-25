@@ -266,7 +266,7 @@ const Palpites = () => {
         ? bcData.map((bc: any) => bc.campeonato_id)
         : bolao.campeonato_id ? [bolao.campeonato_id] : [];
 
-      if (campIds.length === 0) { toast.error("Nenhum campeonato vinculado"); navigate(`/bolao/${id}`); return; }
+      if (campIds.length === 0) { toast.error("Nenhum campeonato vinculado"); setLoading(false); navigate(`/bolao/${id}`); return; }
 
       const { data: allGames } = await supabase
         .from("jogos").select("*").in("campeonato_id", campIds)
@@ -462,7 +462,7 @@ const Palpites = () => {
 
   const currentRodadaIdx = rodadas.indexOf(activeTab);
   const canPrev = isLeague && currentRodadaIdx > 0;
-  const canNext = isLeague && currentRodadaIdx < rodadas.length - 1;
+  const canNext = isLeague && currentRodadaIdx >= 0 && currentRodadaIdx < rodadas.length - 1;
 
   if (loading) return <LoadingSpinner />;
 
@@ -484,7 +484,7 @@ const Palpites = () => {
 
       {/* ═══ Dialog: Copiar palpite para outros bolões ═══ */}
       <Dialog open={showCopyDialog} onOpenChange={setShowCopyDialog}>
-        <DialogContent className="max-w-sm w-[calc(100%-2rem)] mx-4 rounded-2xl">
+        <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="text-base font-bold flex items-center gap-2">
               <Copy className="w-4 h-4 text-copa-green-500" />

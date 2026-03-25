@@ -46,7 +46,7 @@ const InstallAppBanner = () => {
   if (!show) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 animate-slide-up">
+    <div className="fixed bottom-0 left-0 right-0 z-50 animate-slide-up" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
       <div className="mx-3 mb-3 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
         <div className="flex items-center gap-3 p-3">
           {/* App icon */}

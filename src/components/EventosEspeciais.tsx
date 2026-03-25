@@ -128,7 +128,7 @@ const EventosEspeciais = ({ bolaoId, campeonatoId, campeonatos, isCriador, userI
         ) : (
           <div className="space-y-2">
             {eventos.map((evento) => {
-              const cfg = TIPO_CONFIG[evento.tipo];
+              const cfg = TIPO_CONFIG[evento.tipo] || TIPO_CONFIG.multiplicador;
               const Icon = cfg.icon;
               return (
                 <div key={evento.id}

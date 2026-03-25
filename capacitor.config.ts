@@ -10,7 +10,11 @@ const config: CapacitorConfig = {
   },
   plugins: {
     AdMob: {
-      appId: 'ca-app-pub-8494311740043165~4855337174',
+      appId: 'ca-app-pub-9316035916536420~4807390224',
+    },
+    SplashScreen: {
+      launchAutoHide: false,
+      backgroundColor: '#1B5E20',
     },
   },
   includePlugins: [

@@ -95,8 +95,7 @@ const Planos = () => {
       } else {
         throw new Error("URL de checkout não retornada");
       }
-    } catch (err: any) {
-      console.error("Erro no checkout:", err);
+    } catch {
       toast.error("Erro ao iniciar pagamento. Tente novamente.");
     } finally {
       setLoadingCheckout(null);

@@ -1,8 +1,9 @@
 name: Notify Lonely Creators
 
 on:
-  schedule:
-    - cron: '0 13 * * 1'
+  # DESATIVADO ATÉ VIRAR O MÊS (limite de minutos atingido)
+  # schedule:
+  #   - cron: '0 13 * * 1'
   workflow_dispatch:
 
 jobs:

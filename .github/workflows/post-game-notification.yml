@@ -1,9 +1,10 @@
 name: Post-Game Notification
 
 on:
-  schedule:
-    # A cada 30min — verifica jogos recém-encerrados e notifica
-    - cron: '5,35 * * * *'
+  # DESATIVADO ATÉ VIRAR O MÊS (limite de minutos atingido)
+  # schedule:
+  #   - cron: '5,35 15-23 * * *'
+  #   - cron: '5,35 0-5 * * *'
   workflow_dispatch:
 
 jobs:
@@ -19,13 +20,13 @@ jobs:
             "${SUPABASE_URL}/functions/v1/post-game-notification" \
             -H "Authorization: Bearer ${SUPABASE_SERVICE_KEY}" \
             -H "Content-Type: application/json")
-          
+
           http_code=$(echo "$response" | tail -1)
           body=$(echo "$response" | sed '$d')
-          
-          echo "⚽ Post-Game Notification - Status: $http_code"
+
+          echo "Post-Game Notification - Status: $http_code"
           echo "Response: $body"
-          
+
           if [ "$http_code" -ge 400 ]; then
             echo "::error::Falha nas notificações pós-jogo (HTTP $http_code)"
             exit 1

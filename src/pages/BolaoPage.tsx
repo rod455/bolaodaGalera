@@ -655,7 +655,14 @@ const BolaoPage = () => {
     return <LoadingSpinner />;
   }
 
-  if (!bolao) return null;
+  if (!bolao) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 px-4 text-center">
+        <p className="text-muted-foreground">Bolão não encontrado ou você não tem acesso.</p>
+        <Button onClick={() => navigate("/home")} variant="outline">Voltar para Home</Button>
+      </div>
+    );
+  }
 
   const handleLeaveBolao = async () => {
     if (!user || !id) return;

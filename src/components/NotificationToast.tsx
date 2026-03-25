@@ -89,7 +89,7 @@ const NotificationToast = () => {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed top-4 right-4 left-4 sm:left-auto sm:w-96 z-[200] space-y-2 pointer-events-none">
+    <div className="fixed right-4 left-4 sm:left-auto sm:w-96 z-[200] space-y-2 pointer-events-none" style={{ top: "max(1rem, calc(env(safe-area-inset-top, 0px) + 0.5rem))" }}>
       {toasts.map((toast) => {
         const tipo = toast.notificacao.tipo as NotificacaoTipo;
         const Icon = ICON_MAP[tipo] || Bell;

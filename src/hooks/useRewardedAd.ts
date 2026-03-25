@@ -62,18 +62,13 @@ async function ensureAdMobReady(): Promise<boolean> {
   if (adMobInitialized) return true;
 
   const AdMob = getAdMobPlugin();
-  if (!AdMob) {
-    console.warn("[AdMob] Plugin not found");
-    return false;
-  }
+  if (!AdMob) return false;
 
   try {
     await AdMob.initialize({ initializeForTesting: false });
     adMobInitialized = true;
-    console.log("[AdMob] ✅ Initialized");
     return true;
-  } catch (err) {
-    console.warn("[AdMob] ❌ Init failed:", err);
+  } catch {
     return false;
   }
 }
@@ -91,9 +86,8 @@ async function preloadAd(): Promise<void> {
     await ensureAdMobReady();
     await AdMob.prepareRewardVideoAd({ adId: AD_ID, isTesting: false });
     adPreloaded = true;
-    console.log("[AdMob] ✅ Ad preloaded");
-  } catch (err) {
-    console.warn("[AdMob] Preload failed:", err);
+  } catch {
+    // preload failed silently — will retry on next attempt
   }
 }
 
@@ -133,10 +127,7 @@ export const useRewardedAd = () => {
       const ready = await ensureAdMobReady();
       const AdMob = getAdMobPlugin();
 
-      if (!ready || !AdMob) {
-        console.warn("[AdMob] Not ready, skipping ad");
-        return true;
-      }
+      if (!ready || !AdMob) return true;
 
       try {
         return new Promise<boolean>(async (resolve) => {
@@ -159,40 +150,34 @@ export const useRewardedAd = () => {
             adPreloaded = false;
             // Pré-carregar o próximo ad em background
             setTimeout(() => preloadAd(), 2000);
-            console.log(`[AdMob] Ad finished (rewarded: ${userRewarded})`);
             resolve(success);
           };
 
           // Timeout de segurança (60s)
           const timeout = setTimeout(() => {
-            console.warn("[AdMob] Timeout 60s");
             finish(true);
           }, 60000);
 
           try {
             // Registrar listeners
-            const l1 = await AdMob.addListener(REWARD_EVENTS.Rewarded, (r: any) => {
-              console.log("[AdMob] 🎁 Rewarded:", r);
+            const l1 = await AdMob.addListener(REWARD_EVENTS.Rewarded, () => {
               userRewarded = true;
             });
             listeners.push(l1);
 
             const l2 = await AdMob.addListener(REWARD_EVENTS.Dismissed, () => {
-              console.log("[AdMob] 👋 Dismissed");
               clearTimeout(timeout);
               finish(true);
             });
             listeners.push(l2);
 
-            const l3 = await AdMob.addListener(REWARD_EVENTS.FailedToLoad, (e: any) => {
-              console.warn("[AdMob] FailedToLoad:", e);
+            const l3 = await AdMob.addListener(REWARD_EVENTS.FailedToLoad, () => {
               clearTimeout(timeout);
               finish(true);
             });
             listeners.push(l3);
 
-            const l4 = await AdMob.addListener(REWARD_EVENTS.FailedToShow, (e: any) => {
-              console.warn("[AdMob] FailedToShow:", e);
+            const l4 = await AdMob.addListener(REWARD_EVENTS.FailedToShow, () => {
               clearTimeout(timeout);
               finish(true);
             });
@@ -200,25 +185,21 @@ export const useRewardedAd = () => {
 
             // Se não foi preloaded, preparar agora
             if (!adPreloaded) {
-              console.log("[AdMob] Preparing (not preloaded)...");
               await AdMob.prepareRewardVideoAd({
                 adId: AD_ID,
                 isTesting: false,
               });
             }
 
-            console.log("[AdMob] Showing...");
             adPreloaded = false;
             await AdMob.showRewardVideoAd();
 
-          } catch (err: any) {
-            console.warn("[AdMob] Error:", err);
+          } catch {
             clearTimeout(timeout);
             finish(true);
           }
         });
-      } catch (err) {
-        console.warn("[AdMob] Unexpected error:", err);
+      } catch {
         return true;
       }
     },

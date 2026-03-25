@@ -22,6 +22,7 @@ import NotificationToast from "./components/NotificationToast";
 import { Analytics } from "@vercel/analytics/react";
 import { Capacitor } from "@capacitor/core";
 import { App as CapApp } from "@capacitor/app";
+import { SplashScreen as NativeSplash } from "@capacitor/splash-screen";
 import { supabase } from "@/integrations/supabase/client";
 import { initGoogleAuth } from "@/lib/googleAuth";
 
@@ -78,6 +79,13 @@ const App = () => {
   const isNative = Capacitor.isNativePlatform();
   const [showSplash, setShowSplash] = useState(isNative);
   const handleSplashFinish = useCallback(() => setShowSplash(false), []);
+
+  // Esconder splash nativa do Capacitor assim que o React montar
+  useEffect(() => {
+    if (isNative) {
+      NativeSplash.hide().catch(() => {});
+    }
+  }, [isNative]);
 
   useEffect(() => {
     initGoogleAuth();

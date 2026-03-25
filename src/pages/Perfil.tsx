@@ -358,6 +358,7 @@ const Perfil = () => {
                       });
                       if (error) throw error;
                       if (data?.url) { if (Capacitor.isNativePlatform()) { window.open(data.url, "_system"); } else { window.location.href = data.url; } }
+                      else { toast.error("Não foi possível gerar o link de pagamento. Tente novamente."); }
                     } catch {
                       toast.error("Erro ao iniciar pagamento.");
                     } finally {
@@ -379,6 +380,7 @@ const Perfil = () => {
                     const { data, error } = await supabase.functions.invoke("create-portal");
                     if (error) throw error;
                     if (data?.url) { if (Capacitor.isNativePlatform()) { window.open(data.url, "_system"); } else { window.location.href = data.url; } }
+                    else { toast.error("Não foi possível abrir o portal. Tente novamente."); }
                   } catch {
                     toast.error("Erro ao abrir cancelamento.");
                   } finally {
@@ -456,6 +458,7 @@ const Perfil = () => {
                     const { data, error } = await supabase.functions.invoke("create-portal");
                     if (error) throw error;
                     if (data?.url) { if (Capacitor.isNativePlatform()) { window.open(data.url, "_system"); } else { window.location.href = data.url; } }
+                    else { toast.error("Não foi possível abrir o portal. Tente novamente."); }
                   } catch {
                     toast.error("Erro ao abrir cancelamento.");
                   } finally {

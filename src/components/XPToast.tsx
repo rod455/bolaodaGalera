@@ -20,9 +20,10 @@ const XPToast = ({ xp, message, onDone }: XPToastProps) => {
 
   return (
     <div
-      className={`fixed top-20 left-1/2 -translate-x-1/2 z-[100] transition-all duration-300 ${
+      className={`fixed left-1/2 -translate-x-1/2 z-[100] transition-all duration-300 ${
         visible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
       }`}
+      style={{ top: "max(5rem, calc(env(safe-area-inset-top, 0px) + 3.5rem))" }}
     >
       <div className="bg-copa-green-600 text-white rounded-full px-4 py-2 shadow-lg flex items-center gap-2">
         <span className="text-lg">⚡</span>

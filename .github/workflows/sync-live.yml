@@ -1,20 +1,53 @@
 name: Sync Live Scores
 
 on:
-  schedule:
-    - cron: '*/10 * * * *'
+  # DESATIVADO ATÉ VIRAR O MÊS (limite de minutos atingido)
+  # schedule:
+  #   - cron: '*/15 13-23 * * *'
+  #   - cron: '*/15 0-5 * * *'
   workflow_dispatch:
 
 jobs:
   smart-sync:
     runs-on: ubuntu-latest
     steps:
+      # Primeiro: checar se há jogos pendentes ANTES de instalar Node
+      # Isso economiza ~1 min de setup quando não há jogos
+      - name: Check for pending games
+        id: check
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          five_days_ago=$(date -u -d '5 days ago' +%Y-%m-%dT00:00:00Z 2>/dev/null || date -u -v-5d +%Y-%m-%dT00:00:00Z)
+          four_hours_ahead=$(date -u -d '+4 hours' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -v+4H +%Y-%m-%dT%H:%M:%SZ)
+
+          count=$(curl -s \
+            "${SUPABASE_URL}/rest/v1/jogos?select=id&or=(status.eq.ao_vivo,status.eq.agendado)&data_hora=gte.${five_days_ago}&data_hora=lte.${four_hours_ahead}&limit=1" \
+            -H "apikey: ${SUPABASE_SERVICE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_KEY}" \
+            -H "Prefer: count=exact" \
+            -H "Range: 0-0" \
+            -I 2>/dev/null | grep -i content-range | grep -oP '/\K[0-9]+' || echo "0")
+
+          echo "Pending games: $count"
+          if [ "$count" = "0" ] || [ -z "$count" ]; then
+            echo "has_games=false" >> "$GITHUB_OUTPUT"
+            echo "No pending games. Skipping sync."
+          else
+            echo "has_games=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: actions/checkout@v4
+        if: steps.check.outputs.has_games == 'true'
       - uses: actions/setup-node@v4
+        if: steps.check.outputs.has_games == 'true'
         with:
           node-version: '20'
       - run: npm install @supabase/supabase-js
+        if: steps.check.outputs.has_games == 'true'
       - name: Smart live sync
+        if: steps.check.outputs.has_games == 'true'
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}

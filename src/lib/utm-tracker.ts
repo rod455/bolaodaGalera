@@ -68,7 +68,6 @@ async function captureInstallReferrer(): Promise<UTMParams | null> {
     // Tenta acessar o Install Referrer via plugin customizado ou bridge
     // Se não tiver plugin dedicado, o Firebase Analytics já captura automaticamente
     // o install referrer e envia como evento "campaign_details"
-    console.log("[UTM] Install referrer is captured automatically by Firebase Analytics SDK");
     return null;
   } catch {
     return null;
@@ -118,7 +117,6 @@ export async function initUTMTracker() {
   const webUTMs = captureWebUTMs();
   if (webUTMs) {
     saveUTMs(webUTMs);
-    console.log("[UTM] Captured from URL:", webUTMs);
 
     // Enviar evento para analytics
     await trackEvent("campaign_hit", {

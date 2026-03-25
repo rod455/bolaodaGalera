@@ -59,12 +59,9 @@ export async function initAnalytics() {
     try {
       await FA.setEnabled({ enabled: true });
       await FA.setCollectionEnabled({ enabled: true });
-      console.log("[Analytics] ✅ Firebase Analytics initialized");
-    } catch (err) {
-      console.warn("[Analytics] Firebase init error:", err);
+    } catch {
+      // Firebase init failed silently
     }
-  } else {
-    console.warn("[Analytics] Firebase Analytics plugin not found");
   }
 }
 

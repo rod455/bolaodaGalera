@@ -159,7 +159,7 @@ const CriarBolao = () => {
       const { data, error } = await supabase.from("campeonatos").select("*").eq("ativo", true).order("nome");
       if (error) throw error;
       setCampeonatos((data as any[]) || []);
-    } catch (err) { console.error("Erro ao carregar campeonatos:", err); }
+    } catch (err) { toast.error("Erro ao carregar campeonatos. Tente recarregar a página."); }
     finally { setLoadingCampeonatos(false); }
   };
 

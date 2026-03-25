@@ -1,9 +1,9 @@
 name: Engage - Sem Bolao (Email + Sininho)
 
 on:
-  schedule:
-    # Segunda 11h BRT (14h UTC)
-    - cron: '0 14 * * 1'
+  # DESATIVADO ATÉ VIRAR O MÊS (limite de minutos atingido)
+  # schedule:
+  #   - cron: '0 14 * * 1'
   workflow_dispatch:
 
 jobs:

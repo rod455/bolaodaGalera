@@ -143,7 +143,7 @@ const Auth = () => {
           setIsSubmitting(false);
           return;
         }
-        const { error } = await supabase.auth.signUp({
+        const { error, data: signUpData } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -155,13 +155,13 @@ const Auth = () => {
         if (error) throw error;
 
         // Processar referral se veio com código de convite
-        if (refCode && data?.user?.id) {
+        if (refCode && signUpData?.user?.id) {
           try {
             await supabase.rpc("processar_referral", {
-              p_referred_id: data.user.id,
+              p_referred_id: signUpData.user.id,
               p_referral_code: refCode,
             });
-          } catch (e) { console.error("Erro referral:", e); }
+          } catch (_e) { /* referral falhou silenciosamente */ }
         }
 
         // Dispara eventos Google Ads

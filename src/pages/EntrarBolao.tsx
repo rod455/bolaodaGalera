@@ -81,8 +81,8 @@ const EntrarBolao = () => {
         counts[b.id] = count || 0;
       }
       setParticipantesCount(counts);
-    } catch (err) {
-      console.error("Erro ao carregar bolões públicos:", err);
+    } catch {
+      // failed to load public bolões
     } finally {
       setLoading(false);
     }

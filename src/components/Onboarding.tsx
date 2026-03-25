@@ -156,7 +156,7 @@ const QuickBolaoStep = ({
           .order("nome_popular");
         if (data && data.length > 0) {
           setCampeonatos(data);
-          setSelectedChamp(data[0].id!);
+          setSelectedChamp(data[0].id);
         }
       } catch (err) {
         console.error("Erro ao carregar campeonatos:", err);

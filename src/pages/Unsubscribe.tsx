@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+
+const SUPABASE_FN_URL = `${(supabase as any).supabaseUrl}/functions/v1`;
 
 const MOTIVOS = [
   "Recebo emails demais",
@@ -9,7 +12,6 @@ const MOTIVOS = [
   "Outro motivo",
 ];
 
-const SUPABASE_URL = "https://hvgsdxcdufekksxgqyoj.supabase.co";
 
 type Etapa = "carregando" | "invalido" | "ja_descadastrado" | "motivo" | "sucesso" | "erro";
 
@@ -28,7 +30,7 @@ export default function Unsubscribe() {
       setEtapa("invalido");
       return;
     }
-    fetch(`${SUPABASE_URL}/functions/v1/email-unsubscribe?token=${token}`)
+    fetch(`${SUPABASE_FN_URL}/email-unsubscribe?token=${token}`)
       .then((r) => r.json())
       .then((data) => {
         if (data.error) setEtapa("invalido");
@@ -52,7 +54,7 @@ export default function Unsubscribe() {
         : motivoSelecionado;
 
     try {
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/email-unsubscribe`, {
+      const res = await fetch(`${SUPABASE_FN_URL}/email-unsubscribe`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, motivo: motivoFinal }),

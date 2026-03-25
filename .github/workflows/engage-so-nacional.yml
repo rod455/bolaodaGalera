@@ -1,11 +1,10 @@
 name: Engage - So Nacional
 
 on:
-  schedule:
-    # Quinta 11h BRT (14h UTC) - Email + Sininho
-    - cron: '0 14 * * 4'
-    # Sabado 11h BRT (14h UTC) - Push
-    - cron: '0 14 * * 6'
+  # DESATIVADO ATÉ VIRAR O MÊS (limite de minutos atingido)
+  # schedule:
+  #   - cron: '0 14 * * 4'
+  #   - cron: '0 14 * * 6'
   workflow_dispatch:
 
 jobs:

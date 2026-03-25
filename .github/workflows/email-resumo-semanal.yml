@@ -1,9 +1,9 @@
 name: Email Resumo Semanal
 
 on:
-  schedule:
-    # Toda segunda-feira às 10h BRT (13h UTC)
-    - cron: '0 13 * * 1'
+  # DESATIVADO ATÉ VIRAR O MÊS (limite de minutos atingido)
+  # schedule:
+  #   - cron: '0 13 * * 1'
   workflow_dispatch:
 
 jobs:
