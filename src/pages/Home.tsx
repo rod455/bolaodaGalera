@@ -633,13 +633,13 @@ const Home = () => {
             <p className="text-sm text-muted-foreground mt-1">Gerencie e acompanhe seus bolões</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <Button variant="outline" onClick={() => navigate("/criar")} className="h-12 border-copa-green-200 text-copa-green-600 hover:bg-copa-green-50 font-semibold rounded-xl">
-              <PlusCircle className="w-4 h-4 mr-2" /> Criar novo bolão
+          <div className="grid grid-cols-2 gap-2">
+            <Button variant="outline" onClick={() => navigate("/criar")} className="h-12 border-copa-green-200 text-copa-green-600 hover:bg-copa-green-50 font-semibold rounded-xl text-xs sm:text-sm px-2 sm:px-4">
+              <PlusCircle className="w-4 h-4 mr-1.5 flex-shrink-0" /> Criar bolão
             </Button>
             <Button variant="outline" onClick={() => setShowCodeInput(!showCodeInput)}
-              className={`h-12 font-semibold rounded-xl ${showCodeInput ? "border-copa-gold-400 text-copa-gold-600 bg-copa-gold-50" : "border-copa-green-200 text-copa-green-600 hover:bg-copa-green-50"}`}>
-              <Keyboard className="w-4 h-4 mr-2" /> Entrar por código
+              className={`h-12 font-semibold rounded-xl text-xs sm:text-sm px-2 sm:px-4 ${showCodeInput ? "border-copa-gold-400 text-copa-gold-600 bg-copa-gold-50" : "border-copa-green-200 text-copa-green-600 hover:bg-copa-green-50"}`}>
+              <Keyboard className="w-4 h-4 mr-1.5 flex-shrink-0" /> Entrar por código
             </Button>
           </div>
 

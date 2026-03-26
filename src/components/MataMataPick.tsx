@@ -209,7 +209,7 @@ const MataMataPick = ({
                       {jogo.logo_time_a ? (
                         <img src={jogo.logo_time_a} alt={jogo.time_a} className="w-10 h-10 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                       ) : <div className="w-10 h-10 bg-gray-200 rounded-full" />}
-                      <span className="text-xs font-bold text-center leading-tight">{jogo.time_a}</span>
+                      <span className="text-xs font-bold text-center leading-tight truncate w-full">{jogo.time_a}</span>
                       {selectedA && <Check className="w-4 h-4 text-copa-green-500" />}
                       {timeAUsado && <Lock className="w-3 h-3 text-gray-400" />}
                     </button>
@@ -231,7 +231,7 @@ const MataMataPick = ({
                       {jogo.logo_time_b ? (
                         <img src={jogo.logo_time_b} alt={jogo.time_b} className="w-10 h-10 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                       ) : <div className="w-10 h-10 bg-gray-200 rounded-full" />}
-                      <span className="text-xs font-bold text-center leading-tight">{jogo.time_b}</span>
+                      <span className="text-xs font-bold text-center leading-tight truncate w-full">{jogo.time_b}</span>
                       {selectedB && <Check className="w-4 h-4 text-copa-green-500" />}
                       {timeBUsado && <Lock className="w-3 h-3 text-gray-400" />}
                     </button>

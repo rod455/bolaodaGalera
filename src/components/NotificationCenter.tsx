@@ -111,7 +111,7 @@ const NotificationCenter = () => {
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-xl border border-gray-100 z-[100] overflow-hidden animate-fade-in">
+        <div className="absolute right-0 top-full mt-2 w-[calc(100vw-1.5rem)] sm:w-96 max-w-[22rem] bg-white rounded-2xl shadow-xl border border-gray-100 z-[100] overflow-hidden animate-fade-in">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b">
             <h3 className="text-sm font-bold text-foreground">Notificações</h3>

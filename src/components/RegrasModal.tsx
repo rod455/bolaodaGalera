@@ -47,7 +47,7 @@ const RegrasModal = ({ regras, open, onClose }: RegrasModalProps) => {
                 <span className="text-sm">{regra.texto}</span>
               </div>
               <span
-                className={`text-sm font-bold whitespace-nowrap ml-2 ${
+                className={`text-sm font-bold flex-shrink-0 ml-2 ${
                   regra.acerto ? "text-copa-green-600" : "text-red-500"
                 }`}
               >
