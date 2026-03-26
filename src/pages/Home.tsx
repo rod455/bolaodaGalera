@@ -28,6 +28,7 @@ import { formatDataJogo } from "@/lib/formatters";
 import SEOHead from "@/components/SEOHead";
 import { trackEvent } from "@/lib/analytics";
 import Onboarding, { isOnboardingDone, markOnboardingDone } from "@/components/Onboarding";
+import FeedbackBanner from "@/components/FeedbackBanner";
 
 // ID do bolão do Paulistão (promoção R$200)
 const PAULISTAO_BOLAO_ID = "71851d2a-88fa-4ec4-a780-7c1e450869ef";
@@ -590,6 +591,9 @@ const Home = () => {
       {user && (
         <DynamicBanner userBolaoIds={userBolaoIds} userContext={userBannerCtx} />
       )}
+
+      {/* ═══ FEEDBACK BANNER — aparece após palpitar ═══ */}
+      {user && <FeedbackBanner />}
 
       {/* ═══ GUEST: Countdown + Hero Carrossel ═══ */}
       {!user && (

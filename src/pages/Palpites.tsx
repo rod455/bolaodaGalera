@@ -23,6 +23,7 @@ import SEOHead from "@/components/SEOHead";
 import { useGamification } from "@/hooks/useGamification";
 import XPToast from "@/components/XPToast";
 import { trackEvent } from "@/lib/analytics";
+import { triggerFeedback } from "@/components/FeedbackBanner";
 import FirstPalpiteCelebration from "@/components/FirstPalpiteCelebration";
 
 interface PalpiteDB extends Palpite { id: string; }
@@ -429,6 +430,7 @@ const Palpites = () => {
       });
 
       toast.success("Palpite salvo!");
+      triggerFeedback();
 
       // ═══ Celebração do primeiro palpite (onboarding) ═══
       if (isFirstTime && !firstPalpiteDone.current) {

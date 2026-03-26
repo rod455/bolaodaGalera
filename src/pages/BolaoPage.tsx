@@ -27,6 +27,7 @@ import { useGamification } from "@/hooks/useGamification";
 import NivelBadge from "@/components/NivelBadge";
 import XPToast from "@/components/XPToast";
 import { trackEvent } from "@/lib/analytics";
+import { triggerFeedback } from "@/components/FeedbackBanner";
 import MataMataDashboard from "@/components/MataMataDashboard";
 import GerenciarCampeonatos from "@/components/GerenciarCampeonatos";
 
@@ -1101,7 +1102,7 @@ const BolaoPage = () => {
               Ranking
             </CardTitle>
             {(rankingTab === "geral" ? ranking : rankingRodada).length > 5 && (
-              <button onClick={() => setShowFullRanking(!showFullRanking)} className="text-sm text-copa-green-500 font-medium hover:underline">
+              <button onClick={() => { setShowFullRanking(!showFullRanking); if (!showFullRanking) triggerFeedback(); }} className="text-sm text-copa-green-500 font-medium hover:underline">
                 {showFullRanking ? "Ver menos" : "Ver ranking completo"}
               </button>
             )}
