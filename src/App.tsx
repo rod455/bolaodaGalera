@@ -25,6 +25,7 @@ import { App as CapApp } from "@capacitor/app";
 import { SplashScreen as NativeSplash } from "@capacitor/splash-screen";
 import { supabase } from "@/integrations/supabase/client";
 import { initGoogleAuth } from "@/lib/googleAuth";
+import { useSwipeBack } from "@/hooks/useSwipeBack";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ const EXIT_ROUTES = ["/home", "/auth"];
 const BackButtonHandler = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  useSwipeBack();
 
   const pathnameRef = useRef(location.pathname);
   useEffect(() => {
