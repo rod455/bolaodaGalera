@@ -6,7 +6,6 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.14.0?target=deno";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,6 +14,21 @@ const corsHeaders = {
 };
 
 const SITE_URL = "https://www.bolaonacopa.com.br";
+const STRIPE_API = "https://api.stripe.com/v1";
+
+async function stripePost(path: string, body: Record<string, string>, secretKey: string) {
+  const res = await fetch(`${STRIPE_API}${path}`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${secretKey}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams(body).toString(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error?.message || "Stripe API error");
+  return data;
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -22,9 +36,7 @@ serve(async (req) => {
   }
 
   try {
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
-      apiVersion: "2023-10-16",
-    });
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY")!;
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -35,8 +47,7 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Não autorizado" }), {
-        status: 401,
-        headers: corsHeaders,
+        status: 401, headers: corsHeaders,
       });
     }
 
@@ -46,8 +57,7 @@ serve(async (req) => {
 
     if (authError || !user) {
       return new Response(JSON.stringify({ error: "Usuário não encontrado" }), {
-        status: 401,
-        headers: corsHeaders,
+        status: 401, headers: corsHeaders,
       });
     }
 
@@ -66,19 +76,18 @@ serve(async (req) => {
     }
 
     // Criar sessão do Billing Portal
-    const session = await stripe.billingPortal.sessions.create({
+    const session = await stripePost("/billing_portal/sessions", {
       customer: profile.stripe_customer_id,
       return_url: `${SITE_URL}/perfil`,
-    });
+    }, stripeKey);
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: corsHeaders,
     });
   } catch (err) {
     console.error("Erro no create-portal:", err);
-    return new Response(JSON.stringify({ error: "Erro interno ao criar portal" }), {
-      status: 500,
-      headers: corsHeaders,
+    return new Response(JSON.stringify({ error: err.message || "Erro interno" }), {
+      status: 500, headers: corsHeaders,
     });
   }
 });

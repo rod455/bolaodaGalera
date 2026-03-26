@@ -6,7 +6,6 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.14.0?target=deno";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -22,14 +21,40 @@ const PRICE_PLAN_MAP: Record<string, string> = {
   "price_1T1U0KC1YtBHMBc2gqSGO0jD": "premium_pro",
 };
 
+// ── Verificação de assinatura HMAC-SHA256 do Stripe ──
+async function verifySignature(payload: string, sigHeader: string, secret: string): Promise<boolean> {
+  const parts = sigHeader.split(",").reduce((acc, part) => {
+    const [key, val] = part.split("=");
+    acc[key.trim()] = val;
+    return acc;
+  }, {} as Record<string, string>);
+
+  const timestamp = parts["t"];
+  const signature = parts["v1"];
+  if (!timestamp || !signature) return false;
+
+  // Proteção contra replay (5 min)
+  const age = Math.floor(Date.now() / 1000) - parseInt(timestamp);
+  if (age > 300) return false;
+
+  const signedPayload = `${timestamp}.${payload}`;
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(signedPayload));
+  const expected = Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, "0")).join("");
+
+  return expected === signature;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
-
-  const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
-    apiVersion: "2023-10-16",
-  });
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
@@ -37,29 +62,21 @@ serve(async (req) => {
   );
 
   // Verificar assinatura do webhook
-  const signature = req.headers.get("stripe-signature");
-  const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
-
-  if (!signature || !webhookSecret) {
-    return new Response(JSON.stringify({ error: "Missing signature" }), {
-      status: 400,
-      headers: corsHeaders,
-    });
-  }
-
-  let event: Stripe.Event;
+  const sigHeader = req.headers.get("stripe-signature") || "";
+  const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET") || "";
   const body = await req.text();
 
-  try {
-    event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
-  } catch (err) {
-    console.error("Webhook signature verification failed:", err);
-    return new Response(JSON.stringify({ error: "Invalid signature" }), {
-      status: 400,
-      headers: corsHeaders,
-    });
+  if (webhookSecret) {
+    const valid = await verifySignature(body, sigHeader, webhookSecret);
+    if (!valid) {
+      console.error("Webhook signature verification failed");
+      return new Response(JSON.stringify({ error: "Invalid signature" }), {
+        status: 400, headers: corsHeaders,
+      });
+    }
   }
 
+  const event = JSON.parse(body);
   console.log(`[Stripe Webhook] Evento: ${event.type}`);
 
   try {
@@ -67,73 +84,53 @@ serve(async (req) => {
       // ── Assinatura criada ou atualizada ──
       case "customer.subscription.created":
       case "customer.subscription.updated": {
-        const subscription = event.data.object as Stripe.Subscription;
-        const userId = subscription.metadata?.supabase_user_id;
+        const sub = event.data.object;
+        const userId = await resolveUserId(supabase, sub);
+        if (!userId) break;
 
-        if (!userId) {
-          // Tentar encontrar pelo customer ID
-          const customerId = subscription.customer as string;
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("id")
-            .eq("stripe_customer_id", customerId)
-            .single();
+        const status = sub.status;
+        const priceId = sub.items?.data?.[0]?.price?.id;
+        const plano = PRICE_PLAN_MAP[priceId] || "premium";
+        const expiresAt = new Date(sub.current_period_end * 1000).toISOString();
 
-          if (!profile) {
-            console.error("Usuário não encontrado para customer:", customerId);
-            break;
-          }
-
-          await updatePlan(supabase, profile.id, subscription);
-        } else {
-          await updatePlan(supabase, userId, subscription);
+        if (status === "active" || status === "trialing") {
+          await supabase.from("profiles").update({
+            plano,
+            stripe_subscription_id: sub.id,
+            plano_expira_em: expiresAt,
+          }).eq("id", userId);
+          console.log(`[Stripe] Plano ativado: ${userId} → ${plano}`);
+        } else if (status === "canceled" || status === "unpaid") {
+          await supabase.from("profiles").update({
+            plano: "free",
+            stripe_subscription_id: null,
+            plano_expira_em: null,
+          }).eq("id", userId);
+          console.log(`[Stripe] Plano removido: ${userId}`);
         }
         break;
       }
 
       // ── Assinatura cancelada / expirada ──
       case "customer.subscription.deleted": {
-        const subscription = event.data.object as Stripe.Subscription;
-        const customerId = subscription.customer as string;
+        const sub = event.data.object;
+        const userId = await resolveUserId(supabase, sub);
+        if (!userId) break;
 
-        // Encontrar usuário pelo customer ID
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("stripe_customer_id", customerId)
-          .single();
-
-        if (profile) {
-          await supabase
-            .from("profiles")
-            .update({
-              plano: "free",
-              stripe_subscription_id: null,
-              plano_expira_em: null,
-            })
-            .eq("id", profile.id);
-
-          console.log(`[Stripe] Plano cancelado para user: ${profile.id}`);
-        }
+        await supabase.from("profiles").update({
+          plano: "free",
+          stripe_subscription_id: null,
+          plano_expira_em: null,
+        }).eq("id", userId);
+        console.log(`[Stripe] Plano cancelado: ${userId}`);
         break;
       }
 
       // ── Pagamento falhou ──
       case "invoice.payment_failed": {
-        const invoice = event.data.object as Stripe.Invoice;
-        const customerId = invoice.customer as string;
-
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("stripe_customer_id", customerId)
-          .single();
-
-        if (profile) {
-          console.log(`[Stripe] Pagamento falhou para user: ${profile.id}`);
-          // Não remove o plano imediatamente — Stripe vai retry
-          // Apenas loga. Após todos os retries, subscription.deleted será disparado.
-        }
+        const invoice = event.data.object;
+        const customerId = invoice.customer;
+        console.log(`[Stripe] Pagamento falhou para customer: ${customerId}`);
         break;
       }
 
@@ -143,8 +140,7 @@ serve(async (req) => {
   } catch (err) {
     console.error(`[Stripe] Erro processando ${event.type}:`, err);
     return new Response(JSON.stringify({ error: "Erro interno" }), {
-      status: 500,
-      headers: corsHeaders,
+      status: 500, headers: corsHeaders,
     });
   }
 
@@ -153,39 +149,25 @@ serve(async (req) => {
   });
 });
 
-// ── Helper: atualizar plano no profiles ──
-async function updatePlan(
-  supabase: ReturnType<typeof createClient>,
-  userId: string,
-  subscription: Stripe.Subscription
-) {
-  const status = subscription.status; // "active", "past_due", "canceled", etc.
-  const priceId = subscription.items.data[0]?.price?.id;
-  const plano = PRICE_PLAN_MAP[priceId] || "premium";
-  const currentPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
+// ── Resolver user ID: metadata ou stripe_customer_id ──
+async function resolveUserId(supabase: any, sub: any): Promise<string | null> {
+  // Primeiro tenta metadata
+  const userId = sub.metadata?.supabase_user_id;
+  if (userId) return userId;
 
-  if (status === "active" || status === "trialing") {
-    await supabase
-      .from("profiles")
-      .update({
-        plano,
-        stripe_subscription_id: subscription.id,
-        plano_expira_em: currentPeriodEnd,
-      })
-      .eq("id", userId);
+  // Fallback: buscar pelo customer ID
+  const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer?.id;
+  if (!customerId) return null;
 
-    console.log(`[Stripe] Plano atualizado: ${userId} → ${plano} (até ${currentPeriodEnd})`);
-  } else if (status === "canceled" || status === "unpaid") {
-    await supabase
-      .from("profiles")
-      .update({
-        plano: "free",
-        stripe_subscription_id: null,
-        plano_expira_em: null,
-      })
-      .eq("id", userId);
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("stripe_customer_id", customerId)
+    .single();
 
-    console.log(`[Stripe] Plano removido: ${userId} (status: ${status})`);
+  if (!profile) {
+    console.error("Usuário não encontrado para customer:", customerId);
+    return null;
   }
-  // Para "past_due": mantém o plano ativo (Stripe ainda está tentando cobrar)
+  return profile.id;
 }

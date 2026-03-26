@@ -6,7 +6,6 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.14.0?target=deno";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,8 +14,8 @@ const corsHeaders = {
 };
 
 const SITE_URL = "https://www.bolaonacopa.com.br";
+const STRIPE_API = "https://api.stripe.com/v1";
 
-// Mapeia price ID → nome do plano (para a URL de retorno)
 const PRICE_PLAN_MAP: Record<string, string> = {
   "price_1T1TxnC1YtBHMBc2hJMfOwqL": "premium",
   "price_1T1TyYC1YtBHMBc2E12oGz6Q": "premium",
@@ -24,15 +23,27 @@ const PRICE_PLAN_MAP: Record<string, string> = {
   "price_1T1U0KC1YtBHMBc2gqSGO0jD": "premium_pro",
 };
 
+async function stripePost(path: string, body: Record<string, string>, secretKey: string) {
+  const res = await fetch(`${STRIPE_API}${path}`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${secretKey}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams(body).toString(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error?.message || "Stripe API error");
+  return data;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
-      apiVersion: "2023-10-16",
-    });
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY")!;
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -43,8 +54,7 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Não autorizado" }), {
-        status: 401,
-        headers: corsHeaders,
+        status: 401, headers: corsHeaders,
       });
     }
 
@@ -54,17 +64,14 @@ serve(async (req) => {
 
     if (authError || !user) {
       return new Response(JSON.stringify({ error: "Usuário não encontrado" }), {
-        status: 401,
-        headers: corsHeaders,
+        status: 401, headers: corsHeaders,
       });
     }
 
-    // Ler body
     const { priceId } = await req.json();
     if (!priceId) {
       return new Response(JSON.stringify({ error: "priceId é obrigatório" }), {
-        status: 400,
-        headers: corsHeaders,
+        status: 400, headers: corsHeaders,
       });
     }
 
@@ -78,10 +85,10 @@ serve(async (req) => {
     let customerId = profile?.stripe_customer_id;
 
     if (!customerId) {
-      const customer = await stripe.customers.create({
-        email: user.email,
-        metadata: { supabase_user_id: user.id },
-      });
+      const customer = await stripePost("/customers", {
+        email: user.email || "",
+        "metadata[supabase_user_id]": user.id,
+      }, stripeKey);
       customerId = customer.id;
 
       await supabase
@@ -92,26 +99,24 @@ serve(async (req) => {
 
     // Criar sessão de checkout
     const plano = PRICE_PLAN_MAP[priceId] || "premium";
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      line_items: [{ price: priceId, quantity: 1 }],
+    const session = await stripePost("/checkout/sessions", {
+      customer: customerId!,
+      "line_items[0][price]": priceId,
+      "line_items[0][quantity]": "1",
       mode: "subscription",
       success_url: `${SITE_URL}/planos?status=sucesso&plano=${plano}`,
       cancel_url: `${SITE_URL}/planos?status=cancelado`,
-      metadata: { supabase_user_id: user.id },
-      subscription_data: {
-        metadata: { supabase_user_id: user.id },
-      },
-    });
+      "metadata[supabase_user_id]": user.id,
+      "subscription_data[metadata][supabase_user_id]": user.id,
+    }, stripeKey);
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: corsHeaders,
     });
   } catch (err) {
     console.error("Erro no create-checkout:", err);
-    return new Response(JSON.stringify({ error: "Erro interno ao criar checkout" }), {
-      status: 500,
-      headers: corsHeaders,
+    return new Response(JSON.stringify({ error: err.message || "Erro interno" }), {
+      status: 500, headers: corsHeaders,
     });
   }
 });
