@@ -227,6 +227,12 @@ export const useNotifications = (): UseNotificationsReturn => {
 
     return () => {
       if (subscriptionRef.current) supabase.removeChannel(subscriptionRef.current);
+      if (Capacitor.isNativePlatform()) {
+        import("@capacitor/push-notifications").then(({ PushNotifications }) => {
+          PushNotifications.removeAllListeners();
+        }).catch(() => {});
+        pushRegistered.current = false;
+      }
     };
   }, [user]);
 

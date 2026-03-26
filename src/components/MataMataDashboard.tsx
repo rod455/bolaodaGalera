@@ -134,7 +134,7 @@ const MataMataDashboard = ({ bolaoId, campeonatoId }: Props) => {
         .from("mata_mata_escolhas")
         .select("rodada, time_escolhido, resultado, jogo_id")
         .eq("ciclo_id", cicloAtivo.id)
-        .eq("user_id", user!.id)
+        .eq("user_id", user.id)
         .order("rodada", { ascending: true });
 
       setMinhasEscolhas((escolhas || []) as Escolha[]);

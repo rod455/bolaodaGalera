@@ -31,7 +31,7 @@ export default function Unsubscribe() {
       return;
     }
     fetch(`${SUPABASE_FN_URL}/email-unsubscribe?token=${token}`)
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error(); return r.json(); })
       .then((data) => {
         if (data.error) setEtapa("invalido");
         else if (data.already_opted_out) setEtapa("ja_descadastrado");
@@ -59,6 +59,7 @@ export default function Unsubscribe() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, motivo: motivoFinal }),
       });
+      if (!res.ok) throw new Error("Erro no servidor");
       const data = await res.json();
       if (data.success) setEtapa("sucesso");
       else setEtapa("erro");

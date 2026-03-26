@@ -301,7 +301,6 @@ const Home = () => {
       if (result.success && Capacitor.isNativePlatform()) {
         toast.success("Login realizado com sucesso!");
         navigate("/home");
-        window.location.reload();
       } else if (!result.success && result.error) {
         if (result.error !== "Login cancelado") {
           toast.error(result.error);
