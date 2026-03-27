@@ -9,6 +9,9 @@ const getToday = () => new Date().toISOString().split("T")[0];
 // ═══ Seu Ad Unit ID de Rewarded ═══
 const AD_ID = "ca-app-pub-9316035916536420/8143495428";
 
+// ═══ Ad Unit ID de Interstitial (entrar em bolão) ═══
+const INTERSTITIAL_ID = "ca-app-pub-9316035916536420/1822017661";
+
 // ═══ Detecção de plataforma nativa ═══
 function isRunningInNativeApp(): boolean {
   try { if (Capacitor.isNativePlatform()) return true; } catch {}
@@ -206,6 +209,70 @@ export const useRewardedAd = () => {
     [markPalpiteAdWatched]
   );
 
+  /**
+   * Mostra AdMob Interstitial (para entrar em bolão).
+   * Sempre retorna true para não bloquear o fluxo.
+   */
+  const showNativeInterstitialAd = useCallback(
+    async (): Promise<boolean> => {
+      const ready = await ensureAdMobReady();
+      const AdMob = getAdMobPlugin();
+      if (!ready || !AdMob) return true;
+
+      try {
+        return new Promise<boolean>(async (resolve) => {
+          let resolved = false;
+          const listeners: any[] = [];
+
+          const cleanup = () => {
+            listeners.forEach((l) => {
+              try { if (l?.remove) l.remove(); } catch {}
+            });
+          };
+
+          const finish = () => {
+            if (resolved) return;
+            resolved = true;
+            cleanup();
+            resolve(true);
+          };
+
+          // Timeout de segurança (30s)
+          const timeout = setTimeout(finish, 30000);
+
+          try {
+            const l1 = await AdMob.addListener("onInterstitialAdDismissed", () => {
+              clearTimeout(timeout);
+              finish();
+            });
+            listeners.push(l1);
+
+            const l2 = await AdMob.addListener("onInterstitialAdFailedToLoad", () => {
+              clearTimeout(timeout);
+              finish();
+            });
+            listeners.push(l2);
+
+            const l3 = await AdMob.addListener("onInterstitialAdFailedToShow", () => {
+              clearTimeout(timeout);
+              finish();
+            });
+            listeners.push(l3);
+
+            await AdMob.prepareInterstitial({ adId: INTERSTITIAL_ID, isTesting: false });
+            await AdMob.showInterstitial();
+          } catch {
+            clearTimeout(timeout);
+            finish();
+          }
+        });
+      } catch {
+        return true;
+      }
+    },
+    []
+  );
+
   const showAd = useCallback(
     async (tipo: "criar" | "palpite" | "entrar"): Promise<boolean> => {
       if (isPremium) return true;
@@ -214,12 +281,15 @@ export const useRewardedAd = () => {
 
       setAdLoading(true);
       try {
+        if (tipo === "entrar") {
+          return await showNativeInterstitialAd();
+        }
         return await showNativeRewardedAd(tipo);
       } finally {
         setAdLoading(false);
       }
     },
-    [isPremium, isNative, hasWatchedPalpiteAdToday, showNativeRewardedAd]
+    [isPremium, isNative, hasWatchedPalpiteAdToday, showNativeRewardedAd, showNativeInterstitialAd]
   );
 
   const resolveWebAd = useCallback((_watched: boolean) => {}, []);

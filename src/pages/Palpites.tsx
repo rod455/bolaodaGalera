@@ -486,7 +486,7 @@ const Palpites = () => {
 
       {/* ═══ Dialog: Copiar palpite para outros bolões ═══ */}
       <Dialog open={showCopyDialog} onOpenChange={setShowCopyDialog}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm p-4">
           <DialogHeader>
             <DialogTitle className="text-base font-bold flex items-center gap-2">
               <Copy className="w-4 h-4 text-copa-green-500" />
