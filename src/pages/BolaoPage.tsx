@@ -1267,7 +1267,7 @@ const BolaoPage = () => {
             <h3 className="text-lg font-bold text-copa-green-700 mb-2">
               Faça seus palpites
             </h3>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 min-w-0">
               {bolao.codigo_convite && (
                 <Button
                   size="sm"
@@ -1294,25 +1294,25 @@ const BolaoPage = () => {
                       toast.success("Link copiado para compartilhar!");
                     }
                   }}
-                  className="flex-1 text-copa-gold-600 border-copa-gold-400 bg-copa-gold-100 hover:bg-copa-gold-200 font-semibold rounded-lg text-xs h-9"
+                  className="flex-1 min-w-0 text-copa-gold-600 border-copa-gold-400 bg-copa-gold-100 hover:bg-copa-gold-200 font-semibold rounded-lg text-[11px] h-9 px-2"
                 >
-                  <Users className="w-3.5 h-3.5 mr-1" /> Convidar
+                  <Users className="w-3.5 h-3.5 mr-0.5 flex-shrink-0" /> Convidar
                 </Button>
               )}
               <Button
                 size="sm"
                 variant="outline"
                 onClick={openCopyDialog}
-                className="flex-1 text-copa-green-600 border-copa-green-300 hover:bg-copa-green-50 font-semibold rounded-lg text-xs h-9"
+                className="flex-1 min-w-0 text-copa-green-600 border-copa-green-300 hover:bg-copa-green-50 font-semibold rounded-lg text-[11px] h-9 px-2"
               >
-                <Copy className="w-3.5 h-3.5 mr-1" /> Copiar
+                <Copy className="w-3.5 h-3.5 mr-0.5 flex-shrink-0" /> Copiar
               </Button>
               <Button
                 size="sm"
                 onClick={() => navigate(`/bolao/${id}/palpites`)}
-                className="flex-1 bg-copa-green-500 hover:bg-copa-green-600 text-white font-semibold rounded-lg h-9"
+                className="flex-1 min-w-0 bg-copa-green-500 hover:bg-copa-green-600 text-white font-semibold rounded-lg h-9 text-[11px] px-2"
               >
-                Ver todos <ChevronRight className="w-4 h-4 ml-0.5" />
+                Ver todos <ChevronRight className="w-3.5 h-3.5 ml-0.5 flex-shrink-0" />
               </Button>
             </div>
           </div>

@@ -650,14 +650,14 @@ const Home = () => {
       {showCodeInput && (
         <Card className="rounded-2xl shadow-sm border-copa-gold-300 bg-copa-gold-50 animate-fade-in">
           <CardContent className="p-4">
-            <div className="flex gap-3">
-              <input placeholder="Insira o código do bolão" value={codigoInput}
+            <div className="flex gap-2">
+              <input placeholder="Código do bolão" value={codigoInput}
                 onChange={(e) => setCodigoInput(e.target.value.toUpperCase())}
                 onKeyDown={(e) => { if (e.key === "Enter") handleEntrarPorCodigo(); }}
-                className="h-11 rounded-xl bg-white flex-1 font-mono text-center tracking-widest text-lg px-4 border border-gray-200 focus:border-copa-green-500 focus:outline-none"
+                className="h-11 rounded-xl bg-white min-w-0 flex-1 font-mono text-center tracking-widest text-lg px-3 border border-gray-200 focus:border-copa-green-500 focus:outline-none"
                 maxLength={6} autoFocus />
               <Button onClick={handleEntrarPorCodigo} disabled={joiningByCode}
-                className="h-11 px-6 bg-copa-green-500 hover:bg-copa-green-600 text-white font-semibold rounded-xl">
+                className="h-11 px-4 flex-shrink-0 bg-copa-green-500 hover:bg-copa-green-600 text-white font-semibold rounded-xl">
                 {joiningByCode ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Search className="w-4 h-4 mr-1" /> Entrar</>}
               </Button>
             </div>
