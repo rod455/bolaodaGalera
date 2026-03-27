@@ -87,10 +87,11 @@ serve(async (req) => {
       );
     }
 
-    // Autenticacao simples via service role key no header
+    // Autenticacao via apikey header ou Authorization Bearer
+    const apikey = req.headers.get("apikey") || "";
     const authHeader = req.headers.get("authorization") || "";
     const token = authHeader.replace("Bearer ", "");
-    if (token !== SERVICE_KEY) {
+    if (token !== SERVICE_KEY && apikey !== SERVICE_KEY) {
       return new Response(
         JSON.stringify({ error: "Nao autorizado" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
