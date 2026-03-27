@@ -6,11 +6,11 @@ import { useUserPlan } from "./useUserPlan";
 const LAST_PALPITE_AD_KEY = "bolao_last_palpite_ad";
 const getToday = () => new Date().toISOString().split("T")[0];
 
-// ═══ Seu Ad Unit ID de Rewarded ═══
-const AD_ID = "ca-app-pub-9316035916536420/8143495428";
-
-// ═══ Ad Unit ID de Interstitial (entrar em bolão) ═══
+// ═══ Ad Unit IDs ═══
+const REWARDED_ID = "ca-app-pub-9316035916536420/8143495428";
 const INTERSTITIAL_ID = "ca-app-pub-9316035916536420/1822017661";
+const _BANNER_ID = "ca-app-pub-9316035916536420/8926482067"; // reservado
+const _APP_OPEN_ID = "ca-app-pub-9316035916536420/3674155380"; // reservado
 
 // ═══ Detecção de plataforma nativa ═══
 function isRunningInNativeApp(): boolean {
@@ -87,7 +87,7 @@ async function preloadAd(): Promise<void> {
 
   try {
     await ensureAdMobReady();
-    await AdMob.prepareRewardVideoAd({ adId: AD_ID, isTesting: false });
+    await AdMob.prepareRewardVideoAd({ adId: REWARDED_ID, isTesting: false });
     adPreloaded = true;
   } catch {
     // preload failed silently — will retry on next attempt
@@ -189,7 +189,7 @@ export const useRewardedAd = () => {
             // Se não foi preloaded, preparar agora
             if (!adPreloaded) {
               await AdMob.prepareRewardVideoAd({
-                adId: AD_ID,
+                adId: REWARDED_ID,
                 isTesting: false,
               });
             }
