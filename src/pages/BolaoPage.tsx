@@ -1780,7 +1780,7 @@ const ExpandableJogoRow = ({
           <div className="flex items-center gap-1.5">
             {isEncerrado && hasPalpite ? (
               <>
-                <span className={`text-[10px] font-semibold ${palpiteColor}`}>
+                <span className={`text-[10px] font-semibold whitespace-nowrap ${palpiteColor}`}>
                   Palpite: {palpite!.placar_time_a} x {palpite!.placar_time_b}
                 </span>
                 <span className={`text-[10px] font-bold rounded-md px-1.5 py-0.5 ${pontosColor}`}>
@@ -1790,7 +1790,7 @@ const ExpandableJogoRow = ({
             ) : isEncerrado && !hasPalpite ? (
               <span className="text-[10px] text-gray-400">Sem palpite</span>
             ) : hasPalpite ? (
-              <Badge variant="secondary" className="text-[10px] font-medium border-0 px-2 py-0.5 text-copa-green-600 bg-copa-green-100">
+              <Badge variant="secondary" className="text-[10px] font-medium border-0 px-2 py-0.5 text-copa-green-600 bg-copa-green-100 whitespace-nowrap">
                 <CheckCircle2 className="w-3 h-3 mr-1" />
                 Palpite: {palpite!.placar_time_a} x {palpite!.placar_time_b}
               </Badge>

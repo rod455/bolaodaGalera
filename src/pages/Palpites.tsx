@@ -567,7 +567,7 @@ const Palpites = () => {
             })}
           </div>
 
-          <div className="flex gap-2 mt-3">
+          <div className="flex flex-col gap-2 mt-3">
             {copyBoloes.some(b => {
               const novo = pendingCopy ? `${pendingCopy.placarA} x ${pendingCopy.placarB}` : "";
               const igual = b.jaTemPalpite && b.palpiteAtual === novo;
@@ -575,7 +575,7 @@ const Palpites = () => {
             }) && (
               <Button
                 onClick={copiarParaTodos}
-                className="flex-1 h-10 bg-copa-green-500 hover:bg-copa-green-600 text-white font-bold rounded-xl"
+                className="w-full h-10 bg-copa-green-500 hover:bg-copa-green-600 text-white font-bold rounded-xl"
               >
                 <Copy className="w-4 h-4 mr-2" />
                 Copiar para todos
@@ -584,7 +584,7 @@ const Palpites = () => {
             <Button
               variant="outline"
               onClick={() => setShowCopyDialog(false)}
-              className="flex-1 h-10 rounded-xl"
+              className="w-full h-10 rounded-xl"
             >
               {copyBoloes.every(b => {
                 const novo = pendingCopy ? `${pendingCopy.placarA} x ${pendingCopy.placarB}` : "";
