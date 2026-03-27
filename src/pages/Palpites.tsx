@@ -486,10 +486,10 @@ const Palpites = () => {
 
       {/* ═══ Dialog: Copiar palpite para outros bolões ═══ */}
       <Dialog open={showCopyDialog} onOpenChange={setShowCopyDialog}>
-        <DialogContent className="max-w-sm p-4">
+        <DialogContent className="max-w-sm p-3 overflow-x-hidden">
           <DialogHeader>
-            <DialogTitle className="text-base font-bold flex items-center gap-2">
-              <Copy className="w-4 h-4 text-copa-green-500" />
+            <DialogTitle className="text-sm font-bold flex items-center gap-2 pr-6">
+              <Copy className="w-4 h-4 text-copa-green-500 flex-shrink-0" />
               Copiar palpite para outros bolões?
             </DialogTitle>
             <DialogDescription className="text-xs">
@@ -510,7 +510,7 @@ const Palpites = () => {
               return (
                 <div
                   key={bolao.id}
-                  className={`flex items-center justify-between rounded-xl px-3 py-2.5 border ${
+                  className={`flex items-center justify-between rounded-xl px-2.5 py-2 border gap-2 ${
                     status === "done"
                       ? "bg-copa-green-50 border-copa-green-200"
                       : !bolao.temJogo
@@ -520,8 +520,8 @@ const Palpites = () => {
                       : "bg-white border-gray-200"
                   }`}
                 >
-                  <div className="flex-1 mr-2 min-w-0">
-                    <span className={`text-sm font-medium truncate block ${
+                  <div className="flex-1 min-w-0">
+                    <span className={`text-xs font-medium leading-tight block break-words ${
                       !bolao.temJogo ? "text-muted-foreground" : ""
                     }`}>
                       {bolao.nome}
@@ -534,14 +534,14 @@ const Palpites = () => {
                   </div>
 
                   {status === "done" ? (
-                    <span className="flex items-center gap-1 text-xs font-bold text-copa-green-600 whitespace-nowrap">
-                      <Check className="w-3.5 h-3.5" /> {bolao.jaTemPalpite ? "Atualizado" : "Copiado"}
+                    <span className="flex items-center gap-1 text-[10px] font-bold text-copa-green-600 whitespace-nowrap flex-shrink-0">
+                      <Check className="w-3 h-3" /> {bolao.jaTemPalpite ? "Atualizado" : "Copiado"}
                     </span>
                   ) : !bolao.temJogo ? (
-                    <span className="text-[10px] text-muted-foreground whitespace-nowrap">Sem esse jogo</span>
+                    <span className="text-[10px] text-muted-foreground whitespace-nowrap flex-shrink-0">Sem jogo</span>
                   ) : palpiteIgual ? (
-                    <span className="flex items-center gap-1 text-[10px] text-copa-green-600 whitespace-nowrap">
-                      <CheckCircle2 className="w-3 h-3" /> Mesmo palpite
+                    <span className="flex items-center gap-1 text-[10px] text-copa-green-600 whitespace-nowrap flex-shrink-0">
+                      <CheckCircle2 className="w-3 h-3" /> Igual
                     </span>
                   ) : status === "loading" ? (
                     <Loader2 className="w-4 h-4 animate-spin text-copa-green-500" />
@@ -549,7 +549,7 @@ const Palpites = () => {
                     <Button
                       size="sm"
                       onClick={() => copiarPalpiteParaBolao(bolao.id)}
-                      className="h-7 px-3 text-xs bg-amber-500 hover:bg-amber-600 text-white rounded-lg whitespace-nowrap"
+                      className="h-7 px-2.5 text-[10px] bg-amber-500 hover:bg-amber-600 text-white rounded-lg whitespace-nowrap flex-shrink-0"
                     >
                       Atualizar
                     </Button>
@@ -557,7 +557,7 @@ const Palpites = () => {
                     <Button
                       size="sm"
                       onClick={() => copiarPalpiteParaBolao(bolao.id)}
-                      className="h-7 px-3 text-xs bg-copa-green-500 hover:bg-copa-green-600 text-white rounded-lg"
+                      className="h-7 px-2.5 text-[10px] bg-copa-green-500 hover:bg-copa-green-600 text-white rounded-lg flex-shrink-0"
                     >
                       Copiar
                     </Button>
