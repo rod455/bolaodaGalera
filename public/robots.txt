@@ -1,17 +1,13 @@
 # Bolão na Copa - robots.txt
 
 User-agent: *
-Allow: /home
-Allow: /auth
-Allow: /privacidade.html
-Allow: /regulamento-bolao-paulistao.html
+Allow: /
 Disallow: /perfil
 Disallow: /criar
 Disallow: /entrar
-Disallow: /ao-vivo
-Disallow: /planos
 Disallow: /bolao/
 Disallow: /unsubscribe
+Disallow: /cdn-cgi/
 
 Sitemap: https://www.bolaonacopa.com.br/sitemap.xml
 

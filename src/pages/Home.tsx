@@ -580,8 +580,8 @@ const Home = () => {
   return (
     <div className={`space-y-6 animate-fade-in ${!user ? "pb-20" : ""}`}>
       <SEOHead
-        title="Bolões de Futebol Grátis"
-        description="Participe de bolões do Paulistão 2026, Brasileirão e mais. R$200 em prêmios. 100% grátis!"
+        title="Bolão da Copa 2026 — Palpites Grátis"
+        description="Crie seu bolão da Copa do Mundo 2026, Brasileirão, Paulistão e mais. Dispute com amigos, faça palpites e concorra a prêmios. 100% grátis!"
         path="/home"
       />
       <AdRewardModal open={showAdModal} onComplete={resolveWebAd} message="Assista para entrar no bolão" />
