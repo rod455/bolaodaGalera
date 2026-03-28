@@ -2,7 +2,15 @@
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ],
+  "cleanUrls": true,
   "headers": [
+    {
+      "source": "/(como-funciona|bolao-copa-do-mundo-2026|regulamento-bolao-paulistao|privacidade).html",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=3600, s-maxage=86400" },
+        { "key": "X-Robots-Tag", "value": "index, follow" }
+      ]
+    },
     {
       "source": "/sitemap.xml",
       "headers": [

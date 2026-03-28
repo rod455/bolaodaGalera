@@ -637,5 +637,23 @@
     </p>
   </footer>
 
+  <!-- Anti-scraping -->
+  <script>
+    document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+    document.addEventListener('selectstart', function(e) { e.preventDefault(); });
+    document.addEventListener('copy', function(e) { e.preventDefault(); });
+    document.addEventListener('keydown', function(e) {
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U' || e.key === 's' || e.key === 'S')) { e.preventDefault(); }
+      if (e.key === 'F12') { e.preventDefault(); }
+    });
+    (function() {
+      var threshold = 160;
+      setInterval(function() {
+        if (window.outerWidth - window.innerWidth > threshold || window.outerHeight - window.innerHeight > threshold) {
+          document.body.innerHTML = '<div style="text-align:center;padding:100px;font-family:sans-serif;"><h1>Acesso restrito</h1><p><a href="/home">Voltar ao app</a></p></div>';
+        }
+      }, 2000);
+    })();
+  </script>
 </body>
 </html>
