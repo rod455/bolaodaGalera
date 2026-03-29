@@ -280,8 +280,7 @@ const DynamicBanner = ({ userBolaoIds, userContext }: DynamicBannerProps) => {
       <img
         src={banner.imagem_url!}
         alt={banner.titulo}
-        className="w-full object-cover rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]"
-        style={{ minHeight: "180px", maxHeight: "320px" }}
+        className="w-full h-auto rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]"
         draggable={false}
       />
     </div>
