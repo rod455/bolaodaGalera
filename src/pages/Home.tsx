@@ -587,10 +587,8 @@ const Home = () => {
       <AdRewardModal open={showAdModal} onComplete={resolveWebAd} message="Assista para entrar no bolão" />
 
 
-      {/* ═══ BANNERS DINÂMICOS — carrossel (só logados) ═══ */}
-      {user && (
-        <DynamicBanner userBolaoIds={userBolaoIds} userContext={userBannerCtx} />
-      )}
+      {/* ═══ BANNERS DINÂMICOS — carrossel ═══ */}
+      <DynamicBanner userBolaoIds={userBolaoIds} userContext={userBannerCtx} />
 
       {/* ═══ FEEDBACK BANNER — aparece após palpitar ═══ */}
       {user && <FeedbackBanner />}
