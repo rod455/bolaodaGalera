@@ -273,36 +273,27 @@ const DynamicBanner = ({ userBolaoIds, userContext }: DynamicBannerProps) => {
 
   // ── Render: Modo POSTER (imagem completa) ──
   const renderPoster = (banner: BannerData) => {
-    const hasMobileImg = !!banner.imagem_mobile_url;
+    const mobileImg = banner.imagem_mobile_url || banner.imagem_url!;
     return (
       <div
         onClick={() => handleClick(banner)}
-        className={`relative overflow-hidden rounded-2xl cursor-pointer group ${hasMobileImg ? "" : "aspect-[16/9] sm:aspect-[12/5]"}`}
+        className="relative overflow-hidden rounded-2xl cursor-pointer group"
         style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}
       >
-        {hasMobileImg ? (
-          <>
-            <img
-              src={banner.imagem_url!}
-              alt={banner.titulo}
-              className="hidden sm:block w-full h-auto rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]"
-              draggable={false}
-            />
-            <img
-              src={banner.imagem_mobile_url!}
-              alt={banner.titulo}
-              className="block sm:hidden w-full h-auto rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]"
-              draggable={false}
-            />
-          </>
-        ) : (
-          <img
-            src={banner.imagem_url!}
-            alt={banner.titulo}
-            className="w-full h-full object-cover rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]"
-            draggable={false}
-          />
-        )}
+        {/* Desktop */}
+        <img
+          src={banner.imagem_url!}
+          alt={banner.titulo}
+          className="hidden sm:block w-full h-auto rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]"
+          draggable={false}
+        />
+        {/* Mobile */}
+        <img
+          src={mobileImg}
+          alt={banner.titulo}
+          className="block sm:hidden w-full h-auto rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]"
+          draggable={false}
+        />
       </div>
     );
   };
