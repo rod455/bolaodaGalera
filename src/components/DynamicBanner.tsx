@@ -20,6 +20,7 @@ interface BannerData {
   cor_texto: string | null;
   mostrar_para: string;
   imagem_url: string | null;
+  imagem_mobile_url: string | null;
   imagem_fundo_url: string | null;
   // ── Segmentação ──
   segmento: string;
@@ -95,7 +96,7 @@ const DynamicBanner = ({ userBolaoIds, userContext }: DynamicBannerProps) => {
       const now = new Date().toISOString();
       const { data } = await supabase
         .from("banners_home")
-        .select("id, titulo, subtitulo, emoji, badge_texto, cta_texto, cta_texto_participando, bolao_id, link, estilo, cor_fundo, cor_texto, mostrar_para, imagem_url, imagem_fundo_url, segmento, dias_desde_cadastro_min, dias_desde_cadastro_max, tem_bolao_privado, qtd_participantes_min")
+        .select("id, titulo, subtitulo, emoji, badge_texto, cta_texto, cta_texto_participando, bolao_id, link, estilo, cor_fundo, cor_texto, mostrar_para, imagem_url, imagem_mobile_url, imagem_fundo_url, segmento, dias_desde_cadastro_min, dias_desde_cadastro_max, tem_bolao_privado, qtd_participantes_min")
         .eq("ativo", true)
         .or(`data_fim.is.null,data_fim.gt.${now}`)
         .lte("data_inicio", now)
@@ -271,20 +272,40 @@ const DynamicBanner = ({ userBolaoIds, userContext }: DynamicBannerProps) => {
   if (loading || banners.length === 0) return null;
 
   // ── Render: Modo POSTER (imagem completa) ──
-  const renderPoster = (banner: BannerData) => (
-    <div
-      onClick={() => handleClick(banner)}
-      className="relative overflow-hidden rounded-2xl cursor-pointer group aspect-[16/9] sm:aspect-[12/5]"
-      style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}
-    >
-      <img
-        src={banner.imagem_url!}
-        alt={banner.titulo}
-        className="w-full h-full object-cover rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]"
-        draggable={false}
-      />
-    </div>
-  );
+  const renderPoster = (banner: BannerData) => {
+    const hasMobileImg = !!banner.imagem_mobile_url;
+    return (
+      <div
+        onClick={() => handleClick(banner)}
+        className={`relative overflow-hidden rounded-2xl cursor-pointer group ${hasMobileImg ? "" : "aspect-[16/9] sm:aspect-[12/5]"}`}
+        style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}
+      >
+        {hasMobileImg ? (
+          <>
+            <img
+              src={banner.imagem_url!}
+              alt={banner.titulo}
+              className="hidden sm:block w-full h-auto rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]"
+              draggable={false}
+            />
+            <img
+              src={banner.imagem_mobile_url!}
+              alt={banner.titulo}
+              className="block sm:hidden w-full h-auto rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]"
+              draggable={false}
+            />
+          </>
+        ) : (
+          <img
+            src={banner.imagem_url!}
+            alt={banner.titulo}
+            className="w-full h-full object-cover rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]"
+            draggable={false}
+          />
+        )}
+      </div>
+    );
+  };
 
   // ── Render: Modo BACKGROUND (imagem fundo + conteúdo) ──
   const renderBackground = (banner: BannerData) => {

@@ -16,6 +16,7 @@ interface BannerData {
   cor_fundo: string | null;
   cor_texto: string | null;
   imagem_url: string | null;
+  imagem_mobile_url: string | null;
   imagem_fundo_url: string | null;
 }
 
@@ -77,7 +78,7 @@ const GuestHeroCarousel = ({ participantesCount, handleGoogleLogin }: GuestHeroC
       const now = new Date().toISOString();
       const { data } = await supabase
         .from("banners_home")
-        .select("id, titulo, subtitulo, emoji, badge_texto, cta_texto, link, estilo, cor_fundo, cor_texto, mostrar_para, imagem_url, imagem_fundo_url")
+        .select("id, titulo, subtitulo, emoji, badge_texto, cta_texto, link, estilo, cor_fundo, cor_texto, mostrar_para, imagem_url, imagem_mobile_url, imagem_fundo_url")
         .eq("ativo", true)
         .or(`data_fim.is.null,data_fim.gt.${now}`)
         .lte("data_inicio", now)
@@ -192,20 +193,40 @@ const GuestHeroCarousel = ({ participantesCount, handleGoogleLogin }: GuestHeroC
     navigate(banner.link || "/auth?modo=cadastro");
   };
 
-  const renderPoster = (banner: BannerData) => (
-    <div
-      onClick={() => handleBannerClick(banner)}
-      className="relative overflow-hidden rounded-2xl cursor-pointer group aspect-[16/9] sm:aspect-[12/5]"
-      style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}
-    >
-      <img
-        src={banner.imagem_url!}
-        alt={banner.titulo}
-        className="w-full h-full object-cover rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]"
-        draggable={false}
-      />
-    </div>
-  );
+  const renderPoster = (banner: BannerData) => {
+    const hasMobileImg = !!banner.imagem_mobile_url;
+    return (
+      <div
+        onClick={() => handleBannerClick(banner)}
+        className={`relative overflow-hidden rounded-2xl cursor-pointer group ${hasMobileImg ? "" : "aspect-[16/9] sm:aspect-[12/5]"}`}
+        style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}
+      >
+        {hasMobileImg ? (
+          <>
+            <img
+              src={banner.imagem_url!}
+              alt={banner.titulo}
+              className="hidden sm:block w-full h-auto rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]"
+              draggable={false}
+            />
+            <img
+              src={banner.imagem_mobile_url!}
+              alt={banner.titulo}
+              className="block sm:hidden w-full h-auto rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]"
+              draggable={false}
+            />
+          </>
+        ) : (
+          <img
+            src={banner.imagem_url!}
+            alt={banner.titulo}
+            className="w-full h-full object-cover rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]"
+            draggable={false}
+          />
+        )}
+      </div>
+    );
+  };
 
   const renderBackground = (banner: BannerData) => {
     const estiloConfig = ESTILOS[banner.estilo] || ESTILOS.premium;
