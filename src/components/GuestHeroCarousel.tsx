@@ -333,8 +333,26 @@ const GuestHeroCarousel = ({ participantesCount, handleGoogleLogin }: GuestHeroC
     );
   };
 
+  // ── Render: Modo HÍBRIDO (imagem mobile + gradiente desktop) ──
+  const renderHybrid = (banner: BannerData) => (
+    <div onClick={() => handleBannerClick(banner)} className="relative overflow-hidden rounded-2xl cursor-pointer group">
+      {/* Mobile: imagem poster */}
+      <img
+        src={banner.imagem_mobile_url!}
+        alt={banner.titulo}
+        className="block sm:hidden w-full h-auto rounded-2xl"
+        draggable={false}
+      />
+      {/* Desktop: banner normal (gradiente) */}
+      <div className="hidden sm:block">
+        {renderNormal(banner)}
+      </div>
+    </div>
+  );
+
   const renderSlide = (banner: BannerData) => {
     if (banner.imagem_url) return renderPoster(banner);
+    if (!banner.imagem_url && banner.imagem_mobile_url) return renderHybrid(banner);
     if (banner.imagem_fundo_url) return renderBackground(banner);
     return renderNormal(banner);
   };
