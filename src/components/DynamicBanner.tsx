@@ -306,7 +306,7 @@ const DynamicBanner = ({ userBolaoIds, userContext }: DynamicBannerProps) => {
     return (
       <div
         onClick={() => !joining && handleClick(banner)}
-        className={`relative overflow-hidden rounded-2xl cursor-pointer group aspect-[16/9] sm:aspect-[12/5] ${joining === banner.id ? "pointer-events-none opacity-80" : ""}`}
+        className={`relative overflow-hidden rounded-2xl cursor-pointer group aspect-square sm:aspect-[12/5] ${joining === banner.id ? "pointer-events-none opacity-80" : ""}`}
         style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.5)" }}
       >
         {/* Imagem de fundo */}
@@ -369,7 +369,7 @@ const DynamicBanner = ({ userBolaoIds, userContext }: DynamicBannerProps) => {
     return (
       <div
         onClick={() => !isJoining && handleClick(banner)}
-        className={`relative overflow-hidden rounded-2xl cursor-pointer group aspect-[16/9] sm:aspect-[12/5] ${isJoining ? "pointer-events-none opacity-80" : ""}`}
+        className={`relative overflow-hidden rounded-2xl cursor-pointer group aspect-square sm:aspect-[12/5] ${isJoining ? "pointer-events-none opacity-80" : ""}`}
         style={{
           background: bgStyle,
           border: `1px solid ${estiloConfig.badgeBorder}`,

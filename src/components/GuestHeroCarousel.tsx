@@ -226,7 +226,7 @@ const GuestHeroCarousel = ({ participantesCount, handleGoogleLogin }: GuestHeroC
     return (
       <div
         onClick={() => handleBannerClick(banner)}
-        className="relative overflow-hidden rounded-2xl cursor-pointer group aspect-[16/9] sm:aspect-[12/5]"
+        className="relative overflow-hidden rounded-2xl cursor-pointer group aspect-square sm:aspect-[12/5]"
         style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.5)" }}
       >
         <img src={banner.imagem_fundo_url!} alt="" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
@@ -266,7 +266,7 @@ const GuestHeroCarousel = ({ participantesCount, handleGoogleLogin }: GuestHeroC
 
     return (
       <div
-        className="relative overflow-hidden rounded-2xl text-white shadow-xl aspect-[16/9] sm:aspect-[12/5]"
+        className="relative overflow-hidden rounded-2xl text-white shadow-xl aspect-square sm:aspect-[12/5]"
         style={{ background: bgStyle, border: `1px solid ${estiloConfig.badgeBorder}` }}
       >
         <div className="absolute inset-0 opacity-[0.04]"
