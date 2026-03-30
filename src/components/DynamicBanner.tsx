@@ -306,7 +306,7 @@ const DynamicBanner = ({ userBolaoIds, userContext }: DynamicBannerProps) => {
     return (
       <div
         onClick={() => !joining && handleClick(banner)}
-        className={`relative overflow-hidden rounded-2xl cursor-pointer group ${joining === banner.id ? "pointer-events-none opacity-80" : ""}`}
+        className={`relative overflow-hidden rounded-2xl cursor-pointer group aspect-[16/9] sm:aspect-[12/5] ${joining === banner.id ? "pointer-events-none opacity-80" : ""}`}
         style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.5)" }}
       >
         {/* Imagem de fundo */}
@@ -369,7 +369,7 @@ const DynamicBanner = ({ userBolaoIds, userContext }: DynamicBannerProps) => {
     return (
       <div
         onClick={() => !isJoining && handleClick(banner)}
-        className={`relative overflow-hidden rounded-2xl cursor-pointer group ${isJoining ? "pointer-events-none opacity-80" : ""}`}
+        className={`relative overflow-hidden rounded-2xl cursor-pointer group aspect-[16/9] sm:aspect-[12/5] ${isJoining ? "pointer-events-none opacity-80" : ""}`}
         style={{
           background: bgStyle,
           border: `1px solid ${estiloConfig.badgeBorder}`,
@@ -381,7 +381,7 @@ const DynamicBanner = ({ userBolaoIds, userContext }: DynamicBannerProps) => {
         <div className="absolute inset-0 opacity-[0.03]"
           style={{ backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 30px, rgba(255,255,255,0.08) 30px, rgba(255,255,255,0.08) 31px)" }} />
 
-        <div className="relative z-10 flex flex-col items-center text-center px-5 py-6">
+        <div className="relative z-10 flex flex-col items-center justify-center text-center px-5 py-6 h-full">
           <div className="text-5xl mb-2 drop-shadow-lg" style={{ filter: "drop-shadow(0 0 12px rgba(234,179,8,0.4))" }}>
             {banner.emoji}
           </div>
