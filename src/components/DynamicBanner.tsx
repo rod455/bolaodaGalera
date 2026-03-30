@@ -274,13 +274,13 @@ const DynamicBanner = ({ userBolaoIds, userContext }: DynamicBannerProps) => {
   const renderPoster = (banner: BannerData) => (
     <div
       onClick={() => handleClick(banner)}
-      className="relative overflow-hidden rounded-2xl cursor-pointer group"
+      className="relative overflow-hidden rounded-2xl cursor-pointer group aspect-[16/9] sm:aspect-[12/5]"
       style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}
     >
       <img
         src={banner.imagem_url!}
         alt={banner.titulo}
-        className="w-full h-auto rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]"
+        className="w-full h-full object-cover rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]"
         draggable={false}
       />
     </div>
