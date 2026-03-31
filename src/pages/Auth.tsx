@@ -149,6 +149,7 @@ const Auth = () => {
           options: {
             data: {
               nome: name,
+              origem: Capacitor.isNativePlatform() ? Capacitor.getPlatform() : 'web',
             },
           },
         });
@@ -203,6 +204,9 @@ const Auth = () => {
       }
 
       if (result.success && Capacitor.isNativePlatform()) {
+        // Salvar origem do cadastro
+        const origem = Capacitor.getPlatform();
+        supabase.auth.updateUser({ data: { origem } }).catch(() => {});
         // No app nativo, o login já foi feito — navegar
         toast.success("Login realizado com sucesso!");
         navigate(redirectPath);
