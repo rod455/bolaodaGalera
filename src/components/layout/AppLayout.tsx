@@ -117,8 +117,9 @@ const AppLayout = () => {
           ) : (
             <div className="flex items-center gap-2">
               <button onClick={() => { window.location.href = "/como-funciona.html"; }}
-                className="text-white/80 hover:text-white transition-colors text-xs font-medium">
-                <HelpCircle className="w-5 h-5" />
+                className="text-white/80 hover:text-white transition-colors text-xs font-medium flex items-center gap-1">
+                <HelpCircle className="w-4 h-4" />
+                <span>Como Funciona</span>
               </button>
               <button onClick={() => navigate("/auth")}
                 className="text-white/80 hover:text-white transition-colors text-xs font-medium">
