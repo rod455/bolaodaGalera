@@ -140,6 +140,10 @@ const App = () => {
               <Route path="/auth" element={<Auth />} />
               {/* Rota pública de descadastro — sem autenticação */}
               <Route path="/unsubscribe" element={<Unsubscribe />} />
+              {/* Planos — acessível sem login */}
+              <Route path="/planos" element={<AppLayout />}>
+                <Route index element={<Planos />} />
+              </Route>
               <Route path="/home" element={<AppLayout />}>
                 <Route index element={<Home />} />
               </Route>
@@ -156,7 +160,6 @@ const App = () => {
                 <Route path="/perfil" element={<Perfil />} />
                 <Route path="/bolao/:id" element={<BolaoPage />} />
                 <Route path="/bolao/:id/palpites" element={<Palpites />} />
-                <Route path="/planos" element={<Planos />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
