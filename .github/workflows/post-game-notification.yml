@@ -1,10 +1,9 @@
 name: Post-Game Notification
 
 on:
-  # DESATIVADO ATÉ VIRAR O MÊS (limite de minutos atingido)
-  # schedule:
-  #   - cron: '5,35 15-23 * * *'
-  #   - cron: '5,35 0-5 * * *'
+  schedule:
+    - cron: '5,35 15-23 * * *'
+    - cron: '5,35 0-5 * * *'
   workflow_dispatch:
 
 jobs:

@@ -1,10 +1,9 @@
 name: Sync Live Scores
 
 on:
-  # DESATIVADO ATÉ VIRAR O MÊS (limite de minutos atingido)
-  # schedule:
-  #   - cron: '*/15 13-23 * * *'
-  #   - cron: '*/15 0-5 * * *'
+  schedule:
+    - cron: '*/15 13-23 * * *'
+    - cron: '*/15 0-5 * * *'
   workflow_dispatch:
 
 jobs:

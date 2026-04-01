@@ -1,9 +1,8 @@
 name: Engage - Sem Bolao (Push)
 
 on:
-  # DESATIVADO ATÉ VIRAR O MÊS (limite de minutos atingido)
-  # schedule:
-  #   - cron: '0 14 * * 3'
+  schedule:
+    - cron: '0 14 * * 3'
   workflow_dispatch:
 
 jobs:

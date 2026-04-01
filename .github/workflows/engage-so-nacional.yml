@@ -1,10 +1,9 @@
 name: Engage - So Nacional
 
 on:
-  # DESATIVADO ATÉ VIRAR O MÊS (limite de minutos atingido)
-  # schedule:
-  #   - cron: '0 14 * * 4'
-  #   - cron: '0 14 * * 6'
+  schedule:
+    - cron: '0 14 * * 4'
+    - cron: '0 14 * * 6'
   workflow_dispatch:
 
 jobs:
