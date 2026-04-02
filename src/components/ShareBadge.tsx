@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import html2canvas from "html2canvas";
 import { Capacitor } from "@capacitor/core";
-import { X, Download, Share2 } from "lucide-react";
+import { X, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import type { RankingEntry } from "@/lib/types";
@@ -29,6 +29,7 @@ const getOrdinal = (pos: number) => `${pos}º`;
 const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabel }: ShareBadgeProps) => {
   const [tab, setTab] = useState<"foto" | "sem-foto" | "podio">("foto");
   const [sharing, setSharing] = useState(false);
+  const [fraseCustom, setFraseCustom] = useState("");
   const badgeRef = useRef<HTMLDivElement>(null);
 
   if (!open) return null;
@@ -37,61 +38,88 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
   const top3 = ranking.filter((r) => r.pos <= 3).sort((a, b) => a.pos - b.pos);
   const rankLabel = rankingType === "geral" ? "Ranking Geral" : `Ranking ${rodadaLabel || "Rodada"}`;
 
-  const captureAndShare = async (method: "whatsapp" | "save") => {
+  const captureImage = async (): Promise<Blob> => {
+    const canvas = await html2canvas(badgeRef.current!, {
+      backgroundColor: null,
+      scale: 3,
+      useCORS: true,
+      allowTaint: true,
+      logging: false,
+    });
+    return new Promise<Blob>((resolve) =>
+      canvas.toBlob((b) => resolve(b!), "image/png")
+    );
+  };
+
+  const saveImage = (blob: Blob) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `bolao-${bolaoNome.replace(/\s+/g, "-").toLowerCase()}.png`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const getShareText = () => {
+    const defaultText = me
+      ? `🏆 Estou em ${getOrdinal(me.pos)} lugar no bolão "${bolaoNome}"!`
+      : `🏆 Confira o ranking do bolão "${bolaoNome}"!`;
+    const phrase = fraseCustom.trim() ? `\n\n${fraseCustom.trim()}` : "";
+    return `${defaultText}${phrase}\n\nVem competir comigo: https://www.bolaonacopa.com.br`;
+  };
+
+  const handleSave = async () => {
     if (!badgeRef.current) return;
     setSharing(true);
     try {
-      const canvas = await html2canvas(badgeRef.current, {
-        backgroundColor: null,
-        scale: 3,
-        useCORS: true,
-        allowTaint: true,
-        logging: false,
-      });
-      const blob = await new Promise<Blob>((resolve) =>
-        canvas.toBlob((b) => resolve(b!), "image/png")
-      );
+      const blob = await captureImage();
+      saveImage(blob);
+      toast.success("Imagem salva!");
+    } catch (err) {
+      console.error("Erro ao gerar imagem:", err);
+      toast.error("Erro ao gerar imagem");
+    } finally {
+      setSharing(false);
+    }
+  };
 
-      if (method === "save") {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `bolao-${bolaoNome.replace(/\s+/g, "-").toLowerCase()}.png`;
-        a.click();
-        URL.revokeObjectURL(url);
-        toast.success("Imagem salva!");
+  const handleWhatsApp = async () => {
+    if (!badgeRef.current) return;
+    setSharing(true);
+    try {
+      const blob = await captureImage();
+      saveImage(blob);
+      const encoded = encodeURIComponent(getShareText());
+      if (Capacitor.isNativePlatform()) {
+        window.open(`https://api.whatsapp.com/send?text=${encoded}`, "_system");
+      } else if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        window.location.href = `whatsapp://send?text=${encoded}`;
       } else {
-        // WhatsApp share
-        if (navigator.share && navigator.canShare) {
-          const file = new File([blob], "ranking-bolao.png", { type: "image/png" });
-          if (navigator.canShare({ files: [file] })) {
-            await navigator.share({
-              files: [file],
-              title: `Ranking - ${bolaoNome}`,
-            });
-            return;
-          }
-        }
-        // Fallback: save and open WhatsApp with text
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `bolao-${bolaoNome.replace(/\s+/g, "-").toLowerCase()}.png`;
-        a.click();
-        URL.revokeObjectURL(url);
-        const text = me
-          ? `🏆 Estou em ${getOrdinal(me.pos)} lugar no bolão "${bolaoNome}"! Vem competir comigo: https://www.bolaonacopa.com.br`
-          : `🏆 Confira o ranking do bolão "${bolaoNome}"! https://www.bolaonacopa.com.br`;
-        const encoded = encodeURIComponent(text);
-        if (Capacitor.isNativePlatform()) {
-          window.open(`https://api.whatsapp.com/send?text=${encoded}`, "_system");
-        } else if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-          window.location.href = `whatsapp://send?text=${encoded}`;
-        } else {
-          window.open(`https://web.whatsapp.com/send?text=${encoded}`, "_blank");
-        }
-        toast.success("Imagem salva! Cole no WhatsApp.");
+        window.open(`https://web.whatsapp.com/send?text=${encoded}`, "_blank");
       }
+      toast.success("Imagem salva! Cole no WhatsApp.");
+    } catch (err) {
+      console.error("Erro ao gerar imagem:", err);
+      toast.error("Erro ao gerar imagem");
+    } finally {
+      setSharing(false);
+    }
+  };
+
+  const handleInstagram = async () => {
+    if (!badgeRef.current) return;
+    setSharing(true);
+    try {
+      const blob = await captureImage();
+      saveImage(blob);
+      if (Capacitor.isNativePlatform()) {
+        window.open("instagram://story-camera", "_system");
+      } else if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        window.location.href = "instagram://story-camera";
+      } else {
+        window.open("https://www.instagram.com", "_blank");
+      }
+      toast.success("Imagem salva! Cole nos Stories do Instagram.");
     } catch (err) {
       console.error("Erro ao gerar imagem:", err);
       toast.error("Erro ao gerar imagem");
@@ -280,10 +308,22 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
           </div>
         </div>
 
+        {/* Custom phrase */}
+        <div className="px-4 pb-3">
+          <input
+            type="text"
+            value={fraseCustom}
+            onChange={(e) => setFraseCustom(e.target.value)}
+            placeholder="Escreva uma provocação para os amigos..."
+            maxLength={120}
+            className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-copa-green-600 focus:border-transparent placeholder:text-gray-400"
+          />
+        </div>
+
         {/* Actions */}
         <div className="flex gap-2 px-4 pb-4">
           <Button
-            onClick={() => captureAndShare("whatsapp")}
+            onClick={handleWhatsApp}
             disabled={sharing}
             className="flex-1 h-11 bg-[#25D366] hover:bg-[#1da851] text-white font-semibold rounded-xl"
           >
@@ -291,13 +331,20 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
             WhatsApp
           </Button>
           <Button
-            onClick={() => captureAndShare("save")}
+            onClick={handleInstagram}
+            disabled={sharing}
+            className="flex-1 h-11 bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#F77737] hover:opacity-90 text-white font-semibold rounded-xl"
+          >
+            <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+            Instagram
+          </Button>
+          <Button
+            onClick={handleSave}
             disabled={sharing}
             variant="outline"
-            className="flex-1 h-11 border-gray-300 font-semibold rounded-xl"
+            className="h-11 px-4 border-gray-300 font-semibold rounded-xl"
           >
-            <Download className="w-4 h-4 mr-2" />
-            Salvar
+            <Download className="w-4 h-4" />
           </Button>
         </div>
       </div>
