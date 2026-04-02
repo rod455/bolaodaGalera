@@ -30,6 +30,7 @@ import { trackEvent } from "@/lib/analytics";
 import { triggerFeedback } from "@/components/FeedbackBanner";
 import MataMataDashboard from "@/components/MataMataDashboard";
 import GerenciarCampeonatos from "@/components/GerenciarCampeonatos";
+import ShareBadge from "@/components/ShareBadge";
 
 function getStatusInfo(jogo: Jogo, palpite: Palpite | null, now: Date) {
   const jogoDate = new Date(jogo.data_hora);
@@ -157,6 +158,7 @@ const BolaoPage = () => {
   const [rodadaAtualLabel, setRodadaAtualLabel] = useState<string>("");
   const [loadingRodada, setLoadingRodada] = useState(false);
   const [showFullRanking, setShowFullRanking] = useState(false);
+  const [showShareBadge, setShowShareBadge] = useState(false);
   const { darXP } = useGamification();
   const [xpToast, setXPToast] = useState<{xp: number, msg: string} | null>(null);
   const [niveisRanking, setNiveisRanking] = useState<Record<string, number>>({});
@@ -1261,6 +1263,14 @@ const BolaoPage = () => {
               </div>
             );
           })()}
+          {(rankingTab === "geral" ? ranking : rankingRodada).length > 0 && (
+            <button
+              onClick={() => setShowShareBadge(true)}
+              className="w-full mt-2 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-copa-gold-50 border border-copa-gold-300 text-copa-gold-700 text-sm font-semibold hover:bg-copa-gold-100 transition-colors"
+            >
+              <Share2 className="w-4 h-4" /> Compartilhar posição
+            </button>
+          )}
           {ranking.length > 0 && bolao.codigo_convite && (
             <button
               onClick={(e) => {
@@ -1717,6 +1727,18 @@ const BolaoPage = () => {
           isOpen={showGerenciarCampeonatos}
           onClose={() => setShowGerenciarCampeonatos(false)}
           onUpdated={() => loadBolao()}
+        />
+      )}
+
+      {/* Share Badge Modal */}
+      {bolao && (
+        <ShareBadge
+          open={showShareBadge}
+          onClose={() => setShowShareBadge(false)}
+          bolaoNome={bolao.nome}
+          ranking={rankingTab === "geral" ? ranking : rankingRodada}
+          rankingType={rankingTab}
+          rodadaLabel={rodadaAtualLabel ? `Rodada ${rodadaAtualLabel}` : undefined}
         />
       )}
     </div>
