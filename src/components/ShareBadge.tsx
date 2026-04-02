@@ -119,10 +119,17 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
       toast.success("Imagem salva! Cole no WhatsApp.");
       return;
     }
-    // Desktop web: save image + open WhatsApp Web with text
-    saveImage(blob);
+    // Desktop web: copy image to clipboard + open WhatsApp Web
+    try {
+      await navigator.clipboard.write([
+        new ClipboardItem({ "image/png": blob }),
+      ]);
+      toast.success("Imagem copiada! Cole com Ctrl+V no WhatsApp.");
+    } catch {
+      saveImage(blob);
+      toast.success("Imagem salva! Cole no WhatsApp.");
+    }
     window.open(`https://web.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
-    toast.success("Imagem salva! Cole no WhatsApp.");
   };
 
   const handleWhatsApp = async () => {
