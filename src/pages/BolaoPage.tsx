@@ -1823,6 +1823,8 @@ const ExpandableJogoRow = ({
                 <CheckCircle2 className="w-3 h-3 mr-1" />
                 Palpite: {palpite!.placar_time_a} x {palpite!.placar_time_b}
               </Badge>
+            ) : (isAoVivo || started) ? (
+              <span className="text-[10px] text-red-400 font-semibold whitespace-nowrap">Sem palpite</span>
             ) : onNavigate ? (
               <button
                 onClick={(e) => { e.stopPropagation(); onNavigate(); }}
