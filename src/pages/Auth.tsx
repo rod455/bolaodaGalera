@@ -246,7 +246,7 @@ const Auth = () => {
   const isWebView = /FBAN|FBAV|Instagram|Line|TikTok|Snapchat/i.test(navigator.userAgent);
 
   return (
-    <div className="min-h-screen bg-copa-green-500 flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen bg-copa-green-500 flex flex-col items-center justify-center p-6 overflow-y-auto">
       <SEOHead
         title="Criar Conta ou Entrar"
         description="Crie sua conta grátis no Bolão na Copa e comece a fazer seus palpites em segundos."

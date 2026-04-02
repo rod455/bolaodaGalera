@@ -9,6 +9,10 @@ const config: CapacitorConfig = {
     url: 'https://www.bolaonacopa.com.br',
   },
   plugins: {
+    Keyboard: {
+      resize: 'body',
+      resizeOnFullScreen: true,
+    },
     AdMob: {
       appId: 'ca-app-pub-9316035916536420~4807390224',
     },
