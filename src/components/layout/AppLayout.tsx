@@ -70,10 +70,6 @@ const AppLayout = () => {
               </>
             ) : (
               <div className="flex items-center gap-3">
-                <button onClick={() => { window.location.href = "/como-funciona.html"; }}
-                  className="text-white/80 hover:text-white transition-colors text-sm font-medium">
-                  Como Funciona
-                </button>
                 {!Capacitor.isNativePlatform() && (
                   <a href={PLAY_STORE_URL} target="_blank" rel="noopener"
                     className="inline-flex items-center bg-black rounded-md px-2.5 py-1 gap-1.5 hover:bg-gray-800 transition-colors">
@@ -81,6 +77,10 @@ const AppLayout = () => {
                     <span className="text-white text-[10px] leading-tight font-medium">Disponível no<br/><strong className="text-xs">Google Play</strong></span>
                   </a>
                 )}
+                <button onClick={() => { window.location.href = "/como-funciona.html"; }}
+                  className="text-white/80 hover:text-white transition-colors text-sm font-medium">
+                  Como Funciona
+                </button>
                 <button onClick={() => navigate("/auth")}
                   className="text-white/80 hover:text-white transition-colors text-sm font-medium">
                   Entrar
@@ -126,11 +126,6 @@ const AppLayout = () => {
             <NotificationCenter />
           ) : (
             <div className="flex items-center gap-1.5">
-              <button onClick={() => { window.location.href = "/como-funciona.html"; }}
-                className="text-white/80 hover:text-white transition-colors text-xs font-medium flex items-center gap-1">
-                <HelpCircle className="w-3.5 h-3.5" />
-                <span>Como Funciona</span>
-              </button>
               {!Capacitor.isNativePlatform() && (
                 <a href={PLAY_STORE_URL} target="_blank" rel="noopener"
                   className="inline-flex items-center bg-black rounded px-1.5 py-0.5 gap-1 hover:bg-gray-800 transition-colors">
@@ -138,6 +133,11 @@ const AppLayout = () => {
                   <span className="text-white text-[8px] leading-tight font-medium">Google<br/>Play</span>
                 </a>
               )}
+              <button onClick={() => { window.location.href = "/como-funciona.html"; }}
+                className="text-white/80 hover:text-white transition-colors text-xs font-medium flex items-center gap-1">
+                <HelpCircle className="w-3.5 h-3.5" />
+                <span>Como Funciona</span>
+              </button>
               <button onClick={() => navigate("/auth")}
                 className="text-white/80 hover:text-white transition-colors text-xs font-medium">
                 Entrar
