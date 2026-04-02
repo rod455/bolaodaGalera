@@ -89,19 +89,31 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
     setSharing(true);
     try {
       const blob = await captureImage();
-      saveImage(blob);
-      const encoded = encodeURIComponent(getShareText());
-      if (Capacitor.isNativePlatform()) {
-        window.open(`https://api.whatsapp.com/send?text=${encoded}`, "_system");
-      } else if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-        window.location.href = `whatsapp://send?text=${encoded}`;
+      const file = new File([blob], "ranking-bolao.png", { type: "image/png" });
+      const shareData = {
+        files: [file],
+        text: getShareText(),
+      };
+      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
       } else {
-        window.open(`https://web.whatsapp.com/send?text=${encoded}`, "_blank");
+        // Fallback: salva imagem e abre WhatsApp com texto
+        saveImage(blob);
+        const encoded = encodeURIComponent(getShareText());
+        if (Capacitor.isNativePlatform()) {
+          window.open(`https://api.whatsapp.com/send?text=${encoded}`, "_system");
+        } else if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+          window.location.href = `whatsapp://send?text=${encoded}`;
+        } else {
+          window.open(`https://web.whatsapp.com/send?text=${encoded}`, "_blank");
+        }
+        toast.success("Imagem salva! Cole no WhatsApp.");
       }
-      toast.success("Imagem salva! Cole no WhatsApp.");
     } catch (err) {
-      console.error("Erro ao gerar imagem:", err);
-      toast.error("Erro ao gerar imagem");
+      if ((err as Error).name !== "AbortError") {
+        console.error("Erro ao compartilhar:", err);
+        toast.error("Erro ao compartilhar");
+      }
     } finally {
       setSharing(false);
     }
@@ -112,18 +124,26 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
     setSharing(true);
     try {
       const blob = await captureImage();
-      saveImage(blob);
-      if (Capacitor.isNativePlatform()) {
-        window.open("instagram://story-camera", "_system");
-      } else if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-        window.location.href = "instagram://story-camera";
+      const file = new File([blob], "ranking-bolao.png", { type: "image/png" });
+      const shareData = { files: [file] };
+      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
       } else {
-        window.open("https://www.instagram.com", "_blank");
+        saveImage(blob);
+        if (Capacitor.isNativePlatform()) {
+          window.open("instagram://story-camera", "_system");
+        } else if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+          window.location.href = "instagram://story-camera";
+        } else {
+          window.open("https://www.instagram.com", "_blank");
+        }
+        toast.success("Imagem salva! Cole nos Stories do Instagram.");
       }
-      toast.success("Imagem salva! Cole nos Stories do Instagram.");
     } catch (err) {
-      console.error("Erro ao gerar imagem:", err);
-      toast.error("Erro ao gerar imagem");
+      if ((err as Error).name !== "AbortError") {
+        console.error("Erro ao compartilhar:", err);
+        toast.error("Erro ao compartilhar");
+      }
     } finally {
       setSharing(false);
     }
