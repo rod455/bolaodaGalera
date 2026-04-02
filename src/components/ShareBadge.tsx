@@ -80,12 +80,17 @@ const ShareBadge = ({ open, onClose, bolaoId, bolaoNome, ranking, rankingType, r
   const rankLabel = rankingType === "geral" ? "Ranking Geral" : `Ranking ${rodadaLabel || "Rodada"}`;
 
   const captureImage = async (): Promise<Blob> => {
-    const canvas = await html2canvas(badgeRef.current!, {
+    const el = badgeRef.current!;
+    const canvas = await html2canvas(el, {
       backgroundColor: "#1B5E20",
       scale: 3,
       useCORS: false,
       allowTaint: false,
       logging: false,
+      scrollX: 0,
+      scrollY: -window.scrollY,
+      width: el.scrollWidth,
+      height: el.scrollHeight,
     });
     return new Promise<Blob>((resolve, reject) =>
       canvas.toBlob((b) => {
@@ -253,7 +258,7 @@ const ShareBadge = ({ open, onClose, bolaoId, bolaoNome, ranking, rankingType, r
   const BadgeComFoto = () => {
     if (!me) return <p style={{ textAlign: "center", padding: "32px 0", fontSize: 14, color: "#999" }}>Você ainda não está no ranking.</p>;
     return (
-      <div style={{ width: 280, height: 280, borderRadius: 16, overflow: "hidden", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg, #1B5E20 0%, #2E7D32 50%, #1B5E20 100%)", position: "relative" }}>
+      <div style={{ width: 280, height: 280, borderRadius: 16, overflow: "hidden", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg, #1B5E20 0%, #2E7D32 50%, #1B5E20 100%)", position: "relative", paddingTop: 8 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
           <img src={logoSrc} alt="" style={{ width: 20, height: 20 }} />
           <span style={{ color: "rgba(255,255,255,0.8)", fontWeight: 700, fontSize: 10, letterSpacing: "0.05em", textTransform: "uppercase" }}>Bolão na Copa</span>
@@ -282,7 +287,7 @@ const ShareBadge = ({ open, onClose, bolaoId, bolaoNome, ranking, rankingType, r
   const BadgeSemFoto = () => {
     if (!me) return <p style={{ textAlign: "center", padding: "32px 0", fontSize: 14, color: "#999" }}>Você ainda não está no ranking.</p>;
     return (
-      <div style={{ width: 280, height: 280, borderRadius: 16, overflow: "hidden", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg, #0D3B1A 0%, #1B5E20 50%, #2E7D32 100%)", position: "relative" }}>
+      <div style={{ width: 280, height: 280, borderRadius: 16, overflow: "hidden", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg, #0D3B1A 0%, #1B5E20 50%, #2E7D32 100%)", position: "relative", paddingTop: 8 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
           <img src={logoSrc} alt="" style={{ width: 20, height: 20 }} />
           <span style={{ color: "rgba(255,255,255,0.8)", fontWeight: 700, fontSize: 10, letterSpacing: "0.05em", textTransform: "uppercase" }}>Bolão na Copa</span>
