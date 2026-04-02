@@ -313,13 +313,13 @@ const ShareBadge = ({ open, onClose, bolaoId, bolaoNome, ranking, rankingType, r
       <div style={{ width: 320, height: 380, borderRadius: 16, overflow: "hidden", position: "relative", display: "flex", flexDirection: "column", alignItems: "center", background: "linear-gradient(135deg, #1B5E20 0%, #2E7D32 50%, #1B5E20 100%)" }}>
         <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, opacity: 0.05, backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "20px 20px" }} />
         {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 16, position: "relative", zIndex: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 24, position: "relative", zIndex: 10 }}>
           <img src={logoSrc} alt="" style={{ width: 20, height: 20 }} />
           <span style={{ color: "rgba(255,255,255,0.8)", fontWeight: 700, fontSize: 10, letterSpacing: "0.05em", textTransform: "uppercase" }}>Bolão na Copa</span>
         </div>
-        <p style={{ color: "#EAB308", fontWeight: 700, fontSize: 12, marginTop: 4, position: "relative", zIndex: 10, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 290, padding: "0 12px", textAlign: "center" }}>{bolaoNome}</p>
+        <p style={{ color: "#EAB308", fontWeight: 700, fontSize: 12, marginTop: 6, position: "relative", zIndex: 10, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 290, padding: "0 12px", textAlign: "center" }}>{bolaoNome}</p>
         {/* Podium */}
-        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 12, marginTop: "auto", marginBottom: 8, position: "relative", zIndex: 10, width: "100%", padding: "0 16px" }}>
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 12, marginTop: 24, marginBottom: 8, position: "relative", zIndex: 10, width: "100%", padding: "0 16px" }}>
           {/* 2nd place */}
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 90 }}>
             <span style={{ fontSize: 24, marginBottom: 4 }}>🥈</span>
