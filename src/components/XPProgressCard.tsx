@@ -3,6 +3,7 @@ import { Trophy, Star, Users, Gift, ChevronRight, Copy, Share2 } from "lucide-re
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { getReferralUrl, PLAY_STORE_URL } from "@/lib/constants";
 import NivelBadge from "@/components/NivelBadge";
 import {
   getNivelColor, getNivelEmoji, getNivelInfo, getProximoNivel, getXPProgress,
@@ -29,7 +30,7 @@ const XPProgressCard = ({ userXP, referralCode, variant = "full" }: XPProgressCa
   const progress = getXPProgress(userXP.xp_total, userXP.nivel);
 
   const getReferralText = () => {
-    const url = Capacitor.isNativePlatform() ? "https://play.google.com/store/apps/details?id=com.bolaonacopa.app" : `https://www.bolaonacopa.com.br/auth?modo=cadastro&ref=${referralCode}`;
+    const url = Capacitor.isNativePlatform() ? PLAY_STORE_URL : getReferralUrl(referralCode!, "whatsapp");
     return Capacitor.isNativePlatform() ? `🏆 Vem jogar no Bolão na Copa comigo!\n\nQuero ver quem sabe mais do que eu!\n\nBaixe o app: ${url}` : `🏆 Vem jogar no Bolão na Copa comigo!\n\nUse meu código: ${referralCode}\n\nCadastre aqui: ${url}`;
   };
 

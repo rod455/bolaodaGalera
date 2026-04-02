@@ -20,7 +20,7 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import EventosEspeciais from "@/components/EventosEspeciais";
 import PromoBolaoHeader from "@/components/PromoBolaoHeader";
 import type { Bolao, Jogo, Palpite, RankingEntry } from "@/lib/types";
-import { MODO_LABELS, MODO_REGRAS } from "@/lib/constants";
+import { MODO_LABELS, MODO_REGRAS, getInviteUrl, PLAY_STORE_URL } from "@/lib/constants";
 import { formatDataJogo, traduzirFase, getInitials } from "@/lib/formatters";
 import SEOHead from "@/components/SEOHead";
 import { useGamification } from "@/hooks/useGamification";
@@ -961,7 +961,7 @@ const BolaoPage = () => {
                 variant="outline"
                 size="icon"
                 onClick={() => {
-                  const url = Capacitor.isNativePlatform() ? "https://play.google.com/store/apps/details?id=com.bolaonacopa.app" : `https://www.bolaonacopa.com.br/entrar?codigo=${bolao.codigo_convite}`;
+                  const url = Capacitor.isNativePlatform() ? PLAY_STORE_URL : getInviteUrl(id!, bolao.codigo_convite!, "whatsapp");
                   const text = Capacitor.isNativePlatform()
                     ? `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nBaixe o app: ${url}`
                     : `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nÉ só acessar: ${url}`;
@@ -990,7 +990,7 @@ const BolaoPage = () => {
                 variant="outline"
                 size="icon"
                 onClick={() => {
-                  const url = Capacitor.isNativePlatform() ? "https://play.google.com/store/apps/details?id=com.bolaonacopa.app" : `https://www.bolaonacopa.com.br/entrar?codigo=${bolao.codigo_convite}`;
+                  const url = Capacitor.isNativePlatform() ? PLAY_STORE_URL : getInviteUrl(id!, bolao.codigo_convite!, "whatsapp");
                   const text = Capacitor.isNativePlatform()
                     ? `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nBaixe o app: ${url}`
                     : `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nÉ só acessar: ${url}`;
@@ -1278,7 +1278,7 @@ const BolaoPage = () => {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                const url = Capacitor.isNativePlatform() ? "https://play.google.com/store/apps/details?id=com.bolaonacopa.app" : `https://www.bolaonacopa.com.br/entrar?codigo=${bolao.codigo_convite}`;
+                const url = Capacitor.isNativePlatform() ? PLAY_STORE_URL : getInviteUrl(id!, bolao.codigo_convite!, "whatsapp");
                 const text = Capacitor.isNativePlatform()
                   ? `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nBaixe o app: ${url}`
                   : `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nÉ só acessar: ${url}`;
@@ -1332,7 +1332,7 @@ const BolaoPage = () => {
                   variant="outline"
                   onClick={(e) => {
                     e.stopPropagation();
-                    const url = Capacitor.isNativePlatform() ? "https://play.google.com/store/apps/details?id=com.bolaonacopa.app" : `https://www.bolaonacopa.com.br/entrar?codigo=${bolao.codigo_convite}`;
+                    const url = Capacitor.isNativePlatform() ? PLAY_STORE_URL : getInviteUrl(id!, bolao.codigo_convite!, "whatsapp");
                     const text = Capacitor.isNativePlatform()
                   ? `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nBaixe o app: ${url}`
                   : `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nÉ só acessar: ${url}`;
@@ -1738,6 +1738,7 @@ const BolaoPage = () => {
         <ShareBadge
           open={showShareBadge}
           onClose={() => setShowShareBadge(false)}
+          bolaoId={id!}
           bolaoNome={bolao.nome}
           ranking={rankingTab === "geral" ? ranking : rankingRodada}
           rankingType={rankingTab}

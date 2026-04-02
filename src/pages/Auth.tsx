@@ -164,6 +164,7 @@ const Auth = () => {
             data: {
               nome: name,
               origem: Capacitor.isNativePlatform() ? Capacitor.getPlatform() : 'web',
+              ...((() => { try { const u = JSON.parse(localStorage.getItem('bolao_utm_params') || '{}'); return u.utm_source ? { utm_source: u.utm_source, utm_medium: u.utm_medium, utm_campaign: u.utm_campaign } : {}; } catch { return {}; } })()),
             },
           },
         });

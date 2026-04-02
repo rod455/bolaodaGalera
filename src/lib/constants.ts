@@ -144,3 +144,19 @@ export const FASE_ORDER = [
   "Terceiro Lugar",
   "Final",
 ];
+
+// ── URLs com UTM para convites ──
+export const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.bolaonacopa.app";
+const BASE_URL = "https://www.bolaonacopa.com.br";
+
+export function getInviteUrl(bolaoId: string, codigoConvite: string, medium: "whatsapp" | "share" | "copy" = "share"): string {
+  return `${BASE_URL}/entrar?codigo=${codigoConvite}&utm_source=convite&utm_medium=${medium}&utm_campaign=bolao_${bolaoId}`;
+}
+
+export function getReferralUrl(referralCode: string, medium: "whatsapp" | "share" | "copy" = "share"): string {
+  return `${BASE_URL}/auth?modo=cadastro&ref=${referralCode}&utm_source=referral&utm_medium=${medium}&utm_campaign=indicacao`;
+}
+
+export function getShareBadgeUrl(bolaoId: string): string {
+  return `${BASE_URL}?utm_source=convite&utm_medium=badge&utm_campaign=bolao_${bolaoId}`;
+}

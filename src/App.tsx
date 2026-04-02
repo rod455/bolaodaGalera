@@ -25,6 +25,7 @@ import { App as CapApp } from "@capacitor/app";
 import { SplashScreen as NativeSplash } from "@capacitor/splash-screen";
 import { supabase } from "@/integrations/supabase/client";
 import { initGoogleAuth } from "@/lib/googleAuth";
+import { initUTMTracker } from "@/lib/utm-tracker";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
 
 const queryClient = new QueryClient();
@@ -91,6 +92,7 @@ const App = () => {
 
   useEffect(() => {
     initGoogleAuth();
+    initUTMTracker();
   }, []);
 
   // Deep Link: capturar OAuth callback no app nativo

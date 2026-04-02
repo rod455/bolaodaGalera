@@ -12,11 +12,13 @@ const WhatsAppShare = registerPlugin<WhatsAppSharePlugin>("WhatsAppShare");
 import { X, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { getShareBadgeUrl } from "@/lib/constants";
 import type { RankingEntry } from "@/lib/types";
 
 interface ShareBadgeProps {
   open: boolean;
   onClose: () => void;
+  bolaoId: string;
   bolaoNome: string;
   ranking: RankingEntry[];
   rankingType: "geral" | "rodada";
@@ -58,7 +60,7 @@ const getMedalEmoji = (pos: number) => {
 
 const getOrdinal = (pos: number) => `${pos}º`;
 
-const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabel }: ShareBadgeProps) => {
+const ShareBadge = ({ open, onClose, bolaoId, bolaoNome, ranking, rankingType, rodadaLabel }: ShareBadgeProps) => {
   const [tab, setTab] = useState<"foto" | "sem-foto" | "podio">("foto");
   const [sharing, setSharing] = useState(false);
   const [fraseCustom, setFraseCustom] = useState("");
@@ -113,7 +115,7 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
       ? `🏆 Estou em ${getOrdinal(me.pos)} lugar no bolão "${bolaoNome}"!`
       : `🏆 Confira o ranking do bolão "${bolaoNome}"!`;
     const phrase = fraseCustom.trim() ? `\n\n${fraseCustom.trim()}` : "";
-    return `${defaultText}${phrase}\n\nVem competir comigo: https://www.bolaonacopa.com.br`;
+    return `${defaultText}${phrase}\n\nVem competir comigo: ${getShareBadgeUrl(bolaoId)}`;
   };
 
   const handleSave = async () => {
