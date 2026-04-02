@@ -60,6 +60,20 @@ const Auth = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Scroll automático para o campo focado quando teclado abre
+  useEffect(() => {
+    const handleFocus = (e: FocusEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") {
+        setTimeout(() => {
+          target.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 300);
+      }
+    };
+    document.addEventListener("focusin", handleFocus);
+    return () => document.removeEventListener("focusin", handleFocus);
+  }, []);
+
   const timesFiltrados = timeBusca.length > 0
     ? TIMES_BRASIL.filter((t) => t.toLowerCase().includes(timeBusca.toLowerCase()))
     : [];
@@ -246,7 +260,7 @@ const Auth = () => {
   const isWebView = /FBAN|FBAV|Instagram|Line|TikTok|Snapchat/i.test(navigator.userAgent);
 
   return (
-    <div className="min-h-screen bg-copa-green-500 flex flex-col items-center justify-center p-6 overflow-y-auto">
+    <div className="min-h-screen bg-copa-green-500 flex flex-col items-center justify-start p-6 overflow-y-auto pt-8 pb-[40vh]">
       <SEOHead
         title="Criar Conta ou Entrar"
         description="Crie sua conta grátis no Bolão na Copa e comece a fazer seus palpites em segundos."
