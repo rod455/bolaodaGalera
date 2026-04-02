@@ -119,6 +119,12 @@ export const FASE_TRADUCAO: Record<string, string> = {
   ROUND_OF_32: "Fase Eliminatória",
 };
 
+// ── Limites de planos ──
+export const FREE_MAX_CRIAR = 1;
+export const FREE_MAX_PRIVADOS = 3;
+export const FREE_MAX_PARTICIPANTES = 15;
+export const PREMIUM_MAX_PARTICIPANTES = 50;
+
 // ── Imagens fallback para cards de bolão ──
 export const FALLBACK_IMAGES = [
   "https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=600&h=300&fit=crop",

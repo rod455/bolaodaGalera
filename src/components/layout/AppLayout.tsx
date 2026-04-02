@@ -1,5 +1,5 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Home, PlusCircle, Radio, User, LogOut, LogIn } from "lucide-react";
+import { Home, PlusCircle, Radio, User, LogOut, LogIn, HelpCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import NotificationCenter from "@/components/NotificationCenter";
@@ -23,12 +23,21 @@ const AppLayout = () => {
       ]
     : [
         { path: "/home", label: "Home", icon: Home },
+        { path: "/como-funciona.html", label: "Como Funciona", icon: HelpCircle },
         { path: "/auth?modo=cadastro", label: "Criar Conta", icon: LogIn },
       ];
 
   const isActive = (path: string) => {
     const basePath = path.split("?")[0];
     return location.pathname === basePath || location.pathname.startsWith(basePath + "/");
+  };
+
+  const handleNavClick = (path: string) => {
+    if (path.endsWith(".html")) {
+      window.location.href = path;
+    } else {
+      navigate(path);
+    }
   };
 
   const handleLogout = async () => {
@@ -58,6 +67,10 @@ const AppLayout = () => {
               </>
             ) : (
               <div className="flex items-center gap-3">
+                <button onClick={() => { window.location.href = "/como-funciona.html"; }}
+                  className="text-white/80 hover:text-white transition-colors text-sm font-medium">
+                  Como Funciona
+                </button>
                 <button onClick={() => navigate("/auth")}
                   className="text-white/80 hover:text-white transition-colors text-sm font-medium">
                   Entrar
@@ -76,7 +89,7 @@ const AppLayout = () => {
               const Icon = item.icon;
               const active = isActive(item.path);
               return (
-                <button key={item.path} onClick={() => navigate(item.path)}
+                <button key={item.path} onClick={() => handleNavClick(item.path)}
                   className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-medium transition-all border-b-2 ${
                     active
                       ? "border-copa-gold-400 text-copa-gold-400"
@@ -103,6 +116,11 @@ const AppLayout = () => {
             <NotificationCenter />
           ) : (
             <div className="flex items-center gap-2">
+              <button onClick={() => { window.location.href = "/como-funciona.html"; }}
+                className="text-white/80 hover:text-white transition-colors text-xs font-medium flex items-center gap-1">
+                <HelpCircle className="w-4 h-4" />
+                <span>Como Funciona</span>
+              </button>
               <button onClick={() => navigate("/auth")}
                 className="text-white/80 hover:text-white transition-colors text-xs font-medium">
                 Entrar
@@ -130,7 +148,7 @@ const AppLayout = () => {
               const Icon = item.icon;
               const active = isActive(item.path);
               return (
-                <button key={item.path} onClick={() => navigate(item.path)}
+                <button key={item.path} onClick={() => handleNavClick(item.path)}
                   className={`flex-1 flex flex-col items-center gap-0.5 py-2 pt-2.5 relative transition-all ${
                     active ? "text-copa-green-600" : "text-gray-400"
                   }`}>

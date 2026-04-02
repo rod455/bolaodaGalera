@@ -189,6 +189,10 @@ const Planos = () => {
             </div>
             <div className="flex items-center gap-2.5">
               <Check className="w-4 h-4 text-copa-green-500 flex-shrink-0" />
+              <span className="text-sm">Até 15 participantes por grupo</span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <Check className="w-4 h-4 text-copa-green-500 flex-shrink-0" />
               <span className="text-sm">Bolões nacionais ilimitados</span>
             </div>
           </div>
@@ -235,7 +239,7 @@ const Planos = () => {
             </div>
             <div className="flex items-center gap-2.5">
               <Check className="w-4 h-4 text-copa-green-500 flex-shrink-0" />
-              <span className="text-sm">Participantes ilimitados no bolão</span>
+              <span className="text-sm">Até 50 participantes por grupo</span>
             </div>
             <div className="flex items-center gap-2.5">
               <Check className="w-4 h-4 text-copa-green-500 flex-shrink-0" />

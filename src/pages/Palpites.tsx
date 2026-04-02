@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, Save, Loader2, Lock, CheckCircle2, Clock,
-  ChevronLeft, ChevronRight, Heart, Copy, Check,
+  ChevronLeft, ChevronRight, Heart, Copy, Check, Filter,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -56,6 +56,8 @@ const Palpites = () => {
   const [activeTab, setActiveTab] = useState<string>("Todos");
   const [timeFavorito, setTimeFavorito] = useState<string | null>(null);
   const [isFanatico, setIsFanatico] = useState(false);
+  const [campeonatosList, setCampeonatosList] = useState<{id: string; nome: string}[]>([]);
+  const [activeCampeonato, setActiveCampeonato] = useState<string>("Todos");
   const { showAd, adLoading, resolveWebAd, needsAd } = useRewardedAd();
   const { darXP } = useGamification();
   const [xpToast, setXPToast] = useState<{xp: number, msg: string} | null>(null);
@@ -269,6 +271,15 @@ const Palpites = () => {
 
       if (campIds.length === 0) { toast.error("Nenhum campeonato vinculado"); setLoading(false); navigate(`/bolao/${id}`); return; }
 
+      // Buscar nomes dos campeonatos (para filtro quando multi-campeonato)
+      if (campIds.length > 1) {
+        const { data: campData } = await supabase
+          .from("campeonatos").select("id, nome_popular").in("id", campIds);
+        if (campData && campData.length > 1) {
+          setCampeonatosList(campData.map((c: any) => ({ id: c.id, nome: c.nome_popular })));
+        }
+      }
+
       const { data: allGames } = await supabase
         .from("jogos").select("*").in("campeonato_id", campIds)
         .order("data_hora", { ascending: true });
@@ -453,9 +464,11 @@ const Palpites = () => {
   };
 
   const now = new Date();
+  // Filtro por campeonato (quando multi-campeonato)
+  const jogosPorCamp = activeCampeonato === "Todos" ? jogos : jogos.filter((j) => j.campeonato_id === activeCampeonato);
   let jogosFiltrados: Jogo[];
-  if (isLeague) { jogosFiltrados = activeTab === "Todos" ? jogos : jogos.filter((j) => j.rodada === activeTab); }
-  else { jogosFiltrados = activeTab === "Todos" ? jogos : jogos.filter((j) => getTabKey(j) === activeTab); }
+  if (isLeague) { jogosFiltrados = activeTab === "Todos" ? jogosPorCamp : jogosPorCamp.filter((j) => j.rodada === activeTab); }
+  else { jogosFiltrados = activeTab === "Todos" ? jogosPorCamp : jogosPorCamp.filter((j) => getTabKey(j) === activeTab); }
 
   const jogosAbertos = jogosFiltrados.filter((j) => j.status === "agendado" && (new Date(j.data_hora).getTime() - now.getTime()) / (1000 * 60) > 10);
   const jogosFechados = jogosFiltrados.filter((j) => j.status === "agendado" && (new Date(j.data_hora).getTime() - now.getTime()) / (1000 * 60) <= 10);
@@ -614,6 +627,34 @@ const Palpites = () => {
         <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5">
           <Heart className="w-4 h-4 text-amber-500 flex-shrink-0" />
           <span className="text-sm text-amber-700">Você ainda não escolheu seu time do coração. Mostrando todos os jogos.</span>
+        </div>
+      )}
+
+      {campeonatosList.length > 1 && (
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          <button
+            onClick={() => { setActiveCampeonato("Todos"); setActiveTab("Todos"); }}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1 ${
+              activeCampeonato === "Todos"
+                ? "bg-copa-green-600 text-white shadow-md"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+          >
+            <Filter className="w-3 h-3" /> Todos
+          </button>
+          {campeonatosList.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => { setActiveCampeonato(c.id); setActiveTab("Todos"); }}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+                activeCampeonato === c.id
+                  ? "bg-copa-green-600 text-white shadow-md"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              {c.nome}
+            </button>
+          ))}
         </div>
       )}
 

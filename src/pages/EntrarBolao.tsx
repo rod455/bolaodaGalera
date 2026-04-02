@@ -13,7 +13,7 @@ import { useUserPlan } from "@/hooks/useUserPlan";
 import { useRewardedAd } from "@/hooks/useRewardedAd";
 import AdRewardModal from "@/components/AdRewardModal";
 import type { Bolao } from "@/lib/types";
-import { FALLBACK_IMAGES } from "@/lib/constants";
+import { FALLBACK_IMAGES, FREE_MAX_PRIVADOS, FREE_MAX_PARTICIPANTES, PREMIUM_MAX_PARTICIPANTES } from "@/lib/constants";
 import SEOHead from "@/components/SEOHead";
 
 const EntrarBolao = () => {
@@ -38,9 +38,41 @@ const EntrarBolao = () => {
       .select("bolao_id, boloes(is_nacional)")
       .eq("user_id", user.id);
     const privCount = (data || []).filter((p: any) => p.boloes && !p.boloes.is_nacional).length;
-    if (privCount >= 3) {
-      toast.error("Você atingiu o limite de 3 bolões privados no plano Free. Faça upgrade para participar de mais!");
+    if (privCount >= FREE_MAX_PRIVADOS) {
+      toast.error(`Você atingiu o limite de ${FREE_MAX_PRIVADOS} bolões privados no plano Free. Faça upgrade para participar de mais!`);
       navigate("/planos");
+      return false;
+    }
+    return true;
+  };
+
+  const checkBolaoCapacity = async (bolaoId: string): Promise<boolean> => {
+    // Count current participants
+    const { count } = await supabase
+      .from("bolao_participantes")
+      .select("*", { count: "exact", head: true })
+      .eq("bolao_id", bolaoId);
+    const currentCount = count || 0;
+
+    // Check if any participant (or creator) has premium/pro
+    const { data: participants } = await supabase
+      .from("bolao_participantes")
+      .select("user_id, profiles(plano)")
+      .eq("bolao_id", bolaoId);
+    const { data: bolaoData } = await supabase
+      .from("boloes")
+      .select("criador_id, profiles(plano)")
+      .eq("id", bolaoId)
+      .single();
+
+    const hasPremiumMember = (participants || []).some(
+      (p: any) => p.profiles?.plano === "premium" || p.profiles?.plano === "premium_pro"
+    ) || bolaoData?.profiles?.plano === "premium" || bolaoData?.profiles?.plano === "premium_pro";
+
+    const maxCapacity = hasPremiumMember ? PREMIUM_MAX_PARTICIPANTES : FREE_MAX_PARTICIPANTES;
+
+    if (currentCount >= maxCapacity) {
+      toast.error(`Este grupo está lotado! Limite de ${maxCapacity} participantes.${!hasPremiumMember ? " Se alguém do grupo fizer upgrade para Premium, o limite sobe para 50!" : " Para grupos acima de 50, entre em contato conosco."}`);
       return false;
     }
     return true;
@@ -135,6 +167,12 @@ const EntrarBolao = () => {
         return;
       }
 
+      // Verificar capacidade do bolão
+      if (!(await checkBolaoCapacity(bolao.id))) {
+        setBuscando(false);
+        return;
+      }
+
       // Mostrar ad antes de entrar
       if (needsAd) {
         const adResult = await showAd("entrar");
@@ -178,6 +216,12 @@ const EntrarBolao = () => {
     setJoining(bolaoId);
 
     try {
+      // Verificar capacidade do bolão
+      if (!(await checkBolaoCapacity(bolaoId))) {
+        setJoining(null);
+        return;
+      }
+
       // Mostrar ad antes de entrar
       if (needsAd) {
         const adResult = await showAd("entrar");

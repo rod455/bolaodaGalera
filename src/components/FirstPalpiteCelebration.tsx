@@ -95,8 +95,14 @@ const FirstPalpiteCelebration = ({
   ].join("");
 
   const handleWhatsApp = () => {
-    const url = `https://wa.me/?text=${encodeURIComponent(whatsappText)}`;
-    window.open(url, Capacitor.isNativePlatform() ? "_system" : "_blank");
+    const encoded = encodeURIComponent(whatsappText);
+    if (Capacitor.isNativePlatform()) {
+      window.open(`https://api.whatsapp.com/send?text=${encoded}`, "_system");
+    } else if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+      window.location.href = `whatsapp://send?text=${encoded}`;
+    } else {
+      window.open(`https://web.whatsapp.com/send?text=${encoded}`, "_blank");
+    }
   };
 
   const handleCopyCode = () => {

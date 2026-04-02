@@ -23,7 +23,7 @@ import type { UserBannerContext } from "@/components/DynamicBanner";
 import GuestHeroCarousel from "@/components/GuestHeroCarousel";
 import PromoCardBorder from "@/components/PromoCardBorder";
 import type { Bolao } from "@/lib/types";
-import { MODO_LABELS, MODO_REGRAS, FALLBACK_IMAGES } from "@/lib/constants";
+import { MODO_LABELS, MODO_REGRAS, FALLBACK_IMAGES, FREE_MAX_PRIVADOS as CONST_FREE_MAX_PRIVADOS, FREE_MAX_CRIAR as CONST_FREE_MAX_CRIAR, FREE_MAX_PARTICIPANTES, PREMIUM_MAX_PARTICIPANTES } from "@/lib/constants";
 import { formatDataJogo } from "@/lib/formatters";
 import SEOHead from "@/components/SEOHead";
 import { trackEvent } from "@/lib/analytics";
@@ -510,10 +510,36 @@ const Home = () => {
   const visibleAlerts = dismissCount >= 2 ? [] : alerts.filter((a) => !dismissedAlerts.has(a.id));
 
   // ═══ Limites do plano Free ═══
-  const FREE_MAX_PRIVADOS = 3;
-  const FREE_MAX_CRIAR = 1;
+  const FREE_MAX_PRIVADOS = CONST_FREE_MAX_PRIVADOS;
+  const FREE_MAX_CRIAR = CONST_FREE_MAX_CRIAR;
   const isFree = !userPlano || userPlano === "free";
   const atingiuLimitePrivados = isFree && user && privados.length >= FREE_MAX_PRIVADOS;
+
+  const checkBolaoCapacity = async (bolaoId: string): Promise<boolean> => {
+    const { count } = await supabase
+      .from("bolao_participantes")
+      .select("*", { count: "exact", head: true })
+      .eq("bolao_id", bolaoId);
+    const currentCount = count || 0;
+    const { data: participants } = await supabase
+      .from("bolao_participantes")
+      .select("user_id, profiles(plano)")
+      .eq("bolao_id", bolaoId);
+    const { data: bolaoData } = await supabase
+      .from("boloes")
+      .select("criador_id, profiles(plano)")
+      .eq("id", bolaoId)
+      .single();
+    const hasPremiumMember = (participants || []).some(
+      (p: any) => p.profiles?.plano === "premium" || p.profiles?.plano === "premium_pro"
+    ) || bolaoData?.profiles?.plano === "premium" || bolaoData?.profiles?.plano === "premium_pro";
+    const maxCapacity = hasPremiumMember ? PREMIUM_MAX_PARTICIPANTES : FREE_MAX_PARTICIPANTES;
+    if (currentCount >= maxCapacity) {
+      toast.error(`Este grupo está lotado! Limite de ${maxCapacity} participantes.${!hasPremiumMember ? " Se alguém do grupo fizer upgrade para Premium, o limite sobe para 50!" : " Para grupos acima de 50, entre em contato."}`);
+      return false;
+    }
+    return true;
+  };
 
   const handleEntrarPorCodigo = async () => {
     if (!codigoInput.trim()) { toast.error("Informe o código do bolão"); return; }
@@ -537,6 +563,7 @@ const Home = () => {
       await ensureProfile();
       const { data: bolao } = await supabase.from("boloes").select("id, nome").eq("codigo_convite", codigoInput.trim().toUpperCase()).maybeSingle();
       if (!bolao) { toast.error("Código inválido. Verifique e tente novamente."); return; }
+      if (!(await checkBolaoCapacity(bolao.id))) return;
       const { error } = await supabase.from("bolao_participantes").insert({ bolao_id: bolao.id, user_id: user.id });
       if (error) { if (error.code === "23505") { toast.info("Você já está neste bolão!"); navigate(`/bolao/${bolao.id}`); } else throw error; }
       else { toast.success(`Você entrou no "${bolao.nome}"!`); navigate(`/bolao/${bolao.id}`); }
@@ -580,31 +607,37 @@ const Home = () => {
   return (
     <div className={`space-y-6 animate-fade-in ${!user ? "pb-20" : ""}`}>
       <SEOHead
-        title="Bolões de Futebol Grátis"
-        description="Participe de bolões do Paulistão 2026, Brasileirão e mais. R$200 em prêmios. 100% grátis!"
+        title="Bolão da Copa 2026 — Palpites Grátis"
+        description="Crie seu bolão da Copa do Mundo 2026, Brasileirão, Paulistão e mais. Dispute com amigos, faça palpites e concorra a prêmios. 100% grátis!"
         path="/home"
       />
       <AdRewardModal open={showAdModal} onComplete={resolveWebAd} message="Assista para entrar no bolão" />
 
 
-      {/* ═══ BANNERS DINÂMICOS — carrossel (só logados) ═══ */}
-      {user && (
-        <DynamicBanner userBolaoIds={userBolaoIds} userContext={userBannerCtx} />
+      {/* ═══ GUEST: Countdown ═══ */}
+      {!user && <CountdownStrip />}
+
+      {/* ═══ BANNERS DINÂMICOS — carrossel ═══ */}
+      <DynamicBanner userBolaoIds={userBolaoIds} userContext={userBannerCtx} />
+
+      {/* ═══ GUEST: Google Login ═══ */}
+      {!user && !/FBAN|FBAV|Instagram|Line|TikTok|Snapchat/i.test(navigator.userAgent) && (
+        <button
+          onClick={handleGoogleLogin}
+          className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 hover:border-copa-green-400 hover:shadow-md rounded-xl py-3.5 font-semibold text-sm text-gray-600 transition-all"
+        >
+          <svg className="w-5 h-5" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          Cadastre-se rápido com Google
+        </button>
       )}
 
       {/* ═══ FEEDBACK BANNER — aparece após palpitar ═══ */}
       {user && <FeedbackBanner />}
-
-      {/* ═══ GUEST: Countdown + Hero Carrossel ═══ */}
-      {!user && (
-        <div className="space-y-4 -mt-2">
-          <CountdownStrip />
-          <GuestHeroCarousel
-            participantesCount={participantesCount}
-            handleGoogleLogin={handleGoogleLogin}
-          />
-        </div>
-      )}
 
 
       {/* ═══ CONTEÚDO LOGADO: Alerts + Meus Bolões + Privados ═══ */}

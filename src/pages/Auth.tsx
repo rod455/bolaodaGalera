@@ -149,6 +149,7 @@ const Auth = () => {
           options: {
             data: {
               nome: name,
+              origem: Capacitor.isNativePlatform() ? Capacitor.getPlatform() : 'web',
             },
           },
         });
@@ -203,6 +204,9 @@ const Auth = () => {
       }
 
       if (result.success && Capacitor.isNativePlatform()) {
+        // Salvar origem do cadastro
+        const origem = Capacitor.getPlatform();
+        supabase.auth.updateUser({ data: { origem } }).catch(() => {});
         // No app nativo, o login já foi feito — navegar
         toast.success("Login realizado com sucesso!");
         navigate(redirectPath);
@@ -242,7 +246,7 @@ const Auth = () => {
   const isWebView = /FBAN|FBAV|Instagram|Line|TikTok|Snapchat/i.test(navigator.userAgent);
 
   return (
-    <div className="min-h-screen bg-copa-green-500 flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen bg-copa-green-500 flex flex-col items-center justify-center p-6 overflow-y-auto">
       <SEOHead
         title="Criar Conta ou Entrar"
         description="Crie sua conta grátis no Bolão na Copa e comece a fazer seus palpites em segundos."

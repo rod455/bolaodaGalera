@@ -1,9 +1,8 @@
 name: Full Sync Weekly
 
 on:
-  # DESATIVADO ATÉ VIRAR O MÊS (limite de minutos atingido)
-  # schedule:
-  #   - cron: '0 11 * * 1'
+  schedule:
+    - cron: '0 11 * * 1,3'
   workflow_dispatch:
 
 jobs:

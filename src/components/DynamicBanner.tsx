@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { FREE_MAX_PARTICIPANTES, PREMIUM_MAX_PARTICIPANTES } from "@/lib/constants";
 
 interface BannerData {
   id: string;
@@ -20,6 +21,7 @@ interface BannerData {
   cor_texto: string | null;
   mostrar_para: string;
   imagem_url: string | null;
+  imagem_mobile_url: string | null;
   imagem_fundo_url: string | null;
   // ── Segmentação ──
   segmento: string;
@@ -95,7 +97,7 @@ const DynamicBanner = ({ userBolaoIds, userContext }: DynamicBannerProps) => {
       const now = new Date().toISOString();
       const { data } = await supabase
         .from("banners_home")
-        .select("id, titulo, subtitulo, emoji, badge_texto, cta_texto, cta_texto_participando, bolao_id, link, estilo, cor_fundo, cor_texto, mostrar_para, imagem_url, imagem_fundo_url, segmento, dias_desde_cadastro_min, dias_desde_cadastro_max, tem_bolao_privado, qtd_participantes_min")
+        .select("id, titulo, subtitulo, emoji, badge_texto, cta_texto, cta_texto_participando, bolao_id, link, estilo, cor_fundo, cor_texto, mostrar_para, imagem_url, imagem_mobile_url, imagem_fundo_url, segmento, dias_desde_cadastro_min, dias_desde_cadastro_max, tem_bolao_privado, qtd_participantes_min")
         .eq("ativo", true)
         .or(`data_fim.is.null,data_fim.gt.${now}`)
         .lte("data_inicio", now)
@@ -231,6 +233,32 @@ const DynamicBanner = ({ userBolaoIds, userContext }: DynamicBannerProps) => {
     setTimeout(() => setClickBlocked(false), 300);
   };
 
+  const checkBolaoCapacity = async (bolaoId: string): Promise<boolean> => {
+    const { count } = await supabase
+      .from("bolao_participantes")
+      .select("*", { count: "exact", head: true })
+      .eq("bolao_id", bolaoId);
+    const currentCount = count || 0;
+    const { data: participants } = await supabase
+      .from("bolao_participantes")
+      .select("user_id, profiles(plano)")
+      .eq("bolao_id", bolaoId);
+    const { data: bolaoData } = await supabase
+      .from("boloes")
+      .select("criador_id, profiles(plano)")
+      .eq("id", bolaoId)
+      .single();
+    const hasPremiumMember = (participants || []).some(
+      (p: any) => p.profiles?.plano === "premium" || p.profiles?.plano === "premium_pro"
+    ) || bolaoData?.profiles?.plano === "premium" || bolaoData?.profiles?.plano === "premium_pro";
+    const maxCapacity = hasPremiumMember ? PREMIUM_MAX_PARTICIPANTES : FREE_MAX_PARTICIPANTES;
+    if (currentCount >= maxCapacity) {
+      toast.error(`Este grupo está lotado! Limite de ${maxCapacity} participantes.${!hasPremiumMember ? " Se alguém do grupo fizer upgrade para Premium, o limite sobe para 50!" : ""}`);
+      return false;
+    }
+    return true;
+  };
+
   const handleClick = async (banner: BannerData) => {
     if (clickBlocked) return;
 
@@ -251,6 +279,11 @@ const DynamicBanner = ({ userBolaoIds, userContext }: DynamicBannerProps) => {
 
     setJoining(banner.id);
     try {
+      if (!(await checkBolaoCapacity(banner.bolao_id))) {
+        setJoining(null);
+        return;
+      }
+
       const { error } = await supabase
         .from("bolao_participantes")
         .insert({ bolao_id: banner.bolao_id, user_id: user.id });
@@ -271,21 +304,31 @@ const DynamicBanner = ({ userBolaoIds, userContext }: DynamicBannerProps) => {
   if (loading || banners.length === 0) return null;
 
   // ── Render: Modo POSTER (imagem completa) ──
-  const renderPoster = (banner: BannerData) => (
-    <div
-      onClick={() => handleClick(banner)}
-      className="relative overflow-hidden rounded-2xl cursor-pointer group"
-      style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}
-    >
-      <img
-        src={banner.imagem_url!}
-        alt={banner.titulo}
-        className="w-full object-cover rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]"
-        style={{ minHeight: "180px", maxHeight: "320px" }}
-        draggable={false}
-      />
-    </div>
-  );
+  const renderPoster = (banner: BannerData) => {
+    const mobileImg = banner.imagem_mobile_url || banner.imagem_url!;
+    return (
+      <div
+        onClick={() => handleClick(banner)}
+        className="relative overflow-hidden rounded-2xl cursor-pointer group"
+        style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}
+      >
+        {/* Desktop */}
+        <img
+          src={banner.imagem_url!}
+          alt={banner.titulo}
+          className="hidden sm:block w-full h-auto rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]"
+          draggable={false}
+        />
+        {/* Mobile */}
+        <img
+          src={mobileImg}
+          alt={banner.titulo}
+          className="block sm:hidden w-full h-auto rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]"
+          draggable={false}
+        />
+      </div>
+    );
+  };
 
   // ── Render: Modo BACKGROUND (imagem fundo + conteúdo) ──
   const renderBackground = (banner: BannerData) => {
@@ -295,7 +338,7 @@ const DynamicBanner = ({ userBolaoIds, userContext }: DynamicBannerProps) => {
     return (
       <div
         onClick={() => !joining && handleClick(banner)}
-        className={`relative overflow-hidden rounded-2xl cursor-pointer group ${joining === banner.id ? "pointer-events-none opacity-80" : ""}`}
+        className={`relative overflow-hidden rounded-2xl cursor-pointer group aspect-square sm:aspect-[12/5] ${joining === banner.id ? "pointer-events-none opacity-80" : ""}`}
         style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.5)" }}
       >
         {/* Imagem de fundo */}
@@ -358,7 +401,7 @@ const DynamicBanner = ({ userBolaoIds, userContext }: DynamicBannerProps) => {
     return (
       <div
         onClick={() => !isJoining && handleClick(banner)}
-        className={`relative overflow-hidden rounded-2xl cursor-pointer group ${isJoining ? "pointer-events-none opacity-80" : ""}`}
+        className={`relative overflow-hidden rounded-2xl cursor-pointer group aspect-square sm:aspect-[12/5] ${isJoining ? "pointer-events-none opacity-80" : ""}`}
         style={{
           background: bgStyle,
           border: `1px solid ${estiloConfig.badgeBorder}`,
@@ -370,7 +413,7 @@ const DynamicBanner = ({ userBolaoIds, userContext }: DynamicBannerProps) => {
         <div className="absolute inset-0 opacity-[0.03]"
           style={{ backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 30px, rgba(255,255,255,0.08) 30px, rgba(255,255,255,0.08) 31px)" }} />
 
-        <div className="relative z-10 flex flex-col items-center text-center px-5 py-6">
+        <div className="relative z-10 flex flex-col items-center justify-center text-center px-5 py-6 h-full">
           <div className="text-5xl mb-2 drop-shadow-lg" style={{ filter: "drop-shadow(0 0 12px rgba(234,179,8,0.4))" }}>
             {banner.emoji}
           </div>
@@ -405,9 +448,27 @@ const DynamicBanner = ({ userBolaoIds, userContext }: DynamicBannerProps) => {
     );
   };
 
+  // ── Render: Modo HÍBRIDO (imagem mobile + gradiente desktop) ──
+  const renderHybrid = (banner: BannerData) => (
+    <div onClick={() => handleClick(banner)} className="relative overflow-hidden rounded-2xl cursor-pointer group">
+      {/* Mobile: imagem poster */}
+      <img
+        src={banner.imagem_mobile_url!}
+        alt={banner.titulo}
+        className="block sm:hidden w-full h-auto rounded-2xl"
+        draggable={false}
+      />
+      {/* Desktop: banner normal (gradiente) */}
+      <div className="hidden sm:block">
+        {renderNormal(banner)}
+      </div>
+    </div>
+  );
+
   // ── Decidir qual modo renderizar ──
   const renderBanner = (banner: BannerData) => {
     if (banner.imagem_url) return renderPoster(banner);
+    if (!banner.imagem_url && banner.imagem_mobile_url) return renderHybrid(banner);
     if (banner.imagem_fundo_url) return renderBackground(banner);
     return renderNormal(banner);
   };

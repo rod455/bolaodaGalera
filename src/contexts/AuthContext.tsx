@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
+import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
 
 interface AuthContextType {
@@ -33,10 +34,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+
+        // Salvar origem do cadastro na primeira vez (Google OAuth via redirect)
+        if (event === "SIGNED_IN" && session?.user && !session.user.user_metadata?.origem) {
+          const origem = Capacitor.isNativePlatform() ? Capacitor.getPlatform() : "web";
+          supabase.auth.updateUser({ data: { origem } }).catch(() => {});
+        }
       }
     );
 

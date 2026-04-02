@@ -219,6 +219,7 @@ const CriarBolao = () => {
   const isMataMata = modoSelecionado === "mata_mata";
 
   const handleCriar = async () => {
+    if (criando) return;
     if (campeonatosSelecionados.length === 0) { toast.error("Selecione pelo menos um campeonato"); return; }
     if (!nome) { toast.error("Informe o nome do bolão"); return; }
     if (!modoSelecionado) { toast.error("Selecione o modo de pontuação"); return; }

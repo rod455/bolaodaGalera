@@ -30,6 +30,7 @@ import { trackEvent } from "@/lib/analytics";
 import { triggerFeedback } from "@/components/FeedbackBanner";
 import MataMataDashboard from "@/components/MataMataDashboard";
 import GerenciarCampeonatos from "@/components/GerenciarCampeonatos";
+import ShareBadge from "@/components/ShareBadge";
 
 function getStatusInfo(jogo: Jogo, palpite: Palpite | null, now: Date) {
   const jogoDate = new Date(jogo.data_hora);
@@ -154,9 +155,9 @@ const BolaoPage = () => {
   const [ranking, setRanking] = useState<RankingEntry[]>([]);
   const [rankingRodada, setRankingRodada] = useState<RankingEntry[]>([]);
   const [rankingTab, setRankingTab] = useState<"geral" | "rodada">("geral");
-  const [rodadaAtualLabel, setRodadaAtualLabel] = useState<string>("");
   const [loadingRodada, setLoadingRodada] = useState(false);
   const [showFullRanking, setShowFullRanking] = useState(false);
+  const [showShareBadge, setShowShareBadge] = useState(false);
   const { darXP } = useGamification();
   const [xpToast, setXPToast] = useState<{xp: number, msg: string} | null>(null);
   const [niveisRanking, setNiveisRanking] = useState<Record<string, number>>({});
@@ -341,14 +342,30 @@ const BolaoPage = () => {
           .gte("data_hora", twoHoursAgo.toISOString())
           .order("data_hora", { ascending: true });
 
-        // Jogos recentes (encerrados, últimos 5)
-        const { data: recentes } = await supabase
+        // Jogos recentes (encerrados): ontem + hoje, ou últimos 5 se nenhum nos últimos 3 dias
+        const yesterdayStart = new Date(now);
+        yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+        yesterdayStart.setHours(0, 0, 0, 0);
+
+        const { data: recentesHojeOntem } = await supabase
           .from("jogos")
           .select("*")
           .in("campeonato_id", campIds)
           .eq("status", "encerrado")
-          .order("data_hora", { ascending: false })
-          .limit(5);
+          .gte("data_hora", yesterdayStart.toISOString())
+          .order("data_hora", { ascending: false });
+
+        let recentes = recentesHojeOntem;
+        if (!recentes || recentes.length === 0) {
+          const { data: fallback } = await supabase
+            .from("jogos")
+            .select("*")
+            .in("campeonato_id", campIds)
+            .eq("status", "encerrado")
+            .order("data_hora", { ascending: false })
+            .limit(5);
+          recentes = fallback;
+        }
 
         // Jogos ao vivo
         const { data: aoVivo } = await supabase
@@ -472,25 +489,23 @@ const BolaoPage = () => {
       const campIds = (bcData || []).map((bc: any) => bc.campeonato_id);
       if (campIds.length === 0 && bolao?.campeonato_id) campIds.push(bolao.campeonato_id);
 
-      // 2. Descobrir rodada atual (último jogo encerrado)
-      const { data: ultimoJogo } = await supabase
-        .from("jogos")
-        .select("rodada")
-        .in("campeonato_id", campIds)
-        .eq("status", "encerrado")
-        .order("data_hora", { ascending: false })
-        .limit(1);
+      // 2. Calcular semana atual (domingo a domingo)
+      const now = new Date();
+      const dayOfWeek = now.getDay(); // 0=dom, 1=seg...
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - dayOfWeek);
+      startOfWeek.setHours(0, 0, 0, 0);
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 7);
+      endOfWeek.setHours(0, 0, 0, 0);
 
-      const rodadaAtual = ultimoJogo?.[0]?.rodada;
-      if (!rodadaAtual) { setLoadingRodada(false); return; }
-      setRodadaAtualLabel(rodadaAtual);
-
-      // 3. Buscar jogos desta rodada
+      // 3. Buscar jogos desta semana
       const { data: jogosRodada } = await supabase
         .from("jogos")
         .select("id")
         .in("campeonato_id", campIds)
-        .eq("rodada", rodadaAtual);
+        .gte("data_hora", startOfWeek.toISOString())
+        .lt("data_hora", endOfWeek.toISOString());
 
       const jogoIds = (jogosRodada || []).map((j: any) => j.id);
       if (jogoIds.length === 0) { setLoadingRodada(false); return; }
@@ -949,35 +964,64 @@ const BolaoPage = () => {
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           {bolao.codigo_convite && (
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => {
-                const url = Capacitor.isNativePlatform() ? "https://play.google.com/store/apps/details?id=com.bolaonacopa.app" : `https://www.bolaonacopa.com.br/entrar?codigo=${bolao.codigo_convite}`;
-                const text = Capacitor.isNativePlatform()
-                  ? `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nBaixe o app: ${url}`
-                  : `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nÉ só acessar: ${url}`;
-                // Analytics: Convite enviado
-                trackEvent('enviar_convite', {
-                  metodo: navigator.share ? 'share_nativo' : 'copiar_link',
-                  bolao_id: id || '',
-                });
-                // Gamificação: +10 XP por compartilhar
-                darXP("compartilhar", 10).then((ganhou) => {
-                  if (ganhou) setXPToast({ xp: 10, msg: "Resultado compartilhado!" });
-                });
-                if (navigator.share) {
-                  navigator.share({ title: `Bolão: ${bolao.nome}`, text }).catch(() => {});
-                } else {
-                  navigator.clipboard.writeText(text);
-                  toast.success("Link copiado para compartilhar!");
-                }
-              }}
-              className="rounded-full h-9 w-9 border-copa-green-200 text-copa-green-600 hover:bg-copa-green-50"
-              title="Compartilhar bolão"
-            >
-              <Share2 className="w-4 h-4" />
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => {
+                  const url = Capacitor.isNativePlatform() ? "https://play.google.com/store/apps/details?id=com.bolaonacopa.app" : `https://www.bolaonacopa.com.br/entrar?codigo=${bolao.codigo_convite}`;
+                  const text = Capacitor.isNativePlatform()
+                    ? `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nBaixe o app: ${url}`
+                    : `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nÉ só acessar: ${url}`;
+                  trackEvent('enviar_convite', {
+                    metodo: 'whatsapp',
+                    bolao_id: id || '',
+                  });
+                  darXP("compartilhar", 10).then((ganhou) => {
+                    if (ganhou) setXPToast({ xp: 10, msg: "Resultado compartilhado!" });
+                  });
+                  const encoded = encodeURIComponent(text);
+                  if (Capacitor.isNativePlatform()) {
+                    window.open(`https://api.whatsapp.com/send?text=${encoded}`, "_system");
+                  } else if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                    window.location.href = `whatsapp://send?text=${encoded}`;
+                  } else {
+                    window.open(`https://web.whatsapp.com/send?text=${encoded}`, "_blank");
+                  }
+                }}
+                className="rounded-full h-9 w-9 border-[#25D366] text-[#25D366] hover:bg-green-50"
+                title="Convidar pelo WhatsApp"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => {
+                  const url = Capacitor.isNativePlatform() ? "https://play.google.com/store/apps/details?id=com.bolaonacopa.app" : `https://www.bolaonacopa.com.br/entrar?codigo=${bolao.codigo_convite}`;
+                  const text = Capacitor.isNativePlatform()
+                    ? `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nBaixe o app: ${url}`
+                    : `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nÉ só acessar: ${url}`;
+                  trackEvent('enviar_convite', {
+                    metodo: navigator.share ? 'share_nativo' : 'copiar_link',
+                    bolao_id: id || '',
+                  });
+                  darXP("compartilhar", 10).then((ganhou) => {
+                    if (ganhou) setXPToast({ xp: 10, msg: "Resultado compartilhado!" });
+                  });
+                  if (navigator.share) {
+                    navigator.share({ title: `Bolão: ${bolao.nome}`, text }).catch(() => {});
+                  } else {
+                    navigator.clipboard.writeText(text);
+                    toast.success("Link copiado para compartilhar!");
+                  }
+                }}
+                className="rounded-full h-9 w-9 border-copa-green-200 text-copa-green-600 hover:bg-copa-green-50"
+                title="Compartilhar bolão"
+              >
+                <Share2 className="w-4 h-4" />
+              </Button>
+            </>
           )}
           {(bolao.campeonatos as any)?.logo_url && (
             <img
@@ -1101,11 +1145,13 @@ const BolaoPage = () => {
               <Trophy className="w-4 h-4 text-copa-gold-400" />
               Ranking
             </CardTitle>
-            {(rankingTab === "geral" ? ranking : rankingRodada).length > 5 && (
-              <button onClick={() => { setShowFullRanking(!showFullRanking); if (!showFullRanking) triggerFeedback(); }} className="text-sm text-copa-green-500 font-medium hover:underline">
-                {showFullRanking ? "Ver menos" : "Ver ranking completo"}
-              </button>
-            )}
+            <div className="flex items-center gap-3">
+              {(rankingTab === "geral" ? ranking : rankingRodada).length > 5 && (
+                <button onClick={() => { setShowFullRanking(!showFullRanking); if (!showFullRanking) triggerFeedback(); }} className="text-sm text-copa-green-500 font-medium hover:underline">
+                  {showFullRanking ? "Ver menos" : "Ver ranking completo"}
+                </button>
+              )}
+            </div>
           </div>
           {/* ── Tabs: Geral | Esta Rodada ── */}
           {ranking.length > 0 && (
@@ -1132,7 +1178,7 @@ const BolaoPage = () => {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {rodadaAtualLabel ? `Rodada ${rodadaAtualLabel}` : "Esta Rodada"}
+                Esta Semana
               </button>
             </div>
           )}
@@ -1214,6 +1260,26 @@ const BolaoPage = () => {
                 <span className="text-base flex-shrink-0">{msg.emoji}</span>
                 <span>{msg.text}</span>
               </div>
+            );
+          })()}
+          {(rankingTab === "geral" ? ranking : rankingRodada).length > 0 && (() => {
+            const activeRanking = rankingTab === "geral" ? ranking : rankingRodada;
+            const meInRanking = activeRanking.find((r) => r.isCurrentUser);
+            const isTop3 = meInRanking && meInRanking.pos <= 3;
+            return isTop3 ? (
+              <button
+                onClick={() => setShowShareBadge(true)}
+                className="w-full mt-2 flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-copa-gold-400 to-copa-gold-500 text-white text-sm font-bold shadow-md hover:shadow-lg transition-all"
+              >
+                <Share2 className="w-4 h-4" /> Compartilhe sua posição no pódio!
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowShareBadge(true)}
+                className="w-full mt-2 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-copa-gold-50 border border-copa-gold-300 text-copa-gold-700 text-sm font-semibold hover:bg-copa-gold-100 transition-colors"
+              >
+                <Share2 className="w-4 h-4" /> Compartilhar posição
+              </button>
             );
           })()}
           {ranking.length > 0 && bolao.codigo_convite && (
@@ -1674,6 +1740,18 @@ const BolaoPage = () => {
           onUpdated={() => loadBolao()}
         />
       )}
+
+      {/* Share Badge Modal */}
+      {bolao && (
+        <ShareBadge
+          open={showShareBadge}
+          onClose={() => setShowShareBadge(false)}
+          bolaoNome={bolao.nome}
+          ranking={rankingTab === "geral" ? ranking : rankingRodada}
+          rankingType={rankingTab}
+          rodadaLabel="Esta Semana"
+        />
+      )}
     </div>
   );
 };
@@ -1794,6 +1872,8 @@ const ExpandableJogoRow = ({
                 <CheckCircle2 className="w-3 h-3 mr-1" />
                 Palpite: {palpite!.placar_time_a} x {palpite!.placar_time_b}
               </Badge>
+            ) : (isAoVivo || started) ? (
+              <span className="text-[10px] text-red-400 font-semibold whitespace-nowrap">Sem palpite</span>
             ) : onNavigate ? (
               <button
                 onClick={(e) => { e.stopPropagation(); onNavigate(); }}
