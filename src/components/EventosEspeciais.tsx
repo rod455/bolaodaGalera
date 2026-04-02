@@ -80,8 +80,7 @@ const EventosEspeciais = ({ bolaoId, campeonatoId, campeonatos, isCriador, userI
         .eq("ativo", true)
         .order("created_at", { ascending: false });
       setEventos((data as any[]) || []);
-    } catch (err) { console.error("Erro ao carregar eventos:", err); }
-    finally { setLoading(false); }
+    } catch {} finally { setLoading(false); }
   };
 
   const deleteEvento = async (eventoId: string) => {
@@ -316,8 +315,7 @@ const CreateEventoModal = ({ open, onClose, bolaoId, campeonatoId, campeonatos, 
           label: r.replace("Rodada ", "R"),
         })));
       }
-    } catch (err) { console.error(err); }
-    finally { setLoadingData(false); }
+    } catch {} finally { setLoadingData(false); }
   };
 
   const toggleRodada = (rodada: string, target: "mult" | "mini") => {
@@ -361,8 +359,7 @@ const CreateEventoModal = ({ open, onClose, bolaoId, campeonatoId, campeonatos, 
       if (error) throw error;
       toast.success("Evento criado!");
       onCreated(data as any);
-    } catch (err: any) { console.error(err); toast.error(err.message || "Erro ao criar evento"); }
-    finally { setCriando(false); }
+    } catch (err: any) { toast.error(err.message || "Erro ao criar evento"); } finally { setCriando(false); }
   };
 
   const proximosJogos = jogos.filter((j) => j.status === "agendado" && new Date(j.data_hora) > new Date());

@@ -45,8 +45,7 @@ export async function initGoogleAuth() {
       },
     });
     initialized = true;
-  } catch (err) {
-    console.error("Erro ao inicializar SocialLogin:", err);
+  } catch {
   }
 }
 

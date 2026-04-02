@@ -65,9 +65,45 @@ async function captureInstallReferrer(): Promise<UTMParams | null> {
   if (!isNativeApp()) return null;
 
   try {
-    // Tenta acessar o Install Referrer via plugin customizado ou bridge
-    // Se não tiver plugin dedicado, o Firebase Analytics já captura automaticamente
-    // o install referrer e envia como evento "campaign_details"
+    const cap = (window as any).Capacitor;
+    const plugins = cap?.Plugins;
+
+    // Tenta via plugin nativo se disponível
+    if (plugins?.InstallReferrer) {
+      const result = await plugins.InstallReferrer.getReferrerDetails();
+      if (result?.installReferrer) {
+        const params = new URLSearchParams(result.installReferrer);
+        const utm: UTMParams = {};
+        let hasAny = false;
+
+        for (const key of ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"]) {
+          const val = params.get(key);
+          if (val) {
+            (utm as any)[key] = val;
+            hasAny = true;
+          }
+        }
+
+        if (hasAny) {
+          utm.captured_at = new Date().toISOString();
+          saveUTMs(utm);
+          if (utm.utm_source) await setUserProperty("utm_source", utm.utm_source);
+          if (utm.utm_medium) await setUserProperty("utm_medium", utm.utm_medium);
+          if (utm.utm_campaign) await setUserProperty("utm_campaign", utm.utm_campaign);
+          await trackEvent("campaign_details", {
+            source: utm.utm_source || "unknown",
+            medium: utm.utm_medium || "unknown",
+            campaign: utm.utm_campaign || "unknown",
+          });
+          return utm;
+        }
+      }
+    }
+
+    // Fallback: Firebase Analytics SDK captura o referrer automaticamente
+    // quando com.android.installreferrer está no build.gradle.
+    // Não precisamos fazer mais nada aqui — o evento campaign_details
+    // é enviado automaticamente pelo Firebase na primeira abertura.
     return null;
   } catch {
     return null;

@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { FREE_MAX_PARTICIPANTES, PREMIUM_MAX_PARTICIPANTES } from "@/lib/constants";
 
 interface BannerData {
   id: string;
@@ -232,6 +233,32 @@ const DynamicBanner = ({ userBolaoIds, userContext }: DynamicBannerProps) => {
     setTimeout(() => setClickBlocked(false), 300);
   };
 
+  const checkBolaoCapacity = async (bolaoId: string): Promise<boolean> => {
+    const { count } = await supabase
+      .from("bolao_participantes")
+      .select("*", { count: "exact", head: true })
+      .eq("bolao_id", bolaoId);
+    const currentCount = count || 0;
+    const { data: participants } = await supabase
+      .from("bolao_participantes")
+      .select("user_id, profiles(plano)")
+      .eq("bolao_id", bolaoId);
+    const { data: bolaoData } = await supabase
+      .from("boloes")
+      .select("criador_id, profiles(plano)")
+      .eq("id", bolaoId)
+      .single();
+    const hasPremiumMember = (participants || []).some(
+      (p: any) => p.profiles?.plano === "premium" || p.profiles?.plano === "premium_pro"
+    ) || bolaoData?.profiles?.plano === "premium" || bolaoData?.profiles?.plano === "premium_pro";
+    const maxCapacity = hasPremiumMember ? PREMIUM_MAX_PARTICIPANTES : FREE_MAX_PARTICIPANTES;
+    if (currentCount >= maxCapacity) {
+      toast.error(`Este grupo está lotado! Limite de ${maxCapacity} participantes.${!hasPremiumMember ? " Se alguém do grupo fizer upgrade para Premium, o limite sobe para 50!" : ""}`);
+      return false;
+    }
+    return true;
+  };
+
   const handleClick = async (banner: BannerData) => {
     if (clickBlocked) return;
 
@@ -252,6 +279,11 @@ const DynamicBanner = ({ userBolaoIds, userContext }: DynamicBannerProps) => {
 
     setJoining(banner.id);
     try {
+      if (!(await checkBolaoCapacity(banner.bolao_id))) {
+        setJoining(null);
+        return;
+      }
+
       const { error } = await supabase
         .from("bolao_participantes")
         .insert({ bolao_id: banner.bolao_id, user_id: user.id });

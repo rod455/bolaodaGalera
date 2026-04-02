@@ -1,8 +1,14 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import html2canvas from "html2canvas";
-import { Capacitor } from "@capacitor/core";
+import { Capacitor, registerPlugin } from "@capacitor/core";
 import { Share } from "@capacitor/share";
+import { Filesystem, Directory } from "@capacitor/filesystem";
+
+interface WhatsAppSharePlugin {
+  share(options: { fileUri: string; text?: string }): Promise<void>;
+}
+const WhatsAppShare = registerPlugin<WhatsAppSharePlugin>("WhatsAppShare");
 import { X, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -19,6 +25,30 @@ interface ShareBadgeProps {
 
 const LOGO_URL = "https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/604913%20(512%20x%20512%20px).png";
 
+// Pré-carregar logo como base64 para evitar CORS no html2canvas
+let cachedLogoBase64: string | null = null;
+function preloadLogo(): Promise<string> {
+  if (cachedLogoBase64) return Promise.resolve(cachedLogoBase64);
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        canvas.getContext("2d")!.drawImage(img, 0, 0);
+        cachedLogoBase64 = canvas.toDataURL("image/png");
+        resolve(cachedLogoBase64);
+      } catch {
+        resolve(LOGO_URL);
+      }
+    };
+    img.onerror = () => resolve(LOGO_URL);
+    img.src = LOGO_URL;
+  });
+}
+
 const getMedalEmoji = (pos: number) => {
   if (pos === 1) return "🥇";
   if (pos === 2) return "🥈";
@@ -32,7 +62,13 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
   const [tab, setTab] = useState<"foto" | "sem-foto" | "podio">("foto");
   const [sharing, setSharing] = useState(false);
   const [fraseCustom, setFraseCustom] = useState("");
+  const [logoSrc, setLogoSrc] = useState(LOGO_URL);
   const badgeRef = useRef<HTMLDivElement>(null);
+
+  // Pré-carregar logo como base64 para evitar CORS no html2canvas
+  useEffect(() => {
+    if (open) preloadLogo().then(setLogoSrc);
+  }, [open]);
 
   if (!open) return null;
 
@@ -44,12 +80,15 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
     const canvas = await html2canvas(badgeRef.current!, {
       backgroundColor: "#1B5E20",
       scale: 3,
-      useCORS: true,
-      allowTaint: true,
+      useCORS: false,
+      allowTaint: false,
       logging: false,
     });
-    return new Promise<Blob>((resolve) =>
-      canvas.toBlob((b) => resolve(b!), "image/png")
+    return new Promise<Blob>((resolve, reject) =>
+      canvas.toBlob((b) => {
+        if (b) resolve(b);
+        else reject(new Error("toBlob retornou null"));
+      }, "image/png")
     );
   };
 
@@ -85,51 +124,26 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
       saveImage(blob);
       toast.success("Imagem salva!");
     } catch (err) {
-      console.error("Erro ao gerar imagem:", err);
       toast.error("Erro ao gerar imagem");
     } finally {
       setSharing(false);
     }
   };
 
-  const shareNativeOrWeb = async (blob: Blob, text: string) => {
-    // Capacitor native: use Share plugin (opens native share sheet with image)
-    if (Capacitor.isNativePlatform()) {
-      const dataUrl = await blobToDataUrl(blob);
-      await Share.share({
-        title: `Ranking - ${bolaoNome}`,
-        text,
-        url: dataUrl,
-        dialogTitle: "Compartilhar ranking",
-      });
-      return;
-    }
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    // Mobile web: use navigator.share with file (sends image directly)
-    if (isMobile) {
-      const file = new File([blob], "ranking-bolao.png", { type: "image/png" });
-      const shareData = { files: [file], text };
-      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-        await navigator.share(shareData);
-        return;
-      }
-      // Fallback mobile: save + open WhatsApp
-      saveImage(blob);
-      window.location.href = `whatsapp://send?text=${encodeURIComponent(text)}`;
-      toast.success("Imagem salva! Cole no WhatsApp.");
-      return;
-    }
-    // Desktop web: copy image to clipboard + open WhatsApp Web
+  const saveToNativeFile = async (blob: Blob): Promise<string | null> => {
     try {
-      await navigator.clipboard.write([
-        new ClipboardItem({ "image/png": blob }),
-      ]);
-      toast.success("Imagem copiada! Cole com Ctrl+V no WhatsApp.");
+      const dataUrl = await blobToDataUrl(blob);
+      const base64Data = dataUrl.split(",")[1];
+      const fileName = `ranking-bolao-${Date.now()}.png`;
+      const saved = await Filesystem.writeFile({
+        path: fileName,
+        data: base64Data,
+        directory: Directory.Cache,
+      });
+      return saved.uri;
     } catch {
-      saveImage(blob);
-      toast.success("Imagem salva! Cole no WhatsApp.");
+      return null;
     }
-    window.open(`https://web.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
   };
 
   const handleWhatsApp = async () => {
@@ -137,11 +151,58 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
     setSharing(true);
     try {
       const blob = await captureImage();
-      await shareNativeOrWeb(blob, getShareText());
+      const text = getShareText();
+      const encoded = encodeURIComponent(text);
+
+      if (Capacitor.isNativePlatform()) {
+        const fileUri = await saveToNativeFile(blob);
+        if (fileUri) {
+          try {
+            // Plugin nativo abre WhatsApp direto com imagem
+            await WhatsAppShare.share({ fileUri, text });
+          } catch {
+            // Fallback: share sheet genérico
+            await Share.share({ title: `Ranking - ${bolaoNome}`, text, files: [fileUri], dialogTitle: "Enviar para WhatsApp" });
+          }
+        } else {
+          saveImage(blob);
+          toast.success("Imagem salva! Anexe no WhatsApp.");
+          window.open(`https://api.whatsapp.com/send?text=${encoded}`, "_system");
+        }
+        return;
+      }
+
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      if (isMobile) {
+        const file = new File([blob], "ranking-bolao.png", { type: "image/png" });
+        const shareData = { files: [file], text };
+        if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+          await navigator.share(shareData);
+          return;
+        }
+        saveImage(blob);
+        window.open(`https://api.whatsapp.com/send?text=${encoded}`, Capacitor.isNativePlatform() ? "_system" : "_blank");
+        toast.success("Imagem salva! Anexe no WhatsApp.");
+        return;
+      }
+
+      // Desktop web
+      try {
+        await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+        toast.success("Imagem copiada! Cole com Ctrl+V no WhatsApp.");
+      } catch {
+        saveImage(blob);
+        toast.success("Imagem salva! Cole no WhatsApp.");
+      }
+      window.open(`https://web.whatsapp.com/send?text=${encoded}`, "_blank");
     } catch (err) {
       if ((err as Error).name !== "AbortError") {
-        console.error("Erro ao compartilhar:", err);
-        toast.error("Erro ao compartilhar");
+        const encoded = encodeURIComponent(getShareText());
+        if (Capacitor.isNativePlatform()) {
+          window.open(`https://api.whatsapp.com/send?text=${encoded}`, Capacitor.isNativePlatform() ? "_system" : "_blank");
+        } else {
+          toast.error("Erro ao gerar imagem. Tente novamente.");
+        }
       }
     } finally {
       setSharing(false);
@@ -153,11 +214,32 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
     setSharing(true);
     try {
       const blob = await captureImage();
-      await shareNativeOrWeb(blob, getShareText());
+
+      if (Capacitor.isNativePlatform()) {
+        const fileUri = await saveToNativeFile(blob);
+        if (fileUri) {
+          // Share com files[] — Android filtra para apps que aceitam imagem (Instagram aparece)
+          await Share.share({
+            files: [fileUri],
+            dialogTitle: "Enviar para Instagram",
+          });
+        } else {
+          saveImage(blob);
+          toast.success("Imagem salva na galeria! Abra o Instagram e poste.");
+        }
+        return;
+      }
+
+      // Web: salvar imagem e orientar
+      saveImage(blob);
+      toast.success("Imagem salva! Abra o Instagram e poste da galeria.");
     } catch (err) {
       if ((err as Error).name !== "AbortError") {
-        console.error("Erro ao compartilhar:", err);
-        toast.error("Erro ao compartilhar");
+        if (Capacitor.isNativePlatform()) {
+          toast.success("Abra o Instagram e poste da galeria.");
+        } else {
+          toast.error("Erro ao gerar imagem. Tente novamente.");
+        }
       }
     } finally {
       setSharing(false);
@@ -175,7 +257,7 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
           style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "20px 20px" }} />
         {/* Header */}
         <div className="flex items-center gap-1.5 mb-2 z-10">
-          <img src={LOGO_URL} alt="" className="w-5 h-5" crossOrigin="anonymous" />
+          <img src={logoSrc} alt="" className="w-5 h-5" />
           <span className="text-white/80 font-bold text-[10px] tracking-wide uppercase">Bolão na Copa</span>
         </div>
         {/* Avatar */}
@@ -213,7 +295,7 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
           style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
         {/* Header */}
         <div className="flex items-center gap-1.5 mb-1 z-10">
-          <img src={LOGO_URL} alt="" className="w-5 h-5" crossOrigin="anonymous" />
+          <img src={logoSrc} alt="" className="w-5 h-5" />
           <span className="text-white/80 font-bold text-[10px] tracking-wide uppercase">Bolão na Copa</span>
         </div>
         {/* Big medal + position */}
@@ -248,7 +330,7 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
           style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "20px 20px" }} />
         {/* Header */}
         <div className="flex items-center gap-1.5 mt-3 z-10">
-          <img src={LOGO_URL} alt="" className="w-4 h-4" crossOrigin="anonymous" />
+          <img src={logoSrc} alt="" className="w-4 h-4" />
           <span className="text-white/80 font-bold text-[9px] tracking-wide uppercase">Bolão na Copa</span>
         </div>
         <p className="text-copa-gold-400 font-bold text-[10px] mt-0.5 z-10 truncate max-w-[250px] px-3 text-center">{bolaoNome}</p>
@@ -357,7 +439,7 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
         </div>
 
         {/* Actions */}
-        <div className="flex gap-2 px-4 pb-4">
+        <div className="flex gap-2 px-4 pb-2">
           <Button
             onClick={handleWhatsApp}
             disabled={sharing}
@@ -366,14 +448,16 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
             <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
             WhatsApp
           </Button>
-          <Button
-            onClick={handleInstagram}
-            disabled={sharing}
-            className="flex-1 h-11 bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#F77737] hover:opacity-90 text-white font-semibold rounded-xl"
-          >
-            <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
-            Instagram
-          </Button>
+          {Capacitor.isNativePlatform() && (
+            <Button
+              onClick={handleInstagram}
+              disabled={sharing}
+              className="flex-1 h-11 bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#F77737] hover:opacity-90 text-white font-semibold rounded-xl"
+            >
+              <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+              Instagram
+            </Button>
+          )}
           <Button
             onClick={handleSave}
             disabled={sharing}
@@ -383,6 +467,14 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
             <Download className="w-4 h-4" />
           </Button>
         </div>
+        {!Capacitor.isNativePlatform() && (
+          <p className="text-[10px] text-center text-muted-foreground px-4 pb-3">
+            Compartilhe com imagem pelo app!
+            <a href="https://play.google.com/store/apps/details?id=com.bolaonacopa.app" target="_blank" rel="noopener" className="text-copa-green-600 font-semibold ml-1 hover:underline">
+              Baixe na Google Play
+            </a>
+          </p>
+        )}
       </div>
     </div>,
     document.body

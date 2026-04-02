@@ -7,6 +7,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.android.installreferrer.api.InstallReferrerClient;
+import com.android.installreferrer.api.InstallReferrerStateListener;
 import com.getcapacitor.BridgeActivity;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginHandle;
@@ -21,7 +23,9 @@ public class MainActivity extends BridgeActivity implements ModifiedMainActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        registerPlugin(WhatsAppSharePlugin.class);
         createNotificationChannel();
+        initInstallReferrer();
     }
 
     @Override
@@ -46,6 +50,32 @@ public class MainActivity extends BridgeActivity implements ModifiedMainActivity
 
     // Este metodo e obrigatorio — o plugin verifica se ele existe
     public void IHaveModifiedTheMainActivityForTheUseWithSocialLoginPlugin() {}
+
+    private void initInstallReferrer() {
+        try {
+            InstallReferrerClient referrerClient = InstallReferrerClient.newBuilder(this).build();
+            referrerClient.startConnection(new InstallReferrerStateListener() {
+                @Override
+                public void onInstallReferrerSetupFinished(int responseCode) {
+                    if (responseCode == InstallReferrerClient.InstallReferrerResponse.OK) {
+                        try {
+                            // Firebase Analytics lê o referrer automaticamente a partir daqui.
+                            referrerClient.endConnection();
+                        } catch (Exception e) {
+                            // falha silenciosa
+                        }
+                    }
+                }
+
+                @Override
+                public void onInstallReferrerServiceDisconnected() {
+                    // reconecta automaticamente na próxima sessão
+                }
+            });
+        } catch (Exception e) {
+            // falha silenciosa — não impede o app de funcionar
+        }
+    }
 
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

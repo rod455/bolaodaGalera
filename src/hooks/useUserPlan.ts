@@ -34,8 +34,7 @@ export const useUserPlan = (): UserPlanData => {
         setPlano((data as any).plano || "free");
         setPlanoExpiraEm((data as any).plano_expira_em || null);
       }
-    } catch (err) {
-      console.error("Erro ao buscar plano:", err);
+    } catch {
     } finally {
       setLoading(false);
     }

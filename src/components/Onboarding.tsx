@@ -158,8 +158,7 @@ const QuickBolaoStep = ({
           setCampeonatos(data);
           setSelectedChamp(data[0].id);
         }
-      } catch (err) {
-        console.error("Erro ao carregar campeonatos:", err);
+      } catch {
       } finally {
         setLoadingCamps(false);
       }
@@ -200,7 +199,6 @@ const QuickBolaoStep = ({
       toast.success(`Bolão "${bolaoName.trim()}" criado!\nCódigo: ${codigo}`);
       onCreated(newBolao.id);
     } catch (err: any) {
-      console.error("Erro ao criar bolão:", err);
       toast.error(err.message || "Erro ao criar bolão");
     } finally {
       setCreating(false);

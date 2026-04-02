@@ -203,7 +203,6 @@ const Palpites = () => {
       // Gamificação: XP por palpite copiado
       darXP("palpite", 5, `${pendingCopy.jogoId}-${bolaoId}`);
     } catch (err) {
-      console.error("Erro ao copiar palpite:", err);
       toast.error("Erro ao copiar palpite");
       setCopyingBoloes(prev => ({ ...prev, [bolaoId]: "idle" }));
     }
@@ -224,7 +223,10 @@ const Palpites = () => {
     }, 500);
   };
 
-  useEffect(() => { if (id && user) loadData(); }, [id, user]);
+  useEffect(() => {
+    if (id && user) loadData().catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, user]);
 
   useEffect(() => {
     if (!loading && scrollTargetRef.current) {
@@ -379,7 +381,7 @@ const Palpites = () => {
           const batch = jogoIds.slice(i, i + batchSize);
           const { data } = await supabase.from("palpites")
             .select("id, jogo_id, placar_time_a, placar_time_b, pontos")
-            .eq("user_id", user!.id).eq("bolao_id", id!).in("jogo_id", batch);
+            .eq("user_id", user?.id ?? "").eq("bolao_id", id!).in("jogo_id", batch);
           if (data) allPalpites = [...allPalpites, ...data];
         }
         const pMap: Record<string, PalpiteDB> = {};
@@ -390,8 +392,7 @@ const Palpites = () => {
         });
         setPalpitesDB(pMap); setPalpitesLocal(localMap);
       }
-    } catch (err) { console.error("Erro ao carregar palpites:", err); toast.error("Erro ao carregar jogos"); }
-    finally { setLoading(false); }
+    } catch { toast.error("Erro ao carregar jogos"); } finally { setLoading(false); }
   };
 
   const setPlacar = (jogoId: string, time: "a" | "b", valor: number) => {
@@ -459,8 +460,7 @@ const Palpites = () => {
 
       // Verificar se há outros bolões para copiar este palpite
       checkOutrosBoloes(jogoId, placarA, placarB);
-    } catch (err: any) { console.error("Erro ao salvar:", err); toast.error(err.message || "Erro ao salvar palpite"); }
-    finally { setSalvando(null); }
+    } catch (err: any) { toast.error(err.message || "Erro ao salvar palpite"); } finally { setSalvando(null); }
   };
 
   const now = new Date();

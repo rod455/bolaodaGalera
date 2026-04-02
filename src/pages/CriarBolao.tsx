@@ -159,8 +159,7 @@ const CriarBolao = () => {
       const { data, error } = await supabase.from("campeonatos").select("*").eq("ativo", true).order("nome");
       if (error) throw error;
       setCampeonatos((data as any[]) || []);
-    } catch (err) { toast.error("Erro ao carregar campeonatos. Tente recarregar a página."); }
-    finally { setLoadingCampeonatos(false); }
+    } catch { toast.error("Erro ao carregar campeonatos. Tente recarregar a página."); } finally { setLoadingCampeonatos(false); }
   };
 
   const loadTimes = async (campeonatoId: string) => {
@@ -188,8 +187,7 @@ const CriarBolao = () => {
         .sort((a, b) => a.nome.localeCompare(b.nome));
 
       setTimesDisponiveis(sorted);
-    } catch (err) { console.error("Erro ao carregar times:", err); }
-    finally { setLoadingTimes(false); }
+    } catch {} finally { setLoadingTimes(false); }
   };
 
   const isLocked = (plano: string) => {
@@ -219,6 +217,7 @@ const CriarBolao = () => {
   const isMataMata = modoSelecionado === "mata_mata";
 
   const handleCriar = async () => {
+    if (criando) return;
     if (campeonatosSelecionados.length === 0) { toast.error("Selecione pelo menos um campeonato"); return; }
     if (!nome) { toast.error("Informe o nome do bolão"); return; }
     if (!modoSelecionado) { toast.error("Selecione o modo de pontuação"); return; }
@@ -308,8 +307,7 @@ const CriarBolao = () => {
 
       toast.success(`Bolão criado! Código: ${codigo}`);
       navigate(`/bolao/${newBolao.id}`);
-    } catch (err: any) { console.error("Erro ao criar bolão:", err); toast.error(err.message || "Erro ao criar bolão"); }
-    finally { setCriando(false); }
+    } catch { toast.error("Erro ao criar bolão"); } finally { setCriando(false); }
   };
 
   const getPlanoBadge = (plano: string) => {

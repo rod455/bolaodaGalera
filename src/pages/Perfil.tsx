@@ -76,8 +76,7 @@ const Perfil = () => {
       await supabase.from("profiles").update({ estado: novoEstado }).eq("id", user.id);
       setEstado(novoEstado);
       toast.success("Estado atualizado!");
-    } catch { toast.error("Erro ao salvar estado"); }
-    finally { setSavingEstado(false); }
+    } catch { toast.error("Erro ao salvar estado"); } finally { setSavingEstado(false); }
   };
 
   const handleAvatarClick = () => {
@@ -128,7 +127,6 @@ const Perfil = () => {
       setAvatarUrl(publicUrl);
       toast.success("Foto atualizada!");
     } catch (error: any) {
-      console.error(error);
       toast.error("Erro ao enviar foto. Verifique se o bucket 'avatars' existe no Supabase Storage.");
     } finally {
       setUploading(false);
@@ -175,7 +173,6 @@ const Perfil = () => {
       toast.success("Conta excluída com sucesso. Sentiremos sua falta!");
       navigate("/auth");
     } catch (err: any) {
-      console.error("Erro ao excluir conta:", err);
       toast.error("Erro ao excluir conta. Tente novamente ou entre em contato pelo email.");
     } finally {
       setDeletingAccount(false);
@@ -286,6 +283,12 @@ const Perfil = () => {
                   <div className="w-5 h-5 bg-copa-green-100 rounded-full flex items-center justify-center">
                     <Check className="w-3 h-3 text-copa-green-600" />
                   </div>
+                  <span className="text-sm">Até 15 participantes por grupo</span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-5 h-5 bg-copa-green-100 rounded-full flex items-center justify-center">
+                    <Check className="w-3 h-3 text-copa-green-600" />
+                  </div>
                   <span className="text-sm">Propagandas habilitadas</span>
                 </div>
               </div>
@@ -318,7 +321,7 @@ const Perfil = () => {
                   <div className="w-5 h-5 bg-copa-green-100 rounded-full flex items-center justify-center">
                     <Check className="w-3 h-3 text-copa-green-600" />
                   </div>
-                  <span className="text-sm">Participantes ilimitados no bolão</span>
+                  <span className="text-sm">Até 50 participantes por grupo</span>
                 </div>
                 <div className="flex items-center gap-2.5">
                   <div className="w-5 h-5 bg-copa-green-100 rounded-full flex items-center justify-center">

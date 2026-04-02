@@ -1,9 +1,12 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Home, PlusCircle, Radio, User, LogOut, LogIn, HelpCircle } from "lucide-react";
+import { Capacitor } from "@capacitor/core";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import NotificationCenter from "@/components/NotificationCenter";
 import InstallAppBanner from "@/components/InstallAppBanner";
+
+const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.bolaonacopa.app";
 
 const LOGO_URL = "https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/604913%20(512%20x%20512%20px).png";
 
@@ -67,6 +70,13 @@ const AppLayout = () => {
               </>
             ) : (
               <div className="flex items-center gap-3">
+                {!Capacitor.isNativePlatform() && (
+                  <a href={PLAY_STORE_URL} target="_blank" rel="noopener"
+                    className="inline-flex items-center bg-black rounded-md px-2.5 py-1 gap-1.5 hover:bg-gray-800 transition-colors">
+                    <svg className="w-4 h-4 text-white flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 0 1-.61-.92V2.734a1 1 0 0 1 .609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-3.199l2.807 1.626a1 1 0 0 1 0 1.732l-2.807 1.626L15.206 12l2.492-2.492zM5.864 2.658L16.8 8.99l-2.302 2.302-8.634-8.634z"/></svg>
+                    <span className="text-white text-[10px] leading-tight font-medium">Disponível no<br/><strong className="text-xs">Google Play</strong></span>
+                  </a>
+                )}
                 <button onClick={() => { window.location.href = "/como-funciona.html"; }}
                   className="text-white/80 hover:text-white transition-colors text-sm font-medium">
                   Como Funciona
@@ -118,7 +128,7 @@ const AppLayout = () => {
             <div className="flex items-center gap-2">
               <button onClick={() => { window.location.href = "/como-funciona.html"; }}
                 className="text-white/80 hover:text-white transition-colors text-xs font-medium flex items-center gap-1">
-                <HelpCircle className="w-4 h-4" />
+                <HelpCircle className="w-3.5 h-3.5" />
                 <span>Como Funciona</span>
               </button>
               <button onClick={() => navigate("/auth")}

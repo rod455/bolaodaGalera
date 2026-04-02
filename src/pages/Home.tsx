@@ -23,7 +23,7 @@ import type { UserBannerContext } from "@/components/DynamicBanner";
 import GuestHeroCarousel from "@/components/GuestHeroCarousel";
 import PromoCardBorder from "@/components/PromoCardBorder";
 import type { Bolao } from "@/lib/types";
-import { MODO_LABELS, MODO_REGRAS, FALLBACK_IMAGES } from "@/lib/constants";
+import { MODO_LABELS, MODO_REGRAS, FALLBACK_IMAGES, FREE_MAX_PRIVADOS as CONST_FREE_MAX_PRIVADOS, FREE_MAX_CRIAR as CONST_FREE_MAX_CRIAR, FREE_MAX_PARTICIPANTES, PREMIUM_MAX_PARTICIPANTES } from "@/lib/constants";
 import { formatDataJogo } from "@/lib/formatters";
 import SEOHead from "@/components/SEOHead";
 import { trackEvent } from "@/lib/analytics";
@@ -450,8 +450,7 @@ const Home = () => {
       });
       const proxResults = await Promise.all(proxPromises);
       setProximosJogos(Object.fromEntries(proxResults));
-    } catch (err) { console.error("Erro ao carregar dados:", err); }
-    finally { setLoading(false); }
+    } catch {} finally { setLoading(false); }
   };
 
   const loadAlerts = async () => {
@@ -485,7 +484,7 @@ const Home = () => {
     const { data: profile } = await supabase.from("profiles").select("id").eq("id", user.id).single();
     if (!profile) {
       const { error } = await supabase.from("profiles").insert({ id: user.id, nome: user.user_metadata?.nome || user.email?.split("@")[0] || "Usuário", email: user.email || "" });
-      if (error && error.code !== "23505") { console.error("Erro ao criar perfil:", error); return false; }
+      if (error && error.code !== "23505") return false;
     }
     return true;
   };
@@ -503,17 +502,42 @@ const Home = () => {
         if (error.code === "23505") { toast.info("Você já está participando!"); setUserBolaoIds((prev) => new Set(prev).add(bolaoId)); navigate(`/bolao/${bolaoId}`); }
         else throw error;
       } else { toast.success("Você entrou no bolão!"); setUserBolaoIds((prev) => new Set(prev).add(bolaoId)); setParticipantesCount((prev) => ({ ...prev, [bolaoId]: (prev[bolaoId] || 0) + 1 })); navigate(`/bolao/${bolaoId}`); }
-    } catch (err: any) { toast.error(err.message || "Erro ao entrar no bolão"); }
-    finally { setJoiningBolao(null); }
+    } catch (err: any) { toast.error(err.message || "Erro ao entrar no bolão"); } finally { setJoiningBolao(null); }
   };
 
   const visibleAlerts = dismissCount >= 2 ? [] : alerts.filter((a) => !dismissedAlerts.has(a.id));
 
   // ═══ Limites do plano Free ═══
-  const FREE_MAX_PRIVADOS = 3;
-  const FREE_MAX_CRIAR = 1;
+  const FREE_MAX_PRIVADOS = CONST_FREE_MAX_PRIVADOS;
+  const FREE_MAX_CRIAR = CONST_FREE_MAX_CRIAR;
   const isFree = !userPlano || userPlano === "free";
   const atingiuLimitePrivados = isFree && user && privados.length >= FREE_MAX_PRIVADOS;
+
+  const checkBolaoCapacity = async (bolaoId: string): Promise<boolean> => {
+    const { count } = await supabase
+      .from("bolao_participantes")
+      .select("*", { count: "exact", head: true })
+      .eq("bolao_id", bolaoId);
+    const currentCount = count || 0;
+    const { data: participants } = await supabase
+      .from("bolao_participantes")
+      .select("user_id, profiles(plano)")
+      .eq("bolao_id", bolaoId);
+    const { data: bolaoData } = await supabase
+      .from("boloes")
+      .select("criador_id, profiles(plano)")
+      .eq("id", bolaoId)
+      .single();
+    const hasPremiumMember = (participants || []).some(
+      (p: any) => p.profiles?.plano === "premium" || p.profiles?.plano === "premium_pro"
+    ) || bolaoData?.profiles?.plano === "premium" || bolaoData?.profiles?.plano === "premium_pro";
+    const maxCapacity = hasPremiumMember ? PREMIUM_MAX_PARTICIPANTES : FREE_MAX_PARTICIPANTES;
+    if (currentCount >= maxCapacity) {
+      toast.error(`Este grupo está lotado! Limite de ${maxCapacity} participantes.${!hasPremiumMember ? " Se alguém do grupo fizer upgrade para Premium, o limite sobe para 50!" : " Para grupos acima de 50, entre em contato."}`);
+      return false;
+    }
+    return true;
+  };
 
   const handleEntrarPorCodigo = async () => {
     if (!codigoInput.trim()) { toast.error("Informe o código do bolão"); return; }
@@ -537,11 +561,11 @@ const Home = () => {
       await ensureProfile();
       const { data: bolao } = await supabase.from("boloes").select("id, nome").eq("codigo_convite", codigoInput.trim().toUpperCase()).maybeSingle();
       if (!bolao) { toast.error("Código inválido. Verifique e tente novamente."); return; }
+      if (!(await checkBolaoCapacity(bolao.id))) return;
       const { error } = await supabase.from("bolao_participantes").insert({ bolao_id: bolao.id, user_id: user.id });
       if (error) { if (error.code === "23505") { toast.info("Você já está neste bolão!"); navigate(`/bolao/${bolao.id}`); } else throw error; }
       else { toast.success(`Você entrou no "${bolao.nome}"!`); navigate(`/bolao/${bolao.id}`); }
-    } catch (err: any) { toast.error(err.message || "Erro ao entrar no bolão"); }
-    finally { setJoiningByCode(false); }
+    } catch (err: any) { toast.error(err.message || "Erro ao entrar no bolão"); } finally { setJoiningByCode(false); }
   };
 
   const dismissAlert = (e: React.MouseEvent, alertId: string) => { e.stopPropagation(); setDismissedAlerts((prev) => new Set(prev).add(alertId)); setDismissCount((c) => c + 1); };
