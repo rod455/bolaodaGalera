@@ -59,6 +59,7 @@ const getMedalEmoji = (pos: number) => {
 };
 
 const getOrdinal = (pos: number) => `${pos}º`;
+const firstName = (nome: string) => nome.split(" ")[0];
 
 const ShareBadge = ({ open, onClose, bolaoId, bolaoNome, ranking, rankingType, rodadaLabel }: ShareBadgeProps) => {
   const [tab, setTab] = useState<"foto" | "sem-foto" | "podio">("foto");
@@ -326,60 +327,60 @@ const ShareBadge = ({ open, onClose, bolaoId, bolaoNome, ranking, rankingType, r
     const second = top3.find((r) => r.pos === 2);
     const third = top3.find((r) => r.pos === 3);
     return (
-      <div className="w-[280px] h-[280px] rounded-2xl overflow-hidden relative flex flex-col items-center"
+      <div className="w-[320px] h-[380px] rounded-2xl overflow-hidden relative flex flex-col items-center"
         style={{ background: "linear-gradient(135deg, #1B5E20 0%, #2E7D32 50%, #1B5E20 100%)" }}>
         <div className="absolute inset-0 opacity-5"
           style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "20px 20px" }} />
         {/* Header */}
-        <div className="flex items-center gap-1.5 mt-3 z-10">
-          <img src={logoSrc} alt="" className="w-4 h-4" />
-          <span className="text-white/80 font-bold text-[9px] tracking-wide uppercase">Bolão na Copa</span>
+        <div className="flex items-center gap-2 mt-4 z-10">
+          <img src={logoSrc} alt="" className="w-5 h-5" />
+          <span className="text-white/80 font-bold text-[10px] tracking-wide uppercase">Bolão na Copa</span>
         </div>
-        <p className="text-copa-gold-400 font-bold text-[10px] mt-0.5 z-10 truncate max-w-[250px] px-3 text-center">{bolaoNome}</p>
+        <p className="text-copa-gold-400 font-bold text-xs mt-1 z-10 truncate max-w-[290px] px-3 text-center">{bolaoNome}</p>
         {/* Podium */}
-        <div className="flex items-end justify-center gap-2 mt-auto mb-1.5 z-10 w-full px-3">
+        <div className="flex items-end justify-center gap-3 mt-auto mb-2 z-10 w-full px-4">
           {/* 2nd place */}
-          <div className="flex flex-col items-center w-[80px]">
-            <span className="text-lg mb-0.5">🥈</span>
-            <div className="w-9 h-9 rounded-full bg-white/15 border-2 border-gray-300 flex items-center justify-center text-xs font-black text-white">
+          <div className="flex flex-col items-center w-[90px]">
+            <span className="text-2xl mb-1">🥈</span>
+            <div className="w-11 h-11 rounded-full bg-white/15 border-2 border-gray-300 flex items-center justify-center text-sm font-black text-white">
               {second?.avatar || "?"}
             </div>
-            <p className="text-white text-[8px] font-bold mt-0.5 truncate w-full text-center">{second?.nome || "-"}</p>
-            <p className="text-white/60 text-[7px] font-bold">{second?.pontos ?? 0} pts</p>
-            <div className="w-full h-10 bg-white/10 rounded-t-lg mt-0.5 flex items-center justify-center">
-              <span className="text-white/40 font-black text-sm">2º</span>
+            <p className="text-white text-[10px] font-bold mt-1 text-center">{firstName(second?.nome || "-")}</p>
+            <p className="text-white/60 text-[9px] font-bold">{second?.pontos ?? 0} pts</p>
+            <div className="w-full h-12 bg-white/10 rounded-t-lg mt-1 flex items-center justify-center">
+              <span className="text-white/40 font-black text-base">2º</span>
             </div>
           </div>
           {/* 1st place */}
-          <div className="flex flex-col items-center w-[80px]">
-            <span className="text-xl mb-0.5">🥇</span>
-            <div className="w-10 h-10 rounded-full bg-white/20 border-2 border-copa-gold-400 flex items-center justify-center text-sm font-black text-white">
+          <div className="flex flex-col items-center w-[90px]">
+            <span className="text-3xl mb-1">🥇</span>
+            <div className="w-12 h-12 rounded-full bg-white/20 border-2 border-copa-gold-400 flex items-center justify-center text-base font-black text-white">
               {first?.avatar || "?"}
             </div>
-            <p className="text-white text-[8px] font-bold mt-0.5 truncate w-full text-center">{first?.nome || "-"}</p>
-            <p className="text-copa-gold-400 text-[8px] font-bold">{first?.pontos ?? 0} pts</p>
-            <div className="w-full h-16 bg-white/15 rounded-t-lg mt-0.5 flex items-center justify-center">
-              <span className="text-white/50 font-black text-lg">1º</span>
+            <p className="text-white text-[10px] font-bold mt-1 text-center">{firstName(first?.nome || "-")}</p>
+            <p className="text-copa-gold-400 text-[9px] font-bold">{first?.pontos ?? 0} pts</p>
+            <div className="w-full h-20 bg-white/15 rounded-t-lg mt-1 flex items-center justify-center">
+              <span className="text-white/50 font-black text-xl">1º</span>
             </div>
           </div>
           {/* 3rd place */}
-          <div className="flex flex-col items-center w-[80px]">
-            <span className="text-lg mb-0.5">🥉</span>
-            <div className="w-9 h-9 rounded-full bg-white/15 border-2 border-amber-700 flex items-center justify-center text-xs font-black text-white">
+          <div className="flex flex-col items-center w-[90px]">
+            <span className="text-2xl mb-1">🥉</span>
+            <div className="w-11 h-11 rounded-full bg-white/15 border-2 border-amber-700 flex items-center justify-center text-sm font-black text-white">
               {third?.avatar || "?"}
             </div>
-            <p className="text-white text-[8px] font-bold mt-0.5 truncate w-full text-center">{third?.nome || "-"}</p>
-            <p className="text-white/60 text-[7px] font-bold">{third?.pontos ?? 0} pts</p>
-            <div className="w-full h-8 bg-white/10 rounded-t-lg mt-0.5 flex items-center justify-center">
-              <span className="text-white/40 font-black text-sm">3º</span>
+            <p className="text-white text-[10px] font-bold mt-1 text-center">{firstName(third?.nome || "-")}</p>
+            <p className="text-white/60 text-[9px] font-bold">{third?.pontos ?? 0} pts</p>
+            <div className="w-full h-9 bg-white/10 rounded-t-lg mt-1 flex items-center justify-center">
+              <span className="text-white/40 font-black text-base">3º</span>
             </div>
           </div>
         </div>
         {/* Footer */}
-        <div className="w-full bg-black/20 py-1.5 flex items-center justify-center gap-2 z-10">
-          <span className="text-white/50 text-[8px]">{rankLabel}</span>
-          <span className="text-white/30 text-[8px]">&bull;</span>
-          <span className="text-white/50 text-[8px]">bolaonacopa.com.br</span>
+        <div className="w-full bg-black/20 py-2 flex items-center justify-center gap-2 z-10">
+          <span className="text-white/50 text-[9px]">{rankLabel}</span>
+          <span className="text-white/30 text-[9px]">&bull;</span>
+          <span className="text-white/50 text-[9px]">bolaonacopa.com.br</span>
         </div>
       </div>
     );
