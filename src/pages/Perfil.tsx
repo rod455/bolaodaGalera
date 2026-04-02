@@ -641,8 +641,13 @@ const Perfil = () => {
               onClick={() => {
                 const url = Capacitor.isNativePlatform() ? "https://play.google.com/store/apps/details?id=com.bolaonacopa.app" : "https://www.bolaonacopa.com.br/auth";
                 const text = `🏆 Vem jogar no Bolão na Copa! Faça seus palpites e dispute com seus amigos. Cadastre-se aqui: ${url}`;
-                const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
-                if (Capacitor.isNativePlatform()) { window.open(whatsappUrl, "_system"); } else { window.open(whatsappUrl, "_blank"); }
+                const encoded = encodeURIComponent(text);
+                const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+                if (isMobile) {
+                  window.location.href = `whatsapp://send?text=${encoded}`;
+                } else {
+                  window.open(`https://web.whatsapp.com/send?text=${encoded}`, "_blank");
+                }
               }}
               className="flex-1 h-11 bg-[#25D366] hover:bg-[#1da851] text-white font-semibold rounded-xl"
             >

@@ -35,8 +35,13 @@ const XPProgressCard = ({ userXP, referralCode, variant = "full" }: XPProgressCa
 
   const handleWhatsAppReferral = () => {
     if (!referralCode) return;
-    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(getReferralText())}`;
-    if (Capacitor.isNativePlatform()) { window.open(whatsappUrl, "_system"); } else { window.open(whatsappUrl, "_blank"); }
+    const encoded = encodeURIComponent(getReferralText());
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isMobile) {
+      window.location.href = `whatsapp://send?text=${encoded}`;
+    } else {
+      window.open(`https://web.whatsapp.com/send?text=${encoded}`, "_blank");
+    }
   };
 
   const handleCopyReferral = () => {

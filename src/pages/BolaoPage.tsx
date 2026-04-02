@@ -965,8 +965,13 @@ const BolaoPage = () => {
                   darXP("compartilhar", 10).then((ganhou) => {
                     if (ganhou) setXPToast({ xp: 10, msg: "Resultado compartilhado!" });
                   });
-                  const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
-                  if (Capacitor.isNativePlatform()) { window.open(whatsappUrl, "_system"); } else { window.open(whatsappUrl, "_blank"); }
+                  const encoded = encodeURIComponent(text);
+                  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+                  if (isMobile) {
+                    window.location.href = `whatsapp://send?text=${encoded}`;
+                  } else {
+                    window.open(`https://web.whatsapp.com/send?text=${encoded}`, "_blank");
+                  }
                 }}
                 className="rounded-full h-9 w-9 border-[#25D366] text-[#25D366] hover:bg-green-50"
                 title="Convidar pelo WhatsApp"
