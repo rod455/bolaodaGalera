@@ -966,8 +966,9 @@ const BolaoPage = () => {
                     if (ganhou) setXPToast({ xp: 10, msg: "Resultado compartilhado!" });
                   });
                   const encoded = encodeURIComponent(text);
-                  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-                  if (isMobile) {
+                  if (Capacitor.isNativePlatform()) {
+                    window.open(`https://api.whatsapp.com/send?text=${encoded}`, "_system");
+                  } else if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     window.location.href = `whatsapp://send?text=${encoded}`;
                   } else {
                     window.open(`https://web.whatsapp.com/send?text=${encoded}`, "_blank");
