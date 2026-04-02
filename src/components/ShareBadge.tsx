@@ -42,7 +42,7 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
 
   const captureImage = async (): Promise<Blob> => {
     const canvas = await html2canvas(badgeRef.current!, {
-      backgroundColor: null,
+      backgroundColor: "#1B5E20",
       scale: 3,
       useCORS: true,
       allowTaint: true,
@@ -168,7 +168,7 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
   const BadgeComFoto = () => {
     if (!me) return <p className="text-center text-sm text-muted-foreground py-8">Você ainda não está no ranking.</p>;
     return (
-      <div className="w-[240px] h-[240px] rounded-2xl overflow-hidden relative flex flex-col items-center justify-center"
+      <div className="w-[280px] h-[280px] rounded-2xl overflow-hidden relative flex flex-col items-center justify-center"
         style={{ background: "linear-gradient(135deg, #1B5E20 0%, #2E7D32 50%, #1B5E20 100%)" }}>
         {/* Pattern overlay */}
         <div className="absolute inset-0 opacity-5"
@@ -192,7 +192,7 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
         </div>
         {/* Bolão name */}
         <div className="mt-2 z-10 text-center px-4">
-          <p className="text-copa-gold-400 font-bold text-[10px] truncate max-w-[210px]">{bolaoNome}</p>
+          <p className="text-copa-gold-400 font-bold text-[10px] truncate max-w-[250px]">{bolaoNome}</p>
           <p className="text-white/60 text-[8px] mt-0.5">{rankLabel} &bull; {me.pontos} pts</p>
         </div>
         {/* Footer */}
@@ -207,7 +207,7 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
   const BadgeSemFoto = () => {
     if (!me) return <p className="text-center text-sm text-muted-foreground py-8">Você ainda não está no ranking.</p>;
     return (
-      <div className="w-[240px] h-[240px] rounded-2xl overflow-hidden relative flex flex-col items-center justify-center"
+      <div className="w-[280px] h-[280px] rounded-2xl overflow-hidden relative flex flex-col items-center justify-center"
         style={{ background: "linear-gradient(135deg, #0D3B1A 0%, #1B5E20 50%, #2E7D32 100%)" }}>
         <div className="absolute inset-0 opacity-5"
           style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
@@ -225,7 +225,7 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
         <p className="text-copa-gold-400 font-bold text-xs z-10">{me.pontos} pontos</p>
         {/* Bolão */}
         <div className="mt-1.5 z-10 text-center px-4">
-          <p className="text-white/50 text-[10px] truncate max-w-[210px]">{bolaoNome}</p>
+          <p className="text-white/50 text-[10px] truncate max-w-[250px]">{bolaoNome}</p>
           <p className="text-white/40 text-[8px]">{rankLabel}</p>
         </div>
         <div className="absolute bottom-2 z-10">
@@ -242,7 +242,7 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
     const second = top3.find((r) => r.pos === 2);
     const third = top3.find((r) => r.pos === 3);
     return (
-      <div className="w-[240px] h-[240px] rounded-2xl overflow-hidden relative flex flex-col items-center"
+      <div className="w-[280px] h-[280px] rounded-2xl overflow-hidden relative flex flex-col items-center"
         style={{ background: "linear-gradient(135deg, #1B5E20 0%, #2E7D32 50%, #1B5E20 100%)" }}>
         <div className="absolute inset-0 opacity-5"
           style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "20px 20px" }} />
@@ -251,11 +251,11 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
           <img src={LOGO_URL} alt="" className="w-4 h-4" crossOrigin="anonymous" />
           <span className="text-white/80 font-bold text-[9px] tracking-wide uppercase">Bolão na Copa</span>
         </div>
-        <p className="text-copa-gold-400 font-bold text-[10px] mt-0.5 z-10 truncate max-w-[210px] px-3 text-center">{bolaoNome}</p>
+        <p className="text-copa-gold-400 font-bold text-[10px] mt-0.5 z-10 truncate max-w-[250px] px-3 text-center">{bolaoNome}</p>
         {/* Podium */}
         <div className="flex items-end justify-center gap-2 mt-auto mb-1.5 z-10 w-full px-3">
           {/* 2nd place */}
-          <div className="flex flex-col items-center w-[68px]">
+          <div className="flex flex-col items-center w-[80px]">
             <span className="text-lg mb-0.5">🥈</span>
             <div className="w-9 h-9 rounded-full bg-white/15 border-2 border-gray-300 flex items-center justify-center text-xs font-black text-white">
               {second?.avatar || "?"}
@@ -267,7 +267,7 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
             </div>
           </div>
           {/* 1st place */}
-          <div className="flex flex-col items-center w-[68px]">
+          <div className="flex flex-col items-center w-[80px]">
             <span className="text-xl mb-0.5">🥇</span>
             <div className="w-10 h-10 rounded-full bg-white/20 border-2 border-copa-gold-400 flex items-center justify-center text-sm font-black text-white">
               {first?.avatar || "?"}
@@ -279,7 +279,7 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
             </div>
           </div>
           {/* 3rd place */}
-          <div className="flex flex-col items-center w-[68px]">
+          <div className="flex flex-col items-center w-[80px]">
             <span className="text-lg mb-0.5">🥉</span>
             <div className="w-9 h-9 rounded-full bg-white/15 border-2 border-amber-700 flex items-center justify-center text-xs font-black text-white">
               {third?.avatar || "?"}
