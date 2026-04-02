@@ -93,9 +93,8 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
     }
   };
 
-  const shareNativeOrWeb = async (blob: Blob, text: string) => {
-    // Capacitor native: save temp file then share via native share sheet
-    if (Capacitor.isNativePlatform()) {
+  const saveToNativeFile = async (blob: Blob): Promise<string | null> => {
+    try {
       const dataUrl = await blobToDataUrl(blob);
       const base64Data = dataUrl.split(",")[1];
       const fileName = `ranking-bolao-${Date.now()}.png`;
@@ -104,41 +103,10 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
         data: base64Data,
         directory: Directory.Cache,
       });
-      const fileUri = saved.uri;
-      await Share.share({
-        title: `Ranking - ${bolaoNome}`,
-        text,
-        url: fileUri,
-        dialogTitle: "Compartilhar ranking",
-      });
-      return;
-    }
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    // Mobile web: use navigator.share with file (sends image directly)
-    if (isMobile) {
-      const file = new File([blob], "ranking-bolao.png", { type: "image/png" });
-      const shareData = { files: [file], text };
-      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-        await navigator.share(shareData);
-        return;
-      }
-      // Fallback mobile: save + open WhatsApp app
-      saveImage(blob);
-      window.location.href = `whatsapp://send?text=${encodeURIComponent(text)}`;
-      toast.success("Imagem salva! Cole no WhatsApp.");
-      return;
-    }
-    // Desktop web: copy image to clipboard + open WhatsApp Web
-    try {
-      await navigator.clipboard.write([
-        new ClipboardItem({ "image/png": blob }),
-      ]);
-      toast.success("Imagem copiada! Cole com Ctrl+V no WhatsApp.");
+      return saved.uri;
     } catch {
-      saveImage(blob);
-      toast.success("Imagem salva! Cole no WhatsApp.");
+      return null;
     }
-    window.open(`https://web.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
   };
 
   const handleWhatsApp = async () => {
@@ -146,15 +114,57 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
     setSharing(true);
     try {
       const blob = await captureImage();
-      await shareNativeOrWeb(blob, getShareText());
+      const text = getShareText();
+      const encoded = encodeURIComponent(text);
+
+      if (Capacitor.isNativePlatform()) {
+        // Salvar imagem e compartilhar via share sheet com files[]
+        const fileUri = await saveToNativeFile(blob);
+        if (fileUri) {
+          await Share.share({
+            title: `Ranking - ${bolaoNome}`,
+            text,
+            files: [fileUri],
+            dialogTitle: "Enviar para WhatsApp",
+          });
+        } else {
+          // Fallback: salvar imagem + abrir WhatsApp direto
+          saveImage(blob);
+          toast.success("Imagem salva na galeria! Anexe no WhatsApp.");
+          window.location.href = `whatsapp://send?text=${encoded}`;
+        }
+        return;
+      }
+
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      if (isMobile) {
+        const file = new File([blob], "ranking-bolao.png", { type: "image/png" });
+        const shareData = { files: [file], text };
+        if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+          await navigator.share(shareData);
+          return;
+        }
+        saveImage(blob);
+        window.location.href = `whatsapp://send?text=${encoded}`;
+        toast.success("Imagem salva! Anexe no WhatsApp.");
+        return;
+      }
+
+      // Desktop web
+      try {
+        await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+        toast.success("Imagem copiada! Cole com Ctrl+V no WhatsApp.");
+      } catch {
+        saveImage(blob);
+        toast.success("Imagem salva! Cole no WhatsApp.");
+      }
+      window.open(`https://web.whatsapp.com/send?text=${encoded}`, "_blank");
     } catch (err) {
       if ((err as Error).name !== "AbortError") {
         console.error("Erro ao compartilhar:", err);
-        // Fallback: share text only via WhatsApp
-        const text = getShareText();
-        const encoded = encodeURIComponent(text);
+        const encoded = encodeURIComponent(getShareText());
         if (Capacitor.isNativePlatform()) {
-          window.open(`https://api.whatsapp.com/send?text=${encoded}`, "_system");
+          window.location.href = `whatsapp://send?text=${encoded}`;
         } else {
           toast.error("Erro ao gerar imagem. Tente novamente.");
         }
@@ -169,17 +179,30 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
     setSharing(true);
     try {
       const blob = await captureImage();
-      await shareNativeOrWeb(blob, getShareText());
+
+      if (Capacitor.isNativePlatform()) {
+        const fileUri = await saveToNativeFile(blob);
+        if (fileUri) {
+          // Share com files[] — Android filtra para apps que aceitam imagem (Instagram aparece)
+          await Share.share({
+            files: [fileUri],
+            dialogTitle: "Enviar para Instagram",
+          });
+        } else {
+          saveImage(blob);
+          toast.success("Imagem salva na galeria! Abra o Instagram e poste.");
+        }
+        return;
+      }
+
+      // Web: salvar imagem e orientar
+      saveImage(blob);
+      toast.success("Imagem salva! Abra o Instagram e poste da galeria.");
     } catch (err) {
       if ((err as Error).name !== "AbortError") {
         console.error("Erro ao compartilhar:", err);
-        // Fallback: open native share sheet without image
         if (Capacitor.isNativePlatform()) {
-          await Share.share({
-            title: `Ranking - ${bolaoNome}`,
-            text: getShareText(),
-            dialogTitle: "Compartilhar ranking",
-          });
+          toast.success("Abra o Instagram e poste da galeria.");
         } else {
           toast.error("Erro ao gerar imagem. Tente novamente.");
         }
