@@ -104,21 +104,24 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
       });
       return;
     }
-    // Web: try navigator.share with file
-    const file = new File([blob], "ranking-bolao.png", { type: "image/png" });
-    const shareData = { files: [file], text };
-    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-      await navigator.share(shareData);
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    // Mobile web: use navigator.share with file (sends image directly)
+    if (isMobile) {
+      const file = new File([blob], "ranking-bolao.png", { type: "image/png" });
+      const shareData = { files: [file], text };
+      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+        return;
+      }
+      // Fallback mobile: save + open WhatsApp
+      saveImage(blob);
+      window.location.href = `whatsapp://send?text=${encodeURIComponent(text)}`;
+      toast.success("Imagem salva! Cole no WhatsApp.");
       return;
     }
-    // Fallback web: save + open WhatsApp with text
+    // Desktop web: save image + open WhatsApp Web with text
     saveImage(blob);
-    const encoded = encodeURIComponent(text);
-    if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-      window.location.href = `whatsapp://send?text=${encoded}`;
-    } else {
-      window.open(`https://web.whatsapp.com/send?text=${encoded}`, "_blank");
-    }
+    window.open(`https://web.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
     toast.success("Imagem salva! Cole no WhatsApp.");
   };
 
