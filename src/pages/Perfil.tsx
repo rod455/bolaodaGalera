@@ -76,8 +76,7 @@ const Perfil = () => {
       await supabase.from("profiles").update({ estado: novoEstado }).eq("id", user.id);
       setEstado(novoEstado);
       toast.success("Estado atualizado!");
-    } catch { toast.error("Erro ao salvar estado"); }
-    finally { setSavingEstado(false); }
+    } catch { toast.error("Erro ao salvar estado"); } finally { setSavingEstado(false); }
   };
 
   const handleAvatarClick = () => {
@@ -128,7 +127,6 @@ const Perfil = () => {
       setAvatarUrl(publicUrl);
       toast.success("Foto atualizada!");
     } catch (error: any) {
-      console.error(error);
       toast.error("Erro ao enviar foto. Verifique se o bucket 'avatars' existe no Supabase Storage.");
     } finally {
       setUploading(false);
@@ -175,7 +173,6 @@ const Perfil = () => {
       toast.success("Conta excluída com sucesso. Sentiremos sua falta!");
       navigate("/auth");
     } catch (err: any) {
-      console.error("Erro ao excluir conta:", err);
       toast.error("Erro ao excluir conta. Tente novamente ou entre em contato pelo email.");
     } finally {
       setDeletingAccount(false);

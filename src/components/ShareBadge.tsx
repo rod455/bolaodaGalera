@@ -119,7 +119,6 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
       saveImage(blob);
       toast.success("Imagem salva!");
     } catch (err) {
-      console.error("Erro ao gerar imagem:", err);
       toast.error("Erro ao gerar imagem");
     } finally {
       setSharing(false);
@@ -194,7 +193,6 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
       window.open(`https://web.whatsapp.com/send?text=${encoded}`, "_blank");
     } catch (err) {
       if ((err as Error).name !== "AbortError") {
-        console.error("Erro ao compartilhar:", err);
         const encoded = encodeURIComponent(getShareText());
         if (Capacitor.isNativePlatform()) {
           window.open(`https://api.whatsapp.com/send?text=${encoded}`, Capacitor.isNativePlatform() ? "_system" : "_blank");
@@ -233,7 +231,6 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
       toast.success("Imagem salva! Abra o Instagram e poste da galeria.");
     } catch (err) {
       if ((err as Error).name !== "AbortError") {
-        console.error("Erro ao compartilhar:", err);
         if (Capacitor.isNativePlatform()) {
           toast.success("Abra o Instagram e poste da galeria.");
         } else {

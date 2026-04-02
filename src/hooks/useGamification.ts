@@ -96,8 +96,7 @@ export const useGamification = () => {
         .single();
 
       if (profile) setReferralCode((profile as any).referral_code);
-    } catch (err) {
-      console.error("Erro ao buscar XP:", err);
+    } catch {
     } finally {
       setLoading(false);
     }
@@ -115,15 +114,14 @@ export const useGamification = () => {
         p_xp: xp,
         p_referencia: referencia || null,
       });
-      if (error) { console.error("Erro dar_xp:", error); return false; }
+      if (error) return false;
       if (data) {
         // Refetch XP atualizado
         await fetchXP();
         return true;
       }
       return false;
-    } catch (err) {
-      console.error("Erro ao dar XP:", err);
+    } catch {
       return false;
     }
   }, [user, fetchXP]);
@@ -136,10 +134,9 @@ export const useGamification = () => {
         p_referred_id: user.id,
         p_referral_code: referralCode,
       });
-      if (error) { console.error("Erro referral:", error); return false; }
+      if (error) return false;
       return !!data;
-    } catch (err) {
-      console.error("Erro ao processar referral:", err);
+    } catch {
       return false;
     }
   }, [user]);

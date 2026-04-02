@@ -66,8 +66,7 @@ const MataMataPick = ({
       } else {
         setJogos(data as Jogo[]);
       }
-    } catch (err) {
-      console.error("Erro ao carregar jogos:", err);
+    } catch {
     } finally {
       setLoading(false);
     }
@@ -108,7 +107,6 @@ const MataMataPick = ({
       toast.success(`Você apostou no ${selected.time}! Boa sorte! 🍀`);
       onPicked();
     } catch (err: any) {
-      console.error("Erro ao salvar escolha:", err);
       toast.error(err.message || "Erro ao salvar escolha");
     } finally {
       setConfirmando(false);

@@ -90,7 +90,6 @@ const GerenciarCampeonatos = ({ bolaoId, isOpen, onClose, onUpdated }: Gerenciar
       setVinculados(new Set(ids));
       setVinculadosOriginal(new Set(ids));
     } catch (err) {
-      console.error("Erro ao carregar campeonatos:", err);
       toast.error("Erro ao carregar campeonatos");
     } finally {
       setLoading(false);
@@ -178,7 +177,6 @@ const GerenciarCampeonatos = ({ bolaoId, isOpen, onClose, onUpdated }: Gerenciar
       onUpdated();
       onClose();
     } catch (err: any) {
-      console.error("Erro ao salvar campeonatos:", err);
       toast.error(err.message || "Erro ao salvar campeonatos");
     } finally {
       setSaving(false);

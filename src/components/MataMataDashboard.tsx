@@ -192,8 +192,7 @@ const MataMataDashboard = ({ bolaoId, campeonatoId }: Props) => {
 
       setRankingGeral(rankingList);
 
-    } catch (err) {
-      console.error("Erro ao carregar mata-mata:", err);
+    } catch {
     } finally {
       setLoading(false);
     }
@@ -234,8 +233,7 @@ const MataMataDashboard = ({ bolaoId, campeonatoId }: Props) => {
       }
 
       return novoCiclo;
-    } catch (err) {
-      console.error("Erro ao criar ciclo:", err);
+    } catch {
       return null;
     }
   };

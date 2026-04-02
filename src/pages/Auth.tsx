@@ -214,7 +214,7 @@ const Auth = () => {
               p_referral_code: refCode,
             });
           }
-        } catch (e) { console.error("Erro referral Google:", e); }
+        } catch {}
       }
 
       if (result.success && Capacitor.isNativePlatform()) {

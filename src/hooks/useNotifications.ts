@@ -44,14 +44,12 @@ export const useNotifications = (): UseNotificationsReturn => {
       }
 
       if (permStatus.receive !== "granted") {
-        console.log("[Push] Permissão negada pelo usuário");
         pushRegistered.current = false;
         return;
       }
 
       // 3. Listener: token recebido → salva no Supabase
       await PushNotifications.addListener("registration", async (token) => {
-        console.log("[Push] Token FCM:", token.value);
 
         const { error } = await supabase.from("push_tokens").upsert(
           {
@@ -64,28 +62,21 @@ export const useNotifications = (): UseNotificationsReturn => {
           { onConflict: "user_id,token" }
         );
 
-        if (error) {
-          console.error("[Push] Erro ao salvar token:", error);
-        } else {
-          console.log("[Push] ✅ Token salvo com sucesso!");
-        }
+        // error silently ignored
       });
 
       // 4. Listener: erro de registro
       await PushNotifications.addListener("registrationError", (err) => {
-        console.error("[Push] Erro de registro FCM:", JSON.stringify(err));
         pushRegistered.current = false;
       });
 
       // 5. Listener: notificação recebida com app aberto (foreground)
       await PushNotifications.addListener("pushNotificationReceived", (notification) => {
-        console.log("[Push] Recebida (foreground):", notification);
         fetchNotificacoes();
       });
 
       // 6. Listener: usuário tocou na notificação (background/fechado)
       await PushNotifications.addListener("pushNotificationActionPerformed", (action) => {
-        console.log("[Push] Toque na notificação:", action);
         const rota = action.notification?.data?.rota;
         if (rota) {
           window.dispatchEvent(
@@ -97,8 +88,7 @@ export const useNotifications = (): UseNotificationsReturn => {
       // 7. Registrar no FCM (dispara o evento "registration" acima)
       await PushNotifications.register();
 
-    } catch (err) {
-      console.error("[Push] Erro inesperado:", err);
+    } catch {
       pushRegistered.current = false;
     }
   }, [user]);
@@ -114,8 +104,7 @@ export const useNotifications = (): UseNotificationsReturn => {
         .order("created_at", { ascending: false })
         .limit(50);
       if (!error && data) setNotificacoes(data as Notificacao[]);
-    } catch (err) {
-      console.error("Erro ao buscar notificações:", err);
+    } catch {
     }
   }, [user]);
 
@@ -227,12 +216,7 @@ export const useNotifications = (): UseNotificationsReturn => {
 
     return () => {
       if (subscriptionRef.current) supabase.removeChannel(subscriptionRef.current);
-      if (Capacitor.isNativePlatform()) {
-        import("@capacitor/push-notifications").then(({ PushNotifications }) => {
-          PushNotifications.removeAllListeners();
-        }).catch(() => {});
-        pushRegistered.current = false;
-      }
+      pushRegistered.current = false;
     };
   }, [user]);
 

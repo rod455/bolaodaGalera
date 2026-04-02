@@ -24,16 +24,16 @@ const AoVivo = () => {
   const [userBolaoMap, setUserBolaoMap] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (user) loadJogos();
-    // Auto-refresh every 60 seconds
+    let active = true;
+    if (user) loadJogos().catch(() => {});
     const interval = setInterval(() => {
-      if (user) {
-        triggerLiveSync();
-        loadJogos();
+      if (user && active) {
+        triggerLiveSync().catch(() => {});
+        loadJogos().catch(() => {});
         setLastRefresh(new Date());
       }
     }, 60000);
-    return () => clearInterval(interval);
+    return () => { active = false; clearInterval(interval); };
   }, [user]);
 
   // Trigger the Edge Function to update live scores in Supabase

@@ -450,8 +450,7 @@ const Home = () => {
       });
       const proxResults = await Promise.all(proxPromises);
       setProximosJogos(Object.fromEntries(proxResults));
-    } catch (err) { console.error("Erro ao carregar dados:", err); }
-    finally { setLoading(false); }
+    } catch {} finally { setLoading(false); }
   };
 
   const loadAlerts = async () => {
@@ -485,7 +484,7 @@ const Home = () => {
     const { data: profile } = await supabase.from("profiles").select("id").eq("id", user.id).single();
     if (!profile) {
       const { error } = await supabase.from("profiles").insert({ id: user.id, nome: user.user_metadata?.nome || user.email?.split("@")[0] || "Usuário", email: user.email || "" });
-      if (error && error.code !== "23505") { console.error("Erro ao criar perfil:", error); return false; }
+      if (error && error.code !== "23505") return false;
     }
     return true;
   };
@@ -503,8 +502,7 @@ const Home = () => {
         if (error.code === "23505") { toast.info("Você já está participando!"); setUserBolaoIds((prev) => new Set(prev).add(bolaoId)); navigate(`/bolao/${bolaoId}`); }
         else throw error;
       } else { toast.success("Você entrou no bolão!"); setUserBolaoIds((prev) => new Set(prev).add(bolaoId)); setParticipantesCount((prev) => ({ ...prev, [bolaoId]: (prev[bolaoId] || 0) + 1 })); navigate(`/bolao/${bolaoId}`); }
-    } catch (err: any) { toast.error(err.message || "Erro ao entrar no bolão"); }
-    finally { setJoiningBolao(null); }
+    } catch (err: any) { toast.error(err.message || "Erro ao entrar no bolão"); } finally { setJoiningBolao(null); }
   };
 
   const visibleAlerts = dismissCount >= 2 ? [] : alerts.filter((a) => !dismissedAlerts.has(a.id));
@@ -567,8 +565,7 @@ const Home = () => {
       const { error } = await supabase.from("bolao_participantes").insert({ bolao_id: bolao.id, user_id: user.id });
       if (error) { if (error.code === "23505") { toast.info("Você já está neste bolão!"); navigate(`/bolao/${bolao.id}`); } else throw error; }
       else { toast.success(`Você entrou no "${bolao.nome}"!`); navigate(`/bolao/${bolao.id}`); }
-    } catch (err: any) { toast.error(err.message || "Erro ao entrar no bolão"); }
-    finally { setJoiningByCode(false); }
+    } catch (err: any) { toast.error(err.message || "Erro ao entrar no bolão"); } finally { setJoiningByCode(false); }
   };
 
   const dismissAlert = (e: React.MouseEvent, alertId: string) => { e.stopPropagation(); setDismissedAlerts((prev) => new Set(prev).add(alertId)); setDismissCount((c) => c + 1); };

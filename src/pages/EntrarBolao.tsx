@@ -98,7 +98,7 @@ const EntrarBolao = () => {
       const { data: participacoes } = await supabase
         .from("bolao_participantes")
         .select("bolao_id")
-        .eq("user_id", user!.id);
+        .eq("user_id", user?.id ?? "");
 
       const ids = new Set((participacoes || []).map((p: any) => p.bolao_id));
       setUserBolaoIds(ids);
@@ -134,7 +134,6 @@ const EntrarBolao = () => {
         email: user.email || "",
       });
       if (error && error.code !== "23505") {
-        console.error("Erro ao criar perfil:", error);
         return false;
       }
     }

@@ -259,8 +259,7 @@ const BolaoPage = () => {
       toast.success("Foto de capa atualizada!");
       URL.revokeObjectURL(capaEditor.url);
       setCapaEditor(null);
-    } catch (err: any) {
-      console.error("Erro upload capa:", err);
+    } catch {
       toast.error("Erro ao atualizar foto de capa");
     } finally {
       setUploadingCapa(false);
@@ -268,10 +267,10 @@ const BolaoPage = () => {
   };
 
   useEffect(() => {
-    if (id && user) loadBolao();
-    // Auto-refresh every 60 seconds for live score updates
-    const interval = setInterval(() => { if (id && user) loadBolao(); }, 60000);
-    return () => clearInterval(interval);
+    let active = true;
+    if (id && user) loadBolao().catch(() => {});
+    const interval = setInterval(() => { if (id && user && active) loadBolao().catch(() => {}); }, 60000);
+    return () => { active = false; clearInterval(interval); };
   }, [id, user]);
 
   const loadBolao = async () => {
@@ -403,7 +402,7 @@ const BolaoPage = () => {
           const { data: userPalpites, error: palpError } = await supabase
             .from("palpites")
             .select("jogo_id, placar_time_a, placar_time_b, pontos")
-            .eq("user_id", user!.id)
+            .eq("user_id", user?.id ?? "")
             .eq("bolao_id", id!)
             .in("jogo_id", jogoIds);
 
@@ -413,7 +412,7 @@ const BolaoPage = () => {
             const { data: fallback } = await supabase
               .from("palpites")
               .select("jogo_id, placar_time_a, placar_time_b")
-              .eq("user_id", user!.id)
+              .eq("user_id", user?.id ?? "")
               .eq("bolao_id", id!)
               .in("jogo_id", jogoIds);
             palpitesList = (fallback || []).map((p: any) => ({ ...p, pontos: null }));
@@ -442,7 +441,7 @@ const BolaoPage = () => {
             nome,
             avatar: getInitials(nome),
             pontos: p.pontuacao_total || 0,
-            isCurrentUser: p.user_id === user!.id,
+            isCurrentUser: p.user_id === user?.id ?? "",
             userId: p.user_id,
           };
         }
@@ -469,8 +468,7 @@ const BolaoPage = () => {
           setNiveisRanking(niveis);
         }
       }
-    } catch (err) {
-      console.error("Erro ao carregar bolão:", err);
+    } catch {
     } finally {
       setLoading(false);
     }
@@ -545,8 +543,7 @@ const BolaoPage = () => {
         }));
 
       setRankingRodada(rodadaList);
-    } catch (err) {
-      console.error("Erro ranking rodada:", err);
+    } catch {
     } finally {
       setLoadingRodada(false);
     }
@@ -659,8 +656,7 @@ const BolaoPage = () => {
       toast.success(`${toInsert.length} palpite(s) copiado(s) com sucesso!`);
       setShowCopyDialog(false);
       loadBolao(); // Reload to show updated palpites
-    } catch (err: any) {
-      console.error("Erro ao copiar palpites:", err);
+    } catch {
       toast.error("Erro ao copiar palpites");
     } finally {
       setCopying(false);
@@ -688,8 +684,7 @@ const BolaoPage = () => {
       await supabase.from("bolao_participantes").delete().eq("user_id", user.id).eq("bolao_id", id);
       toast.success("Você saiu do bolão.");
       navigate("/home");
-    } catch (err: any) {
-      console.error("Erro ao sair:", err);
+    } catch {
       toast.error("Erro ao sair do bolão.");
     } finally {
       setLeaving(false);
@@ -722,8 +717,7 @@ const BolaoPage = () => {
       await supabase.from("boloes").delete().eq("id", id);
       toast.success("Bolão excluído com sucesso.");
       navigate("/home");
-    } catch (err: any) {
-      console.error("Erro ao excluir:", err);
+    } catch {
       toast.error("Erro ao excluir bolão.");
     } finally {
       setDeleting(false);
@@ -772,7 +766,6 @@ const BolaoPage = () => {
         .eq("jogo_id", jogoId);
 
       if (palpErr) {
-        console.error("Erro ao buscar palpites:", palpErr);
         // Fallback without pontos
         const { data: fallback } = await supabase
           .from("palpites")
@@ -820,8 +813,7 @@ const BolaoPage = () => {
       });
       list.sort((a: any, b: any) => (b.pontos ?? 0) - (a.pontos ?? 0));
       setParticipantPalpites((prev) => ({ ...prev, [jogoId]: list }));
-    } catch (err) {
-      console.error("Erro ao carregar palpites:", err);
+    } catch {
     } finally {
       setLoadingPalpites(null);
     }
