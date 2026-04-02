@@ -341,14 +341,30 @@ const BolaoPage = () => {
           .gte("data_hora", twoHoursAgo.toISOString())
           .order("data_hora", { ascending: true });
 
-        // Jogos recentes (encerrados, últimos 5)
-        const { data: recentes } = await supabase
+        // Jogos recentes (encerrados): ontem + hoje, ou últimos 5 se nenhum nos últimos 3 dias
+        const yesterdayStart = new Date(now);
+        yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+        yesterdayStart.setHours(0, 0, 0, 0);
+
+        const { data: recentesHojeOntem } = await supabase
           .from("jogos")
           .select("*")
           .in("campeonato_id", campIds)
           .eq("status", "encerrado")
-          .order("data_hora", { ascending: false })
-          .limit(5);
+          .gte("data_hora", yesterdayStart.toISOString())
+          .order("data_hora", { ascending: false });
+
+        let recentes = recentesHojeOntem;
+        if (!recentes || recentes.length === 0) {
+          const { data: fallback } = await supabase
+            .from("jogos")
+            .select("*")
+            .in("campeonato_id", campIds)
+            .eq("status", "encerrado")
+            .order("data_hora", { ascending: false })
+            .limit(5);
+          recentes = fallback;
+        }
 
         // Jogos ao vivo
         const { data: aoVivo } = await supabase
