@@ -1146,11 +1146,6 @@ const BolaoPage = () => {
               Ranking
             </CardTitle>
             <div className="flex items-center gap-3">
-              {(rankingTab === "geral" ? ranking : rankingRodada).length > 0 && (
-                <button onClick={() => setShowShareBadge(true)} className="text-sm text-copa-gold-600 font-medium hover:underline flex items-center gap-1">
-                  <Share2 className="w-3.5 h-3.5" /> Compartilhar
-                </button>
-              )}
               {(rankingTab === "geral" ? ranking : rankingRodada).length > 5 && (
                 <button onClick={() => { setShowFullRanking(!showFullRanking); if (!showFullRanking) triggerFeedback(); }} className="text-sm text-copa-green-500 font-medium hover:underline">
                   {showFullRanking ? "Ver menos" : "Ver ranking completo"}
@@ -1265,6 +1260,26 @@ const BolaoPage = () => {
                 <span className="text-base flex-shrink-0">{msg.emoji}</span>
                 <span>{msg.text}</span>
               </div>
+            );
+          })()}
+          {(rankingTab === "geral" ? ranking : rankingRodada).length > 0 && (() => {
+            const activeRanking = rankingTab === "geral" ? ranking : rankingRodada;
+            const meInRanking = activeRanking.find((r) => r.isCurrentUser);
+            const isTop3 = meInRanking && meInRanking.pos <= 3;
+            return isTop3 ? (
+              <button
+                onClick={() => setShowShareBadge(true)}
+                className="w-full mt-2 flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-copa-gold-400 to-copa-gold-500 text-white text-sm font-bold shadow-md hover:shadow-lg transition-all"
+              >
+                <Share2 className="w-4 h-4" /> Compartilhe sua posição no pódio!
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowShareBadge(true)}
+                className="w-full mt-2 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-copa-gold-50 border border-copa-gold-300 text-copa-gold-700 text-sm font-semibold hover:bg-copa-gold-100 transition-colors"
+              >
+                <Share2 className="w-4 h-4" /> Compartilhar posição
+              </button>
             );
           })()}
           {ranking.length > 0 && bolao.codigo_convite && (
