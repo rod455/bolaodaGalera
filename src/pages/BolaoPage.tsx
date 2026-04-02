@@ -155,7 +155,6 @@ const BolaoPage = () => {
   const [ranking, setRanking] = useState<RankingEntry[]>([]);
   const [rankingRodada, setRankingRodada] = useState<RankingEntry[]>([]);
   const [rankingTab, setRankingTab] = useState<"geral" | "rodada">("geral");
-  const [rodadaAtualLabel, setRodadaAtualLabel] = useState<string>("");
   const [loadingRodada, setLoadingRodada] = useState(false);
   const [showFullRanking, setShowFullRanking] = useState(false);
   const [showShareBadge, setShowShareBadge] = useState(false);
@@ -490,25 +489,23 @@ const BolaoPage = () => {
       const campIds = (bcData || []).map((bc: any) => bc.campeonato_id);
       if (campIds.length === 0 && bolao?.campeonato_id) campIds.push(bolao.campeonato_id);
 
-      // 2. Descobrir rodada atual (último jogo encerrado)
-      const { data: ultimoJogo } = await supabase
-        .from("jogos")
-        .select("rodada")
-        .in("campeonato_id", campIds)
-        .eq("status", "encerrado")
-        .order("data_hora", { ascending: false })
-        .limit(1);
+      // 2. Calcular semana atual (domingo a domingo)
+      const now = new Date();
+      const dayOfWeek = now.getDay(); // 0=dom, 1=seg...
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - dayOfWeek);
+      startOfWeek.setHours(0, 0, 0, 0);
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 7);
+      endOfWeek.setHours(0, 0, 0, 0);
 
-      const rodadaAtual = ultimoJogo?.[0]?.rodada;
-      if (!rodadaAtual) { setLoadingRodada(false); return; }
-      setRodadaAtualLabel(rodadaAtual);
-
-      // 3. Buscar jogos desta rodada
+      // 3. Buscar jogos desta semana
       const { data: jogosRodada } = await supabase
         .from("jogos")
         .select("id")
         .in("campeonato_id", campIds)
-        .eq("rodada", rodadaAtual);
+        .gte("data_hora", startOfWeek.toISOString())
+        .lt("data_hora", endOfWeek.toISOString());
 
       const jogoIds = (jogosRodada || []).map((j: any) => j.id);
       if (jogoIds.length === 0) { setLoadingRodada(false); return; }
@@ -1148,11 +1145,18 @@ const BolaoPage = () => {
               <Trophy className="w-4 h-4 text-copa-gold-400" />
               Ranking
             </CardTitle>
-            {(rankingTab === "geral" ? ranking : rankingRodada).length > 5 && (
-              <button onClick={() => { setShowFullRanking(!showFullRanking); if (!showFullRanking) triggerFeedback(); }} className="text-sm text-copa-green-500 font-medium hover:underline">
-                {showFullRanking ? "Ver menos" : "Ver ranking completo"}
-              </button>
-            )}
+            <div className="flex items-center gap-3">
+              {(rankingTab === "geral" ? ranking : rankingRodada).length > 0 && (
+                <button onClick={() => setShowShareBadge(true)} className="text-sm text-copa-gold-600 font-medium hover:underline flex items-center gap-1">
+                  <Share2 className="w-3.5 h-3.5" /> Compartilhar
+                </button>
+              )}
+              {(rankingTab === "geral" ? ranking : rankingRodada).length > 5 && (
+                <button onClick={() => { setShowFullRanking(!showFullRanking); if (!showFullRanking) triggerFeedback(); }} className="text-sm text-copa-green-500 font-medium hover:underline">
+                  {showFullRanking ? "Ver menos" : "Ver ranking completo"}
+                </button>
+              )}
+            </div>
           </div>
           {/* ── Tabs: Geral | Esta Rodada ── */}
           {ranking.length > 0 && (
@@ -1179,7 +1183,7 @@ const BolaoPage = () => {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {rodadaAtualLabel ? `Rodada ${rodadaAtualLabel}` : "Esta Rodada"}
+                Esta Semana
               </button>
             </div>
           )}
@@ -1263,14 +1267,6 @@ const BolaoPage = () => {
               </div>
             );
           })()}
-          {(rankingTab === "geral" ? ranking : rankingRodada).length > 0 && (
-            <button
-              onClick={() => setShowShareBadge(true)}
-              className="w-full mt-2 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-copa-gold-50 border border-copa-gold-300 text-copa-gold-700 text-sm font-semibold hover:bg-copa-gold-100 transition-colors"
-            >
-              <Share2 className="w-4 h-4" /> Compartilhar posição
-            </button>
-          )}
           {ranking.length > 0 && bolao.codigo_convite && (
             <button
               onClick={(e) => {
@@ -1738,7 +1734,7 @@ const BolaoPage = () => {
           bolaoNome={bolao.nome}
           ranking={rankingTab === "geral" ? ranking : rankingRodada}
           rankingType={rankingTab}
-          rodadaLabel={rodadaAtualLabel ? `Rodada ${rodadaAtualLabel}` : undefined}
+          rodadaLabel="Esta Semana"
         />
       )}
     </div>
