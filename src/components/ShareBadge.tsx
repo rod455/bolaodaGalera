@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import html2canvas from "html2canvas";
 import { Capacitor } from "@capacitor/core";
@@ -20,6 +20,30 @@ interface ShareBadgeProps {
 
 const LOGO_URL = "https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/604913%20(512%20x%20512%20px).png";
 
+// Pré-carregar logo como base64 para evitar CORS no html2canvas
+let cachedLogoBase64: string | null = null;
+function preloadLogo(): Promise<string> {
+  if (cachedLogoBase64) return Promise.resolve(cachedLogoBase64);
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        canvas.getContext("2d")!.drawImage(img, 0, 0);
+        cachedLogoBase64 = canvas.toDataURL("image/png");
+        resolve(cachedLogoBase64);
+      } catch {
+        resolve(LOGO_URL);
+      }
+    };
+    img.onerror = () => resolve(LOGO_URL);
+    img.src = LOGO_URL;
+  });
+}
+
 const getMedalEmoji = (pos: number) => {
   if (pos === 1) return "🥇";
   if (pos === 2) return "🥈";
@@ -33,7 +57,13 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
   const [tab, setTab] = useState<"foto" | "sem-foto" | "podio">("foto");
   const [sharing, setSharing] = useState(false);
   const [fraseCustom, setFraseCustom] = useState("");
+  const [logoSrc, setLogoSrc] = useState(LOGO_URL);
   const badgeRef = useRef<HTMLDivElement>(null);
+
+  // Pré-carregar logo como base64 para evitar CORS no html2canvas
+  useEffect(() => {
+    if (open) preloadLogo().then(setLogoSrc);
+  }, [open]);
 
   if (!open) return null;
 
@@ -45,12 +75,15 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
     const canvas = await html2canvas(badgeRef.current!, {
       backgroundColor: "#1B5E20",
       scale: 3,
-      useCORS: true,
-      allowTaint: true,
+      useCORS: false,
+      allowTaint: false,
       logging: false,
     });
-    return new Promise<Blob>((resolve) =>
-      canvas.toBlob((b) => resolve(b!), "image/png")
+    return new Promise<Blob>((resolve, reject) =>
+      canvas.toBlob((b) => {
+        if (b) resolve(b);
+        else reject(new Error("toBlob retornou null"));
+      }, "image/png")
     );
   };
 
@@ -131,7 +164,7 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
           // Fallback: salvar imagem + abrir WhatsApp direto
           saveImage(blob);
           toast.success("Imagem salva na galeria! Anexe no WhatsApp.");
-          window.location.href = `whatsapp://send?text=${encoded}`;
+          window.open(`https://api.whatsapp.com/send?text=${encoded}`, Capacitor.isNativePlatform() ? "_system" : "_blank");
         }
         return;
       }
@@ -145,7 +178,7 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
           return;
         }
         saveImage(blob);
-        window.location.href = `whatsapp://send?text=${encoded}`;
+        window.open(`https://api.whatsapp.com/send?text=${encoded}`, Capacitor.isNativePlatform() ? "_system" : "_blank");
         toast.success("Imagem salva! Anexe no WhatsApp.");
         return;
       }
@@ -164,7 +197,7 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
         console.error("Erro ao compartilhar:", err);
         const encoded = encodeURIComponent(getShareText());
         if (Capacitor.isNativePlatform()) {
-          window.location.href = `whatsapp://send?text=${encoded}`;
+          window.open(`https://api.whatsapp.com/send?text=${encoded}`, Capacitor.isNativePlatform() ? "_system" : "_blank");
         } else {
           toast.error("Erro ao gerar imagem. Tente novamente.");
         }
@@ -223,7 +256,7 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
           style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "20px 20px" }} />
         {/* Header */}
         <div className="flex items-center gap-1.5 mb-2 z-10">
-          <img src={LOGO_URL} alt="" className="w-5 h-5" crossOrigin="anonymous" />
+          <img src={logoSrc} alt="" className="w-5 h-5" />
           <span className="text-white/80 font-bold text-[10px] tracking-wide uppercase">Bolão na Copa</span>
         </div>
         {/* Avatar */}
@@ -261,7 +294,7 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
           style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
         {/* Header */}
         <div className="flex items-center gap-1.5 mb-1 z-10">
-          <img src={LOGO_URL} alt="" className="w-5 h-5" crossOrigin="anonymous" />
+          <img src={logoSrc} alt="" className="w-5 h-5" />
           <span className="text-white/80 font-bold text-[10px] tracking-wide uppercase">Bolão na Copa</span>
         </div>
         {/* Big medal + position */}
@@ -296,7 +329,7 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
           style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "20px 20px" }} />
         {/* Header */}
         <div className="flex items-center gap-1.5 mt-3 z-10">
-          <img src={LOGO_URL} alt="" className="w-4 h-4" crossOrigin="anonymous" />
+          <img src={logoSrc} alt="" className="w-4 h-4" />
           <span className="text-white/80 font-bold text-[9px] tracking-wide uppercase">Bolão na Copa</span>
         </div>
         <p className="text-copa-gold-400 font-bold text-[10px] mt-0.5 z-10 truncate max-w-[250px] px-3 text-center">{bolaoNome}</p>
