@@ -249,40 +249,30 @@ const ShareBadge = ({ open, onClose, bolaoId, bolaoNome, ranking, rankingType, r
     }
   };
 
-  // ── Badge com foto ──
+  // ── Badge com foto (inline styles for html2canvas compatibility) ──
   const BadgeComFoto = () => {
-    if (!me) return <p className="text-center text-sm text-muted-foreground py-8">Você ainda não está no ranking.</p>;
+    if (!me) return <p style={{ textAlign: "center", padding: "32px 0", fontSize: 14, color: "#999" }}>Você ainda não está no ranking.</p>;
     return (
-      <div className="w-[280px] h-[280px] rounded-2xl overflow-hidden relative flex flex-col items-center justify-center"
-        style={{ background: "linear-gradient(135deg, #1B5E20 0%, #2E7D32 50%, #1B5E20 100%)" }}>
-        {/* Pattern overlay */}
-        <div className="absolute inset-0 opacity-5"
-          style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "20px 20px" }} />
-        {/* Header */}
-        <div className="flex items-center gap-1.5 mb-2 z-10">
-          <img src={logoSrc} alt="" className="w-5 h-5" />
-          <span className="text-white/80 font-bold text-[10px] tracking-wide uppercase">Bolão na Copa</span>
+      <div style={{ width: 280, height: 280, borderRadius: 16, overflow: "hidden", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg, #1B5E20 0%, #2E7D32 50%, #1B5E20 100%)", position: "relative" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <img src={logoSrc} alt="" style={{ width: 20, height: 20 }} />
+          <span style={{ color: "rgba(255,255,255,0.8)", fontWeight: 700, fontSize: 10, letterSpacing: "0.05em", textTransform: "uppercase" }}>Bolão na Copa</span>
         </div>
-        {/* Avatar */}
-        <div className="w-12 h-12 rounded-full bg-white/20 border-2 border-copa-gold-400 flex items-center justify-center text-xl font-black text-white z-10">
+        <div style={{ width: 48, height: 48, borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.2)", border: "2px solid #EAB308", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 900, color: "#fff" }}>
           {me.avatar}
         </div>
-        {/* Name */}
-        <p className="text-white font-bold text-sm mt-1.5 z-10">{me.nome}</p>
-        {/* Position */}
-        <div className="flex items-center gap-1.5 mt-0.5 z-10">
-          <span className="text-2xl">{getMedalEmoji(me.pos) || "🏅"}</span>
-          <span className="text-white font-black text-2xl">{getOrdinal(me.pos)}</span>
-          <span className="text-white/70 font-bold text-sm">lugar</span>
+        <p style={{ color: "#fff", fontWeight: 700, fontSize: 14, marginTop: 6 }}>{me.nome}</p>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
+          <span style={{ fontSize: 24 }}>{getMedalEmoji(me.pos) || "🏅"}</span>
+          <span style={{ color: "#fff", fontWeight: 900, fontSize: 24 }}>{getOrdinal(me.pos)}</span>
+          <span style={{ color: "rgba(255,255,255,0.7)", fontWeight: 700, fontSize: 14 }}>lugar</span>
         </div>
-        {/* Bolão name */}
-        <div className="mt-2 z-10 text-center px-4">
-          <p className="text-copa-gold-400 font-bold text-[10px] truncate max-w-[250px]">{bolaoNome}</p>
-          <p className="text-white/60 text-[8px] mt-0.5">{rankLabel} &bull; {me.pontos} pts</p>
+        <div style={{ marginTop: 8, textAlign: "center", padding: "0 16px" }}>
+          <p style={{ color: "#EAB308", fontWeight: 700, fontSize: 10, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 250 }}>{bolaoNome}</p>
+          <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 8, marginTop: 2 }}>{rankLabel} • {me.pontos} pts</p>
         </div>
-        {/* Footer */}
-        <div className="absolute bottom-2 flex items-center gap-1 z-10">
-          <span className="text-white/40 text-[8px]">bolaonacopa.com.br</span>
+        <div style={{ position: "absolute", bottom: 8, display: "flex", alignItems: "center", gap: 4 }}>
+          <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 8 }}>bolaonacopa.com.br</span>
         </div>
       </div>
     );
@@ -290,97 +280,88 @@ const ShareBadge = ({ open, onClose, bolaoId, bolaoNome, ranking, rankingType, r
 
   // ── Badge sem foto ──
   const BadgeSemFoto = () => {
-    if (!me) return <p className="text-center text-sm text-muted-foreground py-8">Você ainda não está no ranking.</p>;
+    if (!me) return <p style={{ textAlign: "center", padding: "32px 0", fontSize: 14, color: "#999" }}>Você ainda não está no ranking.</p>;
     return (
-      <div className="w-[280px] h-[280px] rounded-2xl overflow-hidden relative flex flex-col items-center justify-center"
-        style={{ background: "linear-gradient(135deg, #0D3B1A 0%, #1B5E20 50%, #2E7D32 100%)" }}>
-        <div className="absolute inset-0 opacity-5"
-          style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
-        {/* Header */}
-        <div className="flex items-center gap-1.5 mb-1 z-10">
-          <img src={logoSrc} alt="" className="w-5 h-5" />
-          <span className="text-white/80 font-bold text-[10px] tracking-wide uppercase">Bolão na Copa</span>
+      <div style={{ width: 280, height: 280, borderRadius: 16, overflow: "hidden", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg, #0D3B1A 0%, #1B5E20 50%, #2E7D32 100%)", position: "relative" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+          <img src={logoSrc} alt="" style={{ width: 20, height: 20 }} />
+          <span style={{ color: "rgba(255,255,255,0.8)", fontWeight: 700, fontSize: 10, letterSpacing: "0.05em", textTransform: "uppercase" }}>Bolão na Copa</span>
         </div>
-        {/* Big medal + position */}
-        <span className="text-5xl z-10">{getMedalEmoji(me.pos) || "🏅"}</span>
-        <span className="text-white font-black text-4xl mt-0.5 z-10">{getOrdinal(me.pos)}</span>
-        <span className="text-white/60 font-bold text-sm z-10">lugar</span>
-        {/* Name + points */}
-        <p className="text-white font-bold text-sm mt-2 z-10">{me.nome}</p>
-        <p className="text-copa-gold-400 font-bold text-xs z-10">{me.pontos} pontos</p>
-        {/* Bolão */}
-        <div className="mt-1.5 z-10 text-center px-4">
-          <p className="text-white/50 text-[10px] truncate max-w-[250px]">{bolaoNome}</p>
-          <p className="text-white/40 text-[8px]">{rankLabel}</p>
+        <span style={{ fontSize: 48 }}>{getMedalEmoji(me.pos) || "🏅"}</span>
+        <span style={{ color: "#fff", fontWeight: 900, fontSize: 36, marginTop: 2 }}>{getOrdinal(me.pos)}</span>
+        <span style={{ color: "rgba(255,255,255,0.6)", fontWeight: 700, fontSize: 14 }}>lugar</span>
+        <p style={{ color: "#fff", fontWeight: 700, fontSize: 14, marginTop: 8 }}>{me.nome}</p>
+        <p style={{ color: "#EAB308", fontWeight: 700, fontSize: 12 }}>{me.pontos} pontos</p>
+        <div style={{ marginTop: 6, textAlign: "center", padding: "0 16px" }}>
+          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 10, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 250 }}>{bolaoNome}</p>
+          <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 8 }}>{rankLabel}</p>
         </div>
-        <div className="absolute bottom-2 z-10">
-          <span className="text-white/40 text-[8px]">bolaonacopa.com.br</span>
+        <div style={{ position: "absolute", bottom: 8 }}>
+          <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 8 }}>bolaonacopa.com.br</span>
         </div>
       </div>
     );
   };
 
-  // ── Badge pódio ──
+  // ── Badge pódio (inline styles for html2canvas compatibility) ──
   const BadgePodio = () => {
-    if (top3.length === 0) return <p className="text-center text-sm text-muted-foreground py-8">Ranking ainda sem dados.</p>;
+    if (top3.length === 0) return <p style={{ textAlign: "center", padding: "32px 0", fontSize: 14, color: "#999" }}>Ranking ainda sem dados.</p>;
     const first = top3.find((r) => r.pos === 1);
     const second = top3.find((r) => r.pos === 2);
     const third = top3.find((r) => r.pos === 3);
     return (
-      <div className="w-[320px] h-[380px] rounded-2xl overflow-hidden relative flex flex-col items-center"
-        style={{ background: "linear-gradient(135deg, #1B5E20 0%, #2E7D32 50%, #1B5E20 100%)" }}>
-        <div className="absolute inset-0 opacity-5"
-          style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "20px 20px" }} />
+      <div style={{ width: 320, height: 380, borderRadius: 16, overflow: "hidden", position: "relative", display: "flex", flexDirection: "column", alignItems: "center", background: "linear-gradient(135deg, #1B5E20 0%, #2E7D32 50%, #1B5E20 100%)" }}>
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, opacity: 0.05, backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "20px 20px" }} />
         {/* Header */}
-        <div className="flex items-center gap-2 mt-4 z-10">
-          <img src={logoSrc} alt="" className="w-5 h-5" />
-          <span className="text-white/80 font-bold text-[10px] tracking-wide uppercase">Bolão na Copa</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 16, position: "relative", zIndex: 10 }}>
+          <img src={logoSrc} alt="" style={{ width: 20, height: 20 }} />
+          <span style={{ color: "rgba(255,255,255,0.8)", fontWeight: 700, fontSize: 10, letterSpacing: "0.05em", textTransform: "uppercase" }}>Bolão na Copa</span>
         </div>
-        <p className="text-copa-gold-400 font-bold text-xs mt-1 z-10 truncate max-w-[290px] px-3 text-center">{bolaoNome}</p>
+        <p style={{ color: "#EAB308", fontWeight: 700, fontSize: 12, marginTop: 4, position: "relative", zIndex: 10, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 290, padding: "0 12px", textAlign: "center" }}>{bolaoNome}</p>
         {/* Podium */}
-        <div className="flex items-end justify-center gap-3 mt-auto mb-2 z-10 w-full px-4">
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 12, marginTop: "auto", marginBottom: 8, position: "relative", zIndex: 10, width: "100%", padding: "0 16px" }}>
           {/* 2nd place */}
-          <div className="flex flex-col items-center w-[90px]">
-            <span className="text-2xl mb-1">🥈</span>
-            <div className="w-11 h-11 rounded-full bg-white/15 border-2 border-gray-300 flex items-center justify-center text-sm font-black text-white">
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 90 }}>
+            <span style={{ fontSize: 24, marginBottom: 4 }}>🥈</span>
+            <div style={{ width: 44, height: 44, borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.15)", border: "2px solid #D1D5DB", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 900, color: "#fff" }}>
               {second?.avatar || "?"}
             </div>
-            <p className="text-white text-[10px] font-bold mt-1 text-center">{firstName(second?.nome || "-")}</p>
-            <p className="text-white/60 text-[9px] font-bold">{second?.pontos ?? 0} pts</p>
-            <div className="w-full h-12 bg-white/10 rounded-t-lg mt-1 flex items-center justify-center">
-              <span className="text-white/40 font-black text-base">2º</span>
+            <p style={{ color: "#fff", fontSize: 10, fontWeight: 700, marginTop: 4, textAlign: "center" }}>{firstName(second?.nome || "-")}</p>
+            <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 9, fontWeight: 700 }}>{second?.pontos ?? 0} pts</p>
+            <div style={{ width: "100%", height: 48, backgroundColor: "rgba(255,255,255,0.1)", borderRadius: "8px 8px 0 0", marginTop: 4, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ color: "rgba(255,255,255,0.4)", fontWeight: 900, fontSize: 16 }}>2º</span>
             </div>
           </div>
           {/* 1st place */}
-          <div className="flex flex-col items-center w-[90px]">
-            <span className="text-3xl mb-1">🥇</span>
-            <div className="w-12 h-12 rounded-full bg-white/20 border-2 border-copa-gold-400 flex items-center justify-center text-base font-black text-white">
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 90 }}>
+            <span style={{ fontSize: 30, marginBottom: 4 }}>🥇</span>
+            <div style={{ width: 48, height: 48, borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.2)", border: "2px solid #EAB308", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 900, color: "#fff" }}>
               {first?.avatar || "?"}
             </div>
-            <p className="text-white text-[10px] font-bold mt-1 text-center">{firstName(first?.nome || "-")}</p>
-            <p className="text-copa-gold-400 text-[9px] font-bold">{first?.pontos ?? 0} pts</p>
-            <div className="w-full h-20 bg-white/15 rounded-t-lg mt-1 flex items-center justify-center">
-              <span className="text-white/50 font-black text-xl">1º</span>
+            <p style={{ color: "#fff", fontSize: 10, fontWeight: 700, marginTop: 4, textAlign: "center" }}>{firstName(first?.nome || "-")}</p>
+            <p style={{ color: "#EAB308", fontSize: 9, fontWeight: 700 }}>{first?.pontos ?? 0} pts</p>
+            <div style={{ width: "100%", height: 80, backgroundColor: "rgba(255,255,255,0.15)", borderRadius: "8px 8px 0 0", marginTop: 4, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ color: "rgba(255,255,255,0.5)", fontWeight: 900, fontSize: 20 }}>1º</span>
             </div>
           </div>
           {/* 3rd place */}
-          <div className="flex flex-col items-center w-[90px]">
-            <span className="text-2xl mb-1">🥉</span>
-            <div className="w-11 h-11 rounded-full bg-white/15 border-2 border-amber-700 flex items-center justify-center text-sm font-black text-white">
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 90 }}>
+            <span style={{ fontSize: 24, marginBottom: 4 }}>🥉</span>
+            <div style={{ width: 44, height: 44, borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.15)", border: "2px solid #92400E", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 900, color: "#fff" }}>
               {third?.avatar || "?"}
             </div>
-            <p className="text-white text-[10px] font-bold mt-1 text-center">{firstName(third?.nome || "-")}</p>
-            <p className="text-white/60 text-[9px] font-bold">{third?.pontos ?? 0} pts</p>
-            <div className="w-full h-9 bg-white/10 rounded-t-lg mt-1 flex items-center justify-center">
-              <span className="text-white/40 font-black text-base">3º</span>
+            <p style={{ color: "#fff", fontSize: 10, fontWeight: 700, marginTop: 4, textAlign: "center" }}>{firstName(third?.nome || "-")}</p>
+            <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 9, fontWeight: 700 }}>{third?.pontos ?? 0} pts</p>
+            <div style={{ width: "100%", height: 36, backgroundColor: "rgba(255,255,255,0.1)", borderRadius: "8px 8px 0 0", marginTop: 4, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ color: "rgba(255,255,255,0.4)", fontWeight: 900, fontSize: 16 }}>3º</span>
             </div>
           </div>
         </div>
         {/* Footer */}
-        <div className="w-full bg-black/20 py-2 flex items-center justify-center gap-2 z-10">
-          <span className="text-white/50 text-[9px]">{rankLabel}</span>
-          <span className="text-white/30 text-[9px]">&bull;</span>
-          <span className="text-white/50 text-[9px]">bolaonacopa.com.br</span>
+        <div style={{ width: "100%", backgroundColor: "rgba(0,0,0,0.2)", padding: "8px 0", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, position: "relative", zIndex: 10 }}>
+          <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 9 }}>{rankLabel}</span>
+          <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 9 }}>&bull;</span>
+          <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 9 }}>bolaonacopa.com.br</span>
         </div>
       </div>
     );
