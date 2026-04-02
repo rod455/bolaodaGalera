@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import html2canvas from "html2canvas";
 import { Capacitor } from "@capacitor/core";
+import { Share } from "@capacitor/share";
 import { X, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -52,6 +53,13 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
     );
   };
 
+  const blobToDataUrl = (blob: Blob): Promise<string> =>
+    new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.readAsDataURL(blob);
+    });
+
   const saveImage = (blob: Blob) => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -84,31 +92,42 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
     }
   };
 
+  const shareNativeOrWeb = async (blob: Blob, text: string) => {
+    // Capacitor native: use Share plugin (opens native share sheet with image)
+    if (Capacitor.isNativePlatform()) {
+      const dataUrl = await blobToDataUrl(blob);
+      await Share.share({
+        title: `Ranking - ${bolaoNome}`,
+        text,
+        url: dataUrl,
+        dialogTitle: "Compartilhar ranking",
+      });
+      return;
+    }
+    // Web: try navigator.share with file
+    const file = new File([blob], "ranking-bolao.png", { type: "image/png" });
+    const shareData = { files: [file], text };
+    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+      await navigator.share(shareData);
+      return;
+    }
+    // Fallback web: save + open WhatsApp with text
+    saveImage(blob);
+    const encoded = encodeURIComponent(text);
+    if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+      window.location.href = `whatsapp://send?text=${encoded}`;
+    } else {
+      window.open(`https://web.whatsapp.com/send?text=${encoded}`, "_blank");
+    }
+    toast.success("Imagem salva! Cole no WhatsApp.");
+  };
+
   const handleWhatsApp = async () => {
     if (!badgeRef.current) return;
     setSharing(true);
     try {
       const blob = await captureImage();
-      const file = new File([blob], "ranking-bolao.png", { type: "image/png" });
-      const shareData = {
-        files: [file],
-        text: getShareText(),
-      };
-      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-        await navigator.share(shareData);
-      } else {
-        // Fallback: salva imagem e abre WhatsApp com texto
-        saveImage(blob);
-        const encoded = encodeURIComponent(getShareText());
-        if (Capacitor.isNativePlatform()) {
-          window.open(`https://api.whatsapp.com/send?text=${encoded}`, "_system");
-        } else if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-          window.location.href = `whatsapp://send?text=${encoded}`;
-        } else {
-          window.open(`https://web.whatsapp.com/send?text=${encoded}`, "_blank");
-        }
-        toast.success("Imagem salva! Cole no WhatsApp.");
-      }
+      await shareNativeOrWeb(blob, getShareText());
     } catch (err) {
       if ((err as Error).name !== "AbortError") {
         console.error("Erro ao compartilhar:", err);
@@ -124,21 +143,7 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
     setSharing(true);
     try {
       const blob = await captureImage();
-      const file = new File([blob], "ranking-bolao.png", { type: "image/png" });
-      const shareData = { files: [file] };
-      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-        await navigator.share(shareData);
-      } else {
-        saveImage(blob);
-        if (Capacitor.isNativePlatform()) {
-          window.open("instagram://story-camera", "_system");
-        } else if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-          window.location.href = "instagram://story-camera";
-        } else {
-          window.open("https://www.instagram.com", "_blank");
-        }
-        toast.success("Imagem salva! Cole nos Stories do Instagram.");
-      }
+      await shareNativeOrWeb(blob, getShareText());
     } catch (err) {
       if ((err as Error).name !== "AbortError") {
         console.error("Erro ao compartilhar:", err);
@@ -153,36 +158,36 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
   const BadgeComFoto = () => {
     if (!me) return <p className="text-center text-sm text-muted-foreground py-8">Você ainda não está no ranking.</p>;
     return (
-      <div className="w-[320px] h-[320px] rounded-2xl overflow-hidden relative flex flex-col items-center justify-center"
+      <div className="w-[240px] h-[240px] rounded-2xl overflow-hidden relative flex flex-col items-center justify-center"
         style={{ background: "linear-gradient(135deg, #1B5E20 0%, #2E7D32 50%, #1B5E20 100%)" }}>
         {/* Pattern overlay */}
         <div className="absolute inset-0 opacity-5"
           style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "20px 20px" }} />
         {/* Header */}
-        <div className="flex items-center gap-2 mb-3 z-10">
-          <img src={LOGO_URL} alt="" className="w-6 h-6" crossOrigin="anonymous" />
-          <span className="text-white/80 font-bold text-xs tracking-wide uppercase">Bolão na Copa</span>
+        <div className="flex items-center gap-1.5 mb-2 z-10">
+          <img src={LOGO_URL} alt="" className="w-5 h-5" crossOrigin="anonymous" />
+          <span className="text-white/80 font-bold text-[10px] tracking-wide uppercase">Bolão na Copa</span>
         </div>
         {/* Avatar */}
-        <div className="w-16 h-16 rounded-full bg-white/20 border-2 border-copa-gold-400 flex items-center justify-center text-2xl font-black text-white z-10">
+        <div className="w-12 h-12 rounded-full bg-white/20 border-2 border-copa-gold-400 flex items-center justify-center text-xl font-black text-white z-10">
           {me.avatar}
         </div>
         {/* Name */}
-        <p className="text-white font-bold text-base mt-2 z-10">{me.nome}</p>
+        <p className="text-white font-bold text-sm mt-1.5 z-10">{me.nome}</p>
         {/* Position */}
-        <div className="flex items-center gap-2 mt-1 z-10">
-          <span className="text-3xl">{getMedalEmoji(me.pos) || "🏅"}</span>
-          <span className="text-white font-black text-3xl">{getOrdinal(me.pos)}</span>
-          <span className="text-white/70 font-bold text-lg">lugar</span>
+        <div className="flex items-center gap-1.5 mt-0.5 z-10">
+          <span className="text-2xl">{getMedalEmoji(me.pos) || "🏅"}</span>
+          <span className="text-white font-black text-2xl">{getOrdinal(me.pos)}</span>
+          <span className="text-white/70 font-bold text-sm">lugar</span>
         </div>
         {/* Bolão name */}
-        <div className="mt-3 z-10 text-center px-6">
-          <p className="text-copa-gold-400 font-bold text-xs truncate max-w-[280px]">{bolaoNome}</p>
-          <p className="text-white/60 text-[10px] mt-0.5">{rankLabel} &bull; {me.pontos} pts</p>
+        <div className="mt-2 z-10 text-center px-4">
+          <p className="text-copa-gold-400 font-bold text-[10px] truncate max-w-[210px]">{bolaoNome}</p>
+          <p className="text-white/60 text-[8px] mt-0.5">{rankLabel} &bull; {me.pontos} pts</p>
         </div>
         {/* Footer */}
-        <div className="absolute bottom-3 flex items-center gap-1 z-10">
-          <span className="text-white/40 text-[9px]">bolaonacopa.com.br</span>
+        <div className="absolute bottom-2 flex items-center gap-1 z-10">
+          <span className="text-white/40 text-[8px]">bolaonacopa.com.br</span>
         </div>
       </div>
     );
@@ -192,29 +197,29 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
   const BadgeSemFoto = () => {
     if (!me) return <p className="text-center text-sm text-muted-foreground py-8">Você ainda não está no ranking.</p>;
     return (
-      <div className="w-[320px] h-[320px] rounded-2xl overflow-hidden relative flex flex-col items-center justify-center"
+      <div className="w-[240px] h-[240px] rounded-2xl overflow-hidden relative flex flex-col items-center justify-center"
         style={{ background: "linear-gradient(135deg, #0D3B1A 0%, #1B5E20 50%, #2E7D32 100%)" }}>
         <div className="absolute inset-0 opacity-5"
           style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
         {/* Header */}
-        <div className="flex items-center gap-2 mb-2 z-10">
-          <img src={LOGO_URL} alt="" className="w-6 h-6" crossOrigin="anonymous" />
-          <span className="text-white/80 font-bold text-xs tracking-wide uppercase">Bolão na Copa</span>
+        <div className="flex items-center gap-1.5 mb-1 z-10">
+          <img src={LOGO_URL} alt="" className="w-5 h-5" crossOrigin="anonymous" />
+          <span className="text-white/80 font-bold text-[10px] tracking-wide uppercase">Bolão na Copa</span>
         </div>
         {/* Big medal + position */}
-        <span className="text-6xl z-10">{getMedalEmoji(me.pos) || "🏅"}</span>
-        <span className="text-white font-black text-5xl mt-1 z-10">{getOrdinal(me.pos)}</span>
-        <span className="text-white/60 font-bold text-lg z-10">lugar</span>
+        <span className="text-5xl z-10">{getMedalEmoji(me.pos) || "🏅"}</span>
+        <span className="text-white font-black text-4xl mt-0.5 z-10">{getOrdinal(me.pos)}</span>
+        <span className="text-white/60 font-bold text-sm z-10">lugar</span>
         {/* Name + points */}
-        <p className="text-white font-bold text-base mt-3 z-10">{me.nome}</p>
-        <p className="text-copa-gold-400 font-bold text-sm z-10">{me.pontos} pontos</p>
+        <p className="text-white font-bold text-sm mt-2 z-10">{me.nome}</p>
+        <p className="text-copa-gold-400 font-bold text-xs z-10">{me.pontos} pontos</p>
         {/* Bolão */}
-        <div className="mt-2 z-10 text-center px-6">
-          <p className="text-white/50 text-xs truncate max-w-[280px]">{bolaoNome}</p>
-          <p className="text-white/40 text-[10px]">{rankLabel}</p>
+        <div className="mt-1.5 z-10 text-center px-4">
+          <p className="text-white/50 text-[10px] truncate max-w-[210px]">{bolaoNome}</p>
+          <p className="text-white/40 text-[8px]">{rankLabel}</p>
         </div>
-        <div className="absolute bottom-3 z-10">
-          <span className="text-white/40 text-[9px]">bolaonacopa.com.br</span>
+        <div className="absolute bottom-2 z-10">
+          <span className="text-white/40 text-[8px]">bolaonacopa.com.br</span>
         </div>
       </div>
     );
@@ -227,60 +232,60 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
     const second = top3.find((r) => r.pos === 2);
     const third = top3.find((r) => r.pos === 3);
     return (
-      <div className="w-[320px] h-[320px] rounded-2xl overflow-hidden relative flex flex-col items-center"
+      <div className="w-[240px] h-[240px] rounded-2xl overflow-hidden relative flex flex-col items-center"
         style={{ background: "linear-gradient(135deg, #1B5E20 0%, #2E7D32 50%, #1B5E20 100%)" }}>
         <div className="absolute inset-0 opacity-5"
           style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "20px 20px" }} />
         {/* Header */}
-        <div className="flex items-center gap-2 mt-4 z-10">
-          <img src={LOGO_URL} alt="" className="w-5 h-5" crossOrigin="anonymous" />
-          <span className="text-white/80 font-bold text-[10px] tracking-wide uppercase">Bolão na Copa</span>
+        <div className="flex items-center gap-1.5 mt-3 z-10">
+          <img src={LOGO_URL} alt="" className="w-4 h-4" crossOrigin="anonymous" />
+          <span className="text-white/80 font-bold text-[9px] tracking-wide uppercase">Bolão na Copa</span>
         </div>
-        <p className="text-copa-gold-400 font-bold text-xs mt-1 z-10 truncate max-w-[280px] px-4 text-center">{bolaoNome}</p>
+        <p className="text-copa-gold-400 font-bold text-[10px] mt-0.5 z-10 truncate max-w-[210px] px-3 text-center">{bolaoNome}</p>
         {/* Podium */}
-        <div className="flex items-end justify-center gap-3 mt-auto mb-2 z-10 w-full px-4">
+        <div className="flex items-end justify-center gap-2 mt-auto mb-1.5 z-10 w-full px-3">
           {/* 2nd place */}
-          <div className="flex flex-col items-center w-24">
-            <span className="text-2xl mb-1">🥈</span>
-            <div className="w-12 h-12 rounded-full bg-white/15 border-2 border-gray-300 flex items-center justify-center text-base font-black text-white">
+          <div className="flex flex-col items-center w-[68px]">
+            <span className="text-lg mb-0.5">🥈</span>
+            <div className="w-9 h-9 rounded-full bg-white/15 border-2 border-gray-300 flex items-center justify-center text-xs font-black text-white">
               {second?.avatar || "?"}
             </div>
-            <p className="text-white text-[10px] font-bold mt-1 truncate w-full text-center">{second?.nome || "-"}</p>
-            <p className="text-white/60 text-[9px] font-bold">{second?.pontos ?? 0} pts</p>
-            <div className="w-full h-16 bg-white/10 rounded-t-lg mt-1 flex items-center justify-center">
-              <span className="text-white/40 font-black text-xl">2º</span>
+            <p className="text-white text-[8px] font-bold mt-0.5 truncate w-full text-center">{second?.nome || "-"}</p>
+            <p className="text-white/60 text-[7px] font-bold">{second?.pontos ?? 0} pts</p>
+            <div className="w-full h-10 bg-white/10 rounded-t-lg mt-0.5 flex items-center justify-center">
+              <span className="text-white/40 font-black text-sm">2º</span>
             </div>
           </div>
           {/* 1st place */}
-          <div className="flex flex-col items-center w-24">
-            <span className="text-3xl mb-1">🥇</span>
-            <div className="w-14 h-14 rounded-full bg-white/20 border-2 border-copa-gold-400 flex items-center justify-center text-lg font-black text-white">
+          <div className="flex flex-col items-center w-[68px]">
+            <span className="text-xl mb-0.5">🥇</span>
+            <div className="w-10 h-10 rounded-full bg-white/20 border-2 border-copa-gold-400 flex items-center justify-center text-sm font-black text-white">
               {first?.avatar || "?"}
             </div>
-            <p className="text-white text-[11px] font-bold mt-1 truncate w-full text-center">{first?.nome || "-"}</p>
-            <p className="text-copa-gold-400 text-[10px] font-bold">{first?.pontos ?? 0} pts</p>
-            <div className="w-full h-24 bg-white/15 rounded-t-lg mt-1 flex items-center justify-center">
-              <span className="text-white/50 font-black text-2xl">1º</span>
+            <p className="text-white text-[8px] font-bold mt-0.5 truncate w-full text-center">{first?.nome || "-"}</p>
+            <p className="text-copa-gold-400 text-[8px] font-bold">{first?.pontos ?? 0} pts</p>
+            <div className="w-full h-16 bg-white/15 rounded-t-lg mt-0.5 flex items-center justify-center">
+              <span className="text-white/50 font-black text-lg">1º</span>
             </div>
           </div>
           {/* 3rd place */}
-          <div className="flex flex-col items-center w-24">
-            <span className="text-2xl mb-1">🥉</span>
-            <div className="w-12 h-12 rounded-full bg-white/15 border-2 border-amber-700 flex items-center justify-center text-base font-black text-white">
+          <div className="flex flex-col items-center w-[68px]">
+            <span className="text-lg mb-0.5">🥉</span>
+            <div className="w-9 h-9 rounded-full bg-white/15 border-2 border-amber-700 flex items-center justify-center text-xs font-black text-white">
               {third?.avatar || "?"}
             </div>
-            <p className="text-white text-[10px] font-bold mt-1 truncate w-full text-center">{third?.nome || "-"}</p>
-            <p className="text-white/60 text-[9px] font-bold">{third?.pontos ?? 0} pts</p>
-            <div className="w-full h-12 bg-white/10 rounded-t-lg mt-1 flex items-center justify-center">
-              <span className="text-white/40 font-black text-xl">3º</span>
+            <p className="text-white text-[8px] font-bold mt-0.5 truncate w-full text-center">{third?.nome || "-"}</p>
+            <p className="text-white/60 text-[7px] font-bold">{third?.pontos ?? 0} pts</p>
+            <div className="w-full h-8 bg-white/10 rounded-t-lg mt-0.5 flex items-center justify-center">
+              <span className="text-white/40 font-black text-sm">3º</span>
             </div>
           </div>
         </div>
         {/* Footer */}
-        <div className="w-full bg-black/20 py-2 flex items-center justify-center gap-2 z-10">
-          <span className="text-white/50 text-[9px]">{rankLabel}</span>
-          <span className="text-white/30 text-[9px]">&bull;</span>
-          <span className="text-white/50 text-[9px]">bolaonacopa.com.br</span>
+        <div className="w-full bg-black/20 py-1.5 flex items-center justify-center gap-2 z-10">
+          <span className="text-white/50 text-[8px]">{rankLabel}</span>
+          <span className="text-white/30 text-[8px]">&bull;</span>
+          <span className="text-white/50 text-[8px]">bolaonacopa.com.br</span>
         </div>
       </div>
     );
