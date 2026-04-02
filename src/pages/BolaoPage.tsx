@@ -965,7 +965,7 @@ const BolaoPage = () => {
                   darXP("compartilhar", 10).then((ganhou) => {
                     if (ganhou) setXPToast({ xp: 10, msg: "Resultado compartilhado!" });
                   });
-                  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+                  const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
                   if (Capacitor.isNativePlatform()) { window.open(whatsappUrl, "_system"); } else { window.open(whatsappUrl, "_blank"); }
                 }}
                 className="rounded-full h-9 w-9 border-[#25D366] text-[#25D366] hover:bg-green-50"

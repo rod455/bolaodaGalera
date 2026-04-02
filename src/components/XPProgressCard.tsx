@@ -35,7 +35,7 @@ const XPProgressCard = ({ userXP, referralCode, variant = "full" }: XPProgressCa
 
   const handleWhatsAppReferral = () => {
     if (!referralCode) return;
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(getReferralText())}`;
+    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(getReferralText())}`;
     if (Capacitor.isNativePlatform()) { window.open(whatsappUrl, "_system"); } else { window.open(whatsappUrl, "_blank"); }
   };
 
