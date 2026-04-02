@@ -244,8 +244,8 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
   ];
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-white rounded-2xl max-w-[380px] w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-[100] bg-black/60 flex items-start justify-center pt-20 p-4 overflow-y-auto" onClick={onClose}>
+      <div className="bg-white rounded-2xl max-w-[380px] w-full mb-10" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b">
           <h3 className="font-bold text-sm">Compartilhar Ranking</h3>
