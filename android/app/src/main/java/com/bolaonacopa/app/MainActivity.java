@@ -23,6 +23,7 @@ public class MainActivity extends BridgeActivity implements ModifiedMainActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        registerPlugin(WhatsAppSharePlugin.class);
         createNotificationChannel();
         initInstallReferrer();
     }

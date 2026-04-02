@@ -1,9 +1,14 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import html2canvas from "html2canvas";
-import { Capacitor } from "@capacitor/core";
+import { Capacitor, registerPlugin } from "@capacitor/core";
 import { Share } from "@capacitor/share";
 import { Filesystem, Directory } from "@capacitor/filesystem";
+
+interface WhatsAppSharePlugin {
+  share(options: { fileUri: string; text?: string }): Promise<void>;
+}
+const WhatsAppShare = registerPlugin<WhatsAppSharePlugin>("WhatsAppShare");
 import { X, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -150,20 +155,19 @@ const ShareBadge = ({ open, onClose, bolaoNome, ranking, rankingType, rodadaLabe
       const encoded = encodeURIComponent(text);
 
       if (Capacitor.isNativePlatform()) {
-        // Salvar imagem e compartilhar via share sheet com files[]
         const fileUri = await saveToNativeFile(blob);
         if (fileUri) {
-          await Share.share({
-            title: `Ranking - ${bolaoNome}`,
-            text,
-            files: [fileUri],
-            dialogTitle: "Enviar para WhatsApp",
-          });
+          try {
+            // Plugin nativo abre WhatsApp direto com imagem
+            await WhatsAppShare.share({ fileUri, text });
+          } catch {
+            // Fallback: share sheet genérico
+            await Share.share({ title: `Ranking - ${bolaoNome}`, text, files: [fileUri], dialogTitle: "Enviar para WhatsApp" });
+          }
         } else {
-          // Fallback: salvar imagem + abrir WhatsApp direto
           saveImage(blob);
-          toast.success("Imagem salva na galeria! Anexe no WhatsApp.");
-          window.open(`https://api.whatsapp.com/send?text=${encoded}`, Capacitor.isNativePlatform() ? "_system" : "_blank");
+          toast.success("Imagem salva! Anexe no WhatsApp.");
+          window.open(`https://api.whatsapp.com/send?text=${encoded}`, "_system");
         }
         return;
       }
