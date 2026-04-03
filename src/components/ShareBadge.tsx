@@ -80,31 +80,36 @@ const ShareBadge = ({ open, onClose, bolaoId, bolaoNome, ranking, rankingType, r
   const rankLabel = rankingType === "geral" ? "Ranking Geral" : `Ranking ${rodadaLabel || "Rodada"}`;
 
   const captureImage = async (): Promise<Blob> => {
-    const el = badgeRef.current!;
-    // Captura o elemento
-    const raw = await html2canvas(el, {
+    // Captura o badge diretamente (primeiro filho do wrapper)
+    const badge = badgeRef.current!.firstElementChild as HTMLElement;
+    const scale = 3;
+    const w = badge.offsetWidth;
+    const h = badge.offsetHeight;
+    const raw = await html2canvas(badge, {
       backgroundColor: null,
-      scale: 3,
+      scale,
       useCORS: false,
       allowTaint: false,
       logging: false,
       scrollX: 0,
       scrollY: -window.scrollY,
+      width: w,
+      height: h,
     });
-    // Recorta para as dimensões exatas do badge (elimina qualquer pixel extra)
-    const rect = el.getBoundingClientRect();
-    const s = 3; // scale
-    const w = Math.round(rect.width * s);
-    const h = Math.round(rect.height * s);
-    const cropped = document.createElement("canvas");
-    cropped.width = w;
-    cropped.height = h;
-    cropped.getContext("2d")!.drawImage(raw, 0, 0, w, h, 0, 0, w, h);
+    // Recorta para dimensões exatas caso html2canvas adicione pixels extras
+    const cw = w * scale;
+    const ch = h * scale;
+    if (raw.width !== cw || raw.height !== ch) {
+      const cropped = document.createElement("canvas");
+      cropped.width = cw;
+      cropped.height = ch;
+      cropped.getContext("2d")!.drawImage(raw, 0, 0, cw, ch, 0, 0, cw, ch);
+      return new Promise<Blob>((resolve, reject) =>
+        cropped.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob null"))), "image/png")
+      );
+    }
     return new Promise<Blob>((resolve, reject) =>
-      cropped.toBlob((b) => {
-        if (b) resolve(b);
-        else reject(new Error("toBlob retornou null"));
-      }, "image/png")
+      raw.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob null"))), "image/png")
     );
   };
 
@@ -373,7 +378,7 @@ const ShareBadge = ({ open, onClose, bolaoId, bolaoNome, ranking, rankingType, r
           </div>
         </div>
         {/* Footer */}
-        <div style={{ width: "100%", backgroundColor: "rgba(0,0,0,0.2)", padding: "8px 0", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, position: "relative", zIndex: 10 }}>
+        <div style={{ width: "100%", backgroundColor: "rgba(0,0,0,0.2)", padding: "8px 0", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, position: "relative", zIndex: 10, marginTop: "auto" }}>
           <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 9, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 120 }}>{bolaoNome}</span>
           <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 9 }}>&bull;</span>
           <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 9 }}>{rankLabel}</span>
