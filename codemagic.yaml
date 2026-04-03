@@ -9,7 +9,6 @@ workflows:
     environment:
       vars:
         BUNDLE_ID: com.bolaonacopa.app
-        XCODE_PROJECT: ios/App/App.xcodeproj
         XCODE_SCHEME: App
       node: 22.0.0
       xcode: latest
@@ -48,12 +47,14 @@ workflows:
 
       - name: Build IPA
         script: |
+          cd ios/App
           xcode-project build-ipa \
-            --project "$XCODE_PROJECT" \
+            --workspace App.xcworkspace \
             --scheme "$XCODE_SCHEME"
 
     artifacts:
       - build/ios/ipa/*.ipa
+      - ios/App/build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
 
     publishing:
