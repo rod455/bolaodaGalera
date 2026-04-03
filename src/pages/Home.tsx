@@ -634,6 +634,33 @@ const Home = () => {
         </button>
       )}
 
+      {/* ═══ GUEST: Banner Quiz ═══ */}
+      {!user && (
+        <div onClick={() => navigate("/quiz?start=true")}
+          className="relative overflow-hidden rounded-2xl cursor-pointer bg-gradient-to-br from-[#14532d] via-[#166534] to-[#15803d] p-6 text-white shadow-xl text-center">
+          <div className="absolute inset-0 pointer-events-none opacity-[0.03]" style={{
+            backgroundImage: "repeating-linear-gradient(90deg,transparent,transparent 60px,rgba(255,255,255,.5) 60px,rgba(255,255,255,.5) 61px), repeating-linear-gradient(0deg,transparent,transparent 60px,rgba(255,255,255,.5) 60px,rgba(255,255,255,.5) 61px)",
+          }} />
+          <div className="relative z-10 space-y-3 flex flex-col items-center">
+            <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-widest"
+              style={{ background: "rgba(250,204,21,.14)", border: "1px solid rgba(250,204,21,.38)", color: "#facc15" }}>
+              ⚽ 48 seleções · Copa 2026
+            </div>
+            <h3 className="leading-[0.9]" style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(1.8rem,7vw,3rem)", textShadow: "0 2px 16px rgba(0,0,0,.3)" }}>
+              Para qual seleção<br />
+              <span style={{ color: "#facc15" }}>você seria convocado?</span>
+            </h3>
+            <p className="text-xs max-w-sm" style={{ color: "rgba(255,255,255,.7)" }}>
+              10 perguntas revelam qual das <strong className="text-white">48 seleções</strong> combina com você.
+            </p>
+            <div className="flex items-center justify-center gap-2 mt-2 py-3 px-8 rounded-xl font-black text-sm"
+              style={{ background: "#facc15", color: "#14532d" }}>
+              Começar o Quiz <ChevronRight className="w-4 h-4 ml-1" />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ═══ FEEDBACK BANNER — aparece após palpitar ═══ */}
       {user && <FeedbackBanner />}
 
@@ -795,7 +822,10 @@ const Home = () => {
         })()}
 
         <div className="space-y-4">
-          {nacionais.map((b, i) => {
+          {(user ? nacionais : nacionais.filter(b => {
+            const campNome = ((b as any).campeonatos?.nome_popular || (b as any).campeonatos?.nome || "").toLowerCase();
+            return campNome.includes("copa do mundo") || campNome.includes("world cup") || campNome.includes("copa 2026");
+          })).map((b, i) => {
             const isPaulistao = b.id === PAULISTAO_BOLAO_ID;
             const card = (
               <NacionalCard key={b.id} bolao={b} participantes={participantesCount[b.id] || 0}
@@ -819,6 +849,24 @@ const Home = () => {
           {nacionais.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Nenhum bolão nacional disponível.</p>}
         </div>
       </div>
+
+      {/* ═══ GUEST: Banner Como Funciona ═══ */}
+      {!user && (
+        <div onClick={() => { window.location.href = "/como-funciona.html"; }}
+          className="relative overflow-hidden rounded-2xl cursor-pointer bg-gradient-to-br from-copa-green-600 to-copa-green-700 p-6 text-white shadow-lg text-center">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-10 translate-x-10 blur-2xl" />
+          <div className="relative z-10 space-y-3 flex flex-col items-center">
+            <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-2xl">🏆</div>
+            <h3 className="text-xl font-black">Como funciona o Bolão na Copa?</h3>
+            <p className="text-xs max-w-sm" style={{ color: "rgba(255,255,255,.7)" }}>
+              Crie bolões, faça palpites nos jogos e dispute com amigos. Ranking automático e 7 modos de pontuação.
+            </p>
+            <div className="flex items-center gap-2 mt-1 py-2.5 px-6 rounded-xl font-bold text-sm bg-white text-copa-green-700">
+              Saiba mais <ChevronRight className="w-4 h-4" />
+            </div>
+          </div>
+        </div>
+      )}
 
       <RegrasModal regras={regrasModal ? MODO_REGRAS[regrasModal] || null : null} open={!!regrasModal} onClose={() => setRegrasModal(null)} />
 
