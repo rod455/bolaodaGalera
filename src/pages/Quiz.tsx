@@ -61,6 +61,16 @@ const Quiz = () => {
     setRespostas([]);
   };
 
+  const handleVoltar = () => {
+    if (perguntaIdx > 0) {
+      const novasRespostas = respostas.slice(0, -1);
+      setRespostas(novasRespostas);
+      setPerguntaIdx(perguntaIdx - 1);
+    } else {
+      setStep("intro");
+    }
+  };
+
   const handleResposta = (opcaoIdx: number) => {
     const novasRespostas = [...respostas, opcaoIdx];
     setRespostas(novasRespostas);
@@ -173,15 +183,28 @@ const Quiz = () => {
         toast.success("Texto copiado!");
       });
     } else if (canal === "share") {
-      if (navigator.share) {
-        const shareData: ShareData = { title: `Quiz na Copa: ${selecao.titulo}`, text: texto };
-        if (imageFile && navigator.canShare && navigator.canShare({ files: [imageFile] })) {
-          shareData.files = [imageFile];
+      const url = "https://www.bolaonacopa.com.br/quiz-selecao";
+      try {
+        if (navigator.share) {
+          const shareData: ShareData = { title: `Quiz na Copa: ${selecao.titulo}`, text: texto, url };
+          if (imageFile && navigator.canShare && navigator.canShare({ files: [imageFile] })) {
+            shareData.files = [imageFile];
+          }
+          await navigator.share(shareData);
+        } else {
+          await navigator.clipboard.writeText(`${texto}\n${url}`);
+          toast.success("Link copiado para compartilhar!");
         }
-        navigator.share(shareData).catch(() => {});
-      } else {
-        navigator.clipboard.writeText(texto);
-        toast.success("Link copiado para compartilhar!");
+      } catch (err: any) {
+        // AbortError = usuario cancelou, nao e erro real
+        if (err?.name !== "AbortError") {
+          try {
+            await navigator.clipboard.writeText(`${texto}\n${url}`);
+            toast.success("Link copiado para compartilhar!");
+          } catch {
+            toast.error("Nao foi possivel compartilhar");
+          }
+        }
       }
     }
   }, [selecao, user]);
@@ -585,28 +608,37 @@ const Quiz = () => {
         <div className="relative z-10 max-w-lg mx-auto px-5 py-8 space-y-6">
           <SEOHead title={`Quiz na Copa — Pergunta ${perguntaIdx + 1}/10`} noindex />
 
-          {/* Progresso */}
+          {/* Voltar + Progresso */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold" style={{ color: "rgba(255,255,255,.5)" }}>
-                Pergunta {perguntaIdx + 1} de {PERGUNTAS.length}
-              </span>
-              <span className="text-xs font-bold" style={{ color: "#facc15" }}>{Math.round(progresso)}%</span>
-            </div>
-            <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,.1)" }}>
-              <div className="h-full rounded-full transition-all duration-500"
-                style={{ width: `${progresso}%`, background: "linear-gradient(90deg, #15803d, #facc15)" }} />
+            <div className="flex items-center gap-3">
+              <button onClick={handleVoltar}
+                className="p-1.5 rounded-full transition-colors hover:bg-white/10"
+                style={{ color: "rgba(255,255,255,.5)" }}>
+                <ArrowLeft className="w-4 h-4" />
+              </button>
+              <div className="flex-1 space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold" style={{ color: "rgba(255,255,255,.5)" }}>
+                    Pergunta {perguntaIdx + 1} de {PERGUNTAS.length}
+                  </span>
+                  <span className="text-xs font-bold" style={{ color: "#facc15" }}>{Math.round(progresso)}%</span>
+                </div>
+                <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,.1)" }}>
+                  <div className="h-full rounded-full transition-all duration-500"
+                    style={{ width: `${progresso}%`, background: "linear-gradient(90deg, #15803d, #facc15)" }} />
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Pergunta */}
           <h2 className="text-xl font-bold leading-snug">{pergunta.texto}</h2>
 
-          {/* Opcoes */}
+          {/* Opcoes — sem emojis, key unica por pergunta+opcao para evitar ghost selection */}
           <div className="space-y-2.5">
             {pergunta.opcoes.map((opcao, i) => (
               <button
-                key={i}
+                key={`${perguntaIdx}-${i}`}
                 onClick={() => handleResposta(i)}
                 className="w-full flex items-center gap-3 rounded-xl px-4 py-3.5 text-left transition-all active:scale-[0.98]"
                 style={{
@@ -616,7 +648,6 @@ const Quiz = () => {
                 onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(250,204,21,.08)"; e.currentTarget.style.borderColor = "rgba(250,204,21,.3)"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,.05)"; e.currentTarget.style.borderColor = "rgba(255,255,255,.1)"; }}
               >
-                <span className="text-xl flex-shrink-0">{opcao.icone}</span>
                 <span className="text-sm font-medium leading-snug" style={{ color: "rgba(255,255,255,.85)" }}>{opcao.texto}</span>
               </button>
             ))}

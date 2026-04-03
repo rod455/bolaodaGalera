@@ -124,7 +124,7 @@ const AppLayout = () => {
       <header className="bg-copa-green-500 text-white sticky top-0 z-50 shadow-md md:hidden"
         style={{ paddingTop: "max(2rem, env(safe-area-inset-top, 2rem))" }}>
         <div className="container max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3" onClick={() => navigate("/home")} style={{ cursor: "pointer" }}>
             <img src={LOGO_URL} alt="Bolão na Copa" className="w-9 h-9 object-contain" />
             <h1 className="text-lg font-bold tracking-tight">Bolão na Copa</h1>
           </div>
@@ -132,11 +132,6 @@ const AppLayout = () => {
             <NotificationCenter />
           ) : (
             <div className="flex items-center gap-1.5">
-              <button onClick={() => { window.location.href = "/como-funciona.html"; }}
-                className="text-white/80 hover:text-white transition-colors text-xs font-medium flex items-center gap-1">
-                <HelpCircle className="w-3.5 h-3.5" />
-                <span>Como Funciona</span>
-              </button>
               <button onClick={() => navigate("/auth")}
                 className="text-white/80 hover:text-white transition-colors text-xs font-medium">
                 Entrar
@@ -148,6 +143,19 @@ const AppLayout = () => {
             </div>
           )}
         </div>
+        {/* Barra de navegação mobile (abaixo do logo) */}
+        {!isLoggedIn && (
+          <div className="container max-w-4xl mx-auto px-2 flex border-t border-white/10">
+            <button onClick={() => navigate("/quiz")}
+              className={`flex-1 py-2 text-xs font-medium text-center transition-colors ${location.pathname === "/quiz" ? "text-copa-gold-400 border-b-2 border-copa-gold-400" : "text-white/60 hover:text-white"}`}>
+              Quiz da Copa
+            </button>
+            <button onClick={() => { window.location.href = "/como-funciona.html"; }}
+              className="flex-1 py-2 text-xs font-medium text-center text-white/60 hover:text-white transition-colors">
+              Como Funciona
+            </button>
+          </div>
+        )}
       </header>
 
       {/* Page Content */}
