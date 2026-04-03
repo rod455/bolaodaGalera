@@ -51,13 +51,13 @@ function preloadLogo(): Promise<string> {
 }
 
 const getMedalEmoji = (pos: number) => {
-  if (pos === 1) return "\u{1F947}";
-  if (pos === 2) return "\u{1F948}";
-  if (pos === 3) return "\u{1F949}";
+  if (pos === 1) return "🥇";
+  if (pos === 2) return "🥈";
+  if (pos === 3) return "🥉";
   return "";
 };
 
-const getOrdinal = (pos: number) => `${pos}\u00BA`;
+const getOrdinal = (pos: number) => `${pos}º`;
 const firstName = (nome: string) => nome.split(" ")[0];
 
 // ─── Estilos base reutilizáveis ───
@@ -99,9 +99,9 @@ const S = {
 const Footer = ({ bolaoNome, rankLabel }: { bolaoNome: string; rankLabel: string }) => (
   <div style={S.footer}>
     <span style={{ ...S.footerText, maxWidth: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{bolaoNome}</span>
-    <span style={S.footerDot}>{"\u2022"}</span>
+    <span style={S.footerDot}>{"•"}</span>
     <span style={S.footerText}>{rankLabel}</span>
-    <span style={S.footerDot}>{"\u2022"}</span>
+    <span style={S.footerDot}>{"•"}</span>
     <span style={S.footerText}>bolaonacopa.com.br</span>
   </div>
 );
@@ -109,7 +109,7 @@ const Footer = ({ bolaoNome, rankLabel }: { bolaoNome: string; rankLabel: string
 const Header = ({ logoSrc, mt }: { logoSrc: string; mt?: number }) => (
   <div style={S.header(mt)}>
     <img src={logoSrc} alt="" style={S.headerLogo} />
-    <span style={S.headerText}>Bol\u00E3o na Copa</span>
+    <span style={S.headerText}>Bolão na Copa</span>
   </div>
 );
 
@@ -177,8 +177,8 @@ const ShareBadge = ({ open, onClose, bolaoId, bolaoNome, ranking, rankingType, r
 
   const getShareText = () => {
     const defaultText = me
-      ? `\u{1F3C6} Estou em ${getOrdinal(me.pos)} lugar no bol\u00E3o "${bolaoNome}"!`
-      : `\u{1F3C6} Confira o ranking do bol\u00E3o "${bolaoNome}"!`;
+      ? `🏆 Estou em ${getOrdinal(me.pos)} lugar no bolão "${bolaoNome}"!`
+      : `🏆 Confira o ranking do bolão "${bolaoNome}"!`;
     const phrase = fraseCustom.trim() ? `\n\n${fraseCustom.trim()}` : "";
     return `${defaultText}${phrase}\n\nVem competir comigo: ${getShareBadgeUrl(bolaoId)}`;
   };
@@ -309,14 +309,14 @@ const ShareBadge = ({ open, onClose, bolaoId, bolaoNome, ranking, rankingType, r
   // ════════════════════════════════════════════════════════════════
 
   const BadgeComFoto = () => {
-    if (!me) return <p style={{ textAlign: "center", padding: "32px 0", fontSize: 14, color: "#999" }}>Voc\u00EA ainda n\u00E3o est\u00E1 no ranking.</p>;
+    if (!me) return <p style={{ textAlign: "center", padding: "32px 0", fontSize: 14, color: "#999" }}>Você ainda não está no ranking.</p>;
     return (
       <div style={S.badge(280, 280, "linear-gradient(135deg, #1B5E20 0%, #2E7D32 50%, #1B5E20 100%)")}>
         <Header logoSrc={logoSrc} />
         <div style={{ ...S.avatar(52, "#EAB308"), fontSize: 22, marginTop: 12 }}>{me.avatar}</div>
         <p style={{ color: "#fff", fontWeight: 700, fontSize: 14, marginTop: 6 }}>{me.nome}</p>
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
-          <span style={{ fontSize: 26 }}>{getMedalEmoji(me.pos) || "\u{1F3C5}"}</span>
+          <span style={{ fontSize: 26 }}>{getMedalEmoji(me.pos) || "🏅"}</span>
           <span style={{ color: "#fff", fontWeight: 900, fontSize: 26 }}>{getOrdinal(me.pos)}</span>
           <span style={{ color: "rgba(255,255,255,0.7)", fontWeight: 700, fontSize: 14 }}>lugar</span>
         </div>
@@ -327,11 +327,11 @@ const ShareBadge = ({ open, onClose, bolaoId, bolaoNome, ranking, rankingType, r
   };
 
   const BadgeSemFoto = () => {
-    if (!me) return <p style={{ textAlign: "center", padding: "32px 0", fontSize: 14, color: "#999" }}>Voc\u00EA ainda n\u00E3o est\u00E1 no ranking.</p>;
+    if (!me) return <p style={{ textAlign: "center", padding: "32px 0", fontSize: 14, color: "#999" }}>Você ainda não está no ranking.</p>;
     return (
       <div style={S.badge(280, 280, "linear-gradient(135deg, #0D3B1A 0%, #1B5E20 50%, #2E7D32 100%)")}>
         <Header logoSrc={logoSrc} />
-        <span style={{ fontSize: 52, marginTop: 14 }}>{getMedalEmoji(me.pos) || "\u{1F3C5}"}</span>
+        <span style={{ fontSize: 52, marginTop: 14 }}>{getMedalEmoji(me.pos) || "🏅"}</span>
         <span style={{ color: "#fff", fontWeight: 900, fontSize: 38, marginTop: 2 }}>{getOrdinal(me.pos)}</span>
         <span style={{ color: "rgba(255,255,255,0.6)", fontWeight: 700, fontSize: 14 }}>lugar</span>
         <p style={{ color: "#fff", fontWeight: 700, fontSize: 14, marginTop: 6 }}>{me.nome}</p>
@@ -375,9 +375,9 @@ const ShareBadge = ({ open, onClose, bolaoId, bolaoNome, ranking, rankingType, r
           display: "flex", alignItems: "flex-end", justifyContent: "center",
           gap: 10, flex: 1, width: "100%", padding: "0 14px 36px",
         }}>
-          <PodiumCol entry={second} medal={"\u{1F948}"} border="#D1D5DB" colH={48} ordinal="2\u00BA" />
-          <PodiumCol entry={first} medal={"\u{1F947}"} border="#EAB308" colH={80} ordinal="1\u00BA" />
-          <PodiumCol entry={third} medal={"\u{1F949}"} border="#92400E" colH={36} ordinal="3\u00BA" />
+          <PodiumCol entry={second} medal="🥈" border="#D1D5DB" colH={48} ordinal="2º" />
+          <PodiumCol entry={first} medal="🥇" border="#EAB308" colH={80} ordinal="1º" />
+          <PodiumCol entry={third} medal="🥉" border="#92400E" colH={36} ordinal="3º" />
         </div>
         <Footer bolaoNome={bolaoNome} rankLabel={rankLabel} />
       </div>
@@ -389,7 +389,7 @@ const ShareBadge = ({ open, onClose, bolaoId, bolaoNome, ranking, rankingType, r
   const tabs = [
     { id: "foto" as const, label: "Com Foto" },
     { id: "sem-foto" as const, label: "Sem Foto" },
-    { id: "podio" as const, label: "P\u00F3dio" },
+    { id: "podio" as const, label: "Pódio" },
   ];
 
   return createPortal(
@@ -435,7 +435,7 @@ const ShareBadge = ({ open, onClose, bolaoId, bolaoNome, ranking, rankingType, r
             type="text"
             value={fraseCustom}
             onChange={(e) => setFraseCustom(e.target.value)}
-            placeholder="Escreva uma provoca\u00E7\u00E3o para os amigos..."
+            placeholder="Escreva uma provocação para os amigos..."
             maxLength={120}
             className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-copa-green-600 focus:border-transparent placeholder:text-gray-400"
           />
