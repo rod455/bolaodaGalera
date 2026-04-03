@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Share2, Loader2, ChevronRight, Copy, Check, Crown, Lock, Globe, Target, Shield, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Capacitor } from "@capacitor/core";
@@ -36,11 +36,14 @@ const getDaysUntilCopa = () => Math.max(0, Math.ceil((COPA_DATE.getTime() - Date
 
 const Quiz = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { plano } = useUserPlan();
   const { showAd, adLoading, resolveWebAd, needsAd } = useRewardedAd();
 
-  const [step, setStep] = useState<QuizStep>("hub");
+  // ?start=true vai direto para a primeira pergunta (vindo da LP)
+  const startDirect = searchParams.get("start") === "true";
+  const [step, setStep] = useState<QuizStep>(startDirect ? "pergunta" : "hub");
   const [perguntaIdx, setPerguntaIdx] = useState(0);
   const [respostas, setRespostas] = useState<number[]>([]);
   const [selecao, setSelecao] = useState<SelecaoQuiz | null>(null);
@@ -53,6 +56,13 @@ const Quiz = () => {
 
   // Premium/Pro pula o ad
   const isPremium = plano === "premium" || plano === "premium_pro";
+
+  // Track start quando vem da LP
+  useEffect(() => {
+    if (startDirect) {
+      trackEvent("quiz_start", { quiz_id: "quiz_selecao", source: "lp" });
+    }
+  }, [startDirect]);
 
   const handleStart = () => {
     trackEvent("quiz_start", { quiz_id: "quiz_selecao" });

@@ -212,19 +212,9 @@
       10 perguntas revelam qual das <strong>48 seleções</strong> da Copa 2026 combina com o seu jeito de jogar. Pode ser uma surpresa — ou exatamente o que você esperava.
     </p>
 
-    <div class="qprev"><div class="qi"><div class="qn">1</div><div class="qt">No último minuto empatado, o que você faz?</div><div class="ql">🔓</div></div><div class="qi"><div class="qn">2</div><div class="qt">Como seus parceiros de racha te descrevem?</div><div class="ql">🔒</div></div><div class="qi"><div class="qn">3</div><div class="qt">Qual frase define seu estilo de jogo?</div><div class="ql">🔒</div></div><div class="qi"><div class="qn">4</div><div class="qt">O que você nunca abre mão num jogo?</div><div class="ql">🔒</div></div><div class="qi" style="opacity:.45"><div class="qn" style="opacity:.4">+6</div><div class="qt" style="color:rgba(255,255,255,.3)">mais perguntas exclusivas no app</div><div class="ql">🔒</div></div></div>
-
-    <div class="rtease">
-      <div class="rlabel">Seu resultado pode ser qualquer uma dessas →</div>
-      <div class="rrow"><div class="rpill">🇧🇷 Brasil</div><div class="rpill">🇩🇪 Alemanha</div><div class="rpill bl">🇦🇷 Argentina</div><div class="rpill bl">🇫🇷 França</div><div class="rpill bl">🇪🇸 Espanha</div></div><div class="rrow"><div class="rpill bl">🇵🇹 Portugal</div><div class="rpill bl">🇲🇦 Marrocos</div><div class="rpill bl">🇯🇵 Japão</div><div class="rpill bl">🇺🇾 Uruguai</div><div class="rpill bl">🇳🇱 Holanda</div></div><div class="rrow"><div class="rpill bl">🇲🇽 México</div><div class="rpill bl">🇨🇴 Colômbia</div><div class="rpill bl">🇧🇪 Bélgica</div><div class="rpill bl">🇰🇷 Coreia do Sul</div><div class="rpill bl">... +33 possíveis</div></div>
-    </div>
-
-    <div class="cta">
-      <div class="lock">⚽</div>
-      <p class="cta-lbl">O quiz é 100% grátis e aberto</p>
-      <h2 class="cta-h">Descubra sua seleção<br><span>agora mesmo</span></h2>
-      <p class="cta-s">Quiz completo · 48 seleções possíveis · resultado na hora</p>
-      <a href="https://www.bolaonacopa.com.br/quiz" class="btn btn-main" onclick="tdl('quiz_web')" style="margin-bottom:10px">
+    <!-- CTA principal — antes das perguntas -->
+    <div class="cta" style="margin-top:32px">
+      <a href="https://www.bolaonacopa.com.br/quiz?start=true" class="btn btn-main" onclick="tdl('quiz_web')" style="margin-bottom:10px">
         ⚽ Fazer o Quiz agora — Grátis
       </a>
       <a href="https://play.google.com/store/apps/details?id=com.bolaonacopa.app&utm_source=quiz_selecao&utm_medium=site&utm_campaign=quiz_viral_copa2026" class="btn" onclick="tdl('hero')" target="_blank" rel="noopener" style="background:#111;color:#fff;box-shadow:0 4px 16px rgba(0,0,0,.3);font-weight:700">
@@ -233,11 +223,19 @@
       </a>
     </div>
 
-    <div class="sp">
+    <div class="sp" style="margin-top:18px">
       <div class="avs">
         <div class="av">M</div><div class="av">J</div><div class="av">A</div><div class="av">R</div><div class="av">+</div>
       </div>
-      <p class="sp-t"><strong>+3.800 pessoas</strong> já fizeram o quiz hoje</p>
+      <p class="sp-t"><strong>+5.400 pessoas</strong> já fizeram o quiz hoje</p>
+    </div>
+
+    <!-- Perguntas preview — abaixo do CTA -->
+    <div class="qprev"><div class="qi"><div class="qn">1</div><div class="qt">No último minuto empatado, o que você faz?</div><div class="ql">🔓</div></div><div class="qi"><div class="qn">2</div><div class="qt">Como seus parceiros de racha te descrevem?</div><div class="ql">🔒</div></div><div class="qi"><div class="qn">3</div><div class="qt">Qual frase define seu estilo de jogo?</div><div class="ql">🔒</div></div><div class="qi"><div class="qn">4</div><div class="qt">O que você nunca abre mão num jogo?</div><div class="ql">🔒</div></div><div class="qi" style="opacity:.45"><div class="qn" style="opacity:.4">+6</div><div class="qt" style="color:rgba(255,255,255,.3)">mais perguntas exclusivas</div><div class="ql">🔒</div></div></div>
+
+    <div class="rtease">
+      <div class="rlabel">Seu resultado pode ser qualquer uma dessas →</div>
+      <div class="rrow"><div class="rpill">🇧🇷 Brasil</div><div class="rpill">🇩🇪 Alemanha</div><div class="rpill bl">🇦🇷 Argentina</div><div class="rpill bl">🇫🇷 França</div><div class="rpill bl">🇪🇸 Espanha</div></div><div class="rrow"><div class="rpill bl">🇵🇹 Portugal</div><div class="rpill bl">🇲🇦 Marrocos</div><div class="rpill bl">🇯🇵 Japão</div><div class="rpill bl">🇺🇾 Uruguai</div><div class="rpill bl">🇳🇱 Holanda</div></div><div class="rrow"><div class="rpill bl">🇲🇽 México</div><div class="rpill bl">🇨🇴 Colômbia</div><div class="rpill bl">🇧🇪 Bélgica</div><div class="rpill bl">🇰🇷 Coreia do Sul</div><div class="rpill bl">... +33 possíveis</div></div>
     </div>
   </section>
 
@@ -294,7 +292,7 @@
       <div class="qce">🌎</div>
       <div class="qct"><div class="qctt">Em qual país-sede você estaria?</div><div class="qcs">EUA, México ou Canadá?</div></div>
       <div class="qcl">🔒</div></div>
-    <a href="https://www.bolaonacopa.com.br/quiz" class="btn" style="max-width:100%;margin-top:22px;text-decoration:none;" onclick="tdl('bottom_quiz')">
+    <a href="https://www.bolaonacopa.com.br/quiz?start=true" class="btn" style="max-width:100%;margin-top:22px;text-decoration:none;" onclick="tdl('bottom_quiz')">
       ⚽ Fazer o Quiz da Seleção agora — Grátis
     </a>
     <a href="https://play.google.com/store/apps/details?id=com.bolaonacopa.app&utm_source=quiz_selecao&utm_medium=site_bottom&utm_campaign=quiz_viral_copa2026" class="btn" style="max-width:100%;margin-top:10px;text-decoration:none;background:#111;color:#fff;box-shadow:0 4px 16px rgba(0,0,0,.3);font-weight:700" onclick="tdl('bottom')" target="_blank" rel="noopener">
