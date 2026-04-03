@@ -2,10 +2,13 @@
 
 User-agent: *
 Allow: /
+Allow: /home
+Allow: /auth
+Allow: /ao-vivo
+Allow: /planos
 Disallow: /perfil
 Disallow: /criar
 Disallow: /entrar
-Disallow: /bolao/
 Disallow: /unsubscribe
 Disallow: /cdn-cgi/
 

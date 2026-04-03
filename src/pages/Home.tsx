@@ -604,9 +604,10 @@ const Home = () => {
   return (
     <div className={`space-y-6 animate-fade-in ${!user ? "pb-20" : ""}`}>
       <SEOHead
-        title="Bolão da Copa 2026 — Palpites Grátis"
-        description="Crie seu bolão da Copa do Mundo 2026, Brasileirão, Paulistão e mais. Dispute com amigos, faça palpites e concorra a prêmios. 100% grátis!"
+        title="Bolão de Futebol Grátis | Copa do Mundo 2026, Brasileirão e mais"
+        description="Bolão na Copa: crie bolões de futebol grátis e dispute com amigos! Palpites no Brasileirão, Copa do Mundo 2026, Paulistão, Champions League e Copa do Brasil. Cadastre-se em 10 segundos."
         path="/home"
+        keywords="bolão na copa, bolão da copa, bolão de futebol grátis, palpites futebol, bolão brasileirão 2026, bolão copa do mundo 2026, bolão entre amigos"
       />
       <AdRewardModal open={showAdModal} onComplete={resolveWebAd} message="Assista para entrar no bolão" />
 

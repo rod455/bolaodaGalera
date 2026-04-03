@@ -118,9 +118,10 @@ const Planos = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       <SEOHead
-        title="Planos Premium"
-        description="Desbloqueie modos de pontuação exclusivos, bolões ilimitados e mais. Planos a partir de R$9,90/mês."
+        title="Planos Premium — Bolões Ilimitados a partir de R$9,90/mês"
+        description="Desbloqueie modos de pontuação exclusivos, bolões ilimitados, sem anúncios e mais. Bolão na Copa Premium a partir de R$9,90/mês ou R$79,90/ano."
         path="/planos"
+        keywords="bolão na copa premium, planos bolão, bolão sem anúncios, bolão ilimitado"
       />
       {/* Header */}
       <div className="flex items-center gap-3">
