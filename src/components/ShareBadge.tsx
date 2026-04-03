@@ -362,13 +362,12 @@ const ShareBadge = ({ open, onClose, bolaoId, bolaoNome, ranking, rankingType, r
           </div>
         </div>
         {/* Footer */}
-        <div style={{ width: "100%", backgroundColor: "rgba(0,0,0,0.2)", padding: "8px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, position: "relative", zIndex: 10 }}>
-          <span style={{ color: "#EAB308", fontWeight: 700, fontSize: 10, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 290 }}>{bolaoNome}</span>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 9 }}>{rankLabel}</span>
-            <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 9 }}>&bull;</span>
-            <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 9 }}>bolaonacopa.com.br</span>
-          </div>
+        <div style={{ width: "100%", backgroundColor: "rgba(0,0,0,0.2)", padding: "8px 0", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, position: "relative", zIndex: 10 }}>
+          <span style={{ color: "#EAB308", fontWeight: 700, fontSize: 9, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 120 }}>{bolaoNome}</span>
+          <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 9 }}>&bull;</span>
+          <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 9 }}>{rankLabel}</span>
+          <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 9 }}>&bull;</span>
+          <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 9 }}>bolaonacopa.com.br</span>
         </div>
       </div>
     );
