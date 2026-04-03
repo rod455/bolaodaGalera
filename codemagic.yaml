@@ -33,6 +33,7 @@ workflows:
 
       - name: Setup iOS code signing
         script: |
+          set -ex
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
             --create
@@ -46,30 +47,15 @@ workflows:
           agvtool new-marketing-version 1.5.0
           agvtool new-version -all 26
 
-      - name: Archive
+      - name: Build IPA
         script: |
           set -ex
-          xcodebuild -project ios/App/App.xcodeproj \
-            -scheme "$XCODE_SCHEME" \
-            -configuration Release \
-            -archivePath $CM_BUILD_DIR/build/ios/App.xcarchive \
-            DEVELOPMENT_TEAM="$TEAM_ID" \
-            CODE_SIGN_STYLE=Automatic \
-            -allowProvisioningUpdates \
-            archive
-
-      - name: Export IPA
-        script: |
-          set -ex
-          xcodebuild -exportArchive \
-            -archivePath $CM_BUILD_DIR/build/ios/App.xcarchive \
-            -exportPath $CM_BUILD_DIR/build/ios/ipa \
-            -exportOptionsPlist ios/exportOptions.plist \
-            -allowProvisioningUpdates
+          xcode-project build-ipa \
+            --project ios/App/App.xcodeproj \
+            --scheme "$XCODE_SCHEME"
 
     artifacts:
       - build/ios/ipa/*.ipa
-      - build/ios/App.xcarchive
       - /tmp/xcodebuild_logs/*.log
 
     publishing:
