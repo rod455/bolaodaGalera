@@ -1,5 +1,7 @@
 {
   "rewrites": [
+    { "source": "/quiz-selecao", "destination": "/quiz-selecao.html" },
+    { "source": "/quiz-resultado", "destination": "/quiz-resultado.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
