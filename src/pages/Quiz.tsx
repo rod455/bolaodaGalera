@@ -17,6 +17,7 @@ import {
   type SelecaoQuiz, type Perfil,
 } from "@/lib/quiz-data";
 import { PLAY_STORE_URL } from "@/lib/constants";
+import { shareViaWhatsApp } from "@/lib/utils";
 
 type QuizStep = "intro" | "pergunta" | "calculando" | "ad-gate" | "resultado";
 
@@ -93,14 +94,7 @@ const Quiz = () => {
     trackEvent("quiz_share", { quiz_id: "quiz_selecao", resultado: selecao.id, canal });
 
     if (canal === "whatsapp") {
-      const encoded = encodeURIComponent(texto);
-      if (Capacitor.isNativePlatform()) {
-        window.open(`https://api.whatsapp.com/send?text=${encoded}`, "_system");
-      } else if (/Android|iPhone|iPad/i.test(navigator.userAgent)) {
-        window.location.href = `whatsapp://send?text=${encoded}`;
-      } else {
-        window.open(`https://web.whatsapp.com/send?text=${encoded}`, "_blank");
-      }
+      shareViaWhatsApp(texto);
     } else if (canal === "copiar") {
       navigator.clipboard.writeText(texto).then(() => {
         setCopied(true);

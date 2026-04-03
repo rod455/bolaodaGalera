@@ -22,6 +22,20 @@
     <priority>0.9</priority>
   </url>
 
+  <!-- Quiz -->
+  <url>
+    <loc>https://www.bolaonacopa.com.br/quiz</loc>
+    <lastmod>2026-04-03</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.bolaonacopa.com.br/quiz-selecao</loc>
+    <lastmod>2026-04-03</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
   <!-- Páginas do app (públicas) -->
   <url>
     <loc>https://www.bolaonacopa.com.br/auth</loc>
