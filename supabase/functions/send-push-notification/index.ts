@@ -162,6 +162,13 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    // Autenticar chamador: aceita service_role key ou JWT do próprio user
+    const authHeader = req.headers.get("authorization") || "";
+    const apikey = req.headers.get("apikey") || "";
+    const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const token = authHeader.startsWith("Bearer ") ? authHeader.substring(7) : "";
+    const isServiceCall = token === SERVICE_KEY || apikey === SERVICE_KEY;
+
     const {
       user_id,
       tipo,
@@ -176,6 +183,17 @@ serve(async (req) => {
         JSON.stringify({ error: "user_id, titulo, mensagem obrigatorios" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // Se não é chamada com service_role, validar que o JWT pertence ao user_id
+    if (!isServiceCall) {
+      const { data: { user: caller }, error: authError } = await supabase.auth.getUser(token);
+      if (authError || !caller || caller.id !== user_id) {
+        return new Response(
+          JSON.stringify({ error: "Nao autorizado: user_id nao corresponde ao token" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
 
     // 1. Criar notificacao in-app (com dedup via referencia)

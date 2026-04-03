@@ -20,6 +20,7 @@ import AppLayout from "./components/layout/AppLayout";
 import ProtectedRoute from "./components/layout/ProtectedRoute";
 import SplashScreen from "./components/SplashScreen";
 import NotificationToast from "./components/NotificationToast";
+import ErrorBoundary from "./components/ErrorBoundary";
 import { Analytics } from "@vercel/analytics/react";
 import { Capacitor } from "@capacitor/core";
 import { App as CapApp } from "@capacitor/app";
@@ -135,6 +136,7 @@ const App = () => {
       <TooltipProvider>
         <Sonner />
         {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
+        <ErrorBoundary>
         <AuthProvider>
           <BrowserRouter>
             <BackButtonHandler />
@@ -173,6 +175,7 @@ const App = () => {
             <NotificationToast />
           </BrowserRouter>
         </AuthProvider>
+        </ErrorBoundary>
         <Analytics />
       </TooltipProvider>
     </QueryClientProvider>

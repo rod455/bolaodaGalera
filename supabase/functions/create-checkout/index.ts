@@ -1,12 +1,23 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-region",
-  "Content-Type": "application/json",
-};
+const ALLOWED_ORIGINS = [
+  "https://bolaonacopa.com.br",
+  "https://www.bolaonacopa.com.br",
+  "https://bolaonacopa.lovable.app",
+  "https://bolaodacopa-ten.vercel.app",
+];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("origin") || "";
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-region",
+    "Content-Type": "application/json",
+  };
+}
 
 const SITE_URL = "https://www.bolaonacopa.com.br";
 const STRIPE_API = "https://api.stripe.com/v1";
@@ -19,6 +30,8 @@ const PRICE_PLAN_MAP: Record<string, string> = {
 };
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: corsHeaders });
   }
@@ -94,7 +107,7 @@ serve(async (req) => {
 
       if (!custRes.ok) {
         console.error("[create-checkout] Stripe customer error:", custData.error?.message);
-        return new Response(JSON.stringify({ error: custData.error?.message || "Erro ao criar customer" }), {
+        return new Response(JSON.stringify({ error: "Erro ao processar pagamento" }), {
           status: 500, headers: corsHeaders,
         });
       }
@@ -127,7 +140,7 @@ serve(async (req) => {
 
     if (!sessionRes.ok) {
       console.error("[create-checkout] Stripe checkout error:", sessionData.error?.message);
-      return new Response(JSON.stringify({ error: sessionData.error?.message || "Erro ao criar checkout" }), {
+      return new Response(JSON.stringify({ error: "Erro ao criar sessão de pagamento" }), {
         status: 500, headers: corsHeaders,
       });
     }
@@ -138,7 +151,7 @@ serve(async (req) => {
     });
   } catch (err) {
     console.error("[create-checkout] CATCH:", String(err));
-    return new Response(JSON.stringify({ error: String(err) }), {
+    return new Response(JSON.stringify({ error: "Erro interno do servidor" }), {
       status: 500, headers: corsHeaders,
     });
   }

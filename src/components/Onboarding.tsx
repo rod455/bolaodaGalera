@@ -169,6 +169,7 @@ const QuickBolaoStep = ({
   const handleCreate = async () => {
     if (!user || !bolaoName.trim() || !selectedChamp) return;
     setCreating(true);
+    let createdBolaoId: string | null = null;
     try {
       const codigo = Math.random().toString(36).substring(2, 8).toUpperCase();
       const { data: newBolao, error } = await supabase
@@ -185,6 +186,7 @@ const QuickBolaoStep = ({
         .single();
       if (error) throw error;
       if (!newBolao) throw new Error("Bolão não criado");
+      createdBolaoId = newBolao.id;
 
       const { error: campError } = await supabase.from("bolao_campeonatos").insert({
         bolao_id: newBolao.id,
@@ -201,6 +203,13 @@ const QuickBolaoStep = ({
       toast.success(`Bolão "${bolaoName.trim()}" criado!\nCódigo: ${codigo}`);
       onCreated(newBolao.id);
     } catch (err: any) {
+      // Rollback: se o bolão foi criado mas as etapas seguintes falharam, limpar
+      if (createdBolaoId) {
+        console.error("[Onboarding] Rollback bolão:", createdBolaoId, err);
+        await supabase.from("bolao_campeonatos").delete().eq("bolao_id", createdBolaoId).catch(() => {});
+        await supabase.from("bolao_participantes").delete().eq("bolao_id", createdBolaoId).catch(() => {});
+        await supabase.from("boloes").delete().eq("id", createdBolaoId).catch(() => {});
+      }
       toast.error(err.message || "Erro ao criar bolão");
     } finally {
       setCreating(false);

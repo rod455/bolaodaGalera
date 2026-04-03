@@ -269,8 +269,8 @@ const BolaoPage = () => {
 
   useEffect(() => {
     let active = true;
-    if (id && user) loadBolao().catch(() => {});
-    const interval = setInterval(() => { if (id && user && active) loadBolao().catch(() => {}); }, 60000);
+    if (id && user) loadBolao().catch((e) => console.error("[BolaoPage] loadBolao error:", e));
+    const interval = setInterval(() => { if (id && user && active) loadBolao().catch((e) => console.error("[BolaoPage] loadBolao interval error:", e)); }, 60000);
     return () => { active = false; clearInterval(interval); };
   }, [id, user]);
 
