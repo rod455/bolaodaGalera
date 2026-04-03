@@ -81,16 +81,17 @@ const ShareBadge = ({ open, onClose, bolaoId, bolaoNome, ranking, rankingType, r
 
   const captureImage = async (): Promise<Blob> => {
     const el = badgeRef.current!;
+    const rect = el.getBoundingClientRect();
     const canvas = await html2canvas(el, {
-      backgroundColor: "#1B5E20",
+      backgroundColor: null,
       scale: 3,
       useCORS: false,
       allowTaint: false,
       logging: false,
       scrollX: 0,
       scrollY: -window.scrollY,
-      width: el.scrollWidth,
-      height: el.scrollHeight,
+      width: rect.width,
+      height: rect.height,
     });
     return new Promise<Blob>((resolve, reject) =>
       canvas.toBlob((b) => {
