@@ -81,8 +81,8 @@ const ShareBadge = ({ open, onClose, bolaoId, bolaoNome, ranking, rankingType, r
 
   const captureImage = async (): Promise<Blob> => {
     const el = badgeRef.current!;
-    const rect = el.getBoundingClientRect();
-    const canvas = await html2canvas(el, {
+    // Captura o elemento
+    const raw = await html2canvas(el, {
       backgroundColor: null,
       scale: 3,
       useCORS: false,
@@ -90,11 +90,18 @@ const ShareBadge = ({ open, onClose, bolaoId, bolaoNome, ranking, rankingType, r
       logging: false,
       scrollX: 0,
       scrollY: -window.scrollY,
-      width: rect.width,
-      height: rect.height,
     });
+    // Recorta para as dimensões exatas do badge (elimina qualquer pixel extra)
+    const rect = el.getBoundingClientRect();
+    const s = 3; // scale
+    const w = Math.round(rect.width * s);
+    const h = Math.round(rect.height * s);
+    const cropped = document.createElement("canvas");
+    cropped.width = w;
+    cropped.height = h;
+    cropped.getContext("2d")!.drawImage(raw, 0, 0, w, h, 0, 0, w, h);
     return new Promise<Blob>((resolve, reject) =>
-      canvas.toBlob((b) => {
+      cropped.toBlob((b) => {
         if (b) resolve(b);
         else reject(new Error("toBlob retornou null"));
       }, "image/png")
