@@ -61,6 +61,7 @@ const Quiz = () => {
   useEffect(() => {
     if (startDirect) {
       trackEvent("quiz_start", { quiz_id: "quiz_selecao", source: "lp" });
+      window.scrollTo({ top: 0 });
     }
   }, [startDirect]);
 
@@ -69,6 +70,7 @@ const Quiz = () => {
     setStep("pergunta");
     setPerguntaIdx(0);
     setRespostas([]);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleVoltar = () => {
@@ -79,6 +81,7 @@ const Quiz = () => {
     } else {
       setStep("intro");
     }
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleResposta = (opcaoIdx: number) => {
@@ -103,9 +106,11 @@ const Quiz = () => {
         } else {
           setStep("ad-gate");
         }
+        window.scrollTo({ top: 0, behavior: "smooth" });
       }, 2000);
     } else {
       setPerguntaIdx(novasRespostas.length);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
@@ -116,6 +121,7 @@ const Quiz = () => {
       if (!adResult) return;
     }
     setStep("resultado");
+    window.scrollTo({ top: 0, behavior: "smooth" });
     setTimeout(() => setAnimBars(true), 500);
   };
 
