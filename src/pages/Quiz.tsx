@@ -141,8 +141,13 @@ const Quiz = () => {
   // Compartilha resultado com imagem
   const generateAndShare = useCallback(async (canal: string) => {
     if (!selecao) return;
-    const nome = user?.user_metadata?.nome || user?.email?.split("@")[0] || "Alguem";
-    const texto = `${selecao.bandeira} ${nome} fez o Quiz na Copa e foi convocado para ${selecao.nome} na Copa 2026!\n\nDescubra para qual selecao voce seria convocado:\n👉 bolaonacopa.com.br/quiz-selecao`;
+    const isAndroid = Capacitor.isNativePlatform() || /Android/i.test(navigator.userAgent);
+    const link = isAndroid
+      ? "https://play.google.com/store/apps/details?id=com.bolaonacopa.app&utm_source=quiz_share&utm_medium=whatsapp&utm_campaign=quiz_viral_copa2026"
+      : "https://www.bolaonacopa.com.br/quiz?start=true";
+    const femininos = ["Argentina","Alemanha","Australia","Austria","Belgica","Bosnia","Colombia","Croacia","Dinamarca","Escocia","Espanha","Franca","Holanda","Inglaterra","Jamaica","Noruega","Suecia","Suica","Tunisia","Turquia","Rep. Tcheca","Costa Rica","Costa do Marfim","Nova Zelandia","Arabia Saudita","Coreia do Sul","Africa do Sul"];
+    const artigo = femininos.some(f => selecao.nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(f)) ? "da" : "do";
+    const texto = `${selecao.bandeira} Fui convocado para jogar pela Sele\u00e7\u00e3o ${artigo} ${selecao.nome}! Qual sele\u00e7\u00e3o te convocaria? Descubra em:\n👉 ${link}`;
 
     trackEvent("quiz_share", { quiz_id: "quiz_selecao", resultado: selecao.id, canal });
 

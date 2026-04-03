@@ -246,6 +246,24 @@ export const PERGUNTAS: PerguntaQuiz[] = [
 // ── Algoritmo ──
 const DIMS = ["artista", "maquina", "guerreiro", "surpresa", "festa"] as const;
 
+// Mapeia perfil dominante para posição de futebol
+const POSICAO_MAP: Record<string, string> = {
+  artista: "Meia-Atacante",
+  maquina: "Volante",
+  guerreiro: "Zagueiro",
+  surpresa: "Ponta",
+  festa: "Camisa 10",
+};
+
+export function getPosicaoPerfil(perfil: Perfil): string {
+  let max = -1;
+  let dim = "festa";
+  for (const d of DIMS) {
+    if (perfil[d] > max) { max = perfil[d]; dim = d; }
+  }
+  return POSICAO_MAP[dim] || "Camisa 10";
+}
+
 export function calcularPerfil(respostas: number[]): Perfil {
   const p: Perfil = { artista: 0, maquina: 0, guerreiro: 0, surpresa: 0, festa: 0 };
   respostas.forEach((resp, qi) => {
