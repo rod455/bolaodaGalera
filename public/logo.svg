@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" version="1.2" baseProfile="tiny-ps">
+  <title>Bolão na Copa</title>
+  <!-- Fundo circular verde -->
+  <circle cx="256" cy="256" r="256" fill="#16a34a"/>
+  <!-- Circulo interno mais escuro -->
+  <circle cx="256" cy="256" r="220" fill="#15803d"/>
+  <!-- Bola de futebol estilizada -->
+  <circle cx="256" cy="180" r="80" fill="#facc15" stroke="#a16207" stroke-width="4"/>
+  <!-- Pentagono da bola -->
+  <polygon points="256,130 285,155 275,190 237,190 227,155" fill="#15803d"/>
+  <polygon points="256,110 230,130 237,155 275,155 282,130" fill="#15803d"/>
+  <!-- Xícara (corpo) -->
+  <rect x="186" y="240" width="140" height="80" rx="12" fill="#facc15"/>
+  <rect x="196" y="250" width="120" height="60" rx="8" fill="#16a34a"/>
+  <!-- Alça da xícara -->
+  <path d="M326,260 C360,260 360,310 326,310" fill="none" stroke="#facc15" stroke-width="12"/>
+  <!-- Prato -->
+  <ellipse cx="256" cy="330" rx="100" ry="16" fill="#a16207"/>
+  <ellipse cx="256" cy="326" rx="100" ry="16" fill="#facc15"/>
+  <!-- BOLÃO -->
+  <text x="256" y="390" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="bold" font-size="52" fill="#ffffff" letter-spacing="3">BOLÃO</text>
+  <!-- NA COPA -->
+  <text x="256" y="432" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="bold" font-size="36" fill="#facc15" letter-spacing="2">NA COPA</text>
+  <!-- Estrelas -->
+  <polygon points="196,448 200,458 210,458 202,464 205,474 196,468 187,474 190,464 182,458 192,458" fill="#facc15"/>
+  <polygon points="256,448 260,458 270,458 262,464 265,474 256,468 247,474 250,464 242,458 252,458" fill="#facc15"/>
+  <polygon points="316,448 320,458 330,458 322,464 325,474 316,468 307,474 310,464 302,458 312,458" fill="#facc15"/>
+</svg>
