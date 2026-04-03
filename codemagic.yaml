@@ -34,6 +34,15 @@ workflows:
       - name: Sync Capacitor
         script: npx cap sync ios
 
+      - name: Setup iOS code signing
+        script: |
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create
+          keychain initialize
+          keychain add-certificates
+          xcode-project use-profiles
+
       - name: Set version
         script: |
           cd ios/App
@@ -42,7 +51,6 @@ workflows:
 
       - name: Build IPA
         script: |
-          xcode-project use-profiles
           xcode-project build-ipa \
             --project "$XCODE_PROJECT" \
             --scheme "$XCODE_SCHEME"
