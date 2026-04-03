@@ -79,14 +79,6 @@ const AppLayout = () => {
                     <span className="text-white text-[10px] leading-tight font-medium">Disponível no<br/><strong className="text-xs">Google Play</strong></span>
                   </a>
                 )}
-                <button onClick={() => { window.location.href = "/quiz-selecao"; }}
-                  className="text-white/80 hover:text-white transition-colors text-sm font-medium">
-                  Quiz
-                </button>
-                <button onClick={() => { window.location.href = "/como-funciona.html"; }}
-                  className="text-white/80 hover:text-white transition-colors text-sm font-medium">
-                  Como Funciona
-                </button>
                 <button onClick={() => navigate("/auth")}
                   className="text-white/80 hover:text-white transition-colors text-sm font-medium">
                   Entrar
