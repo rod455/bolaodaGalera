@@ -21,6 +21,7 @@ import EventosEspeciais from "@/components/EventosEspeciais";
 import PromoBolaoHeader from "@/components/PromoBolaoHeader";
 import type { Bolao, Jogo, Palpite, RankingEntry } from "@/lib/types";
 import { MODO_LABELS, MODO_REGRAS, getInviteUrl, PLAY_STORE_URL } from "@/lib/constants";
+import { shareViaWhatsApp } from "@/lib/utils";
 import { formatDataJogo, traduzirFase, getInitials } from "@/lib/formatters";
 import SEOHead from "@/components/SEOHead";
 import { useGamification } from "@/hooks/useGamification";
@@ -972,14 +973,7 @@ const BolaoPage = () => {
                   darXP("compartilhar", 10).then((ganhou) => {
                     if (ganhou) setXPToast({ xp: 10, msg: "Resultado compartilhado!" });
                   });
-                  const encoded = encodeURIComponent(text);
-                  if (Capacitor.isNativePlatform()) {
-                    window.open(`https://api.whatsapp.com/send?text=${encoded}`, "_system");
-                  } else if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-                    window.location.href = `whatsapp://send?text=${encoded}`;
-                  } else {
-                    window.open(`https://web.whatsapp.com/send?text=${encoded}`, "_blank");
-                  }
+                  shareViaWhatsApp(text);
                 }}
                 className="rounded-full h-9 w-9 border-[#25D366] text-[#25D366] hover:bg-green-50"
                 title="Convidar pelo WhatsApp"

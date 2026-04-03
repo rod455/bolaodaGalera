@@ -4,6 +4,7 @@ import { User, Mail, Lock, Trash2, Crown, Check, Pencil, LogOut, Camera, Loader2
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getReferralUrl, PLAY_STORE_URL } from "@/lib/constants";
+import { shareViaWhatsApp } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
@@ -645,14 +646,7 @@ const Perfil = () => {
               onClick={() => {
                 const url = Capacitor.isNativePlatform() ? PLAY_STORE_URL : (referralCode ? getReferralUrl(referralCode, "whatsapp") : "https://www.bolaonacopa.com.br/auth?utm_source=convite&utm_medium=whatsapp");
                 const text = `🏆 Vem jogar no Bolão na Copa! Faça seus palpites e dispute com seus amigos. Cadastre-se aqui: ${url}`;
-                const encoded = encodeURIComponent(text);
-                if (Capacitor.isNativePlatform()) {
-                  window.open(`https://api.whatsapp.com/send?text=${encoded}`, "_system");
-                } else if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-                  window.location.href = `whatsapp://send?text=${encoded}`;
-                } else {
-                  window.open(`https://web.whatsapp.com/send?text=${encoded}`, "_blank");
-                }
+                shareViaWhatsApp(text);
               }}
               className="flex-1 h-11 bg-[#25D366] hover:bg-[#1da851] text-white font-semibold rounded-xl"
             >

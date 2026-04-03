@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { getReferralUrl, PLAY_STORE_URL } from "@/lib/constants";
+import { shareViaWhatsApp } from "@/lib/utils";
 import NivelBadge from "@/components/NivelBadge";
 import {
   getNivelColor, getNivelEmoji, getNivelInfo, getProximoNivel, getXPProgress,
@@ -36,14 +37,7 @@ const XPProgressCard = ({ userXP, referralCode, variant = "full" }: XPProgressCa
 
   const handleWhatsAppReferral = () => {
     if (!referralCode) return;
-    const encoded = encodeURIComponent(getReferralText());
-    if (Capacitor.isNativePlatform()) {
-      window.open(`https://api.whatsapp.com/send?text=${encoded}`, "_system");
-    } else if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-      window.location.href = `whatsapp://send?text=${encoded}`;
-    } else {
-      window.open(`https://web.whatsapp.com/send?text=${encoded}`, "_blank");
-    }
+    shareViaWhatsApp(getReferralText());
   };
 
   const handleCopyReferral = () => {
