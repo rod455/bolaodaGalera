@@ -21,13 +21,13 @@ const InstallAppBanner = () => {
 
     const dismissed = localStorage.getItem(DISMISSED_KEY);
     if (dismissed) {
-      // Mostrar novamente após 7 dias
+      // Mostrar novamente após 3 dias
       const dismissedAt = parseInt(dismissed, 10);
-      if (!isNaN(dismissedAt) && Date.now() - dismissedAt < 7 * 24 * 60 * 60 * 1000) return;
+      if (!isNaN(dismissedAt) && Date.now() - dismissedAt < 3 * 24 * 60 * 60 * 1000) return;
     }
 
-    // Mostrar após 2 segundos para não atrapalhar o carregamento
-    const timer = setTimeout(() => setShow(true), 2000);
+    // Mostrar após 1 segundo
+    const timer = setTimeout(() => setShow(true), 1000);
     return () => clearTimeout(timer);
   }, []);
 
