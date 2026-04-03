@@ -265,7 +265,9 @@ const DynamicBanner = ({ userBolaoIds, userContext }: DynamicBannerProps) => {
     if (clickBlocked) return;
 
     if (!banner.bolao_id && banner.link) {
-      if (!user && !banner.link.startsWith("/auth")) {
+      const publicRoutes = ["/auth", "/quiz", "/planos", "/ao-vivo", "/home"];
+      const isPublicRoute = publicRoutes.some((r) => banner.link!.startsWith(r));
+      if (!user && !isPublicRoute) {
         navigate("/auth?modo=cadastro");
       } else {
         navigate(banner.link);
