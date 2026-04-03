@@ -121,7 +121,24 @@ const Quiz = () => {
 
   const [sharing, setSharing] = useState(false);
 
-  // Gera imagem do card de resultado e compartilha
+  // Gera imagem do card de resultado
+  const generateImage = useCallback(async (): Promise<File | null> => {
+    const cardEl = resultRef.current;
+    if (!cardEl) return null;
+    try {
+      const canvas = await html2canvas(cardEl, {
+        backgroundColor: "#071410",
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
+      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
+      if (blob) return new File([blob], `quiz-${selecao?.id || "resultado"}.png`, { type: "image/png" });
+    } catch { /* falha silenciosa */ }
+    return null;
+  }, [selecao]);
+
+  // Compartilha resultado com imagem
   const generateAndShare = useCallback(async (canal: string) => {
     if (!selecao) return;
     const nome = user?.user_metadata?.nome || user?.email?.split("@")[0] || "Alguem";
@@ -129,69 +146,59 @@ const Quiz = () => {
 
     trackEvent("quiz_share", { quiz_id: "quiz_selecao", resultado: selecao.id, canal });
 
-    // Tentar gerar imagem do card
-    let imageFile: File | null = null;
-    const cardEl = resultRef.current;
-    if (cardEl) {
-      try {
-        setSharing(true);
-        const canvas = await html2canvas(cardEl, {
-          backgroundColor: "#071410",
-          scale: 2,
-          useCORS: true,
-          logging: false,
-        });
-        const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
-        if (blob) {
-          imageFile = new File([blob], `quiz-${selecao.id}.png`, { type: "image/png" });
-        }
-      } catch {
-        // Fallback: compartilha sem imagem
-      } finally {
-        setSharing(false);
-      }
-    }
+    setSharing(true);
+    const imageFile = await generateImage();
+    setSharing(false);
 
     if (canal === "whatsapp") {
-      // No nativo com imagem, usar Share plugin
+      // ── 1. App nativo (Capacitor): salvar imagem + Share plugin ──
       if (Capacitor.isNativePlatform() && imageFile) {
         try {
           const { Filesystem } = await import("@capacitor/filesystem");
           const { Share } = await import("@capacitor/share");
-          const reader = new FileReader();
-          const base64 = await new Promise<string>((resolve) => {
+          const base64 = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
             reader.onload = () => resolve((reader.result as string).split(",")[1]);
-            reader.readAsDataURL(imageFile!);
+            reader.onerror = reject;
+            reader.readAsDataURL(imageFile);
           });
           const saved = await Filesystem.writeFile({
             path: `quiz-${selecao.id}.png`,
             data: base64,
-            directory: 1, // Cache
+            directory: 1, // Directory.Cache
           });
-          await Share.share({ title: selecao.titulo, text: texto, url: saved.uri, dialogTitle: "Compartilhar resultado" });
+          await Share.share({
+            title: `Quiz na Copa: ${selecao.titulo}`,
+            text: texto,
+            url: saved.uri,
+            dialogTitle: "Compartilhar resultado",
+          });
           return;
         } catch {
           // Fallback para texto
         }
       }
-      // Web: compartilhar com imagem via Web Share API se disponivel
+
+      // ── 2. Mobile web (Android/iPhone): Web Share API com imagem ──
       if (imageFile && navigator.canShare && navigator.canShare({ files: [imageFile] })) {
         try {
-          await navigator.share({ title: selecao.titulo, text: texto, files: [imageFile] });
+          await navigator.share({ text: texto, files: [imageFile] });
           return;
-        } catch {
-          // Fallback para texto
+        } catch (err: any) {
+          if (err?.name === "AbortError") return;
         }
       }
+
+      // ── 3. PC Web / Fallback: WhatsApp Web (so texto, nao suporta imagem) ──
       shareViaWhatsApp(texto);
+
     } else if (canal === "copiar") {
       navigator.clipboard.writeText(texto).then(() => {
         setCopied(true);
         toast.success("Texto copiado!");
         setTimeout(() => setCopied(false), 2500);
-      }).catch(() => {
-        toast.success("Texto copiado!");
-      });
+      }).catch(() => toast.success("Texto copiado!"));
+
     } else if (canal === "share") {
       const url = "https://www.bolaonacopa.com.br/quiz-selecao";
       try {
@@ -206,7 +213,6 @@ const Quiz = () => {
           toast.success("Link copiado para compartilhar!");
         }
       } catch (err: any) {
-        // AbortError = usuario cancelou, nao e erro real
         if (err?.name !== "AbortError") {
           try {
             await navigator.clipboard.writeText(`${texto}\n${url}`);
@@ -217,7 +223,7 @@ const Quiz = () => {
         }
       }
     }
-  }, [selecao, user]);
+  }, [selecao, user, generateImage]);
 
   const handleRefazer = () => {
     setStep("hub");
