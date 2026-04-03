@@ -7,9 +7,6 @@ workflows:
       app_store_connect: Bolao na Copa
 
     environment:
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.bolaonacopa.app
       vars:
         BUNDLE_ID: com.bolaonacopa.app
         XCODE_PROJECT: ios/App/App.xcodeproj
