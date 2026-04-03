@@ -10,6 +10,7 @@ workflows:
       vars:
         BUNDLE_ID: com.bolaonacopa.app
         XCODE_SCHEME: App
+        TEAM_ID: GGM89XNN4S
       node: 22.0.0
       xcode: latest
 
@@ -37,7 +38,7 @@ workflows:
             --create
           keychain initialize
           keychain add-certificates
-          xcode-project use-profiles
+          xcode-project use-profiles --project ios/App/App.xcodeproj
 
       - name: Set version
         script: |
@@ -47,13 +48,29 @@ workflows:
 
       - name: Build IPA
         script: |
-          xcode-project build-ipa \
-            --project ios/App/App.xcodeproj \
-            --scheme "$XCODE_SCHEME"
+          xcodebuild -project ios/App/App.xcodeproj \
+            -scheme "$XCODE_SCHEME" \
+            -configuration Release \
+            -archivePath build/ios/App.xcarchive \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_IDENTIFIER}.p8 \
+            -authenticationKeyID $APP_STORE_CONNECT_KEY_IDENTIFIER \
+            -authenticationKeyIssuerID $APP_STORE_CONNECT_ISSUER_ID \
+            DEVELOPMENT_TEAM="$TEAM_ID" \
+            CODE_SIGN_STYLE=Automatic \
+            archive | xcpretty
+
+          xcodebuild -exportArchive \
+            -archivePath build/ios/App.xcarchive \
+            -exportPath build/ios/ipa \
+            -exportOptionsPlist ios/exportOptions.plist \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_IDENTIFIER}.p8 \
+            -authenticationKeyID $APP_STORE_CONNECT_KEY_IDENTIFIER \
+            -authenticationKeyIssuerID $APP_STORE_CONNECT_ISSUER_ID | xcpretty
 
     artifacts:
       - build/ios/ipa/*.ipa
-      - ios/App/build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
 
     publishing:
