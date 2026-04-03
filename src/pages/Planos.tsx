@@ -45,7 +45,7 @@ const Planos = () => {
       toast.info("Pagamento cancelado. Você pode tentar novamente quando quiser.");
       window.history.replaceState({}, "", "/planos");
     }
-  }, [searchParams]);
+  }, [searchParams, refetch]);
 
   const handleCheckout = async (priceId: string) => {
     if (!session) {

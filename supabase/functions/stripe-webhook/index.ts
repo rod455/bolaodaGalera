@@ -66,14 +66,19 @@ serve(async (req) => {
   const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET") || "";
   const body = await req.text();
 
-  if (webhookSecret) {
-    const valid = await verifySignature(body, sigHeader, webhookSecret);
-    if (!valid) {
-      console.error("Webhook signature verification failed");
-      return new Response(JSON.stringify({ error: "Invalid signature" }), {
-        status: 400, headers: corsHeaders,
-      });
-    }
+  if (!webhookSecret) {
+    console.error("STRIPE_WEBHOOK_SECRET not configured — rejecting request");
+    return new Response(JSON.stringify({ error: "Webhook secret not configured" }), {
+      status: 500, headers: corsHeaders,
+    });
+  }
+
+  const valid = await verifySignature(body, sigHeader, webhookSecret);
+  if (!valid) {
+    console.error("Webhook signature verification failed");
+    return new Response(JSON.stringify({ error: "Invalid signature" }), {
+      status: 400, headers: corsHeaders,
+    });
   }
 
   const event = JSON.parse(body);

@@ -44,6 +44,7 @@ export const useUserPlan = (): UserPlanData => {
 
   useEffect(() => {
     fetchPlan();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   return {
