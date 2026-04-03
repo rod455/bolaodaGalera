@@ -125,7 +125,7 @@ const Quiz = () => {
   const generateAndShare = useCallback(async (canal: string) => {
     if (!selecao) return;
     const nome = user?.user_metadata?.nome || user?.email?.split("@")[0] || "Alguem";
-    const texto = `${selecao.bandeira} ${nome} fez o Quiz na Copa e e ${selecao.nome} na Copa 2026!\n\nDescubra qual das 48 selecoes voce seria:\n👉 bolaonacopa.com.br/quiz-selecao`;
+    const texto = `${selecao.bandeira} ${nome} fez o Quiz na Copa e foi convocado para ${selecao.nome} na Copa 2026!\n\nDescubra para qual selecao voce seria convocado:\n👉 bolaonacopa.com.br/quiz-selecao`;
 
     trackEvent("quiz_share", { quiz_id: "quiz_selecao", resultado: selecao.id, canal });
 
@@ -234,8 +234,8 @@ const Quiz = () => {
     return (
       <div className="space-y-6 animate-fade-in">
         <SEOHead
-          title="Quiz na Copa — Qual selecao da Copa 2026 voce seria?"
-          description="Responda 10 perguntas e descubra qual das 48 selecoes da Copa do Mundo 2026 combina com voce. Quiz na Copa — gratis!"
+          title="Quiz na Copa — Para qual selecao voce seria convocado?"
+          description="Responda 10 perguntas e descubra para qual das 48 selecoes da Copa do Mundo 2026 voce seria convocado. Quiz na Copa — gratis!"
           path="/quiz"
           keywords="quiz copa do mundo, quiz selecao, quiz futebol, bolao na copa quiz"
         />
@@ -267,8 +267,8 @@ const Quiz = () => {
             </div>
 
             <h3 className="leading-[0.88]" style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(2.5rem,10vw,5rem)", textShadow: "0 4px 24px rgba(0,0,0,.4)" }}>
-              Qual selecao<br />
-              <span style={{ color: "#facc15" }}>voce seria?</span>
+              Para qual selecao<br />
+              <span style={{ color: "#facc15" }}>voce seria convocado?</span>
             </h3>
 
             <p className="max-w-[420px] leading-relaxed" style={{ fontSize: "clamp(.88rem,2.5vw,1rem)", color: "rgba(255,255,255,.72)" }}>
@@ -392,7 +392,7 @@ const Quiz = () => {
     return (
       <div className="animate-fade-in -mx-4 -mt-6" style={{ background: "#14532d", color: "#fff", fontFamily: "'Inter', sans-serif" }}>
         <SEOHead
-          title="Quiz na Copa — Qual selecao da Copa 2026 voce seria?"
+          title="Quiz na Copa — Para qual selecao voce seria convocado?"
           description="Responda 10 perguntas e descubra qual das 48 selecoes da Copa do Mundo 2026 combina com seu estilo de jogo."
           path="/quiz"
           keywords="quiz copa do mundo, quiz selecao, quiz futebol, bolao na copa quiz"
@@ -423,8 +423,8 @@ const Quiz = () => {
             </div>
 
             <h1 className="leading-[0.88] mb-2" style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(2.8rem,11vw,6.5rem)", textShadow: "0 4px 28px rgba(0,0,0,.45)" }}>
-              Qual selecao<br />
-              <span style={{ color: "#facc15" }}>voce seria?</span>
+              Para qual selecao<br />
+              <span style={{ color: "#facc15" }}>voce seria convocado?</span>
             </h1>
 
             <p className="max-w-[480px] mx-auto mt-3 leading-relaxed" style={{ fontSize: "clamp(.95rem,2.8vw,1.15rem)", color: "rgba(255,255,255,.72)" }}>
@@ -809,7 +809,7 @@ const Quiz = () => {
             {/* ── BOTOES ── */}
             <div className="w-full max-w-[380px] mt-8 space-y-2.5">
               <p className="text-center mb-1" style={{ fontFamily: "'Barlow Condensed', 'Bebas Neue', sans-serif", fontWeight: 900, fontSize: "clamp(1.4rem,5vw,1.85rem)" }}>
-                E seus amigos,<br />qual seria <span style={{ color: "#facc15" }}>a selecao deles?</span>
+                E seus amigos,<br />para qual selecao <span style={{ color: "#facc15" }}>seriam convocados?</span>
               </p>
               <p className="text-center text-sm mb-5" style={{ color: "rgba(255,255,255,.42)" }}>
                 Manda pro grupo e ve quem vai ser a Argentina 👀
@@ -865,7 +865,7 @@ const Quiz = () => {
           {/* ── Provocacao ── */}
           <section className="max-w-[400px] mx-auto px-5 py-12 text-center">
             <h2 className="leading-[0.95] mb-2" style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(2.2rem,8vw,3.5rem)" }}>
-              Qual selecao<br /><span style={{ color: "#facc15" }}>os seus amigos seriam?</span>
+              Para qual selecao<br /><span style={{ color: "#facc15" }}>seus amigos seriam convocados?</span>
             </h2>
             <p className="text-sm leading-relaxed mb-6" style={{ color: "rgba(255,255,255,.48)" }}>
               47 resultados possiveis. Pode ser qualquer selecao das 48 da Copa 2026. O resultado surpreende.
