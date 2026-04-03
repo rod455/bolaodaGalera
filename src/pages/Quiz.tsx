@@ -295,62 +295,231 @@ const Quiz = () => {
     );
   }
 
-  // ═══ TELA: INTRO (antes de comecar o quiz seleção) ═══
+  // ═══ TELA: INTRO (landing page dark — visual da quiz-selecao.html) ═══
   if (step === "intro") {
+    const diasCopa = getDaysUntilCopa();
+    const LOGO_URL = "https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/604913%20(512%20x%20512%20px).png";
+    const PREVIEW_SELECOES = [
+      { bandeira: "🇧🇷", nome: "Brasil" }, { bandeira: "🇩🇪", nome: "Alemanha" },
+      { bandeira: "🇦🇷", nome: "Argentina", blur: true }, { bandeira: "🇫🇷", nome: "Franca", blur: true },
+      { bandeira: "🇪🇸", nome: "Espanha", blur: true }, { bandeira: "🇵🇹", nome: "Portugal", blur: true },
+      { bandeira: "🇲🇦", nome: "Marrocos", blur: true }, { bandeira: "🇯🇵", nome: "Japao", blur: true },
+      { bandeira: "🇺🇾", nome: "Uruguai", blur: true }, { bandeira: "🇳🇱", nome: "Holanda", blur: true },
+      { bandeira: "🇲🇽", nome: "Mexico", blur: true }, { bandeira: "🇨🇴", nome: "Colombia", blur: true },
+      { bandeira: "🇧🇪", nome: "Belgica", blur: true }, { bandeira: "🇰🇷", nome: "Coreia do Sul", blur: true },
+    ];
+
     return (
-      <div className="space-y-6 animate-fade-in">
-        <SEOHead title="Quiz na Copa — Qual selecao voce seria?" noindex />
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => setStep("hub")} className="rounded-full">
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <h2 className="text-xl font-bold">Quiz na Copa</h2>
-        </div>
+      <div className="animate-fade-in -mx-4 -mt-6" style={{ background: "#14532d", color: "#fff", fontFamily: "'Inter', sans-serif" }}>
+        <SEOHead
+          title="Quiz na Copa — Qual selecao da Copa 2026 voce seria?"
+          description="Responda 10 perguntas e descubra qual das 48 selecoes da Copa do Mundo 2026 combina com seu estilo de jogo."
+          path="/quiz"
+          keywords="quiz copa do mundo, quiz selecao, quiz futebol, bolao na copa quiz"
+        />
+        {/* Grid sutil no fundo */}
+        <div className="fixed inset-0 pointer-events-none z-0" style={{
+          background: "repeating-linear-gradient(90deg,transparent,transparent 60px,rgba(255,255,255,.018) 60px,rgba(255,255,255,.018) 61px), repeating-linear-gradient(0deg,transparent,transparent 60px,rgba(255,255,255,.018) 60px,rgba(255,255,255,.018) 61px)",
+        }} />
 
-        <div className="text-center space-y-4 py-4">
-          <div className="inline-flex items-center gap-2 bg-copa-gold-50 border border-copa-gold-200 rounded-full px-4 py-1.5 text-xs font-bold text-copa-gold-600">
-            ⚽ 48 selecoes · Copa 2026
-          </div>
+        <div className="relative z-10">
+          {/* ── HERO ── */}
+          <section className="min-h-screen flex flex-col items-center justify-center px-5 py-9 text-center"
+            style={{ background: "radial-gradient(ellipse at 50% 0%,rgba(22,163,74,.38) 0%,transparent 68%)" }}>
 
-          <h1 className="text-3xl font-black leading-tight">
-            Qual selecao<br />
-            <span className="text-copa-gold-500">voce seria?</span>
-          </h1>
+            {/* Botao voltar */}
+            <button onClick={() => setStep("hub")}
+              className="absolute top-4 left-4 p-2 rounded-full text-white/50 hover:text-white/80 hover:bg-white/10 transition-colors z-20"
+              style={{ top: "max(1rem, env(safe-area-inset-top, 1rem))" }}>
+              <ArrowLeft className="w-5 h-5" />
+            </button>
 
-          <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
-            10 perguntas revelam qual das <strong>48 selecoes</strong> da Copa 2026 combina com o seu jeito de jogar.
-          </p>
-        </div>
+            <img src={LOGO_URL} alt="Bolao na Copa" className="w-[72px] h-[72px] rounded-2xl mb-5"
+              style={{ boxShadow: "0 0 40px rgba(250,204,21,.3)", animation: "pulse 3s ease-in-out infinite" }} />
 
-        {/* Preview das perguntas */}
-        <div className="space-y-2">
-          {PERGUNTAS.slice(0, 4).map((p, i) => (
-            <div key={i} className="flex items-center gap-3 bg-muted/50 rounded-xl px-4 py-3">
-              <div className="w-7 h-7 bg-copa-gold-100 border border-copa-gold-300 rounded-full flex items-center justify-center text-xs font-bold text-copa-gold-600">
-                {i + 1}
-              </div>
-              <span className="text-sm text-muted-foreground flex-1">{p.texto}</span>
-              <span className="text-sm opacity-40">{i === 0 ? "🔓" : "🔒"}</span>
+            <div className="inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[11px] font-bold uppercase tracking-widest mb-4"
+              style={{ background: "rgba(250,204,21,.14)", border: "1px solid rgba(250,204,21,.38)", color: "#facc15" }}>
+              ⚽ 48 selecoes · Copa 2026
             </div>
-          ))}
-          <div className="flex items-center gap-3 bg-muted/30 rounded-xl px-4 py-3 opacity-50">
-            <div className="w-7 h-7 bg-muted rounded-full flex items-center justify-center text-xs font-bold text-muted-foreground">+6</div>
-            <span className="text-sm text-muted-foreground">mais perguntas exclusivas no app</span>
-            <span className="text-sm opacity-30">🔒</span>
+
+            <h1 className="leading-[0.88] mb-2" style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(2.8rem,11vw,6.5rem)", textShadow: "0 4px 28px rgba(0,0,0,.45)" }}>
+              Qual selecao<br />
+              <span style={{ color: "#facc15" }}>voce seria?</span>
+            </h1>
+
+            <p className="max-w-[480px] mx-auto mt-3 leading-relaxed" style={{ fontSize: "clamp(.95rem,2.8vw,1.15rem)", color: "rgba(255,255,255,.72)" }}>
+              10 perguntas revelam qual das <strong className="text-white">48 selecoes</strong> da Copa 2026 combina com o seu jeito de jogar. Pode ser uma surpresa — ou exatamente o que voce esperava.
+            </p>
+
+            {/* Preview perguntas */}
+            <div className="w-full max-w-[460px] mt-10 space-y-2.5">
+              {PERGUNTAS.slice(0, 4).map((p, i) => (
+                <div key={i} className="flex items-center gap-3 text-left rounded-xl px-4 py-3"
+                  style={{ background: "rgba(255,255,255,.048)", border: "1px solid rgba(255,255,255,.07)" }}>
+                  <div className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold"
+                    style={{ background: "rgba(250,204,21,.14)", border: "1.5px solid rgba(250,204,21,.38)", color: "#facc15" }}>
+                    {i + 1}
+                  </div>
+                  <span className="text-sm font-medium flex-1" style={{ color: "rgba(255,255,255,.82)" }}>{p.texto}</span>
+                  <span className="text-sm opacity-40 flex-shrink-0">{i === 0 ? "🔓" : "🔒"}</span>
+                </div>
+              ))}
+              <div className="flex items-center gap-3 rounded-xl px-4 py-3 opacity-45"
+                style={{ background: "rgba(255,255,255,.025)", border: "1px solid rgba(255,255,255,.04)" }}>
+                <div className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold opacity-40"
+                  style={{ background: "rgba(255,255,255,.08)", color: "rgba(255,255,255,.4)" }}>+6</div>
+                <span className="text-sm" style={{ color: "rgba(255,255,255,.3)" }}>mais perguntas exclusivas</span>
+                <span className="text-sm opacity-30 flex-shrink-0 ml-auto">🔒</span>
+              </div>
+            </div>
+
+            {/* Resultados desfocados */}
+            <div className="w-full max-w-[460px] mt-9">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-center mb-3" style={{ color: "rgba(255,255,255,.38)", letterSpacing: "2px" }}>
+                Seu resultado pode ser qualquer uma dessas →
+              </p>
+              <div className="flex flex-wrap justify-center gap-2">
+                {PREVIEW_SELECOES.map((s, i) => (
+                  <span key={i} className="flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold"
+                    style={{
+                      background: "rgba(255,255,255,.065)", border: "1px solid rgba(255,255,255,.09)",
+                      color: "rgba(255,255,255,.78)", filter: (s as any).blur ? "blur(5px)" : "none",
+                      userSelect: (s as any).blur ? "none" : "auto",
+                    }}>
+                    {s.bandeira} {s.nome}
+                  </span>
+                ))}
+                <span className="flex items-center rounded-full px-3 py-1.5 text-xs font-semibold"
+                  style={{ background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.06)", color: "rgba(255,255,255,.4)", filter: "blur(5px)" }}>
+                  +33 possiveis
+                </span>
+              </div>
+            </div>
+
+            {/* CTA Principal */}
+            <div className="w-full max-w-[460px] mt-10 text-center">
+              <div className="w-14 h-14 mx-auto mb-3 rounded-full flex items-center justify-center text-2xl"
+                style={{ background: "rgba(250,204,21,.1)", border: "2px solid rgba(250,204,21,.28)" }}>
+                🔐
+              </div>
+              <p className="text-sm mb-1" style={{ color: "rgba(255,255,255,.65)" }}>O resultado esta esperando por voce</p>
+              <h2 className="text-2xl mb-1" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
+                Descubra agora<br /><span style={{ color: "#facc15" }}>100% gratis</span>
+              </h2>
+              <p className="text-xs mb-6" style={{ color: "rgba(255,255,255,.45)" }}>
+                Quiz completo · 48 selecoes possiveis · bolao da Copa 2026
+              </p>
+              <button onClick={handleStart}
+                className="w-full max-w-[330px] mx-auto flex items-center justify-center gap-3 py-4 rounded-2xl font-black text-base transition-all hover:-translate-y-0.5 active:scale-[0.98]"
+                style={{ background: "#facc15", color: "#14532d", boxShadow: "0 8px 28px rgba(250,204,21,.33)" }}>
+                ⚽ Comecar o Quiz — Gratis
+              </button>
+              {!isPremium && (
+                <p className="text-xs mt-2" style={{ color: "rgba(255,255,255,.38)" }}>
+                  Gratis com anuncio · <button onClick={() => navigate("/planos")} className="underline" style={{ color: "#facc15" }}>Premium sem anuncios</button>
+                </p>
+              )}
+            </div>
+
+            {/* Social proof */}
+            <div className="flex items-center justify-center gap-2 mt-7">
+              <div className="flex">
+                {["M", "J", "A", "R", "+"].map((l, i) => (
+                  <div key={i} className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold -ml-1.5 first:ml-0"
+                    style={{ background: "#15803d", border: "2px solid #14532d", color: "#fff" }}>{l}</div>
+                ))}
+              </div>
+              <p className="text-xs" style={{ color: "rgba(255,255,255,.58)" }}>
+                <strong style={{ color: "#facc15" }}>+5.400 pessoas</strong> ja fizeram o quiz hoje
+              </p>
+            </div>
+          </section>
+
+          {/* ── STATS STRIP ── */}
+          <div className="flex items-center justify-center gap-4 flex-wrap py-3.5 px-5 text-xs"
+            style={{ background: "rgba(250,204,21,.07)", borderTop: "1px solid rgba(250,204,21,.15)", borderBottom: "1px solid rgba(250,204,21,.15)", color: "rgba(255,255,255,.6)" }}>
+            <span>⚽ <strong style={{ color: "#facc15" }}>48 selecoes</strong> possiveis</span>
+            <span>🎯 <strong style={{ color: "#facc15" }}>10 perguntas</strong> precisas</span>
+            <span>🔥 <strong style={{ color: "#facc15" }}>100% gratis</strong></span>
+            <span>📊 <strong style={{ color: "#facc15" }}>Ranking</strong> ao vivo no bolao</span>
           </div>
+
+          {/* ── POR QUE FAZER ── */}
+          <section className="max-w-[500px] mx-auto px-5 py-12 text-center">
+            <h2 className="mb-2" style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(1.8rem,6vw,3rem)" }}>
+              Por que fazer<br /><span style={{ color: "#facc15" }}>o quiz?</span>
+            </h2>
+            <p className="text-sm leading-relaxed mb-7" style={{ color: "rgba(255,255,255,.6)" }}>
+              Nao e so curiosidade. E uma forma de descobrir seu estilo de jogo — e de desafiar seus amigos do bolao.
+            </p>
+            <div className="grid grid-cols-2 gap-2.5" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))" }}>
+              {[
+                { ico: "🌍", t: "48 selecoes reais", s: "Todas as selecoes classificadas para a Copa 2026." },
+                { ico: "🎯", t: "Algoritmo de perfil", s: "Suas respostas criam um perfil unico. Nao tem como 'acertar'." },
+                { ico: "💬", t: "Compartilhe o resultado", s: "Envie para o grupo do bolao e veja quem discorda." },
+                { ico: "🏆", t: "Entre no bolao", s: "Apos o quiz, entre no bolao da Copa e palpite em todos os 104 jogos." },
+              ].map((c, i) => (
+                <div key={i} className="rounded-xl p-4 text-left"
+                  style={{ background: "rgba(255,255,255,.045)", border: "1px solid rgba(255,255,255,.075)" }}>
+                  <div className="text-2xl mb-2">{c.ico}</div>
+                  <p className="text-sm font-bold mb-1">{c.t}</p>
+                  <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,.5)" }}>{c.s}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* ── URGENCIA ── */}
+          {diasCopa > 0 && (
+            <div className="max-w-[460px] mx-auto mb-5 px-5">
+              <div className="rounded-xl px-4 py-3.5 text-center text-sm"
+                style={{ background: "rgba(220,38,38,.12)", border: "1px solid rgba(220,38,38,.25)", color: "rgba(255,200,200,.85)" }}>
+                <strong style={{ color: "#fca5a5" }}>⏰ Copa comeca em {diasCopa} dias.</strong> Faca o quiz agora e entre no bolao antes de comecar!
+              </div>
+            </div>
+          )}
+
+          {/* ── OUTROS QUIZZES ── */}
+          <section className="max-w-[500px] mx-auto px-5 pb-12">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-center mb-4" style={{ color: "rgba(255,255,255,.28)", letterSpacing: "2px" }}>
+              Outros quizzes disponiveis no app
+            </p>
+            <div className="space-y-2.5">
+              {FUTURE_QUIZZES.map((q, i) => (
+                <div key={i} className="flex items-center gap-3.5 rounded-xl px-4 py-3.5 cursor-pointer transition-colors hover:border-[rgba(250,204,21,.28)]"
+                  style={{ background: "rgba(255,255,255,.038)", border: "1px solid rgba(255,255,255,.07)" }}>
+                  <span className="text-3xl flex-shrink-0">{q.emoji}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold">{q.title}</p>
+                    <p className="text-xs" style={{ color: "rgba(255,255,255,.45)" }}>{q.desc}</p>
+                  </div>
+                  <span className="text-lg opacity-30 flex-shrink-0">🔒</span>
+                </div>
+              ))}
+            </div>
+
+            {/* CTA bottom */}
+            <button onClick={handleStart}
+              className="w-full flex items-center justify-center gap-3 mt-6 py-4 rounded-2xl font-black text-sm transition-all hover:-translate-y-0.5 active:scale-[0.98]"
+              style={{ background: "#facc15", color: "#14532d", boxShadow: "0 8px 28px rgba(250,204,21,.33)" }}>
+              ⚽ Comecar o Quiz — Gratis
+            </button>
+          </section>
+
+          {/* ── FOOTER ── */}
+          <footer className="text-center py-6 text-xs" style={{ color: "rgba(255,255,255,.22)", borderTop: "1px solid rgba(255,255,255,.045)" }}>
+            © 2026 Bolao na Copa · <a href="/privacidade.html" style={{ color: "rgba(255,255,255,.3)" }}>Privacidade</a> · <a href="/home" style={{ color: "rgba(255,255,255,.3)" }}>Abrir no navegador</a>
+          </footer>
         </div>
 
-        {/* CTA */}
-        <div className="text-center pt-2">
-          <Button onClick={handleStart} className="w-full max-w-xs mx-auto h-13 bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800 font-black text-base rounded-xl shadow-lg">
-            Comecar o Quiz ⚽
-          </Button>
-          {!isPremium && (
-            <p className="text-[10px] text-muted-foreground mt-2">
-              Gratis com anuncio · <button onClick={() => navigate("/planos")} className="text-copa-gold-500 font-bold underline">Premium sem anuncios</button>
-            </p>
-          )}
-        </div>
+        {/* CSS para animacao de pulse do logo */}
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+          @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(250,204,21,.2); }
+            50% { box-shadow: 0 0 55px rgba(250,204,21,.55); }
+          }
+        `}</style>
       </div>
     );
   }
