@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Rodrigo é o BRASIL na Copa 2026 — Bolão na Copa</title>
+  <meta name="description" content="Rodrigo fez o quiz e descobriu que é o BRASIL na Copa 2026! Descubra qual seleção você seria — Bolão na Copa.">
+  <meta property="og:title" content="🇧🇷 Rodrigo é o BRASIL na Copa 2026!">
+  <meta property="og:description" content="Fiz o quiz do Bolão na Copa e descobri minha seleção. Qual é a sua? Descubra agora →">
+  <meta property="og:image" content="https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/bolao-capas/og-cover.png">
+  <meta property="og:url" content="https://www.bolaonacopa.com.br/quiz/resultado?s=brasil&u=Rodrigo">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/604913%20(512%20x%20512%20px).png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:ital,wght@0,700;0,900;1,900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg:    #071410;
+      --g9:    #0d2818;
+      --g7:    #15803d;
+      --gold:  #facc15;
+      --goldd: #a16207;
+      --w:     #ffffff;
+      --sel1:  #009C3B;
+      --sel2:  #FFDF00;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body {
+      font-family:'Inter',sans-serif;
+      background:var(--bg); color:var(--w);
+      min-height:100vh; overflow-x:hidden;
+    }
+
+    /* ── campo de futebol no fundo ── */
+    .fbg {
+      position:fixed; inset:0; z-index:0; overflow:hidden;
+      background:
+        radial-gradient(ellipse at 50% 100%, rgba(0,156,59,.28) 0%, transparent 55%),
+        radial-gradient(ellipse at 50% 0%,   rgba(0,39,118,.18) 0%, transparent 50%);
+    }
+    .fbg::before {
+      content:''; position:absolute; inset:0;
+      background-image:
+        repeating-linear-gradient(90deg,transparent,transparent 58px,rgba(255,255,255,.02) 58px,rgba(255,255,255,.02) 59px),
+        repeating-linear-gradient(0deg,transparent,transparent 58px,rgba(255,255,255,.02) 58px,rgba(255,255,255,.02) 59px);
+    }
+    .fbg::after {
+      content:''; position:absolute;
+      left:50%; top:50%; transform:translate(-50%,-50%);
+      width:240px; height:240px;
+      border:1px solid rgba(255,255,255,.05); border-radius:50%;
+    }
+
+    /* ── confetes ── */
+    .conf { position:fixed; inset:0; z-index:1; pointer-events:none; }
+    .c {
+      position:absolute; border-radius:2px; opacity:0;
+      animation:fall linear forwards;
+    }
+    @keyframes fall {
+      0%   { opacity:1; transform:translateY(-20px) rotate(0deg); }
+      100% { opacity:0; transform:translateY(100vh) rotate(720deg); }
+    }
+
+    .page { position:relative; z-index:2; }
+
+    /* ════════════════════════════════
+       HERO
+    ════════════════════════════════ */
+    .hero {
+      display:flex; flex-direction:column;
+      align-items:center; padding:48px 20px 52px;
+      text-align:center;
+    }
+
+    /* chip "X descobriu que é" */
+    .chip {
+      display:inline-flex; align-items:center; gap:7px;
+      background:rgba(255,255,255,.07);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:100px; padding:6px 16px;
+      font-size:.75rem; font-weight:600;
+      color:rgba(255,255,255,.6);
+      letter-spacing:.5px; text-transform:uppercase;
+      margin-bottom:32px;
+      animation:fup .5s ease both;
+    }
+    .chip-dot {
+      width:7px; height:7px; border-radius:50%;
+      background:var(--gold);
+      box-shadow:0 0 8px rgba(250,204,21,.7);
+      animation:blink 1.4s ease-in-out infinite;
+    }
+    @keyframes blink{0%,100%{opacity:1;}50%{opacity:.35;}}
+
+    /* bloco central: bandeira + nome + compat em linha */
+    .result-block {
+      display:flex; flex-direction:column; align-items:center;
+      gap:0; margin-bottom:20px;
+      animation:pop .65s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    @keyframes pop {
+      from{opacity:0;transform:scale(.45) rotate(-6deg);}
+      to{opacity:1;transform:scale(1) rotate(0deg);}
+    }
+
+    .flag {
+      font-size:clamp(90px,24vw,140px);
+      line-height:1; display:block;
+      filter:drop-shadow(0 0 50px rgba(0,156,59,.55));
+      animation:float 4s ease-in-out infinite;
+      margin-bottom:16px;
+    }
+    @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+
+    /* "VOCÊ É" + nome separados, sem sobreposição */
+    .voce-e {
+      font-family:'Barlow Condensed',sans-serif;
+      font-weight:700; font-style:italic;
+      font-size:clamp(1.1rem,3.5vw,1.5rem);
+      color:rgba(255,255,255,.55);
+      letter-spacing:3px; text-transform:uppercase;
+      margin-bottom:4px;
+      animation:fup .4s .15s ease both;
+    }
+    .selecao-nome {
+      font-family:'Bebas Neue',sans-serif;
+      font-size:clamp(4rem,16vw,9rem);
+      line-height:.85; color:var(--sel2);
+      text-shadow:0 0 80px rgba(255,223,0,.35);
+      animation:fup .4s .2s ease both;
+      margin-bottom:16px;
+    }
+
+    /* compat — linha horizontal separada e limpa */
+    .compat-row {
+      display:flex; align-items:center; gap:10px;
+      justify-content:center;
+      animation:fup .4s .28s ease both;
+      margin-bottom:20px;
+    }
+    .compat-bar-wrap {
+      width:120px; height:8px;
+      background:rgba(255,255,255,.12); border-radius:4px; overflow:hidden;
+    }
+    .compat-bar-fill {
+      height:100%; border-radius:4px;
+      background:linear-gradient(90deg,var(--sel1),var(--sel2));
+      width:0; transition:width 1.2s .8s cubic-bezier(.4,0,.2,1);
+    }
+    .compat-label {
+      font-family:'Barlow Condensed',sans-serif;
+      font-weight:900; font-size:1.15rem;
+      color:var(--gold);
+    }
+    .compat-text {
+      font-size:.78rem; color:rgba(255,255,255,.4);
+    }
+
+    /* descrição */
+    .desc {
+      font-size:clamp(.9rem,2.5vw,1.05rem);
+      color:rgba(255,255,255,.68);
+      max-width:400px; line-height:1.72;
+      animation:fup .4s .32s ease both;
+    }
+
+    /* ── barras de perfil ── */
+    .pbars {
+      margin:28px auto 0; max-width:370px; width:100%;
+      background:rgba(255,255,255,.047);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:18px; padding:18px 20px;
+      animation:fup .4s .4s ease both;
+    }
+    .pbars-title {
+      font-size:.68rem; font-weight:700; letter-spacing:2px;
+      text-transform:uppercase; color:rgba(255,255,255,.3);
+      text-align:center; margin-bottom:14px;
+    }
+    .pbar-row {
+      display:grid; grid-template-columns:88px 1fr 36px;
+      align-items:center; gap:10px; margin-bottom:9px;
+    }
+    .pbar-row:last-child{margin-bottom:0;}
+    .pbar-lbl { font-size:.8rem; color:rgba(255,255,255,.65); font-weight:500; }
+    .pbar-track {
+      height:6px; background:rgba(255,255,255,.1);
+      border-radius:3px; overflow:hidden;
+    }
+    .pbar-fill {
+      height:100%; border-radius:3px;
+      transition:width 1.2s cubic-bezier(.4,0,.2,1);
+    }
+    .pbar-pct {
+      font-size:.72rem; color:rgba(255,255,255,.38);
+      font-family:monospace; text-align:right;
+    }
+
+    /* ════════════════════════════════
+       BOTÕES DE COMPARTILHAMENTO
+    ════════════════════════════════ */
+    .btns-wrap {
+      margin:32px auto 0; max-width:380px; width:100%;
+      animation:fup .4s .5s ease both;
+    }
+    .btns-headline {
+      font-family:'Barlow Condensed',sans-serif;
+      font-weight:900; font-size:clamp(1.4rem,5vw,1.85rem);
+      color:var(--w); text-align:center; margin-bottom:4px;
+    }
+    .btns-headline span { color:var(--gold); }
+    .btns-sub {
+      font-size:.8rem; color:rgba(255,255,255,.42);
+      text-align:center; margin-bottom:20px;
+    }
+
+    /* WhatsApp */
+    .btn-wpp {
+      display:flex; align-items:center; justify-content:center; gap:10px;
+      width:100%; padding:16px 20px; margin-bottom:10px;
+      background:#25d366; color:#fff;
+      border-radius:14px; font-weight:700; font-size:1rem;
+      border:none; cursor:pointer;
+      transition:transform .15s, filter .15s;
+      text-decoration:none;
+    }
+    .btn-wpp:hover{transform:translateY(-2px);filter:brightness(1.08);}
+    .btn-wpp:active{transform:scale(.98);}
+    .btn-wpp svg{width:22px;height:22px;flex-shrink:0;}
+
+    /* Linha de ações secundárias — copiar + próximo quiz */
+    .redes-row {
+      display:grid; grid-template-columns:1fr 1fr;
+      gap:8px; margin-bottom:10px;
+    }
+    .btn-rede {
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center; gap:5px;
+      padding:14px 8px;
+      border-radius:14px; font-weight:700; font-size:.72rem;
+      border:none; cursor:pointer;
+      transition:transform .15s, filter .15s;
+      text-decoration:none; color:var(--w);
+    }
+    .btn-rede:hover{transform:translateY(-2px);filter:brightness(1.1);}
+    .btn-rede:active{transform:scale(.98);}
+    .btn-rede svg{width:24px;height:24px;}
+    .btn-copiar  {background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.15);}
+    .btn-proximo {background:rgba(250,204,21,.12); border:1px solid rgba(250,204,21,.3); color:var(--gold);}
+
+    /* Play Store */
+    .btn-play {
+      display:flex; align-items:center; justify-content:center; gap:10px;
+      width:100%; padding:16px 20px;
+      background:var(--gold); color:#071410;
+      border-radius:14px; font-weight:900; font-size:1rem;
+      border:none; cursor:pointer;
+      transition:transform .15s, box-shadow .15s;
+      text-decoration:none; position:relative; overflow:hidden;
+      box-shadow:0 8px 28px rgba(250,204,21,.3);
+    }
+    .btn-play::before{
+      content:''; position:absolute; top:-50%; left:-50%; width:200%; height:200%;
+      background:linear-gradient(45deg,transparent 30%,rgba(255,255,255,.18) 50%,transparent 70%);
+      transform:translateX(-100%);
+      animation:shim 2.5s ease-in-out infinite;
+    }
+    @keyframes shim{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+    .btn-play:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(250,204,21,.45);}
+    .btn-play:active{transform:scale(.98);}
+    .btn-play svg{width:20px;height:20px;flex-shrink:0;}
+
+    .btn-web {
+      display:block; text-align:center;
+      color:rgba(255,255,255,.3); font-size:.75rem;
+      text-decoration:none; margin-top:10px;
+      transition:color .2s;
+    }
+    .btn-web:hover{color:rgba(255,255,255,.55);}
+
+    /* ── toast copiado ── */
+    .toast {
+      position:fixed; bottom:28px; left:50%; transform:translateX(-50%);
+      background:rgba(30,30,30,.95); color:var(--w);
+      padding:10px 20px; border-radius:100px;
+      font-size:.82rem; font-weight:600;
+      border:1px solid rgba(255,255,255,.1);
+      opacity:0; pointer-events:none;
+      transition:opacity .3s;
+      z-index:999; white-space:nowrap;
+    }
+    .toast.show{opacity:1;}
+
+    /* ── strip social proof ── */
+    .strip {
+      background:rgba(255,255,255,.035);
+      border-top:1px solid rgba(255,255,255,.06);
+      border-bottom:1px solid rgba(255,255,255,.06);
+      padding:14px 20px;
+      display:flex; align-items:center; justify-content:center;
+      gap:18px; flex-wrap:wrap;
+      font-size:.75rem; color:rgba(255,255,255,.45);
+    }
+    .strip strong{color:var(--gold);}
+    .strip .sep{color:rgba(255,255,255,.15);}
+
+    /* ── provocação ── */
+    .prov {
+      padding:48px 20px 36px;
+      max-width:400px; margin:0 auto; text-align:center;
+    }
+    .prov-title {
+      font-family:'Bebas Neue',sans-serif;
+      font-size:clamp(2.2rem,8vw,3.5rem);
+      color:var(--w); margin-bottom:6px; line-height:.95;
+    }
+    .prov-title span{color:var(--gold);}
+    .prov-sub {
+      font-size:.88rem; color:rgba(255,255,255,.48);
+      margin-bottom:24px; line-height:1.65;
+    }
+
+    /* grid seleções desfocadas */
+    .sel-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:7px;margin-bottom:24px;}
+    .sp {
+      display:flex; align-items:center; gap:6px;
+      background:rgba(255,255,255,.055);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:100px; padding:6px 13px;
+      font-size:.8rem; font-weight:600;
+      color:rgba(255,255,255,.72);
+    }
+    .sp.you{
+      background:rgba(0,156,59,.18);
+      border-color:rgba(0,156,59,.45);
+      color:#86efac;
+    }
+    .sp.blur{filter:blur(5px);user-select:none;}
+
+    .urgencia {
+      background:rgba(239,68,68,.09);
+      border:1px solid rgba(239,68,68,.2);
+      border-radius:12px; padding:12px 16px;
+      text-align:center; margin-bottom:18px;
+      font-size:.8rem; color:rgba(255,180,180,.82);
+    }
+    .urgencia strong{color:#fca5a5;}
+
+    /* outros resultados */
+    .outros{padding:0 20px 52px;max-width:400px;margin:0 auto;text-align:center;}
+    .outros-lbl{
+      font-size:.65rem;font-weight:700;letter-spacing:2px;
+      text-transform:uppercase;color:rgba(255,255,255,.22);
+      margin-bottom:14px;
+    }
+    .outros-emojis{
+      display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:8px;
+    }
+    .oe{font-size:1.8rem;}
+    .oe.blur{filter:blur(4px);user-select:none;}
+    .outros-note{font-size:.75rem;color:rgba(255,255,255,.25);}
+
+    footer{
+      text-align:center;padding:22px 20px 32px;
+      font-size:.68rem;color:rgba(255,255,255,.18);
+      border-top:1px solid rgba(255,255,255,.04);
+    }
+    footer a{color:rgba(255,255,255,.25);text-decoration:none;}
+
+    @keyframes fup{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+    @media(max-width:390px){
+      .hero{padding:36px 16px 40px;}
+      .btn-wpp,.btn-play{font-size:.9rem;padding:14px 16px;}
+    }
+  </style>
+</head>
+<body>
+
+<div class="fbg"></div>
+<div class="conf" id="conf"></div>
+
+<div class="page">
+
+  <!-- ══ HERO ══ -->
+  <section class="hero">
+
+    <!-- chip topo -->
+    <div class="chip">
+      <span class="chip-dot"></span>
+      Rodrigo descobriu sua seleção
+    </div>
+
+    <!-- bloco resultado -->
+    <div class="result-block">
+      <span class="flag">🇧🇷</span>
+      <p class="voce-e">Você é</p>
+      <h1 class="selecao-nome">BRASIL</h1>
+    </div>
+
+    <!-- compatibilidade — separada, abaixo do nome -->
+    <div class="compat-row">
+      <span class="compat-text">compatibilidade</span>
+      <div class="compat-bar-wrap">
+        <div class="compat-bar-fill" id="cbar" data-w="87"></div>
+      </div>
+      <span class="compat-label">87%</span>
+    </div>
+
+    <!-- descrição -->
+    <p class="desc">
+      Criativo, alegre e com aquela ginga que ninguém explica.
+      Você não joga apenas para ganhar — você joga bonito.
+      A torcida levanta quando você toca na bola.
+    </p>
+
+    <!-- perfil de jogo (5 barras que somam 100%) -->
+    <div class="pbars">
+      <div class="pbars-title">Seu perfil de jogo</div>
+      <div class="pbar-row">
+        <span class="pbar-lbl">🎨 Artista</span>
+        <div class="pbar-track"><div class="pbar-fill" style="background:#22c55e;width:0" data-w="34"></div></div>
+        <span class="pbar-pct">34%</span>
+      </div>
+      <div class="pbar-row">
+        <span class="pbar-lbl">🎉 Festa</span>
+        <div class="pbar-track"><div class="pbar-fill" style="background:#facc15;width:0" data-w="28"></div></div>
+        <span class="pbar-pct">28%</span>
+      </div>
+      <div class="pbar-row">
+        <span class="pbar-lbl">🔥 Guerreiro</span>
+        <div class="pbar-track"><div class="pbar-fill" style="background:#f97316;width:0" data-w="20"></div></div>
+        <span class="pbar-pct">20%</span>
+      </div>
+      <div class="pbar-row">
+        <span class="pbar-lbl">⚡ Surpresa</span>
+        <div class="pbar-track"><div class="pbar-fill" style="background:#a78bfa;width:0" data-w="11"></div></div>
+        <span class="pbar-pct">11%</span>
+      </div>
+      <div class="pbar-row">
+        <span class="pbar-lbl">⚙️ Máquina</span>
+        <div class="pbar-track"><div class="pbar-fill" style="background:#60a5fa;width:0" data-w="7"></div></div>
+        <span class="pbar-pct">7%</span>
+      </div>
+      <div style="margin-top:10px;text-align:right;font-size:.65rem;color:rgba(255,255,255,.2)">total: 100%</div>
+    </div>
+
+    <!-- ══ BOTÕES ══ -->
+    <div class="btns-wrap">
+      <p class="btns-headline">E seus amigos,<br>qual seria <span>a seleção deles?</span></p>
+      <p class="btns-sub">Manda pro grupo e vê quem vai ser a Argentina 👀</p>
+
+      <!-- WhatsApp -->
+      <a href="#" class="btn-wpp" id="btnWpp" onclick="enviarWpp(event)">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
+        </svg>
+        Enviar para amigos no WhatsApp
+      </a>
+
+      <!-- redes sociais -->
+      <div class="redes-row">
+        <button class="btn-rede btn-copiar" onclick="copiarLink()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+          Copiar link
+        </button>
+        <a href="https://play.google.com/store/apps/details?id=com.bolaonacopa.app&utm_source=quiz_resultado&utm_medium=proximo_quiz&utm_campaign=quiz_viral_copa2026&utm_content=brasil"
+           class="btn-rede btn-proximo"
+           onclick="gtag('event','proximo_quiz_click',{selecao:'brasil'})"
+           target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
+          </svg>
+          Próximo quiz
+        </a>
+      </div>
+
+      <!-- Play Store -->
+      <a href="https://play.google.com/store/apps/details?id=com.bolaonacopa.app&utm_source=quiz_resultado&utm_medium=share&utm_campaign=quiz_viral_copa2026&utm_content=brasil"
+         class="btn-play" onclick="gtag('event','resultado_dl',{selecao:'brasil'})"
+         target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M3.18 23.76a2 2 0 0 0 2.08-.15l12.19-7.04-2.88-2.88L3.18 23.76zM.35 1.19A1.99 1.99 0 0 0 0 2.38v19.24c0 .43.12.83.35 1.19l.11.11 10.78-10.78v-.25L.46 1.08l-.11.11zM20.53 10.3l-2.77-1.6-3.2 3.2 3.2 3.2 2.79-1.61c.8-.46.8-1.73-.02-2.19zM5.26.39L17.45 7.43l-2.88 2.88L5.26.39z"/>
+        </svg>
+        Fazer meu quiz — Baixar grátis
+      </a>
+
+      <a href="https://www.bolaonacopa.com.br/home" class="btn-web">Prefiro fazer pelo navegador →</a>
+    </div>
+
+  </section>
+
+  <!-- strip -->
+  <div class="strip">
+    <span>🇧🇷 <strong>23%</strong> dos jogadores são Brasil</span>
+    <span class="sep">·</span>
+    <span>⚽ <strong>+5.400</strong> quizzes hoje</span>
+    <span class="sep">·</span>
+    <span>🏆 Copa em <strong id="dias">—</strong> dias</span>
+  </div>
+
+  <!-- provocação -->
+  <section class="prov">
+    <h2 class="prov-title">Qual seleção<br><span>os seus amigos seriam?</span></h2>
+    <p class="prov-sub">47 resultados possíveis. Pode ser qualquer seleção das 48 da Copa 2026. O resultado surpreende.</p>
+
+    <div class="sel-grid">
+      <div class="sp you">🇧🇷 Brasil — você</div>
+      <div class="sp blur">🇩🇪 Alemanha</div>
+      <div class="sp blur">🇦🇷 Argentina</div>
+      <div class="sp blur">🇫🇷 França</div>
+      <div class="sp blur">🇪🇸 Espanha</div>
+      <div class="sp blur">🇲🇦 Marrocos</div>
+      <div class="sp blur">🇯🇵 Japão</div>
+      <div class="sp blur">... +40</div>
+    </div>
+
+    <div class="urgencia">
+      <strong>⏰ Copa começa em <span id="dias2">—</span> dias.</strong>
+      Entra no bolão antes que seus amigos se cadastrem primeiro.
+    </div>
+
+    <a href="https://play.google.com/store/apps/details?id=com.bolaonacopa.app&utm_source=quiz_resultado&utm_medium=share_prov&utm_campaign=quiz_viral_copa2026&utm_content=brasil"
+       class="btn-play" style="text-decoration:none"
+       onclick="gtag('event','resultado_dl_prov',{selecao:'brasil'})"
+       target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="currentColor" style="width:20px;height:20px">
+        <path d="M3.18 23.76a2 2 0 0 0 2.08-.15l12.19-7.04-2.88-2.88L3.18 23.76zM.35 1.19A1.99 1.99 0 0 0 0 2.38v19.24c0 .43.12.83.35 1.19l.11.11 10.78-10.78v-.25L.46 1.08l-.11.11zM20.53 10.3l-2.77-1.6-3.2 3.2 3.2 3.2 2.79-1.61c.8-.46.8-1.73-.02-2.19zM5.26.39L17.45 7.43l-2.88 2.88L5.26.39z"/>
+      </svg>
+      Descobrir a minha seleção
+    </a>
+  </section>
+
+  <!-- outros resultados -->
+  <section class="outros">
+    <p class="outros-lbl">Outros resultados possíveis</p>
+    <div class="outros-emojis">
+      <span class="oe">🇧🇷</span>
+      <span class="oe blur">🇩🇪</span><span class="oe blur">🇦🇷</span>
+      <span class="oe blur">🇫🇷</span><span class="oe blur">🇪🇸</span>
+      <span class="oe blur">🇵🇹</span><span class="oe blur">🇲🇦</span>
+      <span class="oe blur">🇯🇵</span><span class="oe blur">🇺🇾</span>
+      <span class="oe blur">🇳🇱</span><span class="oe blur">🇲🇽</span>
+      <span class="oe blur">🇨🇴</span>
+    </div>
+    <p class="outros-note">e mais 35 seleções — todas as 48 da Copa 2026</p>
+  </section>
+
+  <footer>
+    <p>© 2026 Bolão na Copa ·
+      <a href="/privacidade.html">Privacidade</a> ·
+      <a href="/home">Abrir o app</a>
+    </p>
+  </footer>
+</div>
+
+<!-- toast -->
+<div class="toast" id="toast">🔗 Link copiado!</div>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-V55EC7LGB0"></script>
+<script>
+  window.dataLayer=window.dataLayer||[];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js',new Date());
+  gtag('config','G-V55EC7LGB0');
+  gtag('config','AW-16846659267');
+
+  // dias para a Copa
+  const dias = Math.max(0,Math.ceil((new Date('2026-06-11')-new Date())/86400000));
+  document.getElementById('dias').textContent  = dias;
+  document.getElementById('dias2').textContent = dias;
+
+  // animar barras
+  window.addEventListener('load',()=>{
+    setTimeout(()=>{
+      document.querySelectorAll('.pbar-fill').forEach(el=>{
+        el.style.width = el.dataset.w + '%';
+      });
+      const cb = document.getElementById('cbar');
+      if(cb) cb.style.width = cb.dataset.w + '%';
+    }, 500);
+  });
+
+  // confetes nas cores do Brasil
+  const colors=['#009C3B','#FFDF00','#002776','#ffffff','#facc15','#22c55e'];
+  const conf = document.getElementById('conf');
+  for(let i=0;i<65;i++){
+    const c=document.createElement('div');
+    c.className='c';
+    c.style.cssText=[
+      `left:${Math.random()*100}%`,
+      `top:${-10-Math.random()*30}px`,
+      `background:${colors[Math.floor(Math.random()*colors.length)]}`,
+      `width:${5+Math.random()*9}px`,
+      `height:${5+Math.random()*9}px`,
+      `animation-duration:${2.8+Math.random()*3.2}s`,
+      `animation-delay:${Math.random()*1.8}s`,
+      `border-radius:${Math.random()>0.5?'50%':'2px'}`,
+    ].join(';');
+    conf.appendChild(c);
+  }
+
+  // link de resultado
+  const URL_RESULT = 'https://bolaonacopa.com.br/quiz/resultado?s=brasil&u=Rodrigo';
+  const TXT_WPP = encodeURIComponent(
+    '🇧🇷 Fiz o quiz do Bolão na Copa e sou o BRASIL!
+' +
+    'Descubra qual das 48 seleções da Copa 2026 você seria:
+👉 ' + URL_RESULT
+  );
+
+  function enviarWpp(e){
+    e.preventDefault();
+    gtag('event','quiz_share',{selecao:'brasil',canal:'whatsapp'});
+    window.open('https://wa.me/?text='+TXT_WPP,'_blank');
+  }
+
+  function copiarLink(){
+    gtag('event','quiz_share',{selecao:'brasil',canal:'copiar'});
+    navigator.clipboard.writeText(URL_RESULT).then(()=>{
+      showToast('🔗 Link copiado!');
+    }).catch(()=>{
+      // fallback
+      const ta=document.createElement('textarea');
+      ta.value=URL_RESULT;
+      document.body.appendChild(ta);ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast('🔗 Link copiado!');
+    });
+  }
+
+  function showToast(msg){
+    const t=document.getElementById('toast');
+    t.textContent=msg; t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'),2200);
+  }
+</script>
+</body>
+</html>
