@@ -265,8 +265,33 @@ const Quiz = () => {
               10 perguntas revelam qual das <strong className="text-white">48 selecoes</strong> da Copa 2026 combina com o seu jeito de jogar. Pode ser uma surpresa — ou exatamente o que voce esperava.
             </p>
 
+            {/* CTA — antes das perguntas para facil acesso */}
+            <button onClick={handleStart}
+              className="w-full max-w-[330px] flex items-center justify-center gap-2 py-4 rounded-2xl font-black text-base transition-all hover:-translate-y-0.5 active:scale-[0.98]"
+              style={{ background: "#facc15", color: "#14532d", boxShadow: "0 8px 28px rgba(250,204,21,.33)" }}>
+              Comecar o Quiz <ChevronRight className="w-5 h-5" />
+            </button>
+            {!isPremium && (
+              <p className="text-[10px]" style={{ color: "rgba(255,255,255,.38)" }}>
+                Gratis com anuncio · <button onClick={() => navigate("/planos")} className="underline" style={{ color: "#facc15" }}>Premium sem anuncios</button>
+              </p>
+            )}
+
+            {/* Social proof */}
+            <div className="flex items-center justify-center gap-2">
+              <div className="flex">
+                {["M", "J", "A", "R", "+"].map((l, i) => (
+                  <div key={i} className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold -ml-1 first:ml-0"
+                    style={{ background: "#15803d", border: "2px solid #14532d" }}>{l}</div>
+                ))}
+              </div>
+              <span className="text-[11px]" style={{ color: "rgba(255,255,255,.5)" }}>
+                <strong style={{ color: "#facc15" }}>+5.400</strong> quizzes hoje
+              </span>
+            </div>
+
             {/* Preview perguntas */}
-            <div className="w-full max-w-[440px] space-y-2">
+            <div className="w-full max-w-[440px] space-y-2 pt-2">
               {PERGUNTAS.slice(0, 4).map((p, i) => (
                 <div key={i} className="flex items-center gap-3 text-left rounded-xl px-3.5 py-2.5"
                   style={{ background: "rgba(255,255,255,.048)", border: "1px solid rgba(255,255,255,.07)" }}>
@@ -285,31 +310,6 @@ const Quiz = () => {
                 <span className="text-[13px]" style={{ color: "rgba(255,255,255,.25)" }}>mais perguntas exclusivas</span>
                 <span className="text-sm opacity-25 flex-shrink-0 ml-auto">🔒</span>
               </div>
-            </div>
-
-            {/* CTA */}
-            <button onClick={handleStart}
-              className="w-full max-w-[330px] flex items-center justify-center gap-2 py-4 rounded-2xl font-black text-base transition-all hover:-translate-y-0.5 active:scale-[0.98] mt-2"
-              style={{ background: "#facc15", color: "#14532d", boxShadow: "0 8px 28px rgba(250,204,21,.33)" }}>
-              Comecar o Quiz <ChevronRight className="w-5 h-5" />
-            </button>
-            {!isPremium && (
-              <p className="text-[10px]" style={{ color: "rgba(255,255,255,.38)" }}>
-                Gratis com anuncio · <button onClick={() => navigate("/planos")} className="underline" style={{ color: "#facc15" }}>Premium sem anuncios</button>
-              </p>
-            )}
-
-            {/* Social proof */}
-            <div className="flex items-center justify-center gap-2 pt-2">
-              <div className="flex">
-                {["M", "J", "A", "R", "+"].map((l, i) => (
-                  <div key={i} className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold -ml-1 first:ml-0"
-                    style={{ background: "#15803d", border: "2px solid #14532d" }}>{l}</div>
-                ))}
-              </div>
-              <span className="text-[11px]" style={{ color: "rgba(255,255,255,.5)" }}>
-                <strong style={{ color: "#facc15" }}>+5.400</strong> quizzes hoje
-              </span>
             </div>
           </div>
         </div>
