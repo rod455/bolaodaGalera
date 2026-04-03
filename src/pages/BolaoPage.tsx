@@ -442,7 +442,7 @@ const BolaoPage = () => {
             nome,
             avatar: getInitials(nome),
             pontos: p.pontuacao_total || 0,
-            isCurrentUser: p.user_id === user?.id ?? "",
+            isCurrentUser: p.user_id === (user?.id ?? ""),
             userId: p.user_id,
           };
         }

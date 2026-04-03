@@ -82,7 +82,7 @@ const Quiz = () => {
   };
 
   const handleResposta = (opcaoIdx: number) => {
-    const novasRespostas = [...respostas, opçãoIdx];
+    const novasRespostas = [...respostas, opcaoIdx];
     setRespostas(novasRespostas);
 
     if (novasRespostas.length >= PERGUNTAS.length) {
