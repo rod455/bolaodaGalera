@@ -1,5 +1,5 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Home, PlusCircle, Radio, User, LogOut, LogIn, HelpCircle } from "lucide-react";
+import { Home, PlusCircle, Radio, User, LogOut, LogIn, HelpCircle, Globe } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -20,12 +20,14 @@ const AppLayout = () => {
   const navItems = isLoggedIn
     ? [
         { path: "/home", label: "Home", icon: Home },
+        { path: "/quiz", label: "Quiz na Copa", icon: Globe },
         { path: "/criar", label: "Novo Bolão", icon: PlusCircle },
         { path: "/ao-vivo", label: "Ao Vivo", icon: Radio },
         { path: "/perfil", label: "Perfil", icon: User },
       ]
     : [
         { path: "/home", label: "Home", icon: Home },
+        { path: "/quiz", label: "Quiz na Copa", icon: Globe },
         { path: "/como-funciona.html", label: "Como Funciona", icon: HelpCircle },
         { path: "/auth?modo=cadastro", label: "Criar Conta", icon: LogIn },
       ];
@@ -77,10 +79,6 @@ const AppLayout = () => {
                     <span className="text-white text-[10px] leading-tight font-medium">Disponível no<br/><strong className="text-xs">Google Play</strong></span>
                   </a>
                 )}
-                <button onClick={() => { window.location.href = "/como-funciona.html"; }}
-                  className="text-white/80 hover:text-white transition-colors text-sm font-medium">
-                  Como Funciona
-                </button>
                 <button onClick={() => navigate("/auth")}
                   className="text-white/80 hover:text-white transition-colors text-sm font-medium">
                   Entrar
@@ -118,19 +116,14 @@ const AppLayout = () => {
       <header className="bg-copa-green-500 text-white sticky top-0 z-50 shadow-md md:hidden"
         style={{ paddingTop: "max(2rem, env(safe-area-inset-top, 2rem))" }}>
         <div className="container max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3" onClick={() => navigate("/home")} style={{ cursor: "pointer" }}>
             <img src={LOGO_URL} alt="Bolão na Copa" className="w-9 h-9 object-contain" />
             <h1 className="text-lg font-bold tracking-tight">Bolão na Copa</h1>
           </div>
           {isLoggedIn ? (
             <NotificationCenter />
           ) : (
-            <div className="flex items-center gap-2">
-              <button onClick={() => { window.location.href = "/como-funciona.html"; }}
-                className="text-white/80 hover:text-white transition-colors text-xs font-medium flex items-center gap-1">
-                <HelpCircle className="w-3.5 h-3.5" />
-                <span>Como Funciona</span>
-              </button>
+            <div className="flex items-center gap-1.5">
               <button onClick={() => navigate("/auth")}
                 className="text-white/80 hover:text-white transition-colors text-xs font-medium">
                 Entrar
@@ -142,6 +135,19 @@ const AppLayout = () => {
             </div>
           )}
         </div>
+        {/* Barra de navegação mobile (abaixo do logo) */}
+        {!isLoggedIn && (
+          <div className="container max-w-4xl mx-auto px-2 flex border-t border-white/10">
+            <button onClick={() => navigate("/quiz")}
+              className={`flex-1 py-2 text-xs font-medium text-center transition-colors ${location.pathname === "/quiz" ? "text-copa-gold-400 border-b-2 border-copa-gold-400" : "text-white/60 hover:text-white"}`}>
+              Quiz da Copa
+            </button>
+            <button onClick={() => { window.location.href = "/como-funciona.html"; }}
+              className="flex-1 py-2 text-xs font-medium text-center text-white/60 hover:text-white transition-colors">
+              Como Funciona
+            </button>
+          </div>
+        )}
       </header>
 
       {/* Page Content */}

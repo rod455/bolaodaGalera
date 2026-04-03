@@ -25,6 +25,7 @@ export function useSwipeBack() {
 
     const onTouchStart = (e: TouchEvent) => {
       const touch = e.touches[0];
+      if (!touch) return;
       if (touch.clientX <= EDGE_ZONE) {
         startX = touch.clientX;
         startY = touch.clientY;
@@ -37,6 +38,7 @@ export function useSwipeBack() {
       tracking = false;
 
       const touch = e.changedTouches[0];
+      if (!touch) return;
       const dx = touch.clientX - startX;
       const dy = Math.abs(touch.clientY - startY);
 

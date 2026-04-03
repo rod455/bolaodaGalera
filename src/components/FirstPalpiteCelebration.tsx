@@ -9,6 +9,8 @@ import { X, Share2, Copy, Check, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
+import { getInviteUrl } from "@/lib/constants";
+import { shareViaWhatsApp } from "@/lib/utils";
 
 interface FirstPalpiteCelebrationProps {
   open: boolean;
@@ -81,7 +83,7 @@ const FirstPalpiteCelebration = ({
 
   if (!open) return null;
 
-  const inviteLink = `https://bolaonacopa.com.br/entrar?code=${bolaoCode}`;
+  const inviteLink = getInviteUrl(bolaoId, bolaoCode, "whatsapp");
 
   // Mensagem WhatsApp contextual com o palpite real
   const whatsappText = [
@@ -95,14 +97,7 @@ const FirstPalpiteCelebration = ({
   ].join("");
 
   const handleWhatsApp = () => {
-    const encoded = encodeURIComponent(whatsappText);
-    if (Capacitor.isNativePlatform()) {
-      window.open(`https://api.whatsapp.com/send?text=${encoded}`, "_system");
-    } else if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-      window.location.href = `whatsapp://send?text=${encoded}`;
-    } else {
-      window.open(`https://web.whatsapp.com/send?text=${encoded}`, "_blank");
-    }
+    shareViaWhatsApp(whatsappText);
   };
 
   const handleCopyCode = () => {

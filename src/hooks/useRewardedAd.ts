@@ -274,7 +274,7 @@ export const useRewardedAd = () => {
   );
 
   const showAd = useCallback(
-    async (tipo: "criar" | "palpite" | "entrar"): Promise<boolean> => {
+    async (tipo: "criar" | "palpite" | "entrar" | "quiz"): Promise<boolean> => {
       if (isPremium) return true;
       if (tipo === "palpite" && hasWatchedPalpiteAdToday()) return true;
       if (!isNative) return true;

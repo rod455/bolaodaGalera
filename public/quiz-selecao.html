@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Para qual das 48 seleções da Copa 2026 você seria convocado? — Bolão na Copa</title>
+  <meta name="description" content="Responda 10 perguntas e descubra para qual das 48 seleções da Copa do Mundo 2026 você seria convocado. Só no Bolão na Copa — grátis!">
+  <meta property="og:title" content="Para qual seleção da Copa 2026 você seria convocado? 🌍⚽">
+  <meta property="og:description" content="10 perguntas, 48 seleções possíveis. Descubra para qual você seria convocado — e veja se seus amigos concordam!">
+  <meta property="og:image" content="https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/bolao-capas/og-cover.png">
+  <meta property="og:url" content="https://www.bolaonacopa.com.br/quiz-selecao">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" href="https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/604913%20(512%20x%20512%20px).png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-V55EC7LGB0"></script>
+  <script>
+    window.dataLayer=window.dataLayer||[];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js',new Date());gtag('config','G-V55EC7LGB0');gtag('config','AW-16846659267');
+    function tdl(l){gtag('event','quiz_dl_click',{event_category:'quiz',event_label:l});}
+  </script>
+  <style>
+  :root{
+    --g9:#14532d;--g8:#166534;--g7:#15803d;--g6:#16a34a;
+    --gold:#facc15;--gd:#a16207;--w:#ffffff;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{font-family:'Inter',sans-serif;background:var(--g9);color:var(--w);overflow-x:hidden;}
+  body::before{
+    content:'';position:fixed;inset:0;
+    background:
+      repeating-linear-gradient(90deg,transparent,transparent 60px,rgba(255,255,255,.018) 60px,rgba(255,255,255,.018) 61px),
+      repeating-linear-gradient(0deg,transparent,transparent 60px,rgba(255,255,255,.018) 60px,rgba(255,255,255,.018) 61px);
+    pointer-events:none;z-index:0;
+  }
+  .page{position:relative;z-index:1;}
+
+  /* ── hero ── */
+  .hero{
+    min-height:100vh;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    padding:36px 20px 56px;text-align:center;
+    background:radial-gradient(ellipse at 50% 0%,rgba(22,163,74,.38) 0%,transparent 68%);
+  }
+  .logo{width:72px;height:72px;border-radius:18px;margin-bottom:22px;
+    animation:pulse 3s ease-in-out infinite;
+    box-shadow:0 0 40px rgba(250,204,21,.3);}
+  @keyframes pulse{0%,100%{box-shadow:0 0 20px rgba(250,204,21,.2);}50%{box-shadow:0 0 55px rgba(250,204,21,.55);}}
+
+  .badge{
+    display:inline-flex;align-items:center;gap:6px;
+    background:rgba(250,204,21,.14);border:1px solid rgba(250,204,21,.38);
+    border-radius:100px;padding:5px 15px;
+    font-size:.72rem;font-weight:700;color:var(--gold);
+    letter-spacing:1px;text-transform:uppercase;margin-bottom:18px;
+    animation:fup .6s ease both;
+  }
+  .hero-title{
+    font-family:'Bebas Neue',sans-serif;
+    font-size:clamp(2.8rem,11vw,6.5rem);line-height:.88;
+    color:var(--w);margin-bottom:6px;
+    animation:fup .6s ease .1s both;
+    text-shadow:0 4px 28px rgba(0,0,0,.45);
+  }
+  .hero-title span{color:var(--gold);display:block;}
+  .hero-sub{
+    font-size:clamp(.95rem,2.8vw,1.15rem);color:rgba(255,255,255,.72);
+    max-width:480px;margin:14px auto 0;line-height:1.65;
+    animation:fup .6s ease .2s both;
+  }
+
+  /* ── perguntas preview ── */
+  .qprev{margin:44px auto 0;max-width:460px;width:100%;animation:fup .6s ease .3s both;}
+  .qi{
+    display:flex;align-items:center;gap:13px;
+    background:rgba(255,255,255,.048);border:1px solid rgba(255,255,255,.07);
+    border-radius:13px;padding:12px 16px;margin-bottom:9px;text-align:left;
+  }
+  .qn{
+    width:30px;height:30px;border-radius:50%;flex-shrink:0;
+    background:rgba(250,204,21,.14);border:1.5px solid rgba(250,204,21,.38);
+    display:flex;align-items:center;justify-content:center;
+    font-size:.78rem;font-weight:700;color:var(--gold);
+  }
+  .qt{font-size:.88rem;color:rgba(255,255,255,.82);font-weight:500;}
+  .ql{margin-left:auto;font-size:.95rem;opacity:.45;flex-shrink:0;}
+
+  /* ── resultados desfocados ── */
+  .rtease{margin:36px auto 0;max-width:460px;width:100%;animation:fup .6s ease .4s both;}
+  .rlabel{font-size:.68rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+    color:rgba(255,255,255,.38);margin-bottom:12px;text-align:center;}
+  .rrow{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
+  .rpill{
+    display:flex;align-items:center;gap:5px;
+    background:rgba(255,255,255,.065);border:1px solid rgba(255,255,255,.09);
+    border-radius:100px;padding:7px 13px;
+    font-size:.82rem;font-weight:600;color:rgba(255,255,255,.78);
+    transition:filter .3s;
+  }
+  .rpill.bl{filter:blur(5px);user-select:none;}
+
+  /* ── cta ── */
+  .cta{margin:44px auto 0;max-width:460px;width:100%;animation:fup .6s ease .5s both;text-align:center;}
+  .lock{
+    width:60px;height:60px;border-radius:50%;
+    background:rgba(250,204,21,.1);border:2px solid rgba(250,204,21,.28);
+    display:flex;align-items:center;justify-content:center;
+    margin:0 auto 14px;font-size:1.7rem;
+    animation:blk 2s ease-in-out infinite;
+  }
+  @keyframes blk{0%,100%{transform:translateY(0);}50%{transform:translateY(-7px);}}
+  .cta-lbl{font-size:.95rem;color:rgba(255,255,255,.65);margin-bottom:7px;}
+  .cta-h{
+    font-family:'Bebas Neue',sans-serif;
+    font-size:clamp(1.5rem,4.5vw,2rem);color:var(--w);margin-bottom:5px;line-height:1.08;
+  }
+  .cta-h span{color:var(--gold);}
+  .cta-s{font-size:.82rem;color:rgba(255,255,255,.45);margin-bottom:26px;}
+  .btn{
+    display:flex;align-items:center;justify-content:center;gap:11px;
+    width:100%;max-width:330px;margin:0 auto 10px;
+    padding:17px 26px;background:var(--gold);color:var(--g9);
+    border-radius:15px;font-weight:900;font-size:1rem;
+    text-decoration:none;cursor:pointer;border:none;
+    transition:transform .15s,box-shadow .15s;
+    box-shadow:0 8px 28px rgba(250,204,21,.33);
+    position:relative;overflow:hidden;
+  }
+  .btn::before{
+    content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+    background:linear-gradient(45deg,transparent 30%,rgba(255,255,255,.18) 50%,transparent 70%);
+    transform:translateX(-100%);animation:shim 3s ease-in-out infinite;
+  }
+  @keyframes shim{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 12px 38px rgba(250,204,21,.48);}
+  .btn:active{transform:scale(.98);}
+  .btn svg{width:21px;height:21px;flex-shrink:0;}
+  .btns{display:block;text-align:center;color:rgba(255,255,255,.38);font-size:.78rem;text-decoration:none;margin-top:9px;transition:color .2s;}
+  .btns:hover{color:rgba(255,255,255,.65);}
+
+  /* ── social proof ── */
+  .sp{margin:28px auto 0;max-width:330px;display:flex;align-items:center;justify-content:center;gap:9px;animation:fup .6s ease .6s both;}
+  .avs{display:flex;}
+  .av{width:26px;height:26px;border-radius:50%;border:2px solid var(--g9);background:var(--g7);margin-left:-7px;font-size:.62rem;display:flex;align-items:center;justify-content:center;font-weight:700;}
+  .av:first-child{margin-left:0;}
+  .sp-t{font-size:.78rem;color:rgba(255,255,255,.58);}
+  .sp-t strong{color:var(--gold);}
+
+  /* ── counter strip ── */
+  .strip{
+    background:rgba(250,204,21,.07);border-top:1px solid rgba(250,204,21,.15);border-bottom:1px solid rgba(250,204,21,.15);
+    padding:14px 20px;text-align:center;
+    display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;
+    font-size:.8rem;color:rgba(255,255,255,.6);
+  }
+  .strip strong{color:var(--gold);}
+
+  /* ── por que quiz viral ── */
+  .why{padding:52px 20px 40px;max-width:500px;margin:0 auto;text-align:center;}
+  .why-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(1.8rem,6vw,3rem);margin-bottom:8px;color:var(--w);}
+  .why-title span{color:var(--gold);}
+  .why-sub{font-size:.9rem;color:rgba(255,255,255,.6);margin-bottom:28px;line-height:1.6;}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .card{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.075);border-radius:14px;padding:16px 14px;text-align:left;}
+  .card-ico{font-size:1.6rem;margin-bottom:8px;}
+  .card-t{font-size:.85rem;font-weight:700;margin-bottom:4px;}
+  .card-s{font-size:.75rem;color:rgba(255,255,255,.5);line-height:1.5;}
+  @media(max-width:380px){.cards{grid-template-columns:1fr;}}
+
+  /* ── outros quizzes ── */
+  .more{padding:0 20px 52px;max-width:500px;margin:0 auto;}
+  .slbl{font-size:.68rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.28);text-align:center;margin-bottom:18px;}
+  .qcard{background:rgba(255,255,255,.038);border:1px solid rgba(255,255,255,.07);border-radius:15px;padding:16px 18px;margin-bottom:10px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:background .2s,border-color .2s;}
+  .qcard:hover{background:rgba(255,255,255,.065);border-color:rgba(250,204,21,.28);}
+  .qce{font-size:1.9rem;flex-shrink:0;}
+  .qct{flex:1;}
+  .qctt{font-weight:700;font-size:.92rem;margin-bottom:2px;}
+  .qcs{font-size:.77rem;color:rgba(255,255,255,.45);}
+  .qcl{font-size:1.1rem;opacity:.28;}
+
+  /* ── urgência ── */
+  .urgencia{
+    background:rgba(220,38,38,.12);border:1px solid rgba(220,38,38,.25);
+    border-radius:14px;padding:14px 18px;text-align:center;
+    margin:0 20px 20px;max-width:460px;margin-left:auto;margin-right:auto;
+    font-size:.82rem;color:rgba(255,200,200,.85);
+  }
+  .urgencia strong{color:#fca5a5;}
+
+  /* ── footer ── */
+  footer{text-align:center;padding:26px 20px 36px;font-size:.72rem;color:rgba(255,255,255,.22);border-top:1px solid rgba(255,255,255,.045);}
+  footer a{color:rgba(255,255,255,.3);text-decoration:none;}
+
+  @keyframes fup{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+  @media(max-width:400px){.hero{padding:28px 14px 46px;}.btn{font-size:.92rem;padding:15px 20px;}}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <section class="hero">
+    <img src="https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/604913%20(512%20x%20512%20px).png" alt="Bolão na Copa" class="logo">
+    <div class="badge">⚽ 48 seleções · Copa 2026</div>
+    <h1 class="hero-title">
+      Para qual seleção<br>
+      <span>você seria convocado?</span>
+    </h1>
+    <p class="hero-sub">
+      10 perguntas revelam qual das <strong>48 seleções</strong> da Copa 2026 combina com o seu jeito de jogar. Pode ser uma surpresa — ou exatamente o que você esperava.
+    </p>
+
+    <!-- CTA principal — antes das perguntas -->
+    <div class="cta" style="margin-top:32px">
+      <a href="https://www.bolaonacopa.com.br/quiz?start=true" class="btn btn-main" onclick="tdl('quiz_web')" style="margin-bottom:10px">
+        ⚽ Fazer o Quiz agora — Grátis
+      </a>
+      <a href="https://play.google.com/store/apps/details?id=com.bolaonacopa.app&utm_source=quiz_selecao&utm_medium=site&utm_campaign=quiz_viral_copa2026" class="btn" onclick="tdl('hero')" target="_blank" rel="noopener" style="background:#111;color:#fff;box-shadow:0 4px 16px rgba(0,0,0,.3);font-weight:700">
+        <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px"><path d="M3.18 23.76a2 2 0 0 0 2.08-.15l12.19-7.04-2.88-2.88L3.18 23.76zM.35 1.19A1.99 1.99 0 0 0 0 2.38v19.24c0 .43.12.83.35 1.19l.11.11 10.78-10.78v-.25L.46 1.08l-.11.11zM20.53 10.3l-2.77-1.6-3.2 3.2 3.2 3.2 2.79-1.61c.8-.46.8-1.73-.02-2.19zM5.26.39L17.45 7.43l-2.88 2.88L5.26.39z"/></svg>
+        Baixar o App na Google Play
+      </a>
+    </div>
+
+    <div class="sp" style="margin-top:18px">
+      <div class="avs">
+        <div class="av">M</div><div class="av">J</div><div class="av">A</div><div class="av">R</div><div class="av">+</div>
+      </div>
+      <p class="sp-t"><strong>+5.400 pessoas</strong> já fizeram o quiz hoje</p>
+    </div>
+
+    <!-- Perguntas preview — abaixo do CTA -->
+    <div class="qprev"><div class="qi"><div class="qn">1</div><div class="qt">No último minuto empatado, o que você faz?</div><div class="ql">🔓</div></div><div class="qi"><div class="qn">2</div><div class="qt">Como seus parceiros de racha te descrevem?</div><div class="ql">🔒</div></div><div class="qi"><div class="qn">3</div><div class="qt">Qual frase define seu estilo de jogo?</div><div class="ql">🔒</div></div><div class="qi"><div class="qn">4</div><div class="qt">O que você nunca abre mão num jogo?</div><div class="ql">🔒</div></div><div class="qi" style="opacity:.45"><div class="qn" style="opacity:.4">+6</div><div class="qt" style="color:rgba(255,255,255,.3)">mais perguntas exclusivas</div><div class="ql">🔒</div></div></div>
+
+    <div class="rtease">
+      <div class="rlabel">Seu resultado pode ser qualquer uma dessas →</div>
+      <div class="rrow"><div class="rpill">🇧🇷 Brasil</div><div class="rpill">🇩🇪 Alemanha</div><div class="rpill bl">🇦🇷 Argentina</div><div class="rpill bl">🇫🇷 França</div><div class="rpill bl">🇪🇸 Espanha</div></div><div class="rrow"><div class="rpill bl">🇵🇹 Portugal</div><div class="rpill bl">🇲🇦 Marrocos</div><div class="rpill bl">🇯🇵 Japão</div><div class="rpill bl">🇺🇾 Uruguai</div><div class="rpill bl">🇳🇱 Holanda</div></div><div class="rrow"><div class="rpill bl">🇲🇽 México</div><div class="rpill bl">🇨🇴 Colômbia</div><div class="rpill bl">🇧🇪 Bélgica</div><div class="rpill bl">🇰🇷 Coreia do Sul</div><div class="rpill bl">... +33 possíveis</div></div>
+    </div>
+  </section>
+
+  <div class="strip">
+    <span>⚽ <strong>48 seleções</strong> possíveis</span>
+    <span>🎯 <strong>10 perguntas</strong> precisas</span>
+    <span>🔥 <strong>100% grátis</strong> no app</span>
+    <span>📊 <strong>Ranking</strong> ao vivo no bolão</span>
+  </div>
+
+  <section class="why">
+    <h2 class="why-title">Por que fazer<br><span>o quiz?</span></h2>
+    <p class="why-sub">Não é só curiosidade. É uma forma de descobrir seu estilo de jogo — e de desafiar seus amigos do bolão.</p>
+    <div class="cards">
+      <div class="card">
+        <div class="card-ico">🌍</div>
+        <div class="card-t">48 seleções reais</div>
+        <div class="card-s">Todas as seleções classificadas para a Copa 2026. Pode ser qualquer uma.</div>
+      </div>
+      <div class="card">
+        <div class="card-ico">🎯</div>
+        <div class="card-t">Algoritmo de perfil</div>
+        <div class="card-s">Suas respostas criam um perfil único. Não tem como "acertar" — só revelando.</div>
+      </div>
+      <div class="card">
+        <div class="card-ico">💬</div>
+        <div class="card-t">Compartilhe o resultado</div>
+        <div class="card-s">Envie para o grupo do bolão e veja quem discorda do seu resultado.</div>
+      </div>
+      <div class="card">
+        <div class="card-ico">🏆</div>
+        <div class="card-t">Entre no bolão</div>
+        <div class="card-s">Após o quiz, entre no bolão da Copa e palpite em todos os 104 jogos.</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="urgencia">
+    <strong>⏰ Copa começa em {dias_para_copa} dias.</strong> Faça o quiz agora e entre no bolão antes de começar!
+  </div>
+
+  <section class="more">
+    <p class="slbl">Outros quizzes disponíveis no app</p>
+    <div class="qcard" onclick="location.href='https://play.google.com/store/apps/details?id=com.bolaonacopa.app&utm_source=quiz_selecao&utm_medium=site&utm_campaign=quiz_viral_copa2026'">
+      <div class="qce">⚽</div>
+      <div class="qct"><div class="qctt">Qual lenda da Copa você seria?</div><div class="qcs">Pelé, Zidane, Maradona ou Ronaldo Fenômeno?</div></div>
+      <div class="qcl">🔒</div></div><div class="qcard" onclick="location.href='https://play.google.com/store/apps/details?id=com.bolaonacopa.app&utm_source=quiz_selecao&utm_medium=site&utm_campaign=quiz_viral_copa2026'">
+      <div class="qce">🎯</div>
+      <div class="qct"><div class="qctt">Qual tipo de palpiteiro você é?</div><div class="qcs">Analista, sortudo, torcedor ou o social?</div></div>
+      <div class="qcl">🔒</div></div><div class="qcard" onclick="location.href='https://play.google.com/store/apps/details?id=com.bolaonacopa.app&utm_source=quiz_selecao&utm_medium=site&utm_campaign=quiz_viral_copa2026'">
+      <div class="qce">🧠</div>
+      <div class="qct"><div class="qctt">Qual posição você joga na vida?</div><div class="qcs">Atacante, goleiro, meia ou zagueiro?</div></div>
+      <div class="qcl">🔒</div></div><div class="qcard" onclick="location.href='https://play.google.com/store/apps/details?id=com.bolaonacopa.app&utm_source=quiz_selecao&utm_medium=site&utm_campaign=quiz_viral_copa2026'">
+      <div class="qce">🌎</div>
+      <div class="qct"><div class="qctt">Em qual país-sede você estaria?</div><div class="qcs">EUA, México ou Canadá?</div></div>
+      <div class="qcl">🔒</div></div>
+    <a href="https://www.bolaonacopa.com.br/quiz?start=true" class="btn" style="max-width:100%;margin-top:22px;text-decoration:none;" onclick="tdl('bottom_quiz')">
+      ⚽ Fazer o Quiz da Seleção agora — Grátis
+    </a>
+    <a href="https://play.google.com/store/apps/details?id=com.bolaonacopa.app&utm_source=quiz_selecao&utm_medium=site_bottom&utm_campaign=quiz_viral_copa2026" class="btn" style="max-width:100%;margin-top:10px;text-decoration:none;background:#111;color:#fff;box-shadow:0 4px 16px rgba(0,0,0,.3);font-weight:700" onclick="tdl('bottom')" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px"><path d="M3.18 23.76a2 2 0 0 0 2.08-.15l12.19-7.04-2.88-2.88L3.18 23.76zM.35 1.19A1.99 1.99 0 0 0 0 2.38v19.24c0 .43.12.83.35 1.19l.11.11 10.78-10.78v-.25L.46 1.08l-.11.11zM20.53 10.3l-2.77-1.6-3.2 3.2 3.2 3.2 2.79-1.61c.8-.46.8-1.73-.02-2.19zM5.26.39L17.45 7.43l-2.88 2.88L5.26.39z"/></svg>
+      Quero todos os quizzes — Baixar app
+    </a>
+  </section>
+
+  <footer>
+    <p>© 2026 Bolão na Copa · <a href="/privacidade.html">Privacidade</a> · <a href="/home">Abrir no navegador</a></p>
+  </footer>
+</div>
+<script>
+  // Calcula dias para a Copa (11/06/2026)
+  const copa = new Date('2026-06-11');
+  const hoje = new Date();
+  const dias = Math.max(0, Math.ceil((copa - hoje) / 86400000));
+  document.querySelectorAll('[data-dias]').forEach(el => el.textContent = dias);
+  // substitui placeholder
+  document.body.innerHTML = document.body.innerHTML.replace('{dias_para_copa}', dias);
+</script>
+</body>
+</html>

@@ -13,6 +13,7 @@ import Perfil from "./pages/Perfil";
 import BolaoPage from "./pages/BolaoPage";
 import Palpites from "./pages/Palpites";
 import Planos from "./pages/Planos";
+import Quiz from "./pages/Quiz";
 import NotFound from "./pages/NotFound";
 import Unsubscribe from "./pages/Unsubscribe";
 import AppLayout from "./components/layout/AppLayout";
@@ -25,6 +26,7 @@ import { App as CapApp } from "@capacitor/app";
 import { SplashScreen as NativeSplash } from "@capacitor/splash-screen";
 import { supabase } from "@/integrations/supabase/client";
 import { initGoogleAuth } from "@/lib/googleAuth";
+import { initUTMTracker } from "@/lib/utm-tracker";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
 
 const queryClient = new QueryClient();
@@ -91,6 +93,7 @@ const App = () => {
 
   useEffect(() => {
     initGoogleAuth();
+    initUTMTracker();
   }, []);
 
   // Deep Link: capturar OAuth callback no app nativo
@@ -146,6 +149,10 @@ const App = () => {
               </Route>
               <Route path="/home" element={<AppLayout />}>
                 <Route index element={<Home />} />
+              </Route>
+              {/* Quiz — acessível sem login (mostra CTA de cadastro se guest) */}
+              <Route path="/quiz" element={<AppLayout />}>
+                <Route index element={<Quiz />} />
               </Route>
               <Route
                 element={

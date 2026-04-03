@@ -186,15 +186,17 @@ const QuickBolaoStep = ({
       if (error) throw error;
       if (!newBolao) throw new Error("Bolão não criado");
 
-      await supabase.from("bolao_campeonatos").insert({
+      const { error: campError } = await supabase.from("bolao_campeonatos").insert({
         bolao_id: newBolao.id,
         campeonato_id: selectedChamp,
       });
+      if (campError) throw new Error("Erro ao vincular campeonato ao bolão");
 
-      await supabase.from("bolao_participantes").insert({
+      const { error: partError } = await supabase.from("bolao_participantes").insert({
         bolao_id: newBolao.id,
         user_id: user.id,
       });
+      if (partError) throw new Error("Erro ao adicionar participante ao bolão");
 
       toast.success(`Bolão "${bolaoName.trim()}" criado!\nCódigo: ${codigo}`);
       onCreated(newBolao.id);

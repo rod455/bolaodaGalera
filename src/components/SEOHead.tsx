@@ -6,16 +6,19 @@ interface SEOHeadProps {
   path?: string;
   image?: string;
   noindex?: boolean;
+  keywords?: string;
 }
 
 const DEFAULTS = {
   siteName: "Bolão na Copa",
   baseUrl: "https://www.bolaonacopa.com.br",
-  defaultTitle: "Bolão da Copa 2026 — Palpites de Futebol Grátis | Brasileirão, Paulistão e mais",
+  defaultTitle: "Bolão na Copa — Bolão de Futebol Grátis | Copa do Mundo 2026, Brasileirão e mais",
   defaultDescription:
-    "Bolão da Copa 2026 grátis! Crie bolões de futebol, faça palpites e dispute com amigos no Brasileirão, Paulistão, Copa do Brasil, Champions League e Copa do Mundo.",
+    "Bolão na Copa: crie bolões de futebol grátis e dispute com amigos! Palpites no Brasileirão, Copa do Mundo 2026, Champions League e mais. Cadastre-se em 10 segundos.",
   defaultImage:
     "https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/bolao-capas/og-cover.png",
+  defaultKeywords:
+    "bolão na copa, bolão da copa, bolão de futebol, bolão grátis, palpites futebol, bolão copa do mundo 2026, bolão brasileirão, bolão entre amigos",
 };
 
 const SEOHead = ({
@@ -24,8 +27,11 @@ const SEOHead = ({
   path = "/",
   image = DEFAULTS.defaultImage,
   noindex = false,
+  keywords,
 }: SEOHeadProps) => {
-  const fullTitle = title ? `${title} — ${DEFAULTS.siteName}` : DEFAULTS.defaultTitle;
+  // Padrão: "Bolão na Copa — {título da página}" para que o nome do site
+  // apareça primeiro nas buscas do Google
+  const fullTitle = title ? `Bolão na Copa — ${title}` : DEFAULTS.defaultTitle;
   const fullUrl = `${DEFAULTS.baseUrl}${path}`;
 
   return (
@@ -34,6 +40,7 @@ const SEOHead = ({
       <meta name="description" content={description} />
       <link rel="canonical" href={fullUrl} />
       {noindex && <meta name="robots" content="noindex, nofollow" />}
+      {keywords && <meta name="keywords" content={keywords} />}
 
       {/* Open Graph */}
       <meta property="og:type" content="website" />

@@ -164,6 +164,7 @@ const Auth = () => {
             data: {
               nome: name,
               origem: Capacitor.isNativePlatform() ? Capacitor.getPlatform() : 'web',
+              ...((() => { try { const u = JSON.parse(localStorage.getItem('bolao_utm_params') || '{}'); return u.utm_source ? { utm_source: u.utm_source, utm_medium: u.utm_medium, utm_campaign: u.utm_campaign } : {}; } catch { return {}; } })()),
             },
           },
         });
@@ -262,9 +263,10 @@ const Auth = () => {
   return (
     <div className="min-h-screen bg-copa-green-500 flex flex-col items-center justify-start p-6 overflow-y-auto pt-8 pb-[40vh]">
       <SEOHead
-        title="Criar Conta ou Entrar"
-        description="Crie sua conta grátis no Bolão na Copa e comece a fazer seus palpites em segundos."
+        title="Criar Conta Grátis ou Entrar"
+        description="Crie sua conta grátis no Bolão na Copa e comece a palpitar nos jogos do Brasileirão, Copa do Mundo 2026, Champions League e mais. Cadastro com Google em 10 segundos."
         path="/auth"
+        keywords="criar conta bolão, bolão na copa cadastro, bolão grátis, login bolão da copa"
       />
       {/* Background pattern */}
       <div className="absolute inset-0 bg-gradient-to-b from-copa-green-400 to-copa-green-700 opacity-80" />

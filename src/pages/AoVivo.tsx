@@ -225,9 +225,10 @@ const AoVivo = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       <SEOHead
-        title="Placares Ao Vivo"
-        description="Acompanhe placares ao vivo do Paulistão, Brasileirão e outros campeonatos em tempo real."
+        title="Placares Ao Vivo — Brasileirão, Copa do Mundo e mais"
+        description="Acompanhe placares ao vivo do Brasileirão, Copa do Mundo 2026, Champions League e outros campeonatos em tempo real. Atualização automática a cada minuto."
         path="/ao-vivo"
+        keywords="placares ao vivo, resultado futebol hoje, placar brasileirão ao vivo, jogos de hoje"
       />
       <div className="flex items-start justify-between">
         <div>

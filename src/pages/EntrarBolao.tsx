@@ -103,16 +103,19 @@ const EntrarBolao = () => {
       const ids = new Set((participacoes || []).map((p: any) => p.bolao_id));
       setUserBolaoIds(ids);
 
-      // Count participants for each public bolão
-      const counts: Record<string, number> = {};
-      for (const b of (boloesPublicos as any[]) || []) {
-        const { count } = await supabase
+      // Count participants for all public bolões in a single query
+      const bolaoIds = ((boloesPublicos as any[]) || []).map((b: any) => b.id);
+      if (bolaoIds.length > 0) {
+        const { data: participantes } = await supabase
           .from("bolao_participantes")
-          .select("*", { count: "exact", head: true })
-          .eq("bolao_id", b.id);
-        counts[b.id] = count || 0;
+          .select("bolao_id")
+          .in("bolao_id", bolaoIds);
+        const counts: Record<string, number> = {};
+        for (const p of participantes || []) {
+          counts[p.bolao_id] = (counts[p.bolao_id] || 0) + 1;
+        }
+        setParticipantesCount(counts);
       }
-      setParticipantesCount(counts);
     } catch {
       // failed to load public bolões
     } finally {
