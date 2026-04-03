@@ -20,14 +20,14 @@ const AppLayout = () => {
   const navItems = isLoggedIn
     ? [
         { path: "/home", label: "Home", icon: Home },
-        { path: "/quiz", label: "Quiz", icon: Globe },
+        { path: "/quiz", label: "Quiz na Copa", icon: Globe },
         { path: "/criar", label: "Novo Bolão", icon: PlusCircle },
         { path: "/ao-vivo", label: "Ao Vivo", icon: Radio },
         { path: "/perfil", label: "Perfil", icon: User },
       ]
     : [
         { path: "/home", label: "Home", icon: Home },
-        { path: "/quiz", label: "Quiz", icon: Globe },
+        { path: "/quiz", label: "Quiz na Copa", icon: Globe },
         { path: "/como-funciona.html", label: "Como Funciona", icon: HelpCircle },
         { path: "/auth?modo=cadastro", label: "Criar Conta", icon: LogIn },
       ];
