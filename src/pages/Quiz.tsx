@@ -141,8 +141,8 @@ const Quiz = () => {
   // Compartilha resultado com imagem
   const generateAndShare = useCallback(async (canal: string) => {
     if (!selecao) return;
-    const isMobile = Capacitor.isNativePlatform() || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    const link = isMobile
+    const isAndroid = Capacitor.isNativePlatform() || /Android/i.test(navigator.userAgent);
+    const link = isAndroid
       ? "https://play.google.com/store/apps/details?id=com.bolaonacopa.app&utm_source=quiz_share&utm_medium=whatsapp&utm_campaign=quiz_viral_copa2026"
       : "https://www.bolaonacopa.com.br/quiz?start=true";
     const femininos = ["Argentina","Alemanha","Australia","Austria","Belgica","Bosnia","Colombia","Croacia","Dinamarca","Escocia","Espanha","Franca","Holanda","Inglaterra","Jamaica","Noruega","Suecia","Suica","Tunisia","Turquia","Rep. Tcheca","Costa Rica","Costa do Marfim","Nova Zelandia","Arabia Saudita","Coreia do Sul","Africa do Sul"];
