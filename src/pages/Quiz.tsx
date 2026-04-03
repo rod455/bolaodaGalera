@@ -151,7 +151,7 @@ const Quiz = () => {
     setSharing(false);
 
     if (canal === "whatsapp") {
-      // ── 1. App nativo (Capacitor): salvar imagem + Share plugin ──
+      // ── 1. App nativo (Capacitor): salvar imagem + share com arquivo ──
       if (Capacitor.isNativePlatform() && imageFile) {
         try {
           const { Filesystem } = await import("@capacitor/filesystem");
@@ -167,11 +167,13 @@ const Quiz = () => {
             data: base64,
             directory: 1, // Directory.Cache
           });
+          // Usar files[] para que o Android mostre a imagem no share
+          // O share sheet aparece mas com a imagem anexada — o WhatsApp
+          // aparece como primeira opcao quando ha imagem
           await Share.share({
-            title: `Quiz na Copa: ${selecao.titulo}`,
             text: texto,
-            url: saved.uri,
-            dialogTitle: "Compartilhar resultado",
+            files: [saved.uri],
+            dialogTitle: "Enviar via WhatsApp",
           });
           return;
         } catch {
