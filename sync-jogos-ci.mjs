@@ -15,7 +15,10 @@ const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const FOOTBALL_DATA_TOKEN = process.env.FOOTBALL_DATA_TOKEN;
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY || !FOOTBALL_DATA_TOKEN) {
-  console.log('Variaveis de ambiente nao configuradas.');
+  console.log('Variaveis de ambiente nao configuradas:');
+  if (!SUPABASE_URL) console.log('  - SUPABASE_URL ausente');
+  if (!SUPABASE_SERVICE_KEY) console.log('  - SUPABASE_SERVICE_KEY ausente');
+  if (!FOOTBALL_DATA_TOKEN) console.log('  - FOOTBALL_DATA_TOKEN ausente');
   process.exit(1);
 }
 
@@ -24,22 +27,32 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 const isFullSync = process.argv.includes('--full');
 
 // ---- Helpers ----
-async function fdFetch(endpoint) {
+async function fdFetch(endpoint, retries = 0) {
+  const MAX_RETRIES = 3;
   const url = `https://api.football-data.org/v4${endpoint}`;
   const res = await fetch(url, {
     headers: { 'X-Auth-Token': FOOTBALL_DATA_TOKEN }
   });
   if (res.status === 429) {
-    console.log('  Rate limit. Aguardando 60s...');
+    if (retries >= MAX_RETRIES) {
+      console.log(`  Rate limit: maximo de ${MAX_RETRIES} tentativas atingido.`);
+      return null;
+    }
+    console.log(`  Rate limit. Aguardando 60s... (tentativa ${retries + 1}/${MAX_RETRIES})`);
     await new Promise(r => setTimeout(r, 60000));
-    return fdFetch(endpoint);
+    return fdFetch(endpoint, retries + 1);
   }
   if (!res.ok) {
     const text = await res.text();
     console.log(`  HTTP ${res.status}: ${text.substring(0, 200)}`);
     return null;
   }
-  return res.json();
+  try {
+    return await res.json();
+  } catch {
+    console.log(`  Erro ao parsear JSON da resposta`);
+    return null;
+  }
 }
 
 function mapStatus(apiStatus) {
@@ -73,22 +86,11 @@ async function syncLive() {
   const now = new Date();
   console.log(`Smart Sync - ${now.toISOString()}\n`);
 
-  // ── NOVO: Autoencerramento de jogos atrasados ──
-  // Jogos agendados cuja data_hora passou ha mais de 3h sao marcados como adiado.
-  // Isso resolve jogos da Libertadores e outros que ficam presos como "agendado".
-  const tresHorasAtras = new Date(now.getTime() - 3 * 60 * 60 * 1000);
-  const { data: jogosAtrasados, error: atrasadosErr } = await supabase
-    .from('jogos')
-    .update({ status: 'adiado' })
-    .eq('status', 'agendado')
-    .lt('data_hora', tresHorasAtras.toISOString())
-    .select('time_a, time_b, data_hora');
-
-  if (jogosAtrasados && jogosAtrasados.length > 0) {
-    console.log(`Autoencerramento: ${jogosAtrasados.length} jogo(s) marcado(s) como adiado:`);
-    jogosAtrasados.forEach(j => console.log(`  - ${j.time_a} vs ${j.time_b} (previsto: ${new Date(j.data_hora).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })})`));
-    console.log('');
-  }
+  // ── Autoencerramento de jogos atrasados ──
+  // Jogos agendados cuja data_hora passou ha mais de 6h sao marcados como adiado.
+  // Usa 6h (ao inves de 3h) para evitar marcar jogos que ainda estao ao vivo na API.
+  // Roda DEPOIS da verificacao da API, para que jogos com dados reais nao sejam afetados.
+  // NOTA: Este bloco foi movido para depois do sync da API (ver abaixo).
 
   const fiveDaysAgo = new Date(now);
   fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
@@ -131,16 +133,16 @@ async function syncLive() {
     const ht = score.halfTime || {};
     const newStatus = mapStatus(matchData.status);
 
-    let placarA = ft.home;
-    let placarB = ft.away;
-    if (placarA == null && newStatus === 'ao_vivo') {
-      placarA = ht.home ?? 0;
-      placarB = ht.away ?? 0;
+    let placarA = ft.home !== undefined && ft.home !== null ? ft.home : null;
+    let placarB = ft.away !== undefined && ft.away !== null ? ft.away : null;
+    if (placarA === null && newStatus === 'ao_vivo') {
+      placarA = ht.home !== undefined && ht.home !== null ? ht.home : 0;
+      placarB = ht.away !== undefined && ht.away !== null ? ht.away : 0;
     }
 
     const updateData = { status: newStatus };
-    if (placarA != null) updateData.placar_time_a = placarA;
-    if (placarB != null) updateData.placar_time_b = placarB;
+    if (placarA !== null) updateData.placar_time_a = placarA;
+    if (placarB !== null) updateData.placar_time_b = placarB;
 
     // ── NOVO: Atualiza data_hora se a API retornou uma nova data ──
     // Isso resolve jogos remarcados que ficavam com a data antiga
@@ -153,7 +155,7 @@ async function syncLive() {
       game.status !== newStatus ||
       game.placar_time_a !== placarA ||
       game.placar_time_b !== placarB ||
-      updateData.data_hora != null; // data remarcada conta como mudanca
+      updateData.data_hora !== undefined; // data remarcada conta como mudanca
 
     if (!changed) {
       console.log(`  ${game.time_a} vs ${game.time_b} - sem alteracao`);
@@ -179,10 +181,25 @@ async function syncLive() {
     await new Promise(r => setTimeout(r, 7000));
   }
 
+  // ── Autoencerramento de jogos atrasados (roda APOS sync da API) ──
+  // Jogos agendados cuja data_hora passou ha mais de 6h e que a API nao atualizou.
+  const seisHorasAtras = new Date(now.getTime() - 6 * 60 * 60 * 1000);
+  const { data: jogosAtrasados } = await supabase
+    .from('jogos')
+    .update({ status: 'adiado' })
+    .eq('status', 'agendado')
+    .lt('data_hora', seisHorasAtras.toISOString())
+    .select('time_a, time_b, data_hora');
+
+  if (jogosAtrasados && jogosAtrasados.length > 0) {
+    console.log(`\nAutoencerramento: ${jogosAtrasados.length} jogo(s) marcado(s) como adiado:`);
+    jogosAtrasados.forEach(j => console.log(`  - ${j.time_a} vs ${j.time_b} (previsto: ${new Date(j.data_hora).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })})`));
+  }
+
   if (updated > 0) {
     await supabase.from('sync_log').insert({
       campeonato_api_id: 0, tipo: 'github-actions-smart', jogos_atualizados: updated,
-    });
+    }).catch(err => console.log(`Erro ao salvar sync_log: ${err.message}`));
   }
 
   console.log(`\n${updated} jogo(s) atualizado(s)`);

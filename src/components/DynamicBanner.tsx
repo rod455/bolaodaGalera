@@ -152,18 +152,17 @@ const DynamicBanner = ({ userBolaoIds, userContext }: DynamicBannerProps) => {
   // Auto-rotate
   useEffect(() => {
     if (banners.length <= 1) return;
-    const startTimer = () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-      timerRef.current = setInterval(() => {
-        setCurrent((prev) => {
-          const next = (prev + 1) % banners.length;
-          scrollToIndex(next);
-          return next;
-        });
-      }, AUTO_ROTATE_MS);
-    };
-    startTimer();
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+    if (timerRef.current) clearInterval(timerRef.current);
+    const bannersLen = banners.length;
+    timerRef.current = setInterval(() => {
+      setCurrent((prev) => {
+        if (bannersLen === 0) return 0;
+        const next = (prev + 1) % bannersLen;
+        scrollToIndex(next);
+        return next;
+      });
+    }, AUTO_ROTATE_MS);
+    return () => { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; } };
   }, [banners.length, scrollToIndex]);
 
   // Sync indicador
@@ -177,15 +176,18 @@ const DynamicBanner = ({ userBolaoIds, userContext }: DynamicBannerProps) => {
         const w = el.offsetWidth;
         if (w === 0) return;
         setCurrent(Math.round(el.scrollLeft / w));
-        if (userInteracted.current && timerRef.current) {
-          clearInterval(timerRef.current);
-          timerRef.current = setInterval(() => {
-            setCurrent((prev) => {
-              const next = (prev + 1) % banners.length;
-              scrollToIndex(next);
-              return next;
-            });
-          }, AUTO_ROTATE_MS);
+        if (userInteracted.current) {
+          if (timerRef.current) clearInterval(timerRef.current);
+          const bannersLen = banners.length;
+          if (bannersLen > 1) {
+            timerRef.current = setInterval(() => {
+              setCurrent((prev) => {
+                const next = (prev + 1) % bannersLen;
+                scrollToIndex(next);
+                return next;
+              });
+            }, AUTO_ROTATE_MS);
+          }
           userInteracted.current = false;
         }
       }, 50);
@@ -305,7 +307,7 @@ const DynamicBanner = ({ userBolaoIds, userContext }: DynamicBannerProps) => {
 
   // ── Render: Modo POSTER (imagem completa) ──
   const renderPoster = (banner: BannerData) => {
-    const mobileImg = banner.imagem_mobile_url || banner.imagem_url!;
+    const mobileImg = banner.imagem_mobile_url || banner.imagem_url || "";
     return (
       <div
         onClick={() => handleClick(banner)}
@@ -314,7 +316,7 @@ const DynamicBanner = ({ userBolaoIds, userContext }: DynamicBannerProps) => {
       >
         {/* Desktop */}
         <img
-          src={banner.imagem_url!}
+          src={banner.imagem_url || ""}
           alt={banner.titulo}
           className="hidden sm:block w-full h-auto rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]"
           draggable={false}
@@ -343,7 +345,7 @@ const DynamicBanner = ({ userBolaoIds, userContext }: DynamicBannerProps) => {
       >
         {/* Imagem de fundo */}
         <img
-          src={banner.imagem_fundo_url!}
+          src={banner.imagem_fundo_url || ""}
           alt=""
           className="absolute inset-0 w-full h-full object-cover"
           draggable={false}
@@ -453,7 +455,7 @@ const DynamicBanner = ({ userBolaoIds, userContext }: DynamicBannerProps) => {
     <div onClick={() => handleClick(banner)} className="relative overflow-hidden rounded-2xl cursor-pointer group">
       {/* Mobile: imagem poster */}
       <img
-        src={banner.imagem_mobile_url!}
+        src={banner.imagem_mobile_url || ""}
         alt={banner.titulo}
         className="block sm:hidden w-full h-auto rounded-2xl"
         draggable={false}

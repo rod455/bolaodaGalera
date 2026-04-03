@@ -31,10 +31,12 @@ export const useUserPlan = (): UserPlanData => {
         .single();
 
       if (data && !error) {
-        setPlano((data as any).plano || "free");
-        setPlanoExpiraEm((data as any).plano_expira_em || null);
+        const d = data as { plano?: string; plano_expira_em?: string };
+        setPlano((d.plano as UserPlan) || "free");
+        setPlanoExpiraEm(d.plano_expira_em || null);
       }
-    } catch {
+    } catch (err) {
+      console.error("Erro ao buscar plano do usuário:", err);
     } finally {
       setLoading(false);
     }

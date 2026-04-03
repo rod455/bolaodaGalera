@@ -103,18 +103,17 @@ const GuestHeroCarousel = ({ participantesCount, handleGoogleLogin }: GuestHeroC
   // Auto-rotate
   useEffect(() => {
     if (totalSlides <= 1) return;
-    const startTimer = () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-      timerRef.current = setInterval(() => {
-        setCurrent((prev) => {
-          const next = (prev + 1) % totalSlides;
-          scrollToIndex(next);
-          return next;
-        });
-      }, AUTO_ROTATE_MS);
-    };
-    startTimer();
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+    if (timerRef.current) clearInterval(timerRef.current);
+    const slides = totalSlides;
+    timerRef.current = setInterval(() => {
+      setCurrent((prev) => {
+        if (slides === 0) return 0;
+        const next = (prev + 1) % slides;
+        scrollToIndex(next);
+        return next;
+      });
+    }, AUTO_ROTATE_MS);
+    return () => { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; } };
   }, [totalSlides, scrollToIndex]);
 
   // Sync indicador
@@ -128,15 +127,18 @@ const GuestHeroCarousel = ({ participantesCount, handleGoogleLogin }: GuestHeroC
         const w = el.offsetWidth;
         if (w === 0) return;
         setCurrent(Math.round(el.scrollLeft / w));
-        if (userInteracted.current && timerRef.current) {
-          clearInterval(timerRef.current);
-          timerRef.current = setInterval(() => {
-            setCurrent((prev) => {
-              const next = (prev + 1) % totalSlides;
-              scrollToIndex(next);
-              return next;
-            });
-          }, AUTO_ROTATE_MS);
+        if (userInteracted.current) {
+          if (timerRef.current) clearInterval(timerRef.current);
+          const slides = totalSlides;
+          if (slides > 1) {
+            timerRef.current = setInterval(() => {
+              setCurrent((prev) => {
+                const next = (prev + 1) % slides;
+                scrollToIndex(next);
+                return next;
+              });
+            }, AUTO_ROTATE_MS);
+          }
           userInteracted.current = false;
         }
       }, 50);
@@ -194,7 +196,7 @@ const GuestHeroCarousel = ({ participantesCount, handleGoogleLogin }: GuestHeroC
   };
 
   const renderPoster = (banner: BannerData) => {
-    const mobileImg = banner.imagem_mobile_url || banner.imagem_url!;
+    const mobileImg = banner.imagem_mobile_url || banner.imagem_url || "";
     return (
       <div
         onClick={() => handleBannerClick(banner)}
@@ -203,7 +205,7 @@ const GuestHeroCarousel = ({ participantesCount, handleGoogleLogin }: GuestHeroC
       >
         {/* Desktop */}
         <img
-          src={banner.imagem_url!}
+          src={banner.imagem_url || ""}
           alt={banner.titulo}
           className="hidden sm:block w-full h-auto rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]"
           draggable={false}
@@ -229,7 +231,7 @@ const GuestHeroCarousel = ({ participantesCount, handleGoogleLogin }: GuestHeroC
         className="relative overflow-hidden rounded-2xl cursor-pointer group aspect-square sm:aspect-[12/5]"
         style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.5)" }}
       >
-        <img src={banner.imagem_fundo_url!} alt="" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
+        <img src={banner.imagem_fundo_url || ""} alt="" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
         <div className="absolute inset-0 bg-black/55" />
         <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 50%)" }} />
         <div className="relative z-10 flex flex-col items-center text-center px-5 py-6">
@@ -338,7 +340,7 @@ const GuestHeroCarousel = ({ participantesCount, handleGoogleLogin }: GuestHeroC
     <div onClick={() => handleBannerClick(banner)} className="relative overflow-hidden rounded-2xl cursor-pointer group">
       {/* Mobile: imagem poster */}
       <img
-        src={banner.imagem_mobile_url!}
+        src={banner.imagem_mobile_url || ""}
         alt={banner.titulo}
         className="block sm:hidden w-full h-auto rounded-2xl"
         draggable={false}

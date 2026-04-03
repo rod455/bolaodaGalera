@@ -56,16 +56,21 @@ function traduzirFase(stage) {
   return FASE_MAP[stage] || FASE_MAP[stage.toUpperCase()] || stage;
 }
 
-async function fdFetch(endpoint) {
+async function fdFetch(endpoint, retries = 0) {
+  const MAX_RETRIES = 3;
   const url = `https://api.football-data.org/v4${endpoint}`;
   const res = await fetch(url, {
     headers: { 'X-Auth-Token': FOOTBALL_DATA_TOKEN }
   });
 
   if (res.status === 429) {
-    console.log('  ⏳ Rate limit atingido. Aguardando 60s...');
+    if (retries >= MAX_RETRIES) {
+      console.log(`  ❌ Rate limit: máximo de ${MAX_RETRIES} tentativas atingido.`);
+      return null;
+    }
+    console.log(`  ⏳ Rate limit atingido. Aguardando 60s... (tentativa ${retries + 1}/${MAX_RETRIES})`);
     await new Promise(r => setTimeout(r, 60000));
-    return fdFetch(endpoint);
+    return fdFetch(endpoint, retries + 1);
   }
 
   if (!res.ok) {
@@ -74,7 +79,12 @@ async function fdFetch(endpoint) {
     return null;
   }
 
-  return res.json();
+  try {
+    return await res.json();
+  } catch {
+    console.log(`  ❌ Erro ao parsear JSON da resposta`);
+    return null;
+  }
 }
 
 function mapStatus(apiStatus) {
@@ -154,7 +164,7 @@ async function syncCampeonato(camp) {
     campeonato_api_id: camp.id,
     tipo: 'football-data.org',
     jogos_atualizados: count,
-  });
+  }).catch(err => console.log(`  ⚠️ Erro ao salvar sync_log: ${err.message}`));
 
   console.log(`  ✅ ${count} jogos sincronizados`);
   return count;
@@ -206,16 +216,16 @@ async function syncLiveScores() {
     const ht = score.halfTime || {};
     const newStatus = mapStatus(matchData.status);
 
-    let placarA = ft.home;
-    let placarB = ft.away;
-    if (placarA == null && newStatus === 'ao_vivo') {
-      placarA = ht.home ?? 0;
-      placarB = ht.away ?? 0;
+    let placarA = ft.home !== undefined && ft.home !== null ? ft.home : null;
+    let placarB = ft.away !== undefined && ft.away !== null ? ft.away : null;
+    if (placarA === null && newStatus === 'ao_vivo') {
+      placarA = ht.home !== undefined && ht.home !== null ? ht.home : 0;
+      placarB = ht.away !== undefined && ht.away !== null ? ht.away : 0;
     }
 
     const updateData = { status: newStatus };
-    if (placarA != null) updateData.placar_time_a = placarA;
-    if (placarB != null) updateData.placar_time_b = placarB;
+    if (placarA !== null) updateData.placar_time_a = placarA;
+    if (placarB !== null) updateData.placar_time_b = placarB;
 
     const { error: updateErr } = await supabase
       .from('jogos')

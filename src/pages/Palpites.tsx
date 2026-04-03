@@ -405,14 +405,15 @@ const Palpites = () => {
   const salvarPalpite = async (jogoId: string) => {
     if (!user || !id) return;
 
+    // Capturar valores ANTES do ad (evita race condition se o usuário mudar durante o ad)
+    const local = palpitesLocal[jogoId];
+    const placarA = local?.a ?? 0; const placarB = local?.b ?? 0;
+
     // Ad no primeiro palpite do dia (free users)
     if (needsAd) {
       const adResult = await showAd("palpite");
       if (!adResult) return;
     }
-
-    const local = palpitesLocal[jogoId];
-    const placarA = local?.a ?? 0; const placarB = local?.b ?? 0;
     setSalvando(jogoId);
     try {
       const existing = palpitesDB[jogoId];

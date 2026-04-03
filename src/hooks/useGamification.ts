@@ -95,8 +95,9 @@ export const useGamification = () => {
         .eq("id", user.id)
         .single();
 
-      if (profile) setReferralCode((profile as any).referral_code);
-    } catch {
+      if (profile) setReferralCode((profile as { referral_code?: string }).referral_code || null);
+    } catch (err) {
+      console.error("Erro ao buscar XP do usuário:", err);
     } finally {
       setLoading(false);
     }

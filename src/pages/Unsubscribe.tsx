@@ -30,7 +30,8 @@ export default function Unsubscribe() {
       setEtapa("invalido");
       return;
     }
-    fetch(`${SUPABASE_FN_URL}/email-unsubscribe?token=${token}`)
+    const params = new URLSearchParams({ token });
+    fetch(`${SUPABASE_FN_URL}/email-unsubscribe?${params}`)
       .then((r) => { if (!r.ok) throw new Error(); return r.json(); })
       .then((data) => {
         if (data.error) setEtapa("invalido");

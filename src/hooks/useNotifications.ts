@@ -26,19 +26,17 @@ export const useNotifications = (): UseNotificationsReturn => {
   const subscriptionRef = useRef<any>(null);
   const pushRegistered = useRef(false);
 
+  const pushListeners = useRef<any[]>([]);
+
   // ── Registrar token FCM (nativo) ──
   const registerPushToken = useCallback(async () => {
     if (!user || !Capacitor.isNativePlatform() || pushRegistered.current) return;
     pushRegistered.current = true;
 
     try {
-      // Import estático — funciona corretamente no Capacitor
       const { PushNotifications } = await import("@capacitor/push-notifications");
 
-      // 1. Verificar permissão atual
       let permStatus = await PushNotifications.checkPermissions();
-
-      // 2. Pedir permissão se ainda não foi decidido
       if (permStatus.receive === "prompt") {
         permStatus = await PushNotifications.requestPermissions();
       }
@@ -48,47 +46,49 @@ export const useNotifications = (): UseNotificationsReturn => {
         return;
       }
 
-      // 3. Listener: token recebido → salva no Supabase
-      await PushNotifications.addListener("registration", async (token) => {
+      // Remover listeners anteriores para evitar duplicação
+      for (const l of pushListeners.current) {
+        try { if (l?.remove) await l.remove(); } catch {}
+      }
+      pushListeners.current = [];
 
-        const { error } = await supabase.from("push_tokens").upsert(
+      const l1 = await PushNotifications.addListener("registration", async (token) => {
+        await supabase.from("push_tokens").upsert(
           {
             user_id: user.id,
             token: token.value,
-            platform: Capacitor.getPlatform(), // "android" ou "ios"
+            platform: Capacitor.getPlatform(),
             ativo: true,
             updated_at: new Date().toISOString(),
           },
           { onConflict: "user_id,token" }
         );
-
-        // error silently ignored
       });
+      pushListeners.current.push(l1);
 
-      // 4. Listener: erro de registro
-      await PushNotifications.addListener("registrationError", (err) => {
+      const l2 = await PushNotifications.addListener("registrationError", () => {
         pushRegistered.current = false;
       });
+      pushListeners.current.push(l2);
 
-      // 5. Listener: notificação recebida com app aberto (foreground)
-      await PushNotifications.addListener("pushNotificationReceived", (notification) => {
+      const l3 = await PushNotifications.addListener("pushNotificationReceived", () => {
         fetchNotificacoes();
       });
+      pushListeners.current.push(l3);
 
-      // 6. Listener: usuário tocou na notificação (background/fechado)
-      await PushNotifications.addListener("pushNotificationActionPerformed", (action) => {
+      const l4 = await PushNotifications.addListener("pushNotificationActionPerformed", (action) => {
         const rota = action.notification?.data?.rota;
-        if (rota) {
+        if (rota && typeof rota === "string" && rota.startsWith("/")) {
           window.dispatchEvent(
             new CustomEvent("push-navigate", { detail: { rota } })
           );
         }
       });
+      pushListeners.current.push(l4);
 
-      // 7. Registrar no FCM (dispara o evento "registration" acima)
       await PushNotifications.register();
-
-    } catch {
+    } catch (err) {
+      console.error("Erro ao registrar push notifications:", err);
       pushRegistered.current = false;
     }
   }, [user]);
@@ -216,6 +216,11 @@ export const useNotifications = (): UseNotificationsReturn => {
 
     return () => {
       if (subscriptionRef.current) supabase.removeChannel(subscriptionRef.current);
+      // Limpar listeners de push ao desmontar
+      for (const l of pushListeners.current) {
+        try { if (l?.remove) l.remove(); } catch {}
+      }
+      pushListeners.current = [];
       pushRegistered.current = false;
     };
   }, [user]);

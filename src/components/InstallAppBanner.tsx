@@ -23,7 +23,7 @@ const InstallAppBanner = () => {
     if (dismissed) {
       // Mostrar novamente após 7 dias
       const dismissedAt = parseInt(dismissed, 10);
-      if (Date.now() - dismissedAt < 7 * 24 * 60 * 60 * 1000) return;
+      if (!isNaN(dismissedAt) && Date.now() - dismissedAt < 7 * 24 * 60 * 60 * 1000) return;
     }
 
     // Mostrar após 2 segundos para não atrapalhar o carregamento
