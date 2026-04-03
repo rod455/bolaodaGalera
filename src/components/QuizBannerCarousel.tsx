@@ -27,15 +27,19 @@ const QuizBannerCarousel = () => {
 
   useEffect(() => {
     const fetchBanners = async () => {
-      const now = new Date().toISOString();
-      const { data } = await supabase
-        .from("banners_quiz")
-        .select("*")
-        .eq("ativo", true)
-        .lte("data_inicio", now)
-        .or(`data_fim.is.null,data_fim.gt.${now}`)
-        .order("posicao", { ascending: true });
-      if (data && data.length > 0) setBanners(data as QuizBanner[]);
+      try {
+        const now = new Date().toISOString();
+        const { data } = await supabase
+          .from("banners_quiz")
+          .select("*")
+          .eq("ativo", true)
+          .lte("data_inicio", now)
+          .or(`data_fim.is.null,data_fim.gt.${now}`)
+          .order("posicao", { ascending: true });
+        if (data && data.length > 0) setBanners(data as QuizBanner[]);
+      } catch {
+        // Failed to fetch banners — component will simply not render
+      }
     };
     fetchBanners();
   }, []);

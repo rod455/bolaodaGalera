@@ -69,7 +69,8 @@ const EventosEspeciais = ({ bolaoId, campeonatoId, campeonatos, isCriador, userI
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  useEffect(() => { loadEventos(); }, [bolaoId]);
+  useEffect(() => { loadEventos(); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bolaoId]);
 
   const loadEventos = async () => {
     try {

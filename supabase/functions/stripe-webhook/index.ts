@@ -7,11 +7,22 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Content-Type": "application/json",
-};
+const ALLOWED_ORIGINS = [
+  "https://bolaonacopa.com.br",
+  "https://www.bolaonacopa.com.br",
+  "https://bolaonacopa.lovable.app",
+  "https://bolaodacopa-ten.vercel.app",
+];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("origin") || "";
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, stripe-signature",
+    "Content-Type": "application/json",
+  };
+}
 
 // Mapeia price ID → plano
 const PRICE_PLAN_MAP: Record<string, string> = {
@@ -52,6 +63,8 @@ async function verifySignature(payload: string, sigHeader: string, secret: strin
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -66,14 +79,19 @@ serve(async (req) => {
   const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET") || "";
   const body = await req.text();
 
-  if (webhookSecret) {
-    const valid = await verifySignature(body, sigHeader, webhookSecret);
-    if (!valid) {
-      console.error("Webhook signature verification failed");
-      return new Response(JSON.stringify({ error: "Invalid signature" }), {
-        status: 400, headers: corsHeaders,
-      });
-    }
+  if (!webhookSecret) {
+    console.error("STRIPE_WEBHOOK_SECRET not configured — rejecting request");
+    return new Response(JSON.stringify({ error: "Webhook secret not configured" }), {
+      status: 500, headers: corsHeaders,
+    });
+  }
+
+  const valid = await verifySignature(body, sigHeader, webhookSecret);
+  if (!valid) {
+    console.error("Webhook signature verification failed");
+    return new Response(JSON.stringify({ error: "Invalid signature" }), {
+      status: 400, headers: corsHeaders,
+    });
   }
 
   const event = JSON.parse(body);

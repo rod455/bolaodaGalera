@@ -293,7 +293,8 @@ const Home = () => {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [userBannerCtx, setUserBannerCtx] = useState<UserBannerContext | undefined>(undefined);
 
-  useEffect(() => { loadData(); }, [user]);
+  useEffect(() => { loadData(); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const handleGoogleLogin = async () => {
     try {

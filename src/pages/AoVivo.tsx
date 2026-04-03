@@ -25,11 +25,11 @@ const AoVivo = () => {
 
   useEffect(() => {
     let active = true;
-    if (user) loadJogos().catch(() => {});
+    if (user) loadJogos().catch((e) => console.error("[AoVivo] loadJogos error:", e));
     const interval = setInterval(() => {
       if (user && active) {
-        triggerLiveSync().catch(() => {});
-        loadJogos().catch(() => {});
+        triggerLiveSync().catch((e) => console.error("[AoVivo] triggerLiveSync error:", e));
+        loadJogos().catch((e) => console.error("[AoVivo] loadJogos interval error:", e));
         setLastRefresh(new Date());
       }
     }, 60000);

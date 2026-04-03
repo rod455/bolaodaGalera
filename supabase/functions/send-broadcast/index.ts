@@ -64,12 +64,25 @@ function buildEmailHtml(nome: string, unsubscribeToken: string): string {
 </html>`;
 }
 
-serve(async (req) => {
-  const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
+const ALLOWED_ORIGINS = [
+  "https://bolaonacopa.com.br",
+  "https://www.bolaonacopa.com.br",
+  "https://bolaonacopa.lovable.app",
+  "https://bolaodacopa-ten.vercel.app",
+];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("origin") || "";
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
   };
+}
+
+serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
 
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: corsHeaders });

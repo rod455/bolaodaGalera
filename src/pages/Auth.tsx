@@ -90,7 +90,7 @@ const Auth = () => {
       setIsResettingPassword(true);
     }
     return () => subscription.unsubscribe();
-  }, []);
+  }, [searchParams]);
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
