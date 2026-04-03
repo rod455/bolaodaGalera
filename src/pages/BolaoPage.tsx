@@ -30,7 +30,7 @@ import { trackEvent } from "@/lib/analytics";
 import { triggerFeedback } from "@/components/FeedbackBanner";
 import MataMataDashboard from "@/components/MataMataDashboard";
 import GerenciarCampeonatos from "@/components/GerenciarCampeonatos";
-import ShareBadge from "@/components/ShareBadge";
+
 
 function getStatusInfo(jogo: Jogo, palpite: Palpite | null, now: Date) {
   const jogoDate = new Date(jogo.data_hora);
@@ -157,7 +157,7 @@ const BolaoPage = () => {
   const [rankingTab, setRankingTab] = useState<"geral" | "rodada">("geral");
   const [loadingRodada, setLoadingRodada] = useState(false);
   const [showFullRanking, setShowFullRanking] = useState(false);
-  const [showShareBadge, setShowShareBadge] = useState(false);
+
   const { darXP } = useGamification();
   const [xpToast, setXPToast] = useState<{xp: number, msg: string} | null>(null);
   const [niveisRanking, setNiveisRanking] = useState<Record<string, number>>({});
@@ -1254,26 +1254,6 @@ const BolaoPage = () => {
               </div>
             );
           })()}
-          {(rankingTab === "geral" ? ranking : rankingRodada).length > 0 && (() => {
-            const activeRanking = rankingTab === "geral" ? ranking : rankingRodada;
-            const meInRanking = activeRanking.find((r) => r.isCurrentUser);
-            const isTop3 = meInRanking && meInRanking.pos <= 3;
-            return isTop3 ? (
-              <button
-                onClick={() => setShowShareBadge(true)}
-                className="w-full mt-2 flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-copa-gold-400 to-copa-gold-500 text-white text-sm font-bold shadow-md hover:shadow-lg transition-all"
-              >
-                <Share2 className="w-4 h-4" /> Compartilhe sua posição no pódio!
-              </button>
-            ) : (
-              <button
-                onClick={() => setShowShareBadge(true)}
-                className="w-full mt-2 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-copa-gold-50 border border-copa-gold-300 text-copa-gold-700 text-sm font-semibold hover:bg-copa-gold-100 transition-colors"
-              >
-                <Share2 className="w-4 h-4" /> Compartilhar posição
-              </button>
-            );
-          })()}
           {ranking.length > 0 && bolao.codigo_convite && (
             <button
               onClick={(e) => {
@@ -1733,18 +1713,6 @@ const BolaoPage = () => {
         />
       )}
 
-      {/* Share Badge Modal */}
-      {bolao && (
-        <ShareBadge
-          open={showShareBadge}
-          onClose={() => setShowShareBadge(false)}
-          bolaoId={id!}
-          bolaoNome={bolao.nome}
-          ranking={rankingTab === "geral" ? ranking : rankingRodada}
-          rankingType={rankingTab}
-          rodadaLabel="Esta Semana"
-        />
-      )}
     </div>
   );
 };
