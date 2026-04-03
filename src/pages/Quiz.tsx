@@ -103,8 +103,8 @@ const Quiz = () => {
 
   // Gera imagem do card de resultado e compartilha
   const generateAndShare = useCallback(async (canal: string) => {
-    if (!selecao || !user) return;
-    const nome = user.user_metadata?.nome || user.email?.split("@")[0] || "Alguem";
+    if (!selecao) return;
+    const nome = user?.user_metadata?.nome || user?.email?.split("@")[0] || "Alguem";
     const texto = `${selecao.bandeira} ${nome} fez o Quiz na Copa e e ${selecao.nome} na Copa 2026!\n\nDescubra qual das 48 selecoes voce seria:\n👉 bolaonacopa.com.br/quiz-selecao`;
 
     trackEvent("quiz_share", { quiz_id: "quiz_selecao", resultado: selecao.id, canal });
@@ -342,16 +342,10 @@ const Quiz = () => {
 
         {/* CTA */}
         <div className="text-center pt-2">
-          {user ? (
-            <Button onClick={handleStart} className="w-full max-w-xs mx-auto h-13 bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800 font-black text-base rounded-xl shadow-lg">
-              Comecar o Quiz ⚽
-            </Button>
-          ) : (
-            <Button onClick={() => navigate("/auth?modo=cadastro")} className="w-full max-w-xs mx-auto h-13 bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800 font-black text-base rounded-xl shadow-lg">
-              Criar conta para jogar ⚽
-            </Button>
-          )}
-          {!isPremium && user && (
+          <Button onClick={handleStart} className="w-full max-w-xs mx-auto h-13 bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800 font-black text-base rounded-xl shadow-lg">
+            Comecar o Quiz ⚽
+          </Button>
+          {!isPremium && (
             <p className="text-[10px] text-muted-foreground mt-2">
               Gratis com anuncio · <button onClick={() => navigate("/planos")} className="text-copa-gold-500 font-bold underline">Premium sem anuncios</button>
             </p>
