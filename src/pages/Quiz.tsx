@@ -570,62 +570,75 @@ const Quiz = () => {
     );
   }
 
-  // ═══ TELA: PERGUNTA ═══
+  // ═══ TELA: PERGUNTA (paleta dark) ═══
   if (step === "pergunta") {
     const pergunta = PERGUNTAS[perguntaIdx];
     const progresso = ((perguntaIdx) / PERGUNTAS.length) * 100;
 
     return (
-      <div className="space-y-5 animate-fade-in" key={perguntaIdx}>
-        <SEOHead title={`Quiz — Pergunta ${perguntaIdx + 1}/10`} noindex />
+      <div className="animate-fade-in -mx-4 -mt-6" key={perguntaIdx} style={{ background: "#071410", color: "#fff", minHeight: "100vh" }}>
+        {/* Grid sutil */}
+        <div className="fixed inset-0 pointer-events-none z-0" style={{
+          background: "repeating-linear-gradient(90deg,transparent,transparent 58px,rgba(255,255,255,.02) 58px,rgba(255,255,255,.02) 59px), repeating-linear-gradient(0deg,transparent,transparent 58px,rgba(255,255,255,.02) 58px,rgba(255,255,255,.02) 59px)",
+        }} />
 
-        {/* Header com progresso */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-muted-foreground">Pergunta {perguntaIdx + 1} de {PERGUNTAS.length}</span>
-            <span className="text-xs font-bold text-copa-gold-500">{Math.round(progresso)}%</span>
+        <div className="relative z-10 max-w-lg mx-auto px-5 py-8 space-y-6">
+          <SEOHead title={`Quiz na Copa — Pergunta ${perguntaIdx + 1}/10`} noindex />
+
+          {/* Progresso */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold" style={{ color: "rgba(255,255,255,.5)" }}>
+                Pergunta {perguntaIdx + 1} de {PERGUNTAS.length}
+              </span>
+              <span className="text-xs font-bold" style={{ color: "#facc15" }}>{Math.round(progresso)}%</span>
+            </div>
+            <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,.1)" }}>
+              <div className="h-full rounded-full transition-all duration-500"
+                style={{ width: `${progresso}%`, background: "linear-gradient(90deg, #15803d, #facc15)" }} />
+            </div>
           </div>
-          <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-copa-green-500 to-copa-gold-400 rounded-full transition-all duration-500"
-              style={{ width: `${progresso}%` }} />
+
+          {/* Pergunta */}
+          <h2 className="text-xl font-bold leading-snug">{pergunta.texto}</h2>
+
+          {/* Opcoes */}
+          <div className="space-y-2.5">
+            {pergunta.opcoes.map((opcao, i) => (
+              <button
+                key={i}
+                onClick={() => handleResposta(i)}
+                className="w-full flex items-center gap-3 rounded-xl px-4 py-3.5 text-left transition-all active:scale-[0.98]"
+                style={{
+                  background: "rgba(255,255,255,.05)",
+                  border: "1px solid rgba(255,255,255,.1)",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(250,204,21,.08)"; e.currentTarget.style.borderColor = "rgba(250,204,21,.3)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,.05)"; e.currentTarget.style.borderColor = "rgba(255,255,255,.1)"; }}
+              >
+                <span className="text-xl flex-shrink-0">{opcao.icone}</span>
+                <span className="text-sm font-medium leading-snug" style={{ color: "rgba(255,255,255,.85)" }}>{opcao.texto}</span>
+              </button>
+            ))}
           </div>
-        </div>
-
-        {/* Pergunta */}
-        <h2 className="text-lg font-bold leading-snug">{pergunta.texto}</h2>
-
-        {/* Opções */}
-        <div className="space-y-2.5">
-          {pergunta.opcoes.map((opcao, i) => (
-            <button
-              key={i}
-              onClick={() => handleResposta(i)}
-              className="w-full flex items-center gap-3 bg-white border-2 border-gray-100 hover:border-copa-green-300 hover:bg-copa-green-50/50 rounded-xl px-4 py-3.5 text-left transition-all active:scale-[0.98]"
-            >
-              <span className="text-xl flex-shrink-0">{opcao.icone}</span>
-              <span className="text-sm font-medium leading-snug">{opcao.texto}</span>
-            </button>
-          ))}
         </div>
       </div>
     );
   }
 
-  // ═══ TELA: CALCULANDO ═══
+  // ═══ TELA: CALCULANDO (dark) ═══
   if (step === "calculando") {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center animate-fade-in">
-        <SEOHead title="Calculando sua seleção..." noindex />
+      <div className="animate-fade-in -mx-4 -mt-6 flex flex-col items-center justify-center text-center" style={{ background: "#071410", color: "#fff", minHeight: "100vh" }}>
+        <SEOHead title="Calculando sua selecao..." noindex />
         <div className="relative mb-6">
-          <div className="w-20 h-20 rounded-full bg-copa-gold-100 flex items-center justify-center animate-pulse">
+          <div className="w-20 h-20 rounded-full flex items-center justify-center animate-pulse" style={{ background: "rgba(250,204,21,.1)" }}>
             <span className="text-4xl">⚽</span>
           </div>
-          <Loader2 className="w-24 h-24 text-copa-green-500 animate-spin absolute -top-2 -left-2" />
+          <Loader2 className="w-24 h-24 animate-spin absolute -top-2 -left-2" style={{ color: "#15803d" }} />
         </div>
-        <h2 className="text-xl font-bold mb-2">Calculando sua seleção...</h2>
-        <p className="text-sm text-muted-foreground">Analisando suas respostas entre 48 seleções</p>
-
-        {/* Animação de seleções passando */}
+        <h2 className="text-xl font-bold mb-2">Calculando sua selecao...</h2>
+        <p className="text-sm" style={{ color: "rgba(255,255,255,.5)" }}>Analisando suas respostas entre 48 selecoes</p>
         <div className="mt-6 flex gap-2 animate-pulse">
           {SELECOES.slice(0, 5).map((s, i) => (
             <span key={i} className="text-2xl" style={{ animationDelay: `${i * 200}ms` }}>{s.bandeira}</span>
@@ -635,184 +648,223 @@ const Quiz = () => {
     );
   }
 
-  // ═══ TELA: AD GATE ═══
+  // ═══ TELA: AD GATE (dark) ═══
   if (step === "ad-gate") {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6 animate-fade-in">
-        <SEOHead title="Sua seleção está pronta!" noindex />
+      <div className="animate-fade-in -mx-4 -mt-6 flex flex-col items-center justify-center text-center space-y-6" style={{ background: "#071410", color: "#fff", minHeight: "100vh", padding: "48px 20px" }}>
+        <SEOHead title="Sua selecao esta pronta!" noindex />
         <AdRewardModal open={showAdModal} onComplete={resolveWebAd} message="Assista para ver seu resultado" />
         {adLoading && <AdLoadingOverlay />}
 
-        <div className="w-16 h-16 rounded-full bg-copa-gold-100 border-2 border-copa-gold-300 flex items-center justify-center">
+        <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: "rgba(250,204,21,.1)", border: "2px solid rgba(250,204,21,.28)" }}>
           <span className="text-3xl">🔐</span>
         </div>
 
         <div>
-          <h2 className="text-xl font-bold mb-1">Sua seleção está pronta!</h2>
-          <p className="text-sm text-muted-foreground">Assista um vídeo curto para revelar o resultado</p>
+          <h2 className="text-xl font-bold mb-1">Sua selecao esta pronta!</h2>
+          <p className="text-sm" style={{ color: "rgba(255,255,255,.5)" }}>Assista um video curto para revelar o resultado</p>
         </div>
 
-        <Button onClick={handleAdGate} className="w-full max-w-xs h-12 bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800 font-black rounded-xl shadow-lg">
-          Revelar minha seleção ⚽
-        </Button>
+        <button onClick={handleAdGate}
+          className="w-full max-w-xs py-4 rounded-2xl font-black text-base transition-all hover:-translate-y-0.5 active:scale-[0.98]"
+          style={{ background: "#facc15", color: "#071410", boxShadow: "0 8px 28px rgba(250,204,21,.33)" }}>
+          Revelar minha selecao ⚽
+        </button>
 
-        <button onClick={() => navigate("/planos")} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-copa-gold-500 transition-colors">
+        <button onClick={() => navigate("/planos")} className="flex items-center gap-1.5 text-xs transition-colors" style={{ color: "rgba(255,255,255,.4)" }}>
           <Crown className="w-3.5 h-3.5" />
-          Premium: sem anúncios em todos os quizzes
+          Premium: sem anuncios em todos os quizzes
         </button>
       </div>
     );
   }
 
-  // ═══ TELA: RESULTADO (Dark visual) ═══
+  // ═══ TELA: RESULTADO (estilo quiz-resultado.html) ═══
   if (step === "resultado" && selecao && perfil) {
     const barras = perfilParaPorcentagens(perfil);
     const userName = user?.user_metadata?.nome || user?.email?.split("@")[0] || "Voce";
     const diasCopa = getDaysUntilCopa();
+    const WPP_SVG = <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>;
 
     return (
-      <div className="animate-fade-in pb-6">
+      <div className="animate-fade-in -mx-4 -mt-6" style={{ background: "#071410", color: "#fff", minHeight: "100vh" }}>
         <SEOHead title={`Quiz na Copa — ${selecao.titulo}`} noindex />
 
-        {/* ── Card capturavel (dark bg) ── */}
-        <div ref={resultRef} className="rounded-2xl overflow-hidden" style={{
-          background: "linear-gradient(180deg, #071410 0%, #0d2818 40%, #071410 100%)",
-          position: "relative",
+        {/* Campo de futebol no fundo */}
+        <div className="fixed inset-0 z-0 overflow-hidden" style={{
+          background: "radial-gradient(ellipse at 50% 100%, rgba(0,156,59,.28) 0%, transparent 55%), radial-gradient(ellipse at 50% 0%, rgba(0,39,118,.18) 0%, transparent 50%)",
         }}>
-          {/* Campo de futebol sutil no fundo */}
-          <div className="absolute inset-0 opacity-[0.04]" style={{
-            backgroundImage: "repeating-linear-gradient(90deg,transparent,transparent 58px,rgba(255,255,255,0.3) 58px,rgba(255,255,255,0.3) 59px), repeating-linear-gradient(0deg,transparent,transparent 58px,rgba(255,255,255,0.3) 58px,rgba(255,255,255,0.3) 59px)",
+          <div className="absolute inset-0" style={{
+            backgroundImage: "repeating-linear-gradient(90deg,transparent,transparent 58px,rgba(255,255,255,.02) 58px,rgba(255,255,255,.02) 59px), repeating-linear-gradient(0deg,transparent,transparent 58px,rgba(255,255,255,.02) 58px,rgba(255,255,255,.02) 59px)",
           }} />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 border border-white/5 rounded-full" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-white/10 rounded-full" />
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-60 h-60 rounded-full" style={{ border: "1px solid rgba(255,255,255,.05)" }} />
+        </div>
 
-          <div className="relative z-10 px-5 py-8 space-y-5">
-            {/* Chip topo */}
-            <div className="text-center">
-              <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-3 py-1 text-xs font-semibold text-white/60">
-                <div className="w-2 h-2 rounded-full bg-copa-gold-400 animate-pulse" />
-                {userName.toUpperCase()} DESCOBRIU SUA SELECAO
+        <div className="relative z-10">
+          {/* ══ HERO ══ */}
+          <section className="flex flex-col items-center px-5 py-12 text-center">
+
+            {/* Card capturavel */}
+            <div ref={resultRef} className="w-full max-w-[400px] flex flex-col items-center">
+
+              {/* Chip */}
+              <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-wider mb-8"
+                style={{ background: "rgba(255,255,255,.07)", border: "1px solid rgba(255,255,255,.12)", color: "rgba(255,255,255,.6)" }}>
+                <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: "#facc15", boxShadow: "0 0 8px rgba(250,204,21,.7)" }} />
+                {userName} descobriu sua selecao
               </div>
-            </div>
 
-            {/* Bandeira + Nome */}
-            <div className="text-center space-y-1">
-              <span className="text-[80px] leading-none block" style={{ filter: "drop-shadow(0 0 40px rgba(22,163,74,0.4))" }}>
+              {/* Bandeira */}
+              <span className="block leading-none mb-4" style={{ fontSize: "clamp(90px,24vw,140px)", filter: "drop-shadow(0 0 50px rgba(0,156,59,.55))" }}>
                 {selecao.bandeira}
               </span>
-              <p className="text-xs font-black text-copa-gold-400 uppercase tracking-[0.3em]">voce e</p>
-              <h1 className="text-5xl font-black text-white leading-none tracking-tight" style={{ textShadow: "0 0 40px rgba(250,204,21,0.3)" }}>
+
+              {/* Voce e */}
+              <p className="uppercase tracking-[3px] mb-1" style={{ fontFamily: "'Barlow Condensed', 'Bebas Neue', sans-serif", fontWeight: 700, fontStyle: "italic", fontSize: "clamp(1.1rem,3.5vw,1.5rem)", color: "rgba(255,255,255,.55)" }}>
+                Voce e
+              </p>
+
+              {/* Nome */}
+              <h1 className="mb-4" style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(4rem,16vw,9rem)", lineHeight: ".85", color: "#facc15", textShadow: "0 0 80px rgba(255,223,0,.35)" }}>
                 {selecao.nome.toUpperCase()}
               </h1>
-            </div>
 
-            {/* Compatibilidade */}
-            <div className="flex items-center justify-center gap-3">
-              <span className="text-xs text-white/40">compatibilidade</span>
-              <div className="w-28 h-2 bg-white/10 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-copa-green-500 to-copa-gold-400 rounded-full transition-all duration-1000"
-                  style={{ width: animBars ? `${compatPct}%` : "0%" }} />
+              {/* Compatibilidade */}
+              <div className="flex items-center gap-2.5 mb-5">
+                <span className="text-xs" style={{ color: "rgba(255,255,255,.4)" }}>compatibilidade</span>
+                <div className="w-28 h-2 rounded overflow-hidden" style={{ background: "rgba(255,255,255,.12)" }}>
+                  <div className="h-full rounded transition-all duration-[1200ms]"
+                    style={{ width: animBars ? `${compatPct}%` : "0%", background: "linear-gradient(90deg, #009C3B, #FFDF00)" }} />
+                </div>
+                <span className="font-black text-base" style={{ fontFamily: "'Barlow Condensed', sans-serif", color: "#facc15" }}>{compatPct}%</span>
               </div>
-              <span className="text-sm font-black text-copa-gold-400">{compatPct}%</span>
-            </div>
 
-            {/* Descricao */}
-            <p className="text-center text-sm text-white/60 leading-relaxed max-w-sm mx-auto">
-              {selecao.desc}
+              {/* Descricao */}
+              <p className="max-w-[400px] leading-relaxed mb-7" style={{ fontSize: "clamp(.9rem,2.5vw,1.05rem)", color: "rgba(255,255,255,.68)" }}>
+                {selecao.desc}
+              </p>
+
+              {/* Barras de perfil */}
+              <div className="w-full max-w-[370px] rounded-2xl p-5 space-y-2.5"
+                style={{ background: "rgba(255,255,255,.047)", border: "1px solid rgba(255,255,255,.08)" }}>
+                <p className="text-[11px] font-bold uppercase tracking-widest text-center mb-3" style={{ color: "rgba(255,255,255,.3)", letterSpacing: "2px" }}>
+                  Seu perfil de jogo
+                </p>
+                {barras.map((b) => (
+                  <div key={b.dim} className="grid items-center gap-2.5" style={{ gridTemplateColumns: "88px 1fr 36px" }}>
+                    <span className="text-sm font-medium" style={{ color: "rgba(255,255,255,.65)" }}>{b.icone} {b.label}</span>
+                    <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,.1)" }}>
+                      <div className="h-full rounded-full transition-all duration-[1200ms]"
+                        style={{ backgroundColor: b.cor, width: animBars ? `${b.pct}%` : "0%" }} />
+                    </div>
+                    <span className="text-xs text-right font-mono" style={{ color: "rgba(255,255,255,.38)" }}>{b.pct}%</span>
+                  </div>
+                ))}
+                <p className="text-right text-[10px] mt-2" style={{ color: "rgba(255,255,255,.2)" }}>total: 100%</p>
+              </div>
+            </div>
+            {/* Fim card capturavel */}
+
+            {/* ── BOTOES ── */}
+            <div className="w-full max-w-[380px] mt-8 space-y-2.5">
+              <p className="text-center mb-1" style={{ fontFamily: "'Barlow Condensed', 'Bebas Neue', sans-serif", fontWeight: 900, fontSize: "clamp(1.4rem,5vw,1.85rem)" }}>
+                E seus amigos,<br />qual seria <span style={{ color: "#facc15" }}>a selecao deles?</span>
+              </p>
+              <p className="text-center text-sm mb-5" style={{ color: "rgba(255,255,255,.42)" }}>
+                Manda pro grupo e ve quem vai ser a Argentina 👀
+              </p>
+
+              {/* WhatsApp */}
+              <button onClick={() => generateAndShare("whatsapp")} disabled={sharing}
+                className="w-full flex items-center justify-center gap-2.5 py-4 rounded-xl font-bold text-base transition-all hover:-translate-y-0.5 active:scale-[0.98]"
+                style={{ background: "#25d366", color: "#fff" }}>
+                {sharing ? <Loader2 className="w-5 h-5 animate-spin" /> : WPP_SVG}
+                Enviar para amigos no WhatsApp
+              </button>
+
+              {/* Copiar + Proximo */}
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={() => generateAndShare("copiar")}
+                  className="flex flex-col items-center justify-center gap-1.5 py-3.5 rounded-xl font-bold text-xs transition-all hover:-translate-y-0.5 active:scale-[0.98]"
+                  style={{ background: "rgba(255,255,255,.1)", border: "1px solid rgba(255,255,255,.15)" }}>
+                  {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                  {copied ? "Copiado!" : "Copiar link"}
+                </button>
+                <button onClick={() => generateAndShare("share")} disabled={sharing}
+                  className="flex flex-col items-center justify-center gap-1.5 py-3.5 rounded-xl font-bold text-xs transition-all hover:-translate-y-0.5 active:scale-[0.98]"
+                  style={{ background: "rgba(250,204,21,.12)", border: "1px solid rgba(250,204,21,.3)", color: "#facc15" }}>
+                  {sharing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Share2 className="w-5 h-5" />}
+                  Compartilhar
+                </button>
+              </div>
+
+              {/* CTA dourado */}
+              <button onClick={() => navigate("/home")}
+                className="w-full flex items-center justify-center gap-2.5 py-4 rounded-xl font-black text-base transition-all hover:-translate-y-0.5 active:scale-[0.98] relative overflow-hidden"
+                style={{ background: "#facc15", color: "#071410", boxShadow: "0 8px 28px rgba(250,204,21,.3)" }}>
+                Fazer meu quiz — Entrar no Bolao
+                <ChevronRight className="w-5 h-5" />
+              </button>
+
+              <button onClick={handleRefazer} className="w-full text-center text-xs py-2 transition-colors" style={{ color: "rgba(255,255,255,.3)" }}>
+                Prefiro refazer o quiz →
+              </button>
+            </div>
+          </section>
+
+          {/* ── Strip social ── */}
+          <div className="flex items-center justify-center gap-4 flex-wrap py-3.5 px-5 text-xs"
+            style={{ background: "rgba(255,255,255,.035)", borderTop: "1px solid rgba(255,255,255,.06)", borderBottom: "1px solid rgba(255,255,255,.06)", color: "rgba(255,255,255,.45)" }}>
+            <span>{selecao.bandeira} <strong style={{ color: "#facc15" }}>23%</strong> dos jogadores sao {selecao.nome}</span>
+            <span style={{ color: "rgba(255,255,255,.15)" }}>·</span>
+            <span>⚽ <strong style={{ color: "#facc15" }}>+5.400</strong> quizzes hoje</span>
+            {diasCopa > 0 && <><span style={{ color: "rgba(255,255,255,.15)" }}>·</span><span>🏆 Copa em <strong style={{ color: "#facc15" }}>{diasCopa}</strong> dias</span></>}
+          </div>
+
+          {/* ── Provocacao ── */}
+          <section className="max-w-[400px] mx-auto px-5 py-12 text-center">
+            <h2 className="leading-[0.95] mb-2" style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(2.2rem,8vw,3.5rem)" }}>
+              Qual selecao<br /><span style={{ color: "#facc15" }}>os seus amigos seriam?</span>
+            </h2>
+            <p className="text-sm leading-relaxed mb-6" style={{ color: "rgba(255,255,255,.48)" }}>
+              47 resultados possiveis. Pode ser qualquer selecao das 48 da Copa 2026. O resultado surpreende.
             </p>
 
-            {/* Barras de perfil */}
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-3">
-              <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest text-center">Seu perfil de jogo</p>
-              {barras.map((b) => (
-                <div key={b.dim} className="grid grid-cols-[80px_1fr_36px] items-center gap-2.5">
-                  <span className="text-xs font-medium text-white/60">{b.icone} {b.label}</span>
-                  <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-                    <div className="h-full rounded-full transition-all duration-1000"
-                      style={{ backgroundColor: b.cor, width: animBars ? `${b.pct}%` : "0%" }} />
-                  </div>
-                  <span className="text-[10px] text-white/40 font-mono text-right">{b.pct}%</span>
-                </div>
-              ))}
-              <p className="text-[9px] text-white/20 text-right">total: 100%</p>
-            </div>
-
-            {/* Footer do card */}
-            <div className="flex items-center justify-center gap-4 text-[10px] text-white/30 pt-2">
-              <span>⚽ bolaonacopa.com.br/quiz</span>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Social stats (fora do card) ── */}
-        <div className="flex items-center justify-center gap-4 text-[10px] text-muted-foreground py-3 flex-wrap">
-          <span>⚽ <strong>+5.400</strong> quizzes hoje</span>
-          {diasCopa > 0 && <span>🏆 Copa em <strong>{diasCopa}</strong> dias</span>}
-        </div>
-
-        {/* ── Compartilhar ── */}
-        <div className="space-y-4 mt-2">
-          <div className="text-center space-y-1">
-            <h3 className="text-xl font-black leading-tight">
-              E seus amigos,<br />qual seria <span className="text-copa-gold-500">a selecao deles?</span>
-            </h3>
-            <p className="text-xs text-muted-foreground">Manda pro grupo e ve quem vai ser a Argentina 👀</p>
-          </div>
-
-          {/* WhatsApp */}
-          <Button onClick={() => generateAndShare("whatsapp")} disabled={sharing}
-            className="w-full h-12 bg-[#25d366] hover:bg-[#20bd5a] text-white font-bold rounded-xl text-base">
-            {sharing ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : (
-              <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-              </svg>
-            )}
-            Enviar para amigos no WhatsApp
-          </Button>
-
-          {/* Copiar + Compartilhar */}
-          <div className="grid grid-cols-2 gap-2">
-            <Button variant="outline" onClick={() => generateAndShare("copiar")}
-              className="h-11 rounded-xl text-xs font-bold">
-              {copied ? <Check className="w-4 h-4 mr-1" /> : <Copy className="w-4 h-4 mr-1" />}
-              {copied ? "Copiado!" : "Copiar link"}
-            </Button>
-            <Button variant="outline" onClick={() => generateAndShare("share")} disabled={sharing}
-              className="h-11 rounded-xl text-xs font-bold">
-              {sharing ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Share2 className="w-4 h-4 mr-1" />}
-              Compartilhar
-            </Button>
-          </div>
-
-          {/* Entrar no bolao / Refazer */}
-          <div className="space-y-2 pt-2">
-            <Button onClick={() => navigate("/home")}
-              className="w-full h-12 bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800 font-black rounded-xl shadow-lg">
-              Fazer meu quiz — Entrar no Bolao <ChevronRight className="w-4 h-4 ml-1" />
-            </Button>
-            <button onClick={handleRefazer} className="w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors py-2">
-              Refazer o quiz
-            </button>
-          </div>
-
-          {/* Outras selecoes */}
-          <div className="text-center pt-2">
-            <h3 className="text-lg font-black leading-tight mb-1">
-              Qual selecao<br /><span className="text-copa-gold-500">os seus amigos seriam?</span>
-            </h3>
-            <p className="text-xs text-muted-foreground mb-3">47 resultados possiveis. Pode ser qualquer selecao das 48 da Copa 2026.</p>
-            <div className="flex flex-wrap justify-center gap-1.5">
-              <span className="text-xs bg-copa-green-100 border border-copa-green-300 rounded-full px-2.5 py-1 font-bold text-copa-green-700">
+            <div className="flex flex-wrap justify-center gap-2 mb-6">
+              <span className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold"
+                style={{ background: "rgba(0,156,59,.18)", border: "1px solid rgba(0,156,59,.45)", color: "#86efac" }}>
                 {selecao.bandeira} {selecao.nome} — voce
               </span>
               {SELECOES.filter(s => s.id !== selecao.id).slice(0, 6).map((s) => (
-                <span key={s.id} className="text-xs bg-muted/50 border border-border rounded-full px-2.5 py-1 font-medium text-muted-foreground">
+                <span key={s.id} className="flex items-center gap-1 rounded-full px-3 py-1.5 text-sm font-semibold"
+                  style={{ background: "rgba(255,255,255,.055)", border: "1px solid rgba(255,255,255,.08)", color: "rgba(255,255,255,.72)", filter: "blur(5px)", userSelect: "none" }}>
                   {s.bandeira} {s.nome}
                 </span>
               ))}
-              <span className="text-xs bg-muted/30 border border-border rounded-full px-2.5 py-1 text-muted-foreground">+41</span>
+              <span className="rounded-full px-3 py-1.5 text-sm font-semibold"
+                style={{ background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.06)", color: "rgba(255,255,255,.35)", filter: "blur(5px)" }}>
+                ... +40
+              </span>
             </div>
-          </div>
+
+            {diasCopa > 0 && (
+              <div className="rounded-xl px-4 py-3 mb-5 text-sm"
+                style={{ background: "rgba(239,68,68,.09)", border: "1px solid rgba(239,68,68,.2)", color: "rgba(255,180,180,.82)" }}>
+                <strong style={{ color: "#fca5a5" }}>⏰ Copa comeca em {diasCopa} dias.</strong> Entra no bolao antes que seus amigos se cadastrem primeiro.
+              </div>
+            )}
+
+            <button onClick={handleRefazer}
+              className="w-full flex items-center justify-center gap-2.5 py-4 rounded-xl font-black text-base transition-all hover:-translate-y-0.5 active:scale-[0.98]"
+              style={{ background: "#facc15", color: "#071410", boxShadow: "0 8px 28px rgba(250,204,21,.3)" }}>
+              Descobrir a minha selecao
+            </button>
+          </section>
+
+          {/* ── Footer ── */}
+          <footer className="text-center py-6 text-xs" style={{ color: "rgba(255,255,255,.18)", borderTop: "1px solid rgba(255,255,255,.04)" }}>
+            © 2026 Bolao na Copa · <a href="/privacidade.html" style={{ color: "rgba(255,255,255,.25)", textDecoration: "none" }}>Privacidade</a> · <a href="/home" style={{ color: "rgba(255,255,255,.25)", textDecoration: "none" }}>Abrir o app</a>
+          </footer>
         </div>
       </div>
     );
