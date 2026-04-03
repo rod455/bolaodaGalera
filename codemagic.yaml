@@ -46,31 +46,30 @@ workflows:
           agvtool new-marketing-version 1.5.0
           agvtool new-version -all 26
 
-      - name: Build IPA
+      - name: Archive
         script: |
+          set -ex
           xcodebuild -project ios/App/App.xcodeproj \
             -scheme "$XCODE_SCHEME" \
             -configuration Release \
-            -archivePath build/ios/App.xcarchive \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath ~/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_IDENTIFIER}.p8 \
-            -authenticationKeyID $APP_STORE_CONNECT_KEY_IDENTIFIER \
-            -authenticationKeyIssuerID $APP_STORE_CONNECT_ISSUER_ID \
+            -archivePath $CM_BUILD_DIR/build/ios/App.xcarchive \
             DEVELOPMENT_TEAM="$TEAM_ID" \
             CODE_SIGN_STYLE=Automatic \
-            archive | xcpretty
-
-          xcodebuild -exportArchive \
-            -archivePath build/ios/App.xcarchive \
-            -exportPath build/ios/ipa \
-            -exportOptionsPlist ios/exportOptions.plist \
             -allowProvisioningUpdates \
-            -authenticationKeyPath ~/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_IDENTIFIER}.p8 \
-            -authenticationKeyID $APP_STORE_CONNECT_KEY_IDENTIFIER \
-            -authenticationKeyIssuerID $APP_STORE_CONNECT_ISSUER_ID | xcpretty
+            archive
+
+      - name: Export IPA
+        script: |
+          set -ex
+          xcodebuild -exportArchive \
+            -archivePath $CM_BUILD_DIR/build/ios/App.xcarchive \
+            -exportPath $CM_BUILD_DIR/build/ios/ipa \
+            -exportOptionsPlist ios/exportOptions.plist \
+            -allowProvisioningUpdates
 
     artifacts:
       - build/ios/ipa/*.ipa
+      - build/ios/App.xcarchive
       - /tmp/xcodebuild_logs/*.log
 
     publishing:
