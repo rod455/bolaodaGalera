@@ -216,21 +216,22 @@ const Quiz = () => {
         {/* Quiz principal: Selecao */}
         <div
           onClick={() => setStep("intro")}
-          className="relative overflow-hidden rounded-2xl cursor-pointer group bg-gradient-to-br from-copa-green-700 via-copa-green-800 to-copa-green-900 p-6 text-white shadow-xl"
+          className="relative overflow-hidden rounded-2xl cursor-pointer group bg-gradient-to-br from-copa-green-700 via-copa-green-800 to-copa-green-900 px-6 py-10 text-white shadow-xl text-center"
         >
           <div className="absolute top-0 right-0 w-32 h-32 bg-copa-gold-400/10 rounded-full -translate-y-10 translate-x-10 blur-2xl" />
-          <div className="relative z-10 space-y-3">
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-copa-green-400/10 rounded-full translate-y-8 -translate-x-8 blur-2xl" />
+          <div className="relative z-10 space-y-4 flex flex-col items-center">
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-widest">
               ⚽ 48 selecoes · Copa 2026
             </div>
-            <h3 className="leading-[0.9]" style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(2rem,8vw,3.5rem)", textShadow: "0 2px 16px rgba(0,0,0,.3)" }}>
+            <h3 className="leading-[0.9]" style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(2.2rem,9vw,4rem)", textShadow: "0 2px 16px rgba(0,0,0,.3)" }}>
               Qual selecao<br />
               <span className="text-copa-gold-400">voce seria?</span>
             </h3>
-            <p className="text-xs text-white/70 leading-relaxed">
+            <p className="text-sm text-white/70 leading-relaxed max-w-sm">
               10 perguntas revelam qual das <strong className="text-white">48 selecoes</strong> combina com seu jeito de jogar.
             </p>
-            <div className="flex items-center gap-2 text-xs text-white/50">
+            <div className="flex items-center justify-center gap-2 text-xs text-white/50">
               <div className="flex -space-x-1">
                 {SELECOES.slice(0, 5).map((s) => (
                   <span key={s.id} className="text-sm">{s.bandeira}</span>
@@ -238,8 +239,8 @@ const Quiz = () => {
               </div>
               <span>+43 selecoes possiveis</span>
             </div>
-            <Button className="mt-2 bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800 font-black rounded-xl shadow-lg group-hover:scale-[1.02] transition-transform">
-              Comecar o Quiz <ChevronRight className="w-4 h-4 ml-1" />
+            <Button className="mt-2 bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800 font-black rounded-xl shadow-lg group-hover:scale-[1.02] transition-transform px-8 h-12 text-base">
+              Comecar o Quiz <ChevronRight className="w-5 h-5 ml-1" />
             </Button>
           </div>
         </div>
