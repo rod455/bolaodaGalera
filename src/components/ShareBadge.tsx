@@ -27,7 +27,6 @@ interface ShareBadgeProps {
 
 const LOGO_URL = "https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/604913%20(512%20x%20512%20px).png";
 
-// Pré-carregar logo como base64 para evitar CORS no html2canvas
 let cachedLogoBase64: string | null = null;
 function preloadLogo(): Promise<string> {
   if (cachedLogoBase64) return Promise.resolve(cachedLogoBase64);
@@ -52,15 +51,69 @@ function preloadLogo(): Promise<string> {
 }
 
 const getMedalEmoji = (pos: number) => {
-  if (pos === 1) return "🥇";
-  if (pos === 2) return "🥈";
-  if (pos === 3) return "🥉";
+  if (pos === 1) return "\u{1F947}";
+  if (pos === 2) return "\u{1F948}";
+  if (pos === 3) return "\u{1F949}";
   return "";
 };
 
-const getOrdinal = (pos: number) => `${pos}º`;
+const getOrdinal = (pos: number) => `${pos}\u00BA`;
 const firstName = (nome: string) => nome.split(" ")[0];
 
+// ─── Estilos base reutilizáveis ───
+const S = {
+  badge: (w: number, h: number, bg: string): React.CSSProperties => ({
+    width: w, height: h, borderRadius: 16, position: "relative" as const,
+    display: "flex", flexDirection: "column" as const, alignItems: "center",
+    background: bg, fontFamily: "system-ui, -apple-system, sans-serif",
+    boxSizing: "border-box" as const,
+  }),
+  header: (mt = 20): React.CSSProperties => ({
+    display: "flex", alignItems: "center", gap: 6, marginTop: mt,
+  }),
+  headerLogo: { width: 18, height: 18 } as React.CSSProperties,
+  headerText: {
+    color: "rgba(255,255,255,0.8)", fontWeight: 700, fontSize: 10,
+    letterSpacing: "0.05em", textTransform: "uppercase" as const,
+  } as React.CSSProperties,
+  footer: {
+    position: "absolute" as const, bottom: 0, left: 0, right: 0,
+    backgroundColor: "rgba(0,0,0,0.2)", padding: "7px 12px",
+    display: "flex", alignItems: "center", justifyContent: "center",
+    gap: 5, borderRadius: "0 0 16px 16px",
+  } as React.CSSProperties,
+  footerText: {
+    color: "rgba(255,255,255,0.5)", fontSize: 8,
+  } as React.CSSProperties,
+  footerDot: {
+    color: "rgba(255,255,255,0.3)", fontSize: 8,
+  } as React.CSSProperties,
+  avatar: (size: number, border: string): React.CSSProperties => ({
+    width: size, height: size, borderRadius: "50%",
+    backgroundColor: "rgba(255,255,255,0.2)", border: `2px solid ${border}`,
+    display: "flex", alignItems: "center", justifyContent: "center",
+    fontWeight: 900, color: "#fff",
+  }),
+};
+
+const Footer = ({ bolaoNome, rankLabel }: { bolaoNome: string; rankLabel: string }) => (
+  <div style={S.footer}>
+    <span style={{ ...S.footerText, maxWidth: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{bolaoNome}</span>
+    <span style={S.footerDot}>{"\u2022"}</span>
+    <span style={S.footerText}>{rankLabel}</span>
+    <span style={S.footerDot}>{"\u2022"}</span>
+    <span style={S.footerText}>bolaonacopa.com.br</span>
+  </div>
+);
+
+const Header = ({ logoSrc, mt }: { logoSrc: string; mt?: number }) => (
+  <div style={S.header(mt)}>
+    <img src={logoSrc} alt="" style={S.headerLogo} />
+    <span style={S.headerText}>Bol\u00E3o na Copa</span>
+  </div>
+);
+
+// ─── Component ───
 const ShareBadge = ({ open, onClose, bolaoId, bolaoNome, ranking, rankingType, rodadaLabel }: ShareBadgeProps) => {
   const [tab, setTab] = useState<"foto" | "sem-foto" | "podio">("foto");
   const [sharing, setSharing] = useState(false);
@@ -68,7 +121,6 @@ const ShareBadge = ({ open, onClose, bolaoId, bolaoNome, ranking, rankingType, r
   const [logoSrc, setLogoSrc] = useState(LOGO_URL);
   const badgeRef = useRef<HTMLDivElement>(null);
 
-  // Pré-carregar logo como base64 para evitar CORS no html2canvas
   useEffect(() => {
     if (open) preloadLogo().then(setLogoSrc);
   }, [open]);
@@ -79,38 +131,32 @@ const ShareBadge = ({ open, onClose, bolaoId, bolaoNome, ranking, rankingType, r
   const top3 = ranking.filter((r) => r.pos <= 3).sort((a, b) => a.pos - b.pos);
   const rankLabel = rankingType === "geral" ? "Ranking Geral" : `Ranking ${rodadaLabel || "Rodada"}`;
 
+  // ── Captura à prova de falha: clona offscreen, captura, remove ──
   const captureImage = async (): Promise<Blob> => {
-    // Captura o badge diretamente (primeiro filho do wrapper)
-    const badge = badgeRef.current!.firstElementChild as HTMLElement;
-    const scale = 3;
-    const w = badge.offsetWidth;
-    const h = badge.offsetHeight;
-    const raw = await html2canvas(badge, {
-      backgroundColor: null,
-      scale,
-      useCORS: false,
-      allowTaint: false,
-      logging: false,
-      scrollX: 0,
-      scrollY: -window.scrollY,
-      width: w,
-      height: h,
-    });
-    // Recorta para dimensões exatas caso html2canvas adicione pixels extras
-    const cw = w * scale;
-    const ch = h * scale;
-    if (raw.width !== cw || raw.height !== ch) {
-      const cropped = document.createElement("canvas");
-      cropped.width = cw;
-      cropped.height = ch;
-      cropped.getContext("2d")!.drawImage(raw, 0, 0, cw, ch, 0, 0, cw, ch);
+    const src = badgeRef.current!;
+    // Clona o badge e posiciona fora da tela (sem scroll, sem wrapper)
+    const clone = src.cloneNode(true) as HTMLElement;
+    clone.style.position = "fixed";
+    clone.style.top = "0";
+    clone.style.left = "0";
+    clone.style.zIndex = "-9999";
+    clone.style.pointerEvents = "none";
+    document.body.appendChild(clone);
+
+    try {
+      const canvas = await html2canvas(clone, {
+        backgroundColor: null,
+        scale: 3,
+        useCORS: false,
+        allowTaint: false,
+        logging: false,
+      });
       return new Promise<Blob>((resolve, reject) =>
-        cropped.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob null"))), "image/png")
+        canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob null"))), "image/png")
       );
+    } finally {
+      document.body.removeChild(clone);
     }
-    return new Promise<Blob>((resolve, reject) =>
-      raw.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob null"))), "image/png")
-    );
   };
 
   const blobToDataUrl = (blob: Blob): Promise<string> =>
@@ -131,8 +177,8 @@ const ShareBadge = ({ open, onClose, bolaoId, bolaoNome, ranking, rankingType, r
 
   const getShareText = () => {
     const defaultText = me
-      ? `🏆 Estou em ${getOrdinal(me.pos)} lugar no bolão "${bolaoNome}"!`
-      : `🏆 Confira o ranking do bolão "${bolaoNome}"!`;
+      ? `\u{1F3C6} Estou em ${getOrdinal(me.pos)} lugar no bol\u00E3o "${bolaoNome}"!`
+      : `\u{1F3C6} Confira o ranking do bol\u00E3o "${bolaoNome}"!`;
     const phrase = fraseCustom.trim() ? `\n\n${fraseCustom.trim()}` : "";
     return `${defaultText}${phrase}\n\nVem competir comigo: ${getShareBadgeUrl(bolaoId)}`;
   };
@@ -144,7 +190,7 @@ const ShareBadge = ({ open, onClose, bolaoId, bolaoNome, ranking, rankingType, r
       const blob = await captureImage();
       saveImage(blob);
       toast.success("Imagem salva!");
-    } catch (err) {
+    } catch {
       toast.error("Erro ao gerar imagem");
     } finally {
       setSharing(false);
@@ -179,10 +225,8 @@ const ShareBadge = ({ open, onClose, bolaoId, bolaoNome, ranking, rankingType, r
         const fileUri = await saveToNativeFile(blob);
         if (fileUri) {
           try {
-            // Plugin nativo abre WhatsApp direto com imagem
             await WhatsAppShare.share({ fileUri, text });
           } catch {
-            // Fallback: share sheet genérico
             await Share.share({ title: `Ranking - ${bolaoNome}`, text, files: [fileUri], dialogTitle: "Enviar para WhatsApp" });
           }
         } else {
@@ -202,12 +246,12 @@ const ShareBadge = ({ open, onClose, bolaoId, bolaoNome, ranking, rankingType, r
           return;
         }
         saveImage(blob);
-        window.open(`https://api.whatsapp.com/send?text=${encoded}`, Capacitor.isNativePlatform() ? "_system" : "_blank");
+        window.open(`https://api.whatsapp.com/send?text=${encoded}`, "_blank");
         toast.success("Imagem salva! Anexe no WhatsApp.");
         return;
       }
 
-      // Desktop web
+      // Desktop web: copia imagem pro clipboard e abre WhatsApp Web
       try {
         await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
         toast.success("Imagem copiada! Cole com Ctrl+V no WhatsApp.");
@@ -220,7 +264,7 @@ const ShareBadge = ({ open, onClose, bolaoId, bolaoNome, ranking, rankingType, r
       if ((err as Error).name !== "AbortError") {
         const encoded = encodeURIComponent(getShareText());
         if (Capacitor.isNativePlatform()) {
-          window.open(`https://api.whatsapp.com/send?text=${encoded}`, Capacitor.isNativePlatform() ? "_system" : "_blank");
+          window.open(`https://api.whatsapp.com/send?text=${encoded}`, "_system");
         } else {
           toast.error("Erro ao gerar imagem. Tente novamente.");
         }
@@ -235,23 +279,16 @@ const ShareBadge = ({ open, onClose, bolaoId, bolaoNome, ranking, rankingType, r
     setSharing(true);
     try {
       const blob = await captureImage();
-
       if (Capacitor.isNativePlatform()) {
         const fileUri = await saveToNativeFile(blob);
         if (fileUri) {
-          // Share com files[] — Android filtra para apps que aceitam imagem (Instagram aparece)
-          await Share.share({
-            files: [fileUri],
-            dialogTitle: "Enviar para Instagram",
-          });
+          await Share.share({ files: [fileUri], dialogTitle: "Enviar para Instagram" });
         } else {
           saveImage(blob);
           toast.success("Imagem salva na galeria! Abra o Instagram e poste.");
         }
         return;
       }
-
-      // Web: salvar imagem e orientar
       saveImage(blob);
       toast.success("Imagem salva! Abra o Instagram e poste da galeria.");
     } catch (err) {
@@ -267,132 +304,92 @@ const ShareBadge = ({ open, onClose, bolaoId, bolaoNome, ranking, rankingType, r
     }
   };
 
-  // ── Badge com foto (inline styles for html2canvas compatibility) ──
+  // ════════════════════════════════════════════════════════════════
+  //  BADGES - 100% inline styles, design limpo e profissional
+  // ════════════════════════════════════════════════════════════════
+
   const BadgeComFoto = () => {
-    if (!me) return <p style={{ textAlign: "center", padding: "32px 0", fontSize: 14, color: "#999" }}>Você ainda não está no ranking.</p>;
+    if (!me) return <p style={{ textAlign: "center", padding: "32px 0", fontSize: 14, color: "#999" }}>Voc\u00EA ainda n\u00E3o est\u00E1 no ranking.</p>;
     return (
-      <div style={{ width: 280, height: 280, borderRadius: 16, overflow: "hidden", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg, #1B5E20 0%, #2E7D32 50%, #1B5E20 100%)", position: "relative", paddingTop: 8 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-          <img src={logoSrc} alt="" style={{ width: 20, height: 20 }} />
-          <span style={{ color: "rgba(255,255,255,0.8)", fontWeight: 700, fontSize: 10, letterSpacing: "0.05em", textTransform: "uppercase" }}>Bolão na Copa</span>
-        </div>
-        <div style={{ width: 48, height: 48, borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.2)", border: "2px solid #EAB308", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 900, color: "#fff" }}>
-          {me.avatar}
-        </div>
+      <div style={S.badge(280, 280, "linear-gradient(135deg, #1B5E20 0%, #2E7D32 50%, #1B5E20 100%)")}>
+        <Header logoSrc={logoSrc} />
+        <div style={{ ...S.avatar(52, "#EAB308"), fontSize: 22, marginTop: 12 }}>{me.avatar}</div>
         <p style={{ color: "#fff", fontWeight: 700, fontSize: 14, marginTop: 6 }}>{me.nome}</p>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
-          <span style={{ fontSize: 24 }}>{getMedalEmoji(me.pos) || "🏅"}</span>
-          <span style={{ color: "#fff", fontWeight: 900, fontSize: 24 }}>{getOrdinal(me.pos)}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
+          <span style={{ fontSize: 26 }}>{getMedalEmoji(me.pos) || "\u{1F3C5}"}</span>
+          <span style={{ color: "#fff", fontWeight: 900, fontSize: 26 }}>{getOrdinal(me.pos)}</span>
           <span style={{ color: "rgba(255,255,255,0.7)", fontWeight: 700, fontSize: 14 }}>lugar</span>
         </div>
-        <div style={{ marginTop: 8, textAlign: "center", padding: "0 16px" }}>
-          <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 8, marginTop: 2 }}>{me.pontos} pts</p>
-        </div>
-        <div style={{ position: "absolute", bottom: 8, display: "flex", alignItems: "center", gap: 4 }}>
-          <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 8 }}>{bolaoNome}</span>
-          <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 8 }}>&bull;</span>
-          <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 8 }}>{rankLabel}</span>
-          <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 8 }}>&bull;</span>
-          <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 8 }}>bolaonacopa.com.br</span>
-        </div>
+        <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 9, marginTop: 4 }}>{me.pontos} pts</p>
+        <Footer bolaoNome={bolaoNome} rankLabel={rankLabel} />
       </div>
     );
   };
 
-  // ── Badge sem foto ──
   const BadgeSemFoto = () => {
-    if (!me) return <p style={{ textAlign: "center", padding: "32px 0", fontSize: 14, color: "#999" }}>Você ainda não está no ranking.</p>;
+    if (!me) return <p style={{ textAlign: "center", padding: "32px 0", fontSize: 14, color: "#999" }}>Voc\u00EA ainda n\u00E3o est\u00E1 no ranking.</p>;
     return (
-      <div style={{ width: 280, height: 280, borderRadius: 16, overflow: "hidden", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg, #0D3B1A 0%, #1B5E20 50%, #2E7D32 100%)", position: "relative", paddingTop: 8 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-          <img src={logoSrc} alt="" style={{ width: 20, height: 20 }} />
-          <span style={{ color: "rgba(255,255,255,0.8)", fontWeight: 700, fontSize: 10, letterSpacing: "0.05em", textTransform: "uppercase" }}>Bolão na Copa</span>
-        </div>
-        <span style={{ fontSize: 48 }}>{getMedalEmoji(me.pos) || "🏅"}</span>
-        <span style={{ color: "#fff", fontWeight: 900, fontSize: 36, marginTop: 2 }}>{getOrdinal(me.pos)}</span>
+      <div style={S.badge(280, 280, "linear-gradient(135deg, #0D3B1A 0%, #1B5E20 50%, #2E7D32 100%)")}>
+        <Header logoSrc={logoSrc} />
+        <span style={{ fontSize: 52, marginTop: 14 }}>{getMedalEmoji(me.pos) || "\u{1F3C5}"}</span>
+        <span style={{ color: "#fff", fontWeight: 900, fontSize: 38, marginTop: 2 }}>{getOrdinal(me.pos)}</span>
         <span style={{ color: "rgba(255,255,255,0.6)", fontWeight: 700, fontSize: 14 }}>lugar</span>
-        <p style={{ color: "#fff", fontWeight: 700, fontSize: 14, marginTop: 8 }}>{me.nome}</p>
+        <p style={{ color: "#fff", fontWeight: 700, fontSize: 14, marginTop: 6 }}>{me.nome}</p>
         <p style={{ color: "#EAB308", fontWeight: 700, fontSize: 12 }}>{me.pontos} pontos</p>
-        <div style={{ position: "absolute", bottom: 8, display: "flex", alignItems: "center", gap: 4 }}>
-          <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 8 }}>{bolaoNome}</span>
-          <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 8 }}>&bull;</span>
-          <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 8 }}>{rankLabel}</span>
-          <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 8 }}>&bull;</span>
-          <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 8 }}>bolaonacopa.com.br</span>
-        </div>
+        <Footer bolaoNome={bolaoNome} rankLabel={rankLabel} />
       </div>
     );
   };
 
-  // ── Badge pódio (inline styles for html2canvas compatibility) ──
   const BadgePodio = () => {
     if (top3.length === 0) return <p style={{ textAlign: "center", padding: "32px 0", fontSize: 14, color: "#999" }}>Ranking ainda sem dados.</p>;
     const first = top3.find((r) => r.pos === 1);
     const second = top3.find((r) => r.pos === 2);
     const third = top3.find((r) => r.pos === 3);
+
+    const PodiumCol = ({ entry, medal, border, colH, ordinal }: {
+      entry: RankingEntry | undefined; medal: string; border: string; colH: number; ordinal: string;
+    }) => (
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 88 }}>
+        <span style={{ fontSize: 24, marginBottom: 4 }}>{medal}</span>
+        <div style={{ ...S.avatar(44, border), fontSize: 14 }}>{entry?.avatar || "?"}</div>
+        <p style={{ color: "#fff", fontSize: 10, fontWeight: 700, marginTop: 4, textAlign: "center" }}>{firstName(entry?.nome || "-")}</p>
+        <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 9, fontWeight: 700 }}>{entry?.pontos ?? 0} pts</p>
+        <div style={{
+          width: "100%", height: colH,
+          backgroundColor: "rgba(255,255,255,0.1)", borderRadius: "8px 8px 0 0",
+          marginTop: 4, display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <span style={{ color: "rgba(255,255,255,0.4)", fontWeight: 900, fontSize: 16 }}>{ordinal}</span>
+        </div>
+      </div>
+    );
+
     return (
-      <div style={{ width: 320, height: 380, borderRadius: 16, overflow: "hidden", position: "relative", display: "flex", flexDirection: "column", alignItems: "center", background: "linear-gradient(135deg, #1B5E20 0%, #2E7D32 50%, #1B5E20 100%)" }}>
+      <div style={S.badge(320, 380, "linear-gradient(135deg, #1B5E20 0%, #2E7D32 50%, #1B5E20 100%)")}>
+        {/* Dot pattern */}
         <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, opacity: 0.05, backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "20px 20px" }} />
-        {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 24, position: "relative", zIndex: 10 }}>
-          <img src={logoSrc} alt="" style={{ width: 20, height: 20 }} />
-          <span style={{ color: "rgba(255,255,255,0.8)", fontWeight: 700, fontSize: 10, letterSpacing: "0.05em", textTransform: "uppercase" }}>Bolão na Copa</span>
+        <Header logoSrc={logoSrc} mt={20} />
+        {/* Podium - centralizado verticalmente entre header e footer */}
+        <div style={{
+          display: "flex", alignItems: "flex-end", justifyContent: "center",
+          gap: 10, flex: 1, width: "100%", padding: "0 14px 36px",
+        }}>
+          <PodiumCol entry={second} medal={"\u{1F948}"} border="#D1D5DB" colH={48} ordinal="2\u00BA" />
+          <PodiumCol entry={first} medal={"\u{1F947}"} border="#EAB308" colH={80} ordinal="1\u00BA" />
+          <PodiumCol entry={third} medal={"\u{1F949}"} border="#92400E" colH={36} ordinal="3\u00BA" />
         </div>
-        {/* Podium */}
-        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 12, marginTop: 16, marginBottom: 8, position: "relative", zIndex: 10, width: "100%", padding: "0 16px" }}>
-          {/* 2nd place */}
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 90 }}>
-            <span style={{ fontSize: 24, marginBottom: 4 }}>🥈</span>
-            <div style={{ width: 44, height: 44, borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.15)", border: "2px solid #D1D5DB", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 900, color: "#fff" }}>
-              {second?.avatar || "?"}
-            </div>
-            <p style={{ color: "#fff", fontSize: 10, fontWeight: 700, marginTop: 4, textAlign: "center" }}>{firstName(second?.nome || "-")}</p>
-            <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 9, fontWeight: 700 }}>{second?.pontos ?? 0} pts</p>
-            <div style={{ width: "100%", height: 48, backgroundColor: "rgba(255,255,255,0.1)", borderRadius: "8px 8px 0 0", marginTop: 4, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <span style={{ color: "rgba(255,255,255,0.4)", fontWeight: 900, fontSize: 16 }}>2º</span>
-            </div>
-          </div>
-          {/* 1st place */}
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 90 }}>
-            <span style={{ fontSize: 30, marginBottom: 4 }}>🥇</span>
-            <div style={{ width: 48, height: 48, borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.2)", border: "2px solid #EAB308", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 900, color: "#fff" }}>
-              {first?.avatar || "?"}
-            </div>
-            <p style={{ color: "#fff", fontSize: 10, fontWeight: 700, marginTop: 4, textAlign: "center" }}>{firstName(first?.nome || "-")}</p>
-            <p style={{ color: "#EAB308", fontSize: 9, fontWeight: 700 }}>{first?.pontos ?? 0} pts</p>
-            <div style={{ width: "100%", height: 80, backgroundColor: "rgba(255,255,255,0.15)", borderRadius: "8px 8px 0 0", marginTop: 4, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <span style={{ color: "rgba(255,255,255,0.5)", fontWeight: 900, fontSize: 20 }}>1º</span>
-            </div>
-          </div>
-          {/* 3rd place */}
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 90 }}>
-            <span style={{ fontSize: 24, marginBottom: 4 }}>🥉</span>
-            <div style={{ width: 44, height: 44, borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.15)", border: "2px solid #92400E", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 900, color: "#fff" }}>
-              {third?.avatar || "?"}
-            </div>
-            <p style={{ color: "#fff", fontSize: 10, fontWeight: 700, marginTop: 4, textAlign: "center" }}>{firstName(third?.nome || "-")}</p>
-            <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 9, fontWeight: 700 }}>{third?.pontos ?? 0} pts</p>
-            <div style={{ width: "100%", height: 36, backgroundColor: "rgba(255,255,255,0.1)", borderRadius: "8px 8px 0 0", marginTop: 4, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <span style={{ color: "rgba(255,255,255,0.4)", fontWeight: 900, fontSize: 16 }}>3º</span>
-            </div>
-          </div>
-        </div>
-        {/* Footer */}
-        <div style={{ width: "100%", backgroundColor: "rgba(0,0,0,0.2)", padding: "8px 0", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, position: "relative", zIndex: 10, marginTop: "auto" }}>
-          <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 9, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 120 }}>{bolaoNome}</span>
-          <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 9 }}>&bull;</span>
-          <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 9 }}>{rankLabel}</span>
-          <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 9 }}>&bull;</span>
-          <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 9 }}>bolaonacopa.com.br</span>
-        </div>
+        <Footer bolaoNome={bolaoNome} rankLabel={rankLabel} />
       </div>
     );
   };
 
+  // ════════════════════════════════════════════════════════════════
+
   const tabs = [
     { id: "foto" as const, label: "Com Foto" },
     { id: "sem-foto" as const, label: "Sem Foto" },
-    { id: "podio" as const, label: "Pódio" },
+    { id: "podio" as const, label: "P\u00F3dio" },
   ];
 
   return createPortal(
@@ -423,7 +420,7 @@ const ShareBadge = ({ open, onClose, bolaoId, bolaoNome, ranking, rankingType, r
           ))}
         </div>
 
-        {/* Badge preview */}
+        {/* Badge preview - ref aponta direto pro badge, sem wrapper extra */}
         <div className="flex justify-center p-4 bg-white">
           <div ref={badgeRef}>
             {tab === "foto" && <BadgeComFoto />}
@@ -438,7 +435,7 @@ const ShareBadge = ({ open, onClose, bolaoId, bolaoNome, ranking, rankingType, r
             type="text"
             value={fraseCustom}
             onChange={(e) => setFraseCustom(e.target.value)}
-            placeholder="Escreva uma provocação para os amigos..."
+            placeholder="Escreva uma provoca\u00E7\u00E3o para os amigos..."
             maxLength={120}
             className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-copa-green-600 focus:border-transparent placeholder:text-gray-400"
           />
