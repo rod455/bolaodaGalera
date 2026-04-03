@@ -20,6 +20,7 @@ import { useRewardedAd } from "@/hooks/useRewardedAd";
 import { useUserPlan } from "@/hooks/useUserPlan";
 import DynamicBanner from "@/components/DynamicBanner";
 import type { UserBannerContext } from "@/components/DynamicBanner";
+import QuizBannerCarousel from "@/components/QuizBannerCarousel";
 import GuestHeroCarousel from "@/components/GuestHeroCarousel";
 import PromoCardBorder from "@/components/PromoCardBorder";
 import type { Bolao } from "@/lib/types";
@@ -634,6 +635,9 @@ const Home = () => {
         </button>
       )}
 
+      {/* ═══ GUEST: Banner Quiz (dinâmico do Supabase) ═══ */}
+      {!user && <QuizBannerCarousel />}
+
       {/* ═══ FEEDBACK BANNER — aparece após palpitar ═══ */}
       {user && <FeedbackBanner />}
 
@@ -795,7 +799,10 @@ const Home = () => {
         })()}
 
         <div className="space-y-4">
-          {nacionais.map((b, i) => {
+          {(user ? nacionais : nacionais.filter(b => {
+            const campNome = ((b as any).campeonatos?.nome_popular || (b as any).campeonatos?.nome || "").toLowerCase();
+            return campNome.includes("copa do mundo") || campNome.includes("world cup") || campNome.includes("copa 2026");
+          })).map((b, i) => {
             const isPaulistao = b.id === PAULISTAO_BOLAO_ID;
             const card = (
               <NacionalCard key={b.id} bolao={b} participantes={participantesCount[b.id] || 0}
@@ -819,6 +826,24 @@ const Home = () => {
           {nacionais.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Nenhum bolão nacional disponível.</p>}
         </div>
       </div>
+
+      {/* ═══ GUEST: Banner Como Funciona ═══ */}
+      {!user && (
+        <div onClick={() => { window.location.href = "/como-funciona.html"; }}
+          className="relative overflow-hidden rounded-2xl cursor-pointer bg-gradient-to-br from-copa-green-600 to-copa-green-700 p-6 text-white shadow-lg text-center">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-10 translate-x-10 blur-2xl" />
+          <div className="relative z-10 space-y-3 flex flex-col items-center">
+            <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-2xl">🏆</div>
+            <h3 className="text-xl font-black">Como funciona o Bolão na Copa?</h3>
+            <p className="text-xs max-w-sm" style={{ color: "rgba(255,255,255,.7)" }}>
+              Crie bolões, faça palpites nos jogos e dispute com amigos. Ranking automático e 7 modos de pontuação.
+            </p>
+            <div className="flex items-center gap-2 mt-1 py-2.5 px-6 rounded-xl font-bold text-sm bg-white text-copa-green-700">
+              Saiba mais <ChevronRight className="w-4 h-4" />
+            </div>
+          </div>
+        </div>
+      )}
 
       <RegrasModal regras={regrasModal ? MODO_REGRAS[regrasModal] || null : null} open={!!regrasModal} onClose={() => setRegrasModal(null)} />
 
