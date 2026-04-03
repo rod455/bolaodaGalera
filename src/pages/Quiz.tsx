@@ -223,7 +223,7 @@ const Quiz = () => {
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-widest">
               ⚽ 48 selecoes · Copa 2026
             </div>
-            <h3 className="text-2xl font-black leading-tight">
+            <h3 className="leading-[0.9]" style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(2rem,8vw,3.5rem)", textShadow: "0 2px 16px rgba(0,0,0,.3)" }}>
               Qual selecao<br />
               <span className="text-copa-gold-400">voce seria?</span>
             </h3>
@@ -514,7 +514,6 @@ const Quiz = () => {
 
         {/* CSS para animacao de pulse do logo */}
         <style>{`
-          @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
           @keyframes pulse {
             0%, 100% { box-shadow: 0 0 20px rgba(250,204,21,.2); }
             50% { box-shadow: 0 0 55px rgba(250,204,21,.55); }
