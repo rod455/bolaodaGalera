@@ -147,7 +147,7 @@ const Quiz = () => {
       : "https://www.bolaonacopa.com.br/quiz?start=true";
     const femininos = ["Argentina","Alemanha","Australia","Austria","Belgica","Bosnia","Colombia","Croacia","Dinamarca","Escocia","Espanha","Franca","Holanda","Inglaterra","Jamaica","Noruega","Suecia","Suica","Tunisia","Turquia","Rep. Tcheca","Costa Rica","Costa do Marfim","Nova Zelandia","Arabia Saudita","Coreia do Sul","Africa do Sul"];
     const artigo = femininos.some(f => selecao.nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(f)) ? "da" : "do";
-    const texto = `${selecao.bandeira} Fui convocado para jogar pela Selecao ${artigo} ${selecao.nome}! Qual selecao te convocaria? Descubra em:\n👉 ${link}`;
+    const texto = `${selecao.bandeira} Fui convocado para jogar pela Sele\u00e7\u00e3o ${artigo} ${selecao.nome}! Qual sele\u00e7\u00e3o te convocaria? Descubra em:\n👉 ${link}`;
 
     trackEvent("quiz_share", { quiz_id: "quiz_selecao", resultado: selecao.id, canal });
 
