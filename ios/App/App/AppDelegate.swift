@@ -1,14 +1,15 @@
 import UIKit
 import Capacitor
 import UserNotifications
+import FirebaseCore
 
-@UIApplicationMain
+@main
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Configurar delegate de notificações
+        FirebaseApp.configure()
         UNUserNotificationCenter.current().delegate = self
         return true
     }
