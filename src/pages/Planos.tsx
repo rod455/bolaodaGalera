@@ -458,6 +458,9 @@ const Planos = () => {
           <p className="text-center text-xs text-muted-foreground">
             Desbloqueie todas as funcionalidades do app
           </p>
+          <p className="text-center text-[10px] text-muted-foreground/70 leading-tight mt-1">
+            A assinatura renova automaticamente. Cancele a qualquer momento nas configurações da sua conta Apple.
+          </p>
         </CardContent>
       </Card>
 
