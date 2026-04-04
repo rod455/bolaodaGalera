@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { signInWithGoogle } from "@/lib/googleAuth";
+import { signInWithApple } from "@/lib/appleAuth";
 import { trackEvent, trackConversion } from "@/lib/analytics";
 import SEOHead from "@/components/SEOHead";
 
@@ -196,6 +197,41 @@ const Auth = () => {
       }
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const isIOS = Capacitor.getPlatform() === "ios";
+
+  const handleAppleLogin = async () => {
+    try {
+      trackEvent('Criar_Conta', { metodo: 'apple' });
+      const redirectPath = bolaoRedirect ? `/bolao/${bolaoRedirect}` : "/home";
+      const result = await signInWithApple(redirectPath);
+
+      if (result.success && refCode) {
+        try {
+          const { data: { user: currentUser } } = await supabase.auth.getUser();
+          if (currentUser) {
+            await supabase.rpc("processar_referral", {
+              p_referred_id: currentUser.id,
+              p_referral_code: refCode,
+            });
+          }
+        } catch {}
+      }
+
+      if (result.success && Capacitor.isNativePlatform()) {
+        const origem = Capacitor.getPlatform();
+        supabase.auth.updateUser({ data: { origem } }).catch(() => {});
+        toast.success("Login realizado com sucesso!");
+        navigate(redirectPath);
+      } else if (!result.success && result.error) {
+        if (result.error !== "Login cancelado") {
+          toast.error(result.error);
+        }
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao fazer login com Apple");
     }
   };
 
@@ -438,6 +474,20 @@ const Auth = () => {
                 </svg>
                 {isLogin ? "Entrar com Google" : "Cadastrar com Google"}
               </button>
+
+              {/* Sign in with Apple — exibir no iOS nativo e na web */}
+              {(isIOS || !Capacitor.isNativePlatform()) && (
+                <button
+                  onClick={handleAppleLogin}
+                  className="w-full h-12 flex items-center justify-center gap-3 bg-black hover:bg-gray-900 rounded-xl font-semibold text-sm text-white transition-all"
+                >
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+                  </svg>
+                  {isLogin ? "Entrar com Apple" : "Cadastrar com Apple"}
+                </button>
+              )}
+
               <p className="text-[10px] text-center text-muted-foreground">Rápido e sem precisar de senha</p>
             </div>
 
