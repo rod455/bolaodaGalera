@@ -209,9 +209,10 @@ async function syncLive() {
   }
 
   if (updated > 0) {
-    await supabase.from('sync_log').insert({
+    const { error: logErr } = await supabase.from('sync_log').insert({
       campeonato_api_id: 0, tipo: 'github-actions-smart', jogos_atualizados: updated,
-    }).catch(err => console.log(`Erro ao salvar sync_log: ${err.message}`));
+    });
+    if (logErr) console.log(`Erro ao salvar sync_log: ${logErr.message}`);
   }
 
   console.log(`\n${updated} jogo(s) atualizado(s)`);
