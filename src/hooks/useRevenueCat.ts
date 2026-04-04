@@ -34,9 +34,9 @@ const PRODUCT_PLAN_MAP: Record<string, string> = {
   premium_pro_anual: "premium_pro",
 };
 
-// RevenueCat API key — set your iOS key here
-const RC_IOS_KEY = ""; // TODO: paste your RevenueCat iOS API key
-const RC_ANDROID_KEY = ""; // TODO: paste your RevenueCat Android API key (optional)
+// RevenueCat API keys
+const RC_IOS_KEY = "appl_uWPkPVhceHXoYgjSeDZIFjcQMCE"; // Apple iOS key
+const RC_ANDROID_KEY = ""; // Android key (usa Stripe direto no Android)
 
 let rcInitialized = false;
 
