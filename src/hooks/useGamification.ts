@@ -97,7 +97,7 @@ export const useGamification = () => {
 
       if (profile) setReferralCode((profile as { referral_code?: string }).referral_code || null);
     } catch (err) {
-      console.error("Erro ao buscar XP do usuário:", err);
+      void err;
     } finally {
       setLoading(false);
     }

@@ -224,7 +224,7 @@ const Palpites = () => {
   };
 
   useEffect(() => {
-    if (id && user) loadData().catch((e) => console.error("[Palpites] loadData error:", e));
+    if (id && user) loadData().catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, user]);
 

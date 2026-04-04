@@ -76,7 +76,7 @@ export const useRevenueCat = () => {
       try {
         const apiKey = isIOS ? RC_IOS_KEY : RC_ANDROID_KEY;
         if (!apiKey) {
-          console.warn("[RevenueCat] No API key configured");
+          // No API key configured
           setLoading(false);
           return;
         }
@@ -97,7 +97,7 @@ export const useRevenueCat = () => {
         const { customerInfo: info } = await Purchases.getCustomerInfo();
         setCustomerInfo(info as RCCustomerInfo);
       } catch (err) {
-        console.error("[RevenueCat] Init error:", err);
+        void err;
       } finally {
         setLoading(false);
       }
@@ -118,7 +118,7 @@ export const useRevenueCat = () => {
         const { customerInfo: info } = await Purchases.logIn({ appUserID: user.id });
         setCustomerInfo(info as RCCustomerInfo);
       } catch (err) {
-        console.error("[RevenueCat] Login error:", err);
+        void err;
       }
     };
 
@@ -134,7 +134,7 @@ export const useRevenueCat = () => {
       (p) => p.product.identifier === productId
     );
     if (!pkg) {
-      console.error("[RevenueCat] Package not found:", productId);
+      // Package not found
       return false;
     }
 
@@ -157,7 +157,7 @@ export const useRevenueCat = () => {
         // User cancelled — not an error
         return false;
       }
-      console.error("[RevenueCat] Purchase error:", { code: err?.code, message: err?.message });
+      void err;
       return false;
     } finally {
       setPurchasing(false);
@@ -174,7 +174,7 @@ export const useRevenueCat = () => {
       setCustomerInfo(info as RCCustomerInfo);
       return Object.keys(info.entitlements?.active || {}).length > 0;
     } catch (err) {
-      console.error("[RevenueCat] Restore error:", err);
+      void err;
       return false;
     }
   }, []);
