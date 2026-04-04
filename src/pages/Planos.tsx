@@ -1,5 +1,5 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Check, Crown, Zap, Trophy, Info, X, Loader2, ExternalLink } from "lucide-react";
+import { ArrowLeft, Check, Crown, Zap, Trophy, Info, X, Loader2, ExternalLink, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserPlan } from "@/hooks/useUserPlan";
+import { useRevenueCat } from "@/hooks/useRevenueCat";
 import { supabase } from "@/integrations/supabase/client";
 import RegrasModal from "@/components/RegrasModal";
 import type { RegraInfo } from "@/lib/types";
@@ -15,7 +16,7 @@ import { MODO_REGRAS } from "@/lib/constants";
 import SEOHead from "@/components/SEOHead";
 import { trackEvent } from "@/lib/analytics";
 
-// ═══ Price IDs do Stripe ═══
+// ═══ Price IDs do Stripe (Android/Web) ═══
 const STRIPE_PRICES = {
   premium_mensal: "price_1T1TxnC1YtBHMBc2hJMfOwqL",
   premium_anual: "price_1T1TyYC1YtBHMBc2E12oGz6Q",
@@ -23,11 +24,22 @@ const STRIPE_PRICES = {
   premium_pro_anual: "price_1T1U0KC1YtBHMBc2gqSGO0jD",
 };
 
+// ═══ Product IDs do RevenueCat/Apple (iOS) ═══
+const RC_PRODUCTS = {
+  premium_mensal: "premium_mensal",
+  premium_anual: "premium_anual",
+  premium_pro_mensal: "premium_pro_mensal",
+  premium_pro_anual: "premium_pro_anual",
+};
+
 const Planos = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { session } = useAuth();
   const { plano: userPlano, loading: loadingPlano, refetch } = useUserPlan();
+  const { purchase, restore, purchasing, isAvailable: rcAvailable } = useRevenueCat();
+  const isIOS = Capacitor.getPlatform() === "ios";
+  const useIAP = isIOS && rcAvailable;
   const [infoModal, setInfoModal] = useState<RegraInfo | null>(null);
   const [loadingCheckout, setLoadingCheckout] = useState<string | null>(null);
   const [billingPeriod, setBillingPeriod] = useState<"mensal" | "anual">("mensal");
@@ -47,7 +59,50 @@ const Planos = () => {
     }
   }, [searchParams, refetch]);
 
-  const handleCheckout = async (priceId: string) => {
+  // ═══ IAP via RevenueCat (iOS) ═══
+  const handleIAPCheckout = async (rcProductId: string) => {
+    if (!session) {
+      toast.error("Você precisa estar logado");
+      return;
+    }
+
+    setLoadingCheckout(rcProductId);
+    try {
+      const plano = rcProductId.includes("pro") ? "premium_pro" : "premium";
+      const periodo = rcProductId.includes("anual") ? "anual" : "mensal";
+      trackEvent("iniciar_premium", { plano, periodo, via: "iap" });
+
+      const success = await purchase(rcProductId);
+      if (success) {
+        toast.success("Assinatura ativada com sucesso!");
+        refetch();
+      }
+    } catch {
+      toast.error("Erro ao processar assinatura. Tente novamente.");
+    } finally {
+      setLoadingCheckout(null);
+    }
+  };
+
+  const handleRestore = async () => {
+    setLoadingCheckout("restore");
+    try {
+      const restored = await restore();
+      if (restored) {
+        toast.success("Assinatura restaurada com sucesso!");
+        refetch();
+      } else {
+        toast.info("Nenhuma assinatura encontrada para restaurar.");
+      }
+    } catch {
+      toast.error("Erro ao restaurar compras.");
+    } finally {
+      setLoadingCheckout(null);
+    }
+  };
+
+  // ═══ Stripe checkout (Android/Web) ═══
+  const handleStripeCheckout = async (priceId: string) => {
     if (!session) {
       toast.error("Você precisa estar logado");
       return;
@@ -61,7 +116,6 @@ const Planos = () => {
 
       if (error) throw error;
       if (data?.url) {
-        // Analytics: Assinatura Premium
         const planoMap: Record<string, string> = {
           [STRIPE_PRICES.premium_mensal]: 'premium',
           [STRIPE_PRICES.premium_anual]: 'premium',
@@ -86,7 +140,6 @@ const Planos = () => {
           valor: valorMap[priceId] || 0,
         });
 
-        // No app nativo, abrir no browser externo (Chrome) para Stripe funcionar
         if (Capacitor.isNativePlatform()) {
           window.open(data.url, "_system");
         } else {
@@ -99,6 +152,22 @@ const Planos = () => {
       toast.error("Erro ao iniciar pagamento. Tente novamente.");
     } finally {
       setLoadingCheckout(null);
+    }
+  };
+
+  // ═══ Handler unificado — roteia para IAP ou Stripe ═══
+  const handleCheckout = async (priceId: string) => {
+    if (useIAP) {
+      // No iOS, mapeia Stripe price ID para RevenueCat product ID
+      const rcMap: Record<string, string> = {
+        [STRIPE_PRICES.premium_mensal]: RC_PRODUCTS.premium_mensal,
+        [STRIPE_PRICES.premium_anual]: RC_PRODUCTS.premium_anual,
+        [STRIPE_PRICES.premium_pro_mensal]: RC_PRODUCTS.premium_pro_mensal,
+        [STRIPE_PRICES.premium_pro_anual]: RC_PRODUCTS.premium_pro_anual,
+      };
+      await handleIAPCheckout(rcMap[priceId] || priceId);
+    } else {
+      await handleStripeCheckout(priceId);
     }
   };
 
@@ -391,6 +460,18 @@ const Planos = () => {
           </p>
         </CardContent>
       </Card>
+
+      {/* Restaurar compras — obrigatório pela Apple */}
+      {useIAP && (
+        <button
+          onClick={handleRestore}
+          disabled={!!loadingCheckout}
+          className="w-full flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
+        >
+          <RotateCcw className="w-3.5 h-3.5" />
+          Restaurar compras anteriores
+        </button>
+      )}
 
       <RegrasModal
         regras={infoModal}
