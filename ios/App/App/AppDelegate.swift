@@ -58,6 +58,8 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 didReceive response: UNNotificationResponse,
                                 withCompletionHandler completionHandler: @escaping () -> Void) {
+        // Encaminhar para o Capacitor para que o listener JS receba o evento
+        NotificationCenter.default.post(name: NSNotification.Name("pushNotificationActionPerformed"), object: response)
         completionHandler()
     }
 }

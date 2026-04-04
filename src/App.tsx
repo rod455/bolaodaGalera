@@ -80,8 +80,12 @@ const BackButtonHandler = () => {
   return null;
 };
 
+const isNativePlatform = (): boolean => {
+  try { return Capacitor.isNativePlatform(); } catch { return false; }
+};
+
 const App = () => {
-  const isNative = Capacitor.isNativePlatform();
+  const isNative = isNativePlatform();
   const [showSplash, setShowSplash] = useState(isNative);
   const handleSplashFinish = useCallback(() => setShowSplash(false), []);
 

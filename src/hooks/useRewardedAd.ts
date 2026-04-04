@@ -144,10 +144,13 @@ export const useRewardedAd = () => {
             });
           };
 
-          const finish = (success: boolean) => {
+          const finish = (fromDismiss: boolean) => {
             if (resolved) return;
             resolved = true;
             cleanup();
+            // Só conta como sucesso se o usuário assistiu o ad completo (reward recebido)
+            // ou se houve falha no carregamento/exibição (não bloquear o usuário)
+            const success = fromDismiss ? userRewarded : true;
             if (tipo === "palpite" && success) markPalpiteAdWatched();
             // Marcar para re-preload na próxima vez
             adPreloaded = false;
@@ -156,9 +159,9 @@ export const useRewardedAd = () => {
             resolve(success);
           };
 
-          // Timeout de segurança (60s)
+          // Timeout de segurança (60s) — permite prosseguir
           const timeout = setTimeout(() => {
-            finish(true);
+            finish(false);
           }, 60000);
 
           try {
@@ -170,19 +173,19 @@ export const useRewardedAd = () => {
 
             const l2 = await AdMob.addListener(REWARD_EVENTS.Dismissed, () => {
               clearTimeout(timeout);
-              finish(true);
+              finish(true); // fromDismiss=true: checa userRewarded
             });
             listeners.push(l2);
 
             const l3 = await AdMob.addListener(REWARD_EVENTS.FailedToLoad, () => {
               clearTimeout(timeout);
-              finish(true);
+              finish(false); // falha: não bloquear o usuário
             });
             listeners.push(l3);
 
             const l4 = await AdMob.addListener(REWARD_EVENTS.FailedToShow, () => {
               clearTimeout(timeout);
-              finish(true);
+              finish(false); // falha: não bloquear o usuário
             });
             listeners.push(l4);
 
@@ -199,7 +202,7 @@ export const useRewardedAd = () => {
 
           } catch {
             clearTimeout(timeout);
-            finish(true);
+            finish(false); // falha: não bloquear o usuário
           }
         });
       } catch {
