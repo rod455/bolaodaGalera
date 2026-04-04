@@ -85,6 +85,7 @@ export default function FeedbackBanner({ className }: Props) {
         body: {
           tipo: "sugestao",
           mensagem: `[Rating: ${rating}/5] ${feedback.trim()}`,
+          nome: user?.user_metadata?.nome || user?.email?.split("@")[0] || "Usuário",
           userId: user?.id,
           email: user?.email,
         },
