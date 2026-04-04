@@ -35,7 +35,7 @@ const PRODUCT_PLAN_MAP: Record<string, string> = {
 };
 
 // RevenueCat API keys
-const RC_IOS_KEY = "appl_uWPkPVhceHXoYgjSeDZIFjcQMCE"; // Apple iOS key
+const RC_IOS_KEY = "appl_ppRBdwGfPksxShHzurIajclLNtJ"; // Apple iOS key (trocar test_ por appl_ em produção)
 const RC_ANDROID_KEY = ""; // Android key (usa Stripe direto no Android)
 
 let rcInitialized = false;
