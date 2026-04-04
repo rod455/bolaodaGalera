@@ -30,9 +30,20 @@ const isFullSync = process.argv.includes('--full');
 async function fdFetch(endpoint, retries = 0) {
   const MAX_RETRIES = 3;
   const url = `https://api.football-data.org/v4${endpoint}`;
-  const res = await fetch(url, {
-    headers: { 'X-Auth-Token': FOOTBALL_DATA_TOKEN }
-  });
+  let res;
+  try {
+    res = await fetch(url, {
+      headers: { 'X-Auth-Token': FOOTBALL_DATA_TOKEN }
+    });
+  } catch (err) {
+    console.log(`  Erro de rede ao acessar football-data.org: ${err.message}`);
+    if (retries < MAX_RETRIES) {
+      console.log(`  Tentando novamente em 10s... (tentativa ${retries + 1}/${MAX_RETRIES})`);
+      await new Promise(r => setTimeout(r, 10000));
+      return fdFetch(endpoint, retries + 1);
+    }
+    return null;
+  }
   if (res.status === 429) {
     if (retries >= MAX_RETRIES) {
       console.log(`  Rate limit: maximo de ${MAX_RETRIES} tentativas atingido.`);
@@ -106,7 +117,8 @@ async function syncLive() {
     .or('status.eq.ao_vivo,status.eq.agendado,and(status.eq.encerrado,placar_time_a.is.null)');
 
   if (error) {
-    console.log('Erro Supabase:', error.message);
+    console.log('Erro Supabase ao buscar jogos:', error.message);
+    console.log('Detalhes:', JSON.stringify(error, null, 2));
     process.exit(1);
   }
 
@@ -294,5 +306,6 @@ async function main() {
 
 main().catch(err => {
   console.error('Erro fatal:', err.message);
+  console.error('Stack:', err.stack);
   process.exit(1);
 });
