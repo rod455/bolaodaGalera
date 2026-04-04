@@ -177,7 +177,7 @@ const QuickBolaoStep = ({
         .insert({
           nome: bolaoName.trim(),
           campeonato_id: selectedChamp,
-          modo: selectedMode,
+          modo_pontuacao: selectedMode,
           criador_id: user.id,
           codigo_convite: codigo,
           is_publico: false,

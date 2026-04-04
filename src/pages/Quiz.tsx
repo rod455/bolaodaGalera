@@ -765,11 +765,14 @@ const Quiz = () => {
             <div ref={resultRef} className="w-full max-w-[400px] flex flex-col items-center">
 
               {/* Chip */}
-              <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-wider mb-8"
+              <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-wider mb-2"
                 style={{ background: "rgba(255,255,255,.07)", border: "1px solid rgba(255,255,255,.12)", color: "rgba(255,255,255,.6)" }}>
                 <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: "#facc15", boxShadow: "0 0 8px rgba(250,204,21,.7)" }} />
                 {userName} descobriu sua seleção
               </div>
+              <p className="text-xs mb-8" style={{ color: "rgba(255,255,255,.4)" }}>
+                Descubra você também em: <span style={{ color: "#facc15" }}>bolaonacopa.com.br/quiz</span>
+              </p>
 
               {/* Bandeira */}
               <span className="block leading-none mb-4" style={{ fontSize: "clamp(90px,24vw,140px)", filter: "drop-shadow(0 0 50px rgba(0,156,59,.55))" }}>
