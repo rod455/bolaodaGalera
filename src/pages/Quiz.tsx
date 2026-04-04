@@ -147,13 +147,10 @@ const Quiz = () => {
   // Compartilha resultado com imagem
   const generateAndShare = useCallback(async (canal: string) => {
     if (!selecao) return;
-    const isAndroid = Capacitor.isNativePlatform() || /Android/i.test(navigator.userAgent);
-    const link = isAndroid
-      ? "https://play.google.com/store/apps/details?id=com.bolaonacopa.app&utm_source=quiz_share&utm_medium=whatsapp&utm_campaign=quiz_viral_copa2026"
-      : "https://www.bolaonacopa.com.br/quiz?start=true";
+    const link = "bolaonacopa.com.br/quiz";
     const femininos = ["Argentina","Alemanha","Australia","Austria","Belgica","Bosnia","Colombia","Croacia","Dinamarca","Escocia","Espanha","Franca","Holanda","Inglaterra","Jamaica","Noruega","Suecia","Suica","Tunisia","Turquia","Rep. Tcheca","Costa Rica","Costa do Marfim","Nova Zelandia","Arabia Saudita","Coreia do Sul","Africa do Sul"];
     const artigo = femininos.some(f => selecao.nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(f)) ? "da" : "do";
-    const texto = `${selecao.bandeira} Fui convocado para jogar pela Sele\u00e7\u00e3o ${artigo} ${selecao.nome}! Qual sele\u00e7\u00e3o te convocaria? Descubra em:\n👉 ${link}`;
+    const texto = `${selecao.bandeira} Fui convocado para jogar pela Sele\u00e7\u00e3o ${artigo} ${selecao.nome}! Qual sele\u00e7\u00e3o te convocaria?\n\nDescubra em: ${link}`;
 
     trackEvent("quiz_share", { quiz_id: "quiz_selecao", resultado: selecao.id, canal });
 
@@ -768,11 +765,14 @@ const Quiz = () => {
             <div ref={resultRef} className="w-full max-w-[400px] flex flex-col items-center">
 
               {/* Chip */}
-              <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-wider mb-8"
+              <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-wider mb-2"
                 style={{ background: "rgba(255,255,255,.07)", border: "1px solid rgba(255,255,255,.12)", color: "rgba(255,255,255,.6)" }}>
                 <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: "#facc15", boxShadow: "0 0 8px rgba(250,204,21,.7)" }} />
                 {userName} descobriu sua seleção
               </div>
+              <p className="text-xs mb-8" style={{ color: "rgba(255,255,255,.4)" }}>
+                Descubra você também em: <span style={{ color: "#facc15" }}>bolaonacopa.com.br/quiz</span>
+              </p>
 
               {/* Bandeira */}
               <span className="block leading-none mb-4" style={{ fontSize: "clamp(90px,24vw,140px)", filter: "drop-shadow(0 0 50px rgba(0,156,59,.55))" }}>
