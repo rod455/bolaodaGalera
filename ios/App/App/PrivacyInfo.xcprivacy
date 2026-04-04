@@ -9,6 +9,10 @@
 		<string>googleads.g.doubleclick.net</string>
 		<string>pagead2.googlesyndication.com</string>
 		<string>app-measurement.com</string>
+		<string>analytics.google.com</string>
+		<string>google-analytics.com</string>
+		<string>firebaselogging-pa.googleapis.com</string>
+		<string>googleadservices.com</string>
 	</array>
 	<key>NSPrivacyCollectedDataTypes</key>
 	<array>
