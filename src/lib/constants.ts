@@ -147,6 +147,16 @@ export const FASE_ORDER = [
 
 // ── URLs com UTM para convites ──
 export const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.bolaonacopa.app";
+export const APP_STORE_URL = "https://apps.apple.com/app/bolao-na-copa/id6761629695";
+
+// Retorna a URL da loja correta baseado na plataforma
+export function getStoreUrl(): string {
+  try {
+    const { Capacitor } = require("@capacitor/core");
+    if (Capacitor.getPlatform() === "ios") return APP_STORE_URL;
+  } catch {}
+  return PLAY_STORE_URL;
+}
 const BASE_URL = "https://www.bolaonacopa.com.br";
 
 export function getInviteUrl(bolaoId: string, codigoConvite: string, medium: "whatsapp" | "share" | "copy" = "share"): string {

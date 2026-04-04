@@ -4,7 +4,8 @@ import { Capacitor } from "@capacitor/core";
 import { trackEvent } from "@/lib/analytics";
 
 const DISMISSED_KEY = "install_banner_dismissed";
-const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.bolaonacopa.app";
+import { getStoreUrl } from "@/lib/constants";
+const PLAY_STORE_URL = getStoreUrl();
 
 const InstallAppBanner = () => {
   const [show, setShow] = useState(false);

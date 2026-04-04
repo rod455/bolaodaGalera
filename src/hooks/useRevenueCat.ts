@@ -146,11 +146,18 @@ export const useRevenueCat = () => {
       setCustomerInfo(info as RCCustomerInfo);
       return true;
     } catch (err: any) {
-      if (err?.code === "1" || err?.message?.includes("cancelled")) {
+      const cancelled =
+        err?.code === "1" ||
+        err?.code === "PurchaseCancelledError" ||
+        err?.userCancelled === true ||
+        err?.message?.includes("cancelled") ||
+        err?.message?.includes("CANCELLED") ||
+        err?.message?.includes("cancel");
+      if (cancelled) {
         // User cancelled — not an error
         return false;
       }
-      console.error("[RevenueCat] Purchase error:", err);
+      console.error("[RevenueCat] Purchase error:", { code: err?.code, message: err?.message });
       return false;
     } finally {
       setPurchasing(false);

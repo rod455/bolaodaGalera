@@ -6,7 +6,8 @@ import { toast } from "sonner";
 import NotificationCenter from "@/components/NotificationCenter";
 import InstallAppBanner from "@/components/InstallAppBanner";
 
-const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.bolaonacopa.app";
+import { getStoreUrl } from "@/lib/constants";
+const PLAY_STORE_URL = getStoreUrl();
 
 const LOGO_URL = "https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/604913%20(512%20x%20512%20px).png";
 

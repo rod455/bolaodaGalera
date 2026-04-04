@@ -8,7 +8,8 @@ import { trackEvent } from "@/lib/analytics";
 
 const FEEDBACK_DONE_KEY = "feedback_done";
 const FEEDBACK_TRIGGER_KEY = "feedback_trigger";
-const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.bolaonacopa.app";
+import { getStoreUrl } from "@/lib/constants";
+const PLAY_STORE_URL = getStoreUrl();
 
 /**
  * Marca que o feedback deve ser solicitado na próxima visita à Home.
