@@ -49,7 +49,7 @@ workflows:
         script: |
           cd ios/App
           agvtool new-marketing-version 1.5.0
-          agvtool new-version -all 29
+          agvtool new-version -all 30
 
       - name: Build IPA
         script: |
