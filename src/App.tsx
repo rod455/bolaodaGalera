@@ -102,7 +102,20 @@ const App = () => {
     initUTMTracker();
     // App Open Ad — mostra ao iniciar o app (apenas nativo, free users)
     if (isNative) {
-      setTimeout(() => showAppOpenAd(), 2000);
+      setTimeout(async () => {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user) {
+            const { data } = await supabase.from("profiles").select("plano").eq("id", session.user.id).single();
+            const plano = (data as any)?.plano || "free";
+            showAppOpenAd(plano === "premium" || plano === "premium_pro");
+          } else {
+            showAppOpenAd(false);
+          }
+        } catch {
+          showAppOpenAd(false);
+        }
+      }, 2000);
     }
   }, [isNative]);
 

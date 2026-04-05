@@ -171,7 +171,6 @@ export const useRewardedAd = () => {
             // Só conta como sucesso se o usuário assistiu o ad completo (reward recebido)
             // ou se houve falha no carregamento/exibição (não bloquear o usuário)
             const success = fromDismiss ? userRewarded : true;
-            if (tipo === "palpite" && success) markPalpiteAdWatched();
             // Marcar para re-preload na próxima vez
             adPreloaded = false;
             // Pré-carregar o próximo ad em background
@@ -229,7 +228,7 @@ export const useRewardedAd = () => {
         return true;
       }
     },
-    [markPalpiteAdWatched]
+    []
   );
 
   /**
@@ -340,8 +339,9 @@ export const useRewardedAd = () => {
 };
 
 // ═══ App Open Ad — chamar no App.tsx ao iniciar ═══
-export async function showAppOpenAd(): Promise<void> {
+export async function showAppOpenAd(isPremium?: boolean): Promise<void> {
   if (!isRunningInNativeApp()) return;
+  if (isPremium) return;
 
   const AdMob = getAdMobPlugin();
   if (!AdMob) return;
