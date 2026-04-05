@@ -58,13 +58,13 @@ const Quiz = () => {
   // Track start quando vem da LP
   useEffect(() => {
     if (startDirect) {
-      trackEvent("quiz_start", { quiz_id: "quiz_selecao", source: "lp" });
+      trackEvent("quiz_selecao_start", { source: "lp" });
       window.scrollTo({ top: 0 });
     }
   }, [startDirect]);
 
   const handleStart = () => {
-    trackEvent("quiz_start", { quiz_id: "quiz_selecao" });
+    trackEvent("quiz_selecao_start", {});
     setStep("pergunta");
     setPerguntaIdx(0);
     setRespostas([]);
@@ -95,7 +95,7 @@ const Quiz = () => {
       setSelecao(s);
       setCompatPct(calcularCompatibilidade(p, s));
 
-      trackEvent("quiz_complete", { quiz_id: "quiz_selecao", resultado: s.id });
+      trackEvent("quiz_selecao_complete", { resultado: s.id });
 
       setTimeout(() => {
         if (isPremium) {
@@ -114,7 +114,7 @@ const Quiz = () => {
 
   const handleAdGate = async () => {
     if (needsAd) {
-      trackEvent("quiz_ad_shown", { quiz_id: "quiz_selecao" });
+      trackEvent("quiz_selecao_ad_shown", {});
       const adResult = await showAd("quiz");
       if (!adResult) return;
     }
@@ -150,7 +150,7 @@ const Quiz = () => {
     const artigo = femininos.some(f => selecao.nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(f)) ? "da" : "do";
     const texto = `${selecao.bandeira} Fui convocado para jogar pela Sele\u00e7\u00e3o ${artigo} ${selecao.nome}! Qual sele\u00e7\u00e3o te convocaria?\n\nDescubra em: ${link}`;
 
-    trackEvent("quiz_share", { quiz_id: "quiz_selecao", resultado: selecao.id, canal });
+    trackEvent("quiz_selecao_share", { resultado: selecao.id, canal });
 
     setSharing(true);
     const imageFile = await generateImage();
