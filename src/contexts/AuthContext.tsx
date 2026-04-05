@@ -44,6 +44,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           const origem = Capacitor.isNativePlatform() ? Capacitor.getPlatform() : "web";
           supabase.auth.updateUser({ data: { origem } }).catch(() => {});
         }
+
+        // Processar referral pendente (salvo no localStorage antes do OAuth redirect)
+        if (event === "SIGNED_IN" && session?.user) {
+          const pendingRef = localStorage.getItem("pending_referral");
+          if (pendingRef) {
+            localStorage.removeItem("pending_referral");
+            supabase.rpc("processar_referral", {
+              p_referred_id: session.user.id,
+              p_referral_code: pendingRef,
+            }).catch(() => {});
+          }
+        }
       }
     );
 

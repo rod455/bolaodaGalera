@@ -81,12 +81,24 @@ const Auth = () => {
 
   // Detectar fluxo de recuperação de senha
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "PASSWORD_RECOVERY") {
         setIsResettingPassword(true);
       }
+      // Processar referral pendente após OAuth redirect (Google/Apple)
+      if (event === "SIGNED_IN" && session?.user) {
+        const pendingRef = localStorage.getItem("pending_referral");
+        if (pendingRef) {
+          localStorage.removeItem("pending_referral");
+          try {
+            await supabase.rpc("processar_referral", {
+              p_referred_id: session.user.id,
+              p_referral_code: pendingRef,
+            });
+          } catch {}
+        }
+      }
     });
-    // Também detectar via query param
     if (searchParams.get("modo") === "reset") {
       setIsResettingPassword(true);
     }
@@ -123,6 +135,13 @@ const Auth = () => {
 
   const bolaoRedirect = searchParams.get("bolao");
   const refCode = searchParams.get("ref");
+
+  // Salvar refCode no localStorage para não perder durante OAuth redirect
+  useEffect(() => {
+    if (refCode) {
+      localStorage.setItem("pending_referral", refCode);
+    }
+  }, [refCode]);
 
   // If already logged in AND not resetting password, redirect
   if (!loading && session && !isResettingPassword) {
