@@ -1434,6 +1434,9 @@ const BolaoPage = () => {
             </div>
           )}
 
+          {/* Banner Ad entre seções */}
+          <AdBanner />
+
           {/* Próximos jogos (outros dias) */}
           {jogosRestantes.length > 0 && (
             <div>
@@ -1914,8 +1917,6 @@ const ExpandableJogoRow = ({
           )}
         </div>
       )}
-      {/* Banner Ad */}
-      <AdBanner />
     </div>
   );
 };

@@ -508,6 +508,9 @@ const CriarBolao = () => {
         </Card>
       )}
 
+      {/* Banner Ad entre seções */}
+      <AdBanner />
+
       {/* 3. Campeonato por Categoria */}
       <Card id="section-campeonato" className="rounded-2xl shadow-sm">
         <CardHeader className="pb-3">
@@ -769,7 +772,6 @@ const CriarBolao = () => {
           </DialogContent>
         </Dialog>
       )}
-      <AdBanner />
     </div>
   );
 };

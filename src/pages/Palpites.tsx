@@ -705,6 +705,9 @@ const Palpites = () => {
         </div>
       </>)}
 
+      {/* Banner Ad entre seções */}
+      <AdBanner />
+
       {jogosFechados.length > 0 && (<>
         <div className="flex items-center gap-2">
           <Lock className="w-3.5 h-3.5 text-gray-400" />
@@ -758,7 +761,6 @@ const Palpites = () => {
           </CardContent>
         </Card>
       )}
-      <AdBanner />
     </div>
   );
 };

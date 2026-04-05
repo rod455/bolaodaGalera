@@ -138,7 +138,7 @@ export const useRewardedAd = () => {
 
   const shouldShowPalpiteAd = useCallback((): boolean => {
     const count = getPalpiteCount();
-    return count > 0 && count % 5 === 0; // a cada 5 palpites
+    return count === 1 || (count > 1 && count % 5 === 0); // 1º palpite + a cada 5
   }, [getPalpiteCount]);
 
   /**
@@ -346,9 +346,10 @@ export async function showAppOpenAd(isPremium?: boolean): Promise<void> {
 
   try {
     await ensureAdMobReady();
-    await AdMob.prepareInterstitial({ adId: APP_OPEN_ID, isTesting: false });
+    // Usar interstitial regular — o plugin não suporta App Open Ads nativamente
+    await AdMob.prepareInterstitial({ adId: INTERSTITIAL_ID, isTesting: false });
     await AdMob.showInterstitial();
   } catch {
-    // App Open ad failed — continue normally
+    // Ad failed — continue normally
   }
 }

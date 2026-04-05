@@ -765,6 +765,9 @@ const Home = () => {
         </>
       )}
 
+      {/* Banner Ad entre seções */}
+      <AdBanner />
+
       <div className="flex items-center gap-3">
         <div className="flex-1 h-px bg-border" />
         <span className="text-xs text-muted-foreground font-medium px-2">BOLÕES NACIONAIS</span>
@@ -850,9 +853,6 @@ const Home = () => {
       )}
 
       <RegrasModal regras={regrasModal ? MODO_REGRAS[regrasModal] || null : null} open={!!regrasModal} onClose={() => setRegrasModal(null)} />
-
-      {/* ═══ Banner Ad ═══ */}
-      <AdBanner />
 
       {/* ═══ GUEST: Sticky CTA bar no bottom ═══ */}
       {!user && (

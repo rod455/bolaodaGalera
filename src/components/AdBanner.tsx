@@ -1,64 +1,72 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { useUserPlan } from "@/hooks/useUserPlan";
 
 const BANNER_ID = "ca-app-pub-9316035916536420/8926482067";
 
-interface AdBannerProps {
-  position?: "top" | "bottom";
-}
-
 /**
- * Banner ad fixo (320x50) para usuários free no app nativo.
- * Não renderiza nada na web ou para premium.
+ * Banner ad inline entre seções.
+ * No app nativo: mostra banner AdMob via plugin.
+ * Na web/premium: não renderiza nada.
+ *
+ * Usar entre seções da página, ex:
+ *   <Section1 />
+ *   <AdBanner />
+ *   <Section2 />
  */
-const AdBanner = ({ position = "bottom" }: AdBannerProps) => {
+const AdBanner = () => {
   const { plano } = useUserPlan();
   const isPremium = plano === "premium" || plano === "premium_pro";
   const isNative = Capacitor.isNativePlatform();
-  const shown = useRef(false);
+  const [adLoaded, setAdLoaded] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const loadedRef = useRef(false);
 
   useEffect(() => {
-    if (isPremium || !isNative || shown.current) return;
+    if (isPremium || !isNative || loadedRef.current) return;
+    loadedRef.current = true;
 
-    const showBanner = async () => {
+    const loadAd = async () => {
       try {
         const AdMob = getAdMobPlugin();
         if (!AdMob) return;
 
         await ensureAdMobReady();
+
+        // Usar prepareAdBanner + showBanner para banner inline
+        // O banner vai ser posicionado no topo — o espaçador garante que não sobreponha
         await AdMob.showBanner({
           adId: BANNER_ID,
-          adSize: "ADAPTIVE_BANNER",
-          position: position === "top" ? "TOP_CENTER" : "BOTTOM_CENTER",
+          adSize: "BANNER",
+          position: "TOP_CENTER",
           margin: 0,
           isTesting: false,
         });
-        shown.current = true;
+        setAdLoaded(true);
       } catch {
-        // Banner failed silently
+        // Banner failed
       }
     };
 
-    showBanner();
+    loadAd();
 
     return () => {
-      // Esconder banner ao desmontar
       try {
         const AdMob = getAdMobPlugin();
-        if (AdMob && shown.current) {
-          AdMob.hideBanner().catch(() => {});
-          shown.current = false;
-        }
+        if (AdMob) AdMob.hideBanner().catch(() => {});
+        loadedRef.current = false;
       } catch {}
     };
-  }, [isPremium, isNative, position]);
+  }, [isPremium, isNative]);
 
-  // Não renderiza HTML — o banner é gerenciado pelo plugin nativo
-  return null;
+  // Não renderiza nada na web ou para premium
+  if (!isNative || isPremium) return null;
+
+  // Reservar espaço para o banner nativo (50px = altura do banner padrão)
+  return adLoaded ? <div ref={containerRef} style={{ height: 50, width: "100%" }} /> : null;
 };
 
-// Helpers copiados do useRewardedAd para evitar dependência circular
+// Helpers
 let _adMobInit = false;
 function getAdMobPlugin(): any | null {
   try {
