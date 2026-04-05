@@ -6,35 +6,25 @@ const BANNER_ID = "ca-app-pub-9316035916536420/8926482067";
 
 /**
  * Banner ad inline entre seções.
- * No app nativo: mostra banner AdMob via plugin.
+ * No app nativo (free): mostra banner AdMob via plugin.
  * Na web/premium: não renderiza nada.
- *
- * Usar entre seções da página, ex:
- *   <Section1 />
- *   <AdBanner />
- *   <Section2 />
  */
 const AdBanner = () => {
   const { plano } = useUserPlan();
   const isPremium = plano === "premium" || plano === "premium_pro";
   const isNative = Capacitor.isNativePlatform();
-  const [adLoaded, setAdLoaded] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const loadedRef = useRef(false);
+  const [adVisible, setAdVisible] = useState(false);
+  const attemptedRef = useRef(false);
 
   useEffect(() => {
-    if (isPremium || !isNative || loadedRef.current) return;
-    loadedRef.current = true;
+    if (isPremium || !isNative || attemptedRef.current) return;
+    attemptedRef.current = true;
 
-    const loadAd = async () => {
+    const showAd = async () => {
       try {
         const AdMob = getAdMobPlugin();
         if (!AdMob) return;
-
         await ensureAdMobReady();
-
-        // Usar prepareAdBanner + showBanner para banner inline
-        // O banner vai ser posicionado no topo — o espaçador garante que não sobreponha
         await AdMob.showBanner({
           adId: BANNER_ID,
           adSize: "BANNER",
@@ -42,28 +32,33 @@ const AdBanner = () => {
           margin: 0,
           isTesting: false,
         });
-        setAdLoaded(true);
+        setAdVisible(true);
       } catch {
-        // Banner failed
+        // Ad failed — don't show spacer
       }
     };
 
-    loadAd();
+    showAd();
 
     return () => {
       try {
         const AdMob = getAdMobPlugin();
-        if (AdMob) AdMob.hideBanner().catch(() => {});
-        loadedRef.current = false;
+        if (AdMob && adVisible) {
+          AdMob.hideBanner().catch(() => {});
+        }
       } catch {}
+      attemptedRef.current = false;
     };
   }, [isPremium, isNative]);
 
-  // Não renderiza nada na web ou para premium
   if (!isNative || isPremium) return null;
 
-  // Reservar espaço para o banner nativo (50px = altura do banner padrão)
-  return adLoaded ? <div ref={containerRef} style={{ height: 50, width: "100%" }} /> : null;
+  // Espaçador para o banner nativo (60px)
+  return adVisible ? (
+    <div className="w-full flex items-center justify-center" style={{ minHeight: 60 }}>
+      <span className="text-[9px] text-muted-foreground/30 uppercase tracking-widest">Publicidade</span>
+    </div>
+  ) : null;
 };
 
 // Helpers
