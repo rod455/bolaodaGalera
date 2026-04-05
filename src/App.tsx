@@ -100,22 +100,27 @@ const App = () => {
   useEffect(() => {
     initGoogleAuth();
     initUTMTracker();
-    // App Open Ad — mostra ao iniciar o app (apenas nativo, free users)
+    // App Open Ad — mostra a partir da 2ª abertura do app (apenas nativo, free users)
     if (isNative) {
-      setTimeout(async () => {
-        try {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (session?.user) {
-            const { data } = await supabase.from("profiles").select("plano").eq("id", session.user.id).single();
-            const plano = (data as any)?.plano || "free";
-            showAppOpenAd(plano === "premium" || plano === "premium_pro");
-          } else {
+      const appOpenCount = parseInt(localStorage.getItem("app_open_count") || "0", 10);
+      localStorage.setItem("app_open_count", String(appOpenCount + 1));
+
+      if (appOpenCount >= 1) {
+        setTimeout(async () => {
+          try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+              const { data } = await supabase.from("profiles").select("plano").eq("id", session.user.id).single();
+              const plano = (data as any)?.plano || "free";
+              showAppOpenAd(plano === "premium" || plano === "premium_pro");
+            } else {
+              showAppOpenAd(false);
+            }
+          } catch {
             showAppOpenAd(false);
           }
-        } catch {
-          showAppOpenAd(false);
-        }
-      }, 2000);
+        }, 2000);
+      }
     }
   }, [isNative]);
 
