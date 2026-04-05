@@ -16,6 +16,7 @@ import RegrasModal from "@/components/RegrasModal";
 import type { RegraInfo } from "@/lib/types";
 import { MODO_REGRAS, MODOS_PONTUACAO } from "@/lib/constants";
 import SEOHead from "@/components/SEOHead";
+import AdBanner from "@/components/AdBanner";
 import { useGamification } from "@/hooks/useGamification";
 import XPToast from "@/components/XPToast";
 import { trackEvent } from "@/lib/analytics";
@@ -771,6 +772,7 @@ const CriarBolao = () => {
           </DialogContent>
         </Dialog>
       )}
+      <AdBanner />
     </div>
   );
 };

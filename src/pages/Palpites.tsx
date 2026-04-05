@@ -20,6 +20,7 @@ import type { Jogo, Palpite } from "@/lib/types";
 import { FASE_ORDER } from "@/lib/constants";
 import { traduzirFase, formatDataJogo, rodadaNum } from "@/lib/formatters";
 import SEOHead from "@/components/SEOHead";
+import AdBanner from "@/components/AdBanner";
 import { useGamification } from "@/hooks/useGamification";
 import XPToast from "@/components/XPToast";
 import { trackEvent } from "@/lib/analytics";
@@ -760,6 +761,7 @@ const Palpites = () => {
           </CardContent>
         </Card>
       )}
+      <AdBanner />
     </div>
   );
 };

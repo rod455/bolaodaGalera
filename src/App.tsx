@@ -29,6 +29,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { initGoogleAuth } from "@/lib/googleAuth";
 import { initUTMTracker } from "@/lib/utm-tracker";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
+import { showAppOpenAd } from "@/hooks/useRewardedAd";
 
 const queryClient = new QueryClient();
 
@@ -99,7 +100,11 @@ const App = () => {
   useEffect(() => {
     initGoogleAuth();
     initUTMTracker();
-  }, []);
+    // App Open Ad — mostra ao iniciar o app (apenas nativo, free users)
+    if (isNative) {
+      setTimeout(() => showAppOpenAd(), 2000);
+    }
+  }, [isNative]);
 
   // Deep Link: capturar OAuth callback no app nativo
   useEffect(() => {
