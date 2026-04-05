@@ -11,7 +11,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useUserPlan } from "@/hooks/useUserPlan";
 import { useRewardedAd } from "@/hooks/useRewardedAd";
-import AdRewardModal from "@/components/AdRewardModal";
 import type { Bolao } from "@/lib/types";
 import { FALLBACK_IMAGES, FREE_MAX_PRIVADOS, FREE_MAX_PARTICIPANTES, PREMIUM_MAX_PARTICIPANTES } from "@/lib/constants";
 import SEOHead from "@/components/SEOHead";
@@ -27,8 +26,7 @@ const EntrarBolao = () => {
   const [joining, setJoining] = useState<string | null>(null);
   const [buscando, setBuscando] = useState(false);
   const { plano: userPlano } = useUserPlan();
-  const { showAd, resolveWebAd, needsAd } = useRewardedAd();
-  const [showAdModal, setShowAdModal] = useState(false);
+  const { showAd, needsAd } = useRewardedAd();
 
   const checkPrivateLimit = async (): Promise<boolean> => {
     if (userPlano !== "free" && userPlano) return true;
@@ -429,7 +427,6 @@ const EntrarBolao = () => {
         )}
       </div>
 
-      <AdRewardModal open={showAdModal} onComplete={resolveWebAd} message="Assista para entrar no bolão" />
     </div>
   );
 };

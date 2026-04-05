@@ -15,7 +15,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import RegrasModal from "@/components/RegrasModal";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import AdRewardModal from "@/components/AdRewardModal";
 import { useRewardedAd } from "@/hooks/useRewardedAd";
 import { useUserPlan } from "@/hooks/useUserPlan";
 import DynamicBanner from "@/components/DynamicBanner";
@@ -286,9 +285,9 @@ const Home = () => {
   const [showCodeInput, setShowCodeInput] = useState(false);
   const [codigoInput, setCodigoInput] = useState("");
   const [joiningByCode, setJoiningByCode] = useState(false);
-  const { showAd, resolveWebAd, needsAd } = useRewardedAd();
+  const { showAd, needsAd } = useRewardedAd();
   const { plano: userPlano } = useUserPlan();
-  const [showAdModal, setShowAdModal] = useState(false);
+
   const [regrasModal, setRegrasModal] = useState<string | null>(null);
   const [userEstado, setUserEstado] = useState<string | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -612,7 +611,7 @@ const Home = () => {
         path="/home"
         keywords="bolão na copa, bolão da copa, bolão de futebol grátis, palpites futebol, bolão brasileirão 2026, bolão copa do mundo 2026, bolão entre amigos"
       />
-      <AdRewardModal open={showAdModal} onComplete={resolveWebAd} message="Assista para entrar no bolão" />
+
 
 
       {/* ═══ GUEST: Countdown ═══ */}

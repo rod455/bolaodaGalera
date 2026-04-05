@@ -333,9 +333,7 @@ export const useRewardedAd = () => {
     [isPremium, isNative, incrementPalpiteCount, shouldShowPalpiteAd, showNativeRewardedAd, showNativeInterstitialAd]
   );
 
-  const resolveWebAd = useCallback((_watched: boolean) => {}, []);
-
-  return { showAd, adLoading, isPremium, needsAd: !isPremium && isNative, resolveWebAd };
+  return { showAd, adLoading, isPremium, needsAd: !isPremium && isNative };
 };
 
 // ═══ App Open Ad — chamar no App.tsx ao iniciar ═══

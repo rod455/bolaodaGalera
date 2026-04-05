@@ -7,7 +7,6 @@ import html2canvas from "html2canvas";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserPlan } from "@/hooks/useUserPlan";
 import { useRewardedAd } from "@/hooks/useRewardedAd";
-import AdRewardModal from "@/components/AdRewardModal";
 import AdLoadingOverlay from "@/components/AdLoadingOverlay";
 import SEOHead from "@/components/SEOHead";
 import { trackEvent } from "@/lib/analytics";
@@ -39,7 +38,7 @@ const Quiz = () => {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { plano } = useUserPlan();
-  const { showAd, adLoading, resolveWebAd, needsAd } = useRewardedAd();
+  const { showAd, adLoading, needsAd } = useRewardedAd();
 
   // ?start=true vai direto para a primeira pergunta (vindo da LP)
   const startDirect = searchParams.get("start") === "true";
@@ -51,7 +50,6 @@ const Quiz = () => {
   const [compatPct, setCompatPct] = useState(0);
   const [animBars, setAnimBars] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [showAdModal, setShowAdModal] = useState(false);
   const resultRef = useRef<HTMLDivElement>(null);
 
   // Premium/Pro pula o ad
@@ -710,7 +708,6 @@ const Quiz = () => {
     return (
       <div className="animate-fade-in -mx-4 -mt-6 flex flex-col items-center justify-center text-center space-y-6" style={{ background: "#071410", color: "#fff", minHeight: "100vh", padding: "48px 20px" }}>
         <SEOHead title="Sua seleção está pronta!" noindex />
-        <AdRewardModal open={showAdModal} onComplete={resolveWebAd} message="Assista para ver seu resultado" />
         {adLoading && <AdLoadingOverlay />}
 
         <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: "rgba(250,204,21,.1)", border: "2px solid rgba(250,204,21,.28)" }}>

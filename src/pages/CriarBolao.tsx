@@ -11,7 +11,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserPlan } from "@/hooks/useUserPlan";
 import { useRewardedAd } from "@/hooks/useRewardedAd";
-import AdRewardModal from "@/components/AdRewardModal";
 import RegrasModal from "@/components/RegrasModal";
 import type { RegraInfo } from "@/lib/types";
 import { MODO_REGRAS, MODOS_PONTUACAO } from "@/lib/constants";
@@ -96,8 +95,7 @@ const CriarBolao = () => {
   const [xpToast, setXPToast] = useState<{xp: number, msg: string} | null>(null);
 
   const { plano: userPlano } = useUserPlan();
-  const { showAd, adLoading, resolveWebAd, needsAd } = useRewardedAd();
-  const [showAdModal, setShowAdModal] = useState(false);
+  const { showAd, adLoading, needsAd } = useRewardedAd();
   const [adCallback, setAdCallback] = useState<(() => void) | null>(null);
 
   useEffect(() => { loadCampeonatos(); }, []);
@@ -662,7 +660,6 @@ const CriarBolao = () => {
       <RegrasModal regras={infoModal} open={!!infoModal} onClose={() => setInfoModal(null)} />
 
       {/* Ad Reward Modal */}
-      <AdRewardModal open={showAdModal} onComplete={resolveWebAd} message="Assista para criar seu bolão" />
 
       {/* Modal: Configurar Regras */}
       {modoRegras && (
