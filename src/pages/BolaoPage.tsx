@@ -1290,6 +1290,9 @@ const BolaoPage = () => {
         />
       )}
 
+      {/* Banner Ad entre ranking e palpites */}
+      <AdBanner />
+
       {/* ═══ 2. PALPITES ou MATA A MATA ═══ */}
       {bolao?.modo_pontuacao === "mata_mata" ? (
         <MataMataDashboard bolaoId={id!} campeonatoId={bolao.campeonato_id} />
@@ -1433,9 +1436,6 @@ const BolaoPage = () => {
               </div>
             </div>
           )}
-
-          {/* Banner Ad entre seções */}
-          <AdBanner />
 
           {/* Próximos jogos (outros dias) */}
           {jogosRestantes.length > 0 && (

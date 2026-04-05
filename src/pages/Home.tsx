@@ -623,6 +623,9 @@ const Home = () => {
       {/* ═══ BANNERS DINÂMICOS — carrossel ═══ */}
       <DynamicBanner userBolaoIds={userBolaoIds} userContext={userBannerCtx} />
 
+      {/* ═══ Banner Ad — entre carrossel e conteúdo ═══ */}
+      <AdBanner />
+
       {/* ═══ GUEST: Google Login ═══ */}
       {!user && !/FBAN|FBAV|Instagram|Line|TikTok|Snapchat/i.test(navigator.userAgent) && (
         <button
@@ -764,9 +767,6 @@ const Home = () => {
       </div>
         </>
       )}
-
-      {/* Banner Ad entre seções */}
-      <AdBanner />
 
       <div className="flex items-center gap-3">
         <div className="flex-1 h-px bg-border" />
