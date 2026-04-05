@@ -10,6 +10,7 @@ const getToday = () => new Date().toISOString().split("T")[0];
 // ═══ Ad Unit IDs ═══
 const REWARDED_ID = "ca-app-pub-9316035916536420/8143495428";
 const INTERSTITIAL_ID = "ca-app-pub-9316035916536420/1822017661";
+const REWARDED_INTERSTITIAL_ID = "ca-app-pub-9316035916536420/4753813043";
 const BANNER_ID = "ca-app-pub-9316035916536420/8926482067";
 const APP_OPEN_ID = "ca-app-pub-9316035916536420/3674155380";
 
@@ -346,9 +347,9 @@ export async function showAppOpenAd(isPremium?: boolean): Promise<void> {
 
   try {
     await ensureAdMobReady();
-    // Usar interstitial regular — o plugin não suporta App Open Ads nativamente
-    await AdMob.prepareInterstitial({ adId: INTERSTITIAL_ID, isTesting: false });
-    await AdMob.showInterstitial();
+    // Rewarded Interstitial — mais curto que interstitial normal, com X para fechar
+    await AdMob.prepareRewardInterstitialAd({ adId: REWARDED_INTERSTITIAL_ID, isTesting: false });
+    await AdMob.showRewardInterstitialAd();
   } catch {
     // Ad failed — continue normally
   }
