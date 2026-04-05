@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { useUserPlan } from "@/hooks/useUserPlan";
 import { useRewardedAd } from "@/hooks/useRewardedAd";
 import type { Bolao } from "@/lib/types";
-import { FALLBACK_IMAGES, FREE_MAX_PRIVADOS, FREE_MAX_PARTICIPANTES, PREMIUM_MAX_PARTICIPANTES } from "@/lib/constants";
+import { FALLBACK_IMAGES, FREE_MAX_PRIVADOS, FREE_MAX_PARTICIPANTES, PREMIUM_MAX_PARTICIPANTES, PREMIUM_PRO_MAX_PARTICIPANTES } from "@/lib/constants";
 import SEOHead from "@/components/SEOHead";
 
 const EntrarBolao = () => {
@@ -63,14 +63,17 @@ const EntrarBolao = () => {
       .eq("id", bolaoId)
       .single();
 
-    const hasPremiumMember = (participants || []).some(
-      (p: any) => p.profiles?.plano === "premium" || p.profiles?.plano === "premium_pro"
-    ) || bolaoData?.profiles?.plano === "premium" || bolaoData?.profiles?.plano === "premium_pro";
+    const allPlanos = [
+      ...(participants || []).map((p: any) => p.profiles?.plano),
+      bolaoData?.profiles?.plano,
+    ];
+    const hasProMember = allPlanos.includes("premium_pro");
+    const hasPremiumMember = hasProMember || allPlanos.includes("premium");
 
-    const maxCapacity = hasPremiumMember ? PREMIUM_MAX_PARTICIPANTES : FREE_MAX_PARTICIPANTES;
+    const maxCapacity = hasProMember ? PREMIUM_PRO_MAX_PARTICIPANTES : hasPremiumMember ? PREMIUM_MAX_PARTICIPANTES : FREE_MAX_PARTICIPANTES;
 
     if (currentCount >= maxCapacity) {
-      toast.error(`Este grupo está lotado! Limite de ${maxCapacity} participantes.${!hasPremiumMember ? " Se alguém do grupo fizer upgrade para Premium, o limite sobe para 50!" : " Para grupos acima de 50, entre em contato conosco."}`);
+      toast.error(`Este grupo está lotado! Limite de ${maxCapacity} participantes.${!hasPremiumMember ? " Com Premium o limite sobe para 30, e com Premium PRO para 50!" : !hasProMember ? " Com Premium PRO o limite sobe para 50!" : ""}`);
       return false;
     }
     return true;

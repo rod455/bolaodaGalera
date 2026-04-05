@@ -309,7 +309,7 @@ const Planos = () => {
             </div>
             <div className="flex items-center gap-2.5">
               <Check className="w-4 h-4 text-copa-green-500 flex-shrink-0" />
-              <span className="text-sm">Até 50 participantes por grupo</span>
+              <span className="text-sm">Até 30 participantes por grupo</span>
             </div>
             <div className="flex items-center gap-2.5">
               <Check className="w-4 h-4 text-copa-green-500 flex-shrink-0" />
@@ -390,6 +390,10 @@ const Planos = () => {
             <div className="flex items-center gap-2.5">
               <Check className="w-4 h-4 text-copa-green-500 flex-shrink-0" />
               <span className="text-sm">Todos os benefícios Premium</span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <Check className="w-4 h-4 text-copa-green-500 flex-shrink-0" />
+              <span className="text-sm font-semibold text-copa-green-700">Até 50 participantes por grupo</span>
             </div>
             <div className="flex items-center gap-2.5">
               <Check className="w-4 h-4 text-copa-green-500 flex-shrink-0" />

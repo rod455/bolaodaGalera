@@ -23,7 +23,7 @@ import QuizBannerCarousel from "@/components/QuizBannerCarousel";
 import GuestHeroCarousel from "@/components/GuestHeroCarousel";
 import PromoCardBorder from "@/components/PromoCardBorder";
 import type { Bolao } from "@/lib/types";
-import { MODO_LABELS, MODO_REGRAS, FALLBACK_IMAGES, FREE_MAX_PRIVADOS as CONST_FREE_MAX_PRIVADOS, FREE_MAX_CRIAR as CONST_FREE_MAX_CRIAR, FREE_MAX_PARTICIPANTES, PREMIUM_MAX_PARTICIPANTES } from "@/lib/constants";
+import { MODO_LABELS, MODO_REGRAS, FALLBACK_IMAGES, FREE_MAX_PRIVADOS as CONST_FREE_MAX_PRIVADOS, FREE_MAX_CRIAR as CONST_FREE_MAX_CRIAR, FREE_MAX_PARTICIPANTES, PREMIUM_MAX_PARTICIPANTES, PREMIUM_PRO_MAX_PARTICIPANTES } from "@/lib/constants";
 import { formatDataJogo } from "@/lib/formatters";
 import SEOHead from "@/components/SEOHead";
 import AdBanner from "@/components/AdBanner";
@@ -530,12 +530,15 @@ const Home = () => {
       .select("criador_id, profiles(plano)")
       .eq("id", bolaoId)
       .single();
-    const hasPremiumMember = (participants || []).some(
-      (p: any) => p.profiles?.plano === "premium" || p.profiles?.plano === "premium_pro"
-    ) || bolaoData?.profiles?.plano === "premium" || bolaoData?.profiles?.plano === "premium_pro";
-    const maxCapacity = hasPremiumMember ? PREMIUM_MAX_PARTICIPANTES : FREE_MAX_PARTICIPANTES;
+    const allPlanos = [
+      ...(participants || []).map((p: any) => p.profiles?.plano),
+      bolaoData?.profiles?.plano,
+    ];
+    const hasProMember = allPlanos.includes("premium_pro");
+    const hasPremiumMember = hasProMember || allPlanos.includes("premium");
+    const maxCapacity = hasProMember ? PREMIUM_PRO_MAX_PARTICIPANTES : hasPremiumMember ? PREMIUM_MAX_PARTICIPANTES : FREE_MAX_PARTICIPANTES;
     if (currentCount >= maxCapacity) {
-      toast.error(`Este grupo está lotado! Limite de ${maxCapacity} participantes.${!hasPremiumMember ? " Se alguém do grupo fizer upgrade para Premium, o limite sobe para 50!" : " Para grupos acima de 50, entre em contato."}`);
+      toast.error(`Este grupo está lotado! Limite de ${maxCapacity} participantes.${!hasPremiumMember ? " Com Premium o limite sobe para 30, e com Premium PRO para 50!" : !hasProMember ? " Com Premium PRO o limite sobe para 50!" : ""}`);
       return false;
     }
     return true;
