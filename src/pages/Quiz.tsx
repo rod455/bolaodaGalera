@@ -64,7 +64,7 @@ const Quiz = () => {
   }, [startDirect]);
 
   const handleStart = () => {
-    trackEvent("quiz_selecao_start", {});
+    trackEvent("quiz_selecao_start", { source: "app" });
     setStep("pergunta");
     setPerguntaIdx(0);
     setRespostas([]);
