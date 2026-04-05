@@ -81,23 +81,11 @@ const Auth = () => {
 
   // Detectar fluxo de recuperação de senha
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") {
         setIsResettingPassword(true);
       }
-      // Processar referral pendente após OAuth redirect (Google/Apple)
-      if (event === "SIGNED_IN" && session?.user) {
-        const pendingRef = localStorage.getItem("pending_referral");
-        if (pendingRef) {
-          localStorage.removeItem("pending_referral");
-          try {
-            await supabase.rpc("processar_referral", {
-              p_referred_id: session.user.id,
-              p_referral_code: pendingRef,
-            });
-          } catch {}
-        }
-      }
+      // Referral pendente é processado no AuthContext.tsx (evita duplicação)
     });
     if (searchParams.get("modo") === "reset") {
       setIsResettingPassword(true);
@@ -139,7 +127,7 @@ const Auth = () => {
   // Salvar refCode no localStorage para não perder durante OAuth redirect
   useEffect(() => {
     if (refCode) {
-      localStorage.setItem("pending_referral", refCode);
+      localStorage.setItem("pending_referral", JSON.stringify({ code: refCode, ts: Date.now() }));
     }
   }, [refCode]);
 
@@ -190,15 +178,7 @@ const Auth = () => {
         });
         if (error) throw error;
 
-        // Processar referral se veio com código de convite
-        if (refCode && signUpData?.user?.id) {
-          try {
-            await supabase.rpc("processar_referral", {
-              p_referred_id: signUpData.user.id,
-              p_referral_code: refCode,
-            });
-          } catch (_e) { /* referral falhou silenciosamente */ }
-        }
+        // Referral é processado automaticamente no AuthContext via pending_referral
 
         // Dispara eventos Google Ads
         trackEvent('Criar_Conta', { metodo: 'email' });
@@ -227,17 +207,7 @@ const Auth = () => {
       const redirectPath = bolaoRedirect ? `/bolao/${bolaoRedirect}` : "/home";
       const result = await signInWithApple(redirectPath);
 
-      if (result.success && refCode) {
-        try {
-          const { data: { user: currentUser } } = await supabase.auth.getUser();
-          if (currentUser) {
-            await supabase.rpc("processar_referral", {
-              p_referred_id: currentUser.id,
-              p_referral_code: refCode,
-            });
-          }
-        } catch {}
-      }
+      // Referral é processado automaticamente no AuthContext via pending_referral
 
       if (result.success && Capacitor.isNativePlatform()) {
         const origem = Capacitor.getPlatform();
@@ -260,18 +230,7 @@ const Auth = () => {
       const redirectPath = bolaoRedirect ? `/bolao/${bolaoRedirect}` : "/home";
       const result = await signInWithGoogle(redirectPath);
 
-      // Processar referral se veio com código de convite (Google login)
-      if (result.success && refCode) {
-        try {
-          const { data: { user: currentUser } } = await supabase.auth.getUser();
-          if (currentUser) {
-            await supabase.rpc("processar_referral", {
-              p_referred_id: currentUser.id,
-              p_referral_code: refCode,
-            });
-          }
-        } catch {}
-      }
+      // Referral é processado automaticamente no AuthContext via pending_referral
 
       if (result.success && Capacitor.isNativePlatform()) {
         // Salvar origem do cadastro

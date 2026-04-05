@@ -47,14 +47,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         // Processar referral pendente (salvo no localStorage antes do OAuth redirect)
         if (event === "SIGNED_IN" && session?.user) {
-          const pendingRef = localStorage.getItem("pending_referral");
-          if (pendingRef) {
-            localStorage.removeItem("pending_referral");
-            supabase.rpc("processar_referral", {
-              p_referred_id: session.user.id,
-              p_referral_code: pendingRef,
-            }).catch(() => {});
-          }
+          try {
+            const raw = localStorage.getItem("pending_referral");
+            if (raw) {
+              localStorage.removeItem("pending_referral");
+              // Formato: { code: "ABC123", ts: 1234567890 } ou string legado "ABC123"
+              let code: string | null = null;
+              try {
+                const parsed = JSON.parse(raw);
+                // Expiração de 24h
+                if (parsed.code && Date.now() - parsed.ts < 24 * 60 * 60 * 1000) {
+                  code = parsed.code;
+                }
+              } catch {
+                code = raw; // formato legado (string pura)
+              }
+              if (code) {
+                supabase.rpc("processar_referral", {
+                  p_referred_id: session.user.id,
+                  p_referral_code: code,
+                }).catch(() => {});
+              }
+            }
+          } catch {}
         }
       }
     );
