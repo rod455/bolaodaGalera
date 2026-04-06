@@ -100,27 +100,26 @@ const App = () => {
   useEffect(() => {
     initGoogleAuth();
     initUTMTracker();
-    // App Open Ad — mostra a partir da 2ª abertura do app (apenas nativo, free users)
+    // App Open Ad — mostra ao iniciar o app (apenas nativo, free users)
+    // Pula para usuários que acabaram de criar conta (created_at < 1h)
     if (isNative) {
-      const appOpenCount = parseInt(localStorage.getItem("app_open_count") || "0", 10);
-      localStorage.setItem("app_open_count", String(appOpenCount + 1));
-
-      if (appOpenCount >= 1) {
-        setTimeout(async () => {
-          try {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session?.user) {
-              const { data } = await supabase.from("profiles").select("plano").eq("id", session.user.id).single();
-              const plano = (data as any)?.plano || "free";
-              showAppOpenAd(plano === "premium" || plano === "premium_pro");
-            } else {
-              showAppOpenAd(false);
-            }
-          } catch {
+      setTimeout(async () => {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user) {
+            const createdAt = new Date(session.user.created_at).getTime();
+            const isNewUser = Date.now() - createdAt < 60 * 60 * 1000; // menos de 1h
+            if (isNewUser) return; // não mostrar ad para quem acabou de criar conta
+            const { data } = await supabase.from("profiles").select("plano").eq("id", session.user.id).single();
+            const plano = (data as any)?.plano || "free";
+            showAppOpenAd(plano === "premium" || plano === "premium_pro");
+          } else {
             showAppOpenAd(false);
           }
-        }, 2000);
-      }
+        } catch {
+          showAppOpenAd(false);
+        }
+      }, 2000);
     }
   }, [isNative]);
 
