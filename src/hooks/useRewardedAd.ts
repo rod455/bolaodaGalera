@@ -12,7 +12,7 @@ const REWARDED_ID = "ca-app-pub-9316035916536420/8143495428";
 const INTERSTITIAL_ID = "ca-app-pub-9316035916536420/1822017661";
 const REWARDED_INTERSTITIAL_ID = "ca-app-pub-9316035916536420/4753813043";
 const BANNER_ID = "ca-app-pub-9316035916536420/8926482067";
-const APP_OPEN_ID = "ca-app-pub-9316035916536420/3674155380";
+
 
 // ═══ Detecção de plataforma nativa ═══
 function isRunningInNativeApp(): boolean {
@@ -399,20 +399,3 @@ export const useRewardedAd = () => {
   return { showAd, adLoading, isPremium, needsAd: !isPremium && isNative };
 };
 
-// ═══ App Open Ad — chamar no App.tsx ao iniciar ═══
-export async function showAppOpenAd(isPremium?: boolean): Promise<void> {
-  if (!isRunningInNativeApp()) return;
-  if (isPremium) return;
-
-  const AdMob = getAdMobPlugin();
-  if (!AdMob) return;
-
-  try {
-    await ensureAdMobReady();
-    // Rewarded Interstitial — mais curto que interstitial normal, com X para fechar
-    await AdMob.prepareRewardInterstitialAd({ adId: REWARDED_INTERSTITIAL_ID, isTesting: false });
-    await AdMob.showRewardInterstitialAd();
-  } catch {
-    // Ad failed — continue normally
-  }
-}

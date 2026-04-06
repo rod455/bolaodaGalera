@@ -29,7 +29,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { initGoogleAuth } from "@/lib/googleAuth";
 import { initUTMTracker } from "@/lib/utm-tracker";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
-import { showAppOpenAd } from "@/hooks/useRewardedAd";
+
 
 const queryClient = new QueryClient();
 
@@ -100,27 +100,7 @@ const App = () => {
   useEffect(() => {
     initGoogleAuth();
     initUTMTracker();
-    // App Open Ad — só para logados com conta > 24h, plano free, e que já
-    // fizeram pelo menos 1 palpite (usuário engajado, não primeira vez)
-    if (isNative) {
-      setTimeout(async () => {
-        try {
-          const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
-          if (authError || !authUser) return;
-          const createdAt = new Date(authUser.created_at).getTime();
-          if (Date.now() - createdAt < 24 * 60 * 60 * 1000) return;
-          // Verificar se já fez pelo menos 1 palpite
-          const { count } = await supabase.from("palpites").select("*", { count: "exact", head: true }).eq("user_id", authUser.id);
-          if (!count || count === 0) return; // nunca palpitou: sem ad
-          const { data } = await supabase.from("profiles").select("plano").eq("id", authUser.id).single();
-          const plano = (data as any)?.plano || "free";
-          showAppOpenAd(plano === "premium" || plano === "premium_pro");
-        } catch {
-          // Erro: não mostra ad
-        }
-      }, 2000);
-    }
-  }, [isNative]);
+  }, []);
 
   // Deep Link: capturar OAuth callback no app nativo
   useEffect(() => {
