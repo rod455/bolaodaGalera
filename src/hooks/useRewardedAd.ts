@@ -296,18 +296,80 @@ export const useRewardedAd = () => {
     []
   );
 
+  /**
+   * Mostra AdMob Rewarded Interstitial (mais curto, com X para fechar).
+   */
+  const showNativeRewardedInterstitialAd = useCallback(
+    async (): Promise<boolean> => {
+      const ready = await ensureAdMobReady();
+      const AdMob = getAdMobPlugin();
+      if (!ready || !AdMob) return true;
+
+      try {
+        return new Promise<boolean>(async (resolve) => {
+          let resolved = false;
+          const listeners: any[] = [];
+
+          const cleanup = () => {
+            listeners.forEach((l) => {
+              try { if (l?.remove) l.remove(); } catch {}
+            });
+          };
+
+          const finish = () => {
+            if (resolved) return;
+            resolved = true;
+            cleanup();
+            resolve(true);
+          };
+
+          const timeout = setTimeout(finish, 30000);
+
+          try {
+            const l1 = await AdMob.addListener("onRewardedInterstitialAdDismissed", () => {
+              clearTimeout(timeout);
+              finish();
+            });
+            listeners.push(l1);
+
+            const l2 = await AdMob.addListener("onRewardedInterstitialAdFailedToLoad", () => {
+              clearTimeout(timeout);
+              finish();
+            });
+            listeners.push(l2);
+
+            const l3 = await AdMob.addListener("onRewardedInterstitialAdFailedToShow", () => {
+              clearTimeout(timeout);
+              finish();
+            });
+            listeners.push(l3);
+
+            await AdMob.prepareRewardInterstitialAd({ adId: REWARDED_INTERSTITIAL_ID, isTesting: false });
+            await AdMob.showRewardInterstitialAd();
+          } catch {
+            clearTimeout(timeout);
+            finish();
+          }
+        });
+      } catch {
+        return true;
+      }
+    },
+    []
+  );
+
   const showAd = useCallback(
     async (tipo: "criar" | "palpite" | "entrar" | "quiz"): Promise<boolean> => {
       if (isPremium) return true;
       if (!isNative) return true;
 
-      // Palpite: interstitial a cada 5 palpites
+      // Palpite: rewarded interstitial no 1º + a cada 5
       if (tipo === "palpite") {
         incrementPalpiteCount();
         if (!shouldShowPalpiteAd()) return true;
         setAdLoading(true);
         try {
-          return await showNativeInterstitialAd();
+          return await showNativeRewardedInterstitialAd();
         } finally {
           setAdLoading(false);
         }
@@ -331,7 +393,7 @@ export const useRewardedAd = () => {
         setAdLoading(false);
       }
     },
-    [isPremium, isNative, incrementPalpiteCount, shouldShowPalpiteAd, showNativeRewardedAd, showNativeInterstitialAd]
+    [isPremium, isNative, incrementPalpiteCount, shouldShowPalpiteAd, showNativeRewardedAd, showNativeInterstitialAd, showNativeRewardedInterstitialAd]
   );
 
   return { showAd, adLoading, isPremium, needsAd: !isPremium && isNative };
