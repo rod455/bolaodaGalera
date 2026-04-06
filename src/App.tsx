@@ -100,24 +100,19 @@ const App = () => {
   useEffect(() => {
     initGoogleAuth();
     initUTMTracker();
-    // App Open Ad — mostra ao iniciar o app (apenas nativo, free users)
-    // Pula para usuários que acabaram de criar conta (created_at < 1h)
+    // App Open Ad — só para logados com conta > 24h e plano free
     if (isNative) {
       setTimeout(async () => {
         try {
           const { data: { session } } = await supabase.auth.getSession();
-          if (session?.user) {
-            const createdAt = new Date(session.user.created_at).getTime();
-            const isNewUser = Date.now() - createdAt < 24 * 60 * 60 * 1000; // menos de 24h
-            if (isNewUser) return; // não mostrar ad para quem acabou de criar conta
-            const { data } = await supabase.from("profiles").select("plano").eq("id", session.user.id).single();
-            const plano = (data as any)?.plano || "free";
-            showAppOpenAd(plano === "premium" || plano === "premium_pro");
-          } else {
-            showAppOpenAd(false);
-          }
+          if (!session?.user) return;
+          const createdAt = new Date(session.user.created_at).getTime();
+          if (Date.now() - createdAt < 24 * 60 * 60 * 1000) return;
+          const { data } = await supabase.from("profiles").select("plano").eq("id", session.user.id).single();
+          const plano = (data as any)?.plano || "free";
+          showAppOpenAd(plano === "premium" || plano === "premium_pro");
         } catch {
-          showAppOpenAd(false);
+          // Erro: não mostra ad
         }
       }, 2000);
     }
