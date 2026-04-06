@@ -20,7 +20,7 @@ import { FASE_ORDER } from "@/lib/constants";
 import { traduzirFase, formatDataJogo, rodadaNum } from "@/lib/formatters";
 import SEOHead from "@/components/SEOHead";
 import { useGamification } from "@/hooks/useGamification";
-
+import AdBanner from "@/components/AdBanner";
 import XPToast from "@/components/XPToast";
 import { trackEvent } from "@/lib/analytics";
 import { triggerFeedback } from "@/components/FeedbackBanner";
@@ -704,6 +704,9 @@ const Palpites = () => {
           ))}
         </div>
       </>)}
+
+      {/* Banner Ad entre jogos abertos e fechados */}
+      <AdBanner />
 
       {jogosFechados.length > 0 && (<>
         <div className="flex items-center gap-2">

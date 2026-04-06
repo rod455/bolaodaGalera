@@ -16,7 +16,7 @@ import type { RegraInfo } from "@/lib/types";
 import { MODO_REGRAS, MODOS_PONTUACAO } from "@/lib/constants";
 import SEOHead from "@/components/SEOHead";
 import { useGamification } from "@/hooks/useGamification";
-
+import AdBanner from "@/components/AdBanner";
 import XPToast from "@/components/XPToast";
 import { trackEvent } from "@/lib/analytics";
 
@@ -507,6 +507,9 @@ const CriarBolao = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Banner Ad antes do campeonato */}
+      <AdBanner />
 
       {/* 3. Campeonato por Categoria */}
       <Card id="section-campeonato" className="rounded-2xl shadow-sm">
