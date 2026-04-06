@@ -108,7 +108,7 @@ const App = () => {
           const { data: { session } } = await supabase.auth.getSession();
           if (session?.user) {
             const createdAt = new Date(session.user.created_at).getTime();
-            const isNewUser = Date.now() - createdAt < 60 * 60 * 1000; // menos de 1h
+            const isNewUser = Date.now() - createdAt < 24 * 60 * 60 * 1000; // menos de 24h
             if (isNewUser) return; // não mostrar ad para quem acabou de criar conta
             const { data } = await supabase.from("profiles").select("plano").eq("id", session.user.id).single();
             const plano = (data as any)?.plano || "free";
