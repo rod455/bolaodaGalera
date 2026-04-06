@@ -104,11 +104,13 @@ const App = () => {
     if (isNative) {
       setTimeout(async () => {
         try {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (!session?.user) return;
-          const createdAt = new Date(session.user.created_at).getTime();
-          if (Date.now() - createdAt < 24 * 60 * 60 * 1000) return;
-          const { data } = await supabase.from("profiles").select("plano").eq("id", session.user.id).single();
+          // Usar getUser() em vez de getSession() — valida o token com o servidor
+          // getSession() pode retornar sessão expirada do localStorage
+          const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+          if (authError || !authUser) return; // não logado ou sessão inválida: sem ad
+          const createdAt = new Date(authUser.created_at).getTime();
+          if (Date.now() - createdAt < 24 * 60 * 60 * 1000) return; // conta < 24h: sem ad
+          const { data } = await supabase.from("profiles").select("plano").eq("id", authUser.id).single();
           const plano = (data as any)?.plano || "free";
           showAppOpenAd(plano === "premium" || plano === "premium_pro");
         } catch {
