@@ -26,7 +26,7 @@ import type { Bolao } from "@/lib/types";
 import { MODO_LABELS, MODO_REGRAS, FALLBACK_IMAGES, FREE_MAX_PRIVADOS as CONST_FREE_MAX_PRIVADOS, FREE_MAX_CRIAR as CONST_FREE_MAX_CRIAR, FREE_MAX_PARTICIPANTES, PREMIUM_MAX_PARTICIPANTES, PREMIUM_PRO_MAX_PARTICIPANTES } from "@/lib/constants";
 import { formatDataJogo } from "@/lib/formatters";
 import SEOHead from "@/components/SEOHead";
-import AdBanner from "@/components/AdBanner";
+
 import { trackEvent } from "@/lib/analytics";
 import Onboarding, { isOnboardingDone, markOnboardingDone } from "@/components/Onboarding";
 import FeedbackBanner from "@/components/FeedbackBanner";
@@ -622,9 +622,6 @@ const Home = () => {
 
       {/* ═══ BANNERS DINÂMICOS — carrossel ═══ */}
       <DynamicBanner userBolaoIds={userBolaoIds} userContext={userBannerCtx} />
-
-      {/* ═══ Banner Ad — entre carrossel e conteúdo ═══ */}
-      <AdBanner />
 
       {/* ═══ GUEST: Google Login ═══ */}
       {!user && !/FBAN|FBAV|Instagram|Line|TikTok|Snapchat/i.test(navigator.userAgent) && (

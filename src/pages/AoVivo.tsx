@@ -9,7 +9,7 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import type { Jogo } from "@/lib/types";
 import { formatHora } from "@/lib/formatters";
 import SEOHead from "@/components/SEOHead";
-import AdBanner from "@/components/AdBanner";
+
 
 const AoVivo = () => {
   const navigate = useNavigate();
@@ -293,9 +293,6 @@ const AoVivo = () => {
           </CardContent>
         </Card>
       )}
-
-      {/* Banner Ad entre ao vivo e próximos */}
-      <AdBanner />
 
       {/* Hoje */}
       {jogosHoje.length > 0 && (
