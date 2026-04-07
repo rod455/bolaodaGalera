@@ -31,6 +31,24 @@ workflows:
       - name: Sync Capacitor
         script: npx cap sync ios
 
+      - name: Remove server URL for iOS
+        script: |
+          set -ex
+          # iOS deve carregar o bundle local (dist/), não URL remota
+          # A Apple rejeita apps que crasham se o servidor não responde
+          cd ios/App/App
+          python3 -c "
+          import json
+          with open('capacitor.config.json', 'r') as f:
+              config = json.load(f)
+          if 'server' in config and 'url' in config['server']:
+              del config['server']['url']
+          with open('capacitor.config.json', 'w') as f:
+              json.dump(config, f, indent=2)
+          print('Removed server.url from capacitor.config.json for iOS')
+          "
+          cat capacitor.config.json
+
       - name: Setup iOS code signing
         script: |
           set -ex
@@ -49,7 +67,7 @@ workflows:
         script: |
           cd ios/App
           agvtool new-marketing-version 1.5.0
-          agvtool new-version -all 30
+          agvtool new-version -all 31
 
       - name: Build IPA
         script: |
