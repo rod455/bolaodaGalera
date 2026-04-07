@@ -14,6 +14,8 @@ import BolaoPage from "./pages/BolaoPage";
 import Palpites from "./pages/Palpites";
 import Planos from "./pages/Planos";
 import Quiz from "./pages/Quiz";
+import QuizSelecao from "./pages/QuizSelecao";
+import QuizLenda from "./pages/QuizLenda";
 import NotFound from "./pages/NotFound";
 import Unsubscribe from "./pages/Unsubscribe";
 import AppLayout from "./components/layout/AppLayout";
@@ -178,6 +180,12 @@ const App = () => {
               {/* Quiz — acessível sem login (mostra CTA de cadastro se guest) */}
               <Route path="/quiz" element={<AppLayout />}>
                 <Route index element={<Quiz />} />
+              </Route>
+              <Route path="/quiz/selecao" element={<AppLayout />}>
+                <Route index element={<QuizSelecao />} />
+              </Route>
+              <Route path="/quiz/lenda" element={<AppLayout />}>
+                <Route index element={<QuizLenda />} />
               </Route>
               <Route
                 element={
