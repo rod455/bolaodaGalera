@@ -42,9 +42,9 @@ const QuizLenda = () => {
   const isPremium = plano === "premium" || plano === "premium_pro";
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     if (startDirect) {
       trackEvent("quiz_start", { quiz_id: "quiz_lenda", source: "lp" });
-      window.scrollTo({ top: 0 });
     }
   }, [startDirect]);
 
