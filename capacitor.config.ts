@@ -31,6 +31,7 @@ const config: CapacitorConfig = {
     '@capacitor/splash-screen',
     '@capacitor/status-bar',
     '@capgo/capacitor-social-login',
+    '@revenuecat/purchases-capacitor',
   ],
 };
 

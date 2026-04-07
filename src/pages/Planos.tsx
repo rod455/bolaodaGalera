@@ -105,7 +105,7 @@ const Planos = () => {
   const handleStripeCheckout = async (priceId: string) => {
     // Apple Guideline 3.1.1: iOS must use IAP only
     if (isIOS) {
-      toast.error("Use a assinatura pelo app para continuar.");
+      toast.error("Assinatura indisponível no momento. Tente novamente em instantes.");
       return;
     }
 

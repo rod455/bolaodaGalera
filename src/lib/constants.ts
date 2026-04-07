@@ -151,9 +151,9 @@ export const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com
 export const APP_STORE_URL = "https://apps.apple.com/app/bolao-na-copa/id6761629695";
 
 // Retorna a URL da loja correta baseado na plataforma
+import { Capacitor } from "@capacitor/core";
 export function getStoreUrl(): string {
   try {
-    const { Capacitor } = require("@capacitor/core");
     if (Capacitor.getPlatform() === "ios") return APP_STORE_URL;
   } catch {}
   return PLAY_STORE_URL;
