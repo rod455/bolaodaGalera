@@ -50,15 +50,17 @@ const Quiz = () => {
       <div className="rounded-2xl overflow-hidden shadow-md border border-copa-green-200">
         <button
           onClick={() => toggleQuiz("selecao")}
-          className="w-full flex flex-col items-center justify-center gap-1 px-4 py-5 text-center transition-colors"
+          className="w-full flex items-center gap-3 px-4 py-4 text-left transition-colors"
           style={{ background: "linear-gradient(135deg, #14532d 0%, #166534 100%)" }}
         >
-          <h3 className="leading-[0.9]" style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(1.4rem,5vw,2rem)", color: "#fff", textShadow: "0 2px 12px rgba(0,0,0,.3)" }}>
-            Para qual seleção<br />
-            <span style={{ color: "#facc15" }}>você seria convocado?</span>
-          </h3>
-          <p className="text-[11px] text-white/50 mt-1">48 seleções · 10 perguntas · Copa 2026</p>
-          <ChevronDown className={`w-5 h-5 text-white/40 mt-1 transition-transform duration-300 ${expandedQuiz === "selecao" ? "rotate-180" : ""}`} />
+          <span className="text-3xl flex-shrink-0">⚽</span>
+          <div className="flex-1 min-w-0">
+            <p style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "1.1rem", lineHeight: 1, color: "#fff" }}>
+              Para qual seleção <span style={{ color: "#facc15" }}>você seria convocado?</span>
+            </p>
+            <p className="text-[11px] text-white/60 mt-0.5">48 seleções · 10 perguntas · Copa 2026</p>
+          </div>
+          <ChevronDown className={`w-5 h-5 text-white/60 flex-shrink-0 transition-transform duration-300 ${expandedQuiz === "selecao" ? "rotate-180" : ""}`} />
         </button>
 
         {expandedQuiz === "selecao" && (
@@ -109,15 +111,17 @@ const Quiz = () => {
       <div className="rounded-2xl overflow-hidden shadow-md border border-copa-gold-200">
         <button
           onClick={() => toggleQuiz("lenda")}
-          className="w-full flex flex-col items-center justify-center gap-1 px-4 py-5 text-center transition-colors"
+          className="w-full flex items-center gap-3 px-4 py-4 text-left transition-colors"
           style={{ background: "linear-gradient(135deg, #14532d 0%, #1a3a1a 50%, #2d1a00 100%)" }}
         >
-          <h3 className="leading-[0.9]" style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(1.4rem,5vw,2rem)", color: "#fff", textShadow: "0 2px 12px rgba(0,0,0,.3)" }}>
-            Qual lenda da Copa<br />
-            <span style={{ color: "#facc15" }}>você seria?</span>
-          </h3>
-          <p className="text-[11px] text-white/50 mt-1">25 lendas · 10 perguntas · Pelé, Messi, Zidane...</p>
-          <ChevronDown className={`w-5 h-5 text-white/40 mt-1 transition-transform duration-300 ${expandedQuiz === "lenda" ? "rotate-180" : ""}`} />
+          <span className="text-3xl flex-shrink-0">👑</span>
+          <div className="flex-1 min-w-0">
+            <p style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "1.1rem", lineHeight: 1, color: "#fff" }}>
+              Qual lenda da Copa <span style={{ color: "#facc15" }}>você seria?</span>
+            </p>
+            <p className="text-[11px] text-white/60 mt-0.5">25 lendas · 10 perguntas · Pelé, Messi, Zidane...</p>
+          </div>
+          <ChevronDown className={`w-5 h-5 text-white/60 flex-shrink-0 transition-transform duration-300 ${expandedQuiz === "lenda" ? "rotate-180" : ""}`} />
         </button>
 
         {expandedQuiz === "lenda" && (
