@@ -2,15 +2,17 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { Capacitor } from "@capacitor/core";
 import { useUserPlan } from "./useUserPlan";
 
-// Chave localStorage para controle diário
-const LAST_PALPITE_AD_KEY = "bolao_last_palpite_ad";
+// Chave localStorage para controle de palpites
+const PALPITE_COUNT_KEY = "bolao_palpite_count";
+const PALPITE_COUNT_DATE_KEY = "bolao_palpite_count_date";
 const getToday = () => new Date().toISOString().split("T")[0];
 
 // ═══ Ad Unit IDs ═══
 const REWARDED_ID = "ca-app-pub-9316035916536420/8143495428";
 const INTERSTITIAL_ID = "ca-app-pub-9316035916536420/1822017661";
-const _BANNER_ID = "ca-app-pub-9316035916536420/8926482067"; // reservado
-const _APP_OPEN_ID = "ca-app-pub-9316035916536420/3674155380"; // reservado
+const REWARDED_INTERSTITIAL_ID = "ca-app-pub-9316035916536420/4753813043";
+const BANNER_ID = "ca-app-pub-9316035916536420/8926482067";
+
 
 // ═══ Detecção de plataforma nativa ═══
 function isRunningInNativeApp(): boolean {
@@ -113,13 +115,32 @@ export const useRewardedAd = () => {
     }
   }, [isPremium, isNative]);
 
-  const hasWatchedPalpiteAdToday = useCallback(() => {
-    try { return localStorage.getItem(LAST_PALPITE_AD_KEY) === getToday(); } catch { return false; }
+  // Controle de palpites: interstitial a cada 5
+  const getPalpiteCount = useCallback((): number => {
+    try {
+      const date = localStorage.getItem(PALPITE_COUNT_DATE_KEY);
+      if (date !== getToday()) return 0; // reset diário
+      return parseInt(localStorage.getItem(PALPITE_COUNT_KEY) || "0", 10) || 0;
+    } catch { return 0; }
   }, []);
 
-  const markPalpiteAdWatched = useCallback(() => {
-    try { localStorage.setItem(LAST_PALPITE_AD_KEY, getToday()); } catch {}
+  const incrementPalpiteCount = useCallback(() => {
+    try {
+      const date = localStorage.getItem(PALPITE_COUNT_DATE_KEY);
+      if (date !== getToday()) {
+        localStorage.setItem(PALPITE_COUNT_DATE_KEY, getToday());
+        localStorage.setItem(PALPITE_COUNT_KEY, "1");
+      } else {
+        const count = parseInt(localStorage.getItem(PALPITE_COUNT_KEY) || "0", 10) || 0;
+        localStorage.setItem(PALPITE_COUNT_KEY, String(count + 1));
+      }
+    } catch {}
   }, []);
+
+  const shouldShowPalpiteAd = useCallback((): boolean => {
+    const count = getPalpiteCount();
+    return count === 1 || (count > 1 && count % 5 === 0); // 1º palpite + a cada 5
+  }, [getPalpiteCount]);
 
   /**
    * Mostra AdMob Rewarded fullscreen.
@@ -144,11 +165,13 @@ export const useRewardedAd = () => {
             });
           };
 
-          const finish = (success: boolean) => {
+          const finish = (fromDismiss: boolean) => {
             if (resolved) return;
             resolved = true;
             cleanup();
-            if (tipo === "palpite" && success) markPalpiteAdWatched();
+            // Só conta como sucesso se o usuário assistiu o ad completo (reward recebido)
+            // ou se houve falha no carregamento/exibição (não bloquear o usuário)
+            const success = fromDismiss ? userRewarded : true;
             // Marcar para re-preload na próxima vez
             adPreloaded = false;
             // Pré-carregar o próximo ad em background
@@ -156,9 +179,9 @@ export const useRewardedAd = () => {
             resolve(success);
           };
 
-          // Timeout de segurança (60s)
+          // Timeout de segurança (60s) — permite prosseguir
           const timeout = setTimeout(() => {
-            finish(true);
+            finish(false);
           }, 60000);
 
           try {
@@ -170,19 +193,19 @@ export const useRewardedAd = () => {
 
             const l2 = await AdMob.addListener(REWARD_EVENTS.Dismissed, () => {
               clearTimeout(timeout);
-              finish(true);
+              finish(true); // fromDismiss=true: checa userRewarded
             });
             listeners.push(l2);
 
             const l3 = await AdMob.addListener(REWARD_EVENTS.FailedToLoad, () => {
               clearTimeout(timeout);
-              finish(true);
+              finish(false); // falha: não bloquear o usuário
             });
             listeners.push(l3);
 
             const l4 = await AdMob.addListener(REWARD_EVENTS.FailedToShow, () => {
               clearTimeout(timeout);
-              finish(true);
+              finish(false); // falha: não bloquear o usuário
             });
             listeners.push(l4);
 
@@ -199,14 +222,14 @@ export const useRewardedAd = () => {
 
           } catch {
             clearTimeout(timeout);
-            finish(true);
+            finish(false); // falha: não bloquear o usuário
           }
         });
       } catch {
         return true;
       }
     },
-    [markPalpiteAdWatched]
+    []
   );
 
   /**
@@ -273,26 +296,123 @@ export const useRewardedAd = () => {
     []
   );
 
+  /**
+   * Mostra AdMob Rewarded Interstitial (mais curto, com X para fechar).
+   */
+  const showNativeRewardedInterstitialAd = useCallback(
+    async (): Promise<boolean> => {
+      const ready = await ensureAdMobReady();
+      const AdMob = getAdMobPlugin();
+      if (!ready || !AdMob) return true;
+
+      try {
+        return new Promise<boolean>(async (resolve) => {
+          let resolved = false;
+          const listeners: any[] = [];
+
+          const cleanup = () => {
+            listeners.forEach((l) => {
+              try { if (l?.remove) l.remove(); } catch {}
+            });
+          };
+
+          const finish = () => {
+            if (resolved) return;
+            resolved = true;
+            cleanup();
+            resolve(true);
+          };
+
+          const timeout = setTimeout(finish, 30000);
+
+          try {
+            const l1 = await AdMob.addListener("onRewardedInterstitialAdDismissed", () => {
+              clearTimeout(timeout);
+              finish();
+            });
+            listeners.push(l1);
+
+            const l2 = await AdMob.addListener("onRewardedInterstitialAdFailedToLoad", () => {
+              clearTimeout(timeout);
+              finish();
+            });
+            listeners.push(l2);
+
+            const l3 = await AdMob.addListener("onRewardedInterstitialAdFailedToShow", () => {
+              clearTimeout(timeout);
+              finish();
+            });
+            listeners.push(l3);
+
+            await AdMob.prepareRewardInterstitialAd({ adId: REWARDED_INTERSTITIAL_ID, isTesting: false });
+            await AdMob.showRewardInterstitialAd();
+          } catch {
+            clearTimeout(timeout);
+            finish();
+          }
+        });
+      } catch {
+        return true;
+      }
+    },
+    []
+  );
+
   const showAd = useCallback(
     async (tipo: "criar" | "palpite" | "entrar" | "quiz"): Promise<boolean> => {
       if (isPremium) return true;
-      if (tipo === "palpite" && hasWatchedPalpiteAdToday()) return true;
       if (!isNative) return true;
 
+      // Palpite: rewarded interstitial no 1º + a cada 5
+      if (tipo === "palpite") {
+        incrementPalpiteCount();
+        if (!shouldShowPalpiteAd()) return true;
+        setAdLoading(true);
+        try {
+          return await showNativeRewardedInterstitialAd();
+        } finally {
+          setAdLoading(false);
+        }
+      }
+
+      // Entrar em bolão: interstitial
+      if (tipo === "entrar") {
+        setAdLoading(true);
+        try {
+          return await showNativeInterstitialAd();
+        } finally {
+          setAdLoading(false);
+        }
+      }
+
+      // Criar bolão, quiz: rewarded
       setAdLoading(true);
       try {
-        if (tipo === "entrar") {
-          return await showNativeInterstitialAd();
-        }
         return await showNativeRewardedAd(tipo);
       } finally {
         setAdLoading(false);
       }
     },
-    [isPremium, isNative, hasWatchedPalpiteAdToday, showNativeRewardedAd, showNativeInterstitialAd]
+    [isPremium, isNative, incrementPalpiteCount, shouldShowPalpiteAd, showNativeRewardedAd, showNativeInterstitialAd, showNativeRewardedInterstitialAd]
   );
 
-  const resolveWebAd = useCallback((_watched: boolean) => {}, []);
-
-  return { showAd, adLoading, isPremium, needsAd: !isPremium && isNative, resolveWebAd };
+  return { showAd, adLoading, isPremium, needsAd: !isPremium && isNative };
 };
+
+// ═══ App Open Ad — chamar no App.tsx ao iniciar ═══
+export async function showAppOpenAd(isPremium?: boolean): Promise<void> {
+  if (!isRunningInNativeApp()) return;
+  if (isPremium) return;
+
+  const AdMob = getAdMobPlugin();
+  if (!AdMob) return;
+
+  try {
+    await ensureAdMobReady();
+    await AdMob.prepareRewardInterstitialAd({ adId: REWARDED_INTERSTITIAL_ID, isTesting: false });
+    await AdMob.showRewardInterstitialAd();
+  } catch {
+    // Ad failed — continue normally
+  }
+}
+

@@ -36,7 +36,7 @@ export const useUserPlan = (): UserPlanData => {
         setPlanoExpiraEm(d.plano_expira_em || null);
       }
     } catch (err) {
-      console.error("Erro ao buscar plano do usuário:", err);
+      void err;
     } finally {
       setLoading(false);
     }

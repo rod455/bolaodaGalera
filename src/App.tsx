@@ -14,6 +14,8 @@ import BolaoPage from "./pages/BolaoPage";
 import Palpites from "./pages/Palpites";
 import Planos from "./pages/Planos";
 import Quiz from "./pages/Quiz";
+import QuizSelecao from "./pages/QuizSelecao";
+import QuizLenda from "./pages/QuizLenda";
 import NotFound from "./pages/NotFound";
 import Unsubscribe from "./pages/Unsubscribe";
 import AppLayout from "./components/layout/AppLayout";
@@ -29,6 +31,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { initGoogleAuth } from "@/lib/googleAuth";
 import { initUTMTracker } from "@/lib/utm-tracker";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
+import { showAppOpenAd } from "@/hooks/useRewardedAd";
+
 
 const queryClient = new QueryClient();
 
@@ -80,8 +84,12 @@ const BackButtonHandler = () => {
   return null;
 };
 
+const isNativePlatform = (): boolean => {
+  try { return Capacitor.isNativePlatform(); } catch { return false; }
+};
+
 const App = () => {
-  const isNative = Capacitor.isNativePlatform();
+  const isNative = isNativePlatform();
   const [showSplash, setShowSplash] = useState(isNative);
   const handleSplashFinish = useCallback(() => setShowSplash(false), []);
 
@@ -95,7 +103,24 @@ const App = () => {
   useEffect(() => {
     initGoogleAuth();
     initUTMTracker();
-  }, []);
+    // Rewarded interstitial na abertura — conta > 24h, não premium
+    // Delay increased to avoid interfering with app launch and review
+    if (isNative) {
+      setTimeout(async () => {
+        try {
+          const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+          if (authError || !authUser) return;
+          const createdAt = new Date(authUser.created_at).getTime();
+          if (Date.now() - createdAt < 24 * 60 * 60 * 1000) return;
+          const { data } = await supabase.from("profiles").select("plano").eq("id", authUser.id).single();
+          const plano = (data as any)?.plano || "free";
+          showAppOpenAd(plano === "premium" || plano === "premium_pro");
+        } catch {
+          // Silently fail
+        }
+      }, 5000);
+    }
+  }, [isNative]);
 
   // Deep Link: capturar OAuth callback no app nativo
   useEffect(() => {
@@ -155,6 +180,12 @@ const App = () => {
               {/* Quiz — acessível sem login (mostra CTA de cadastro se guest) */}
               <Route path="/quiz" element={<AppLayout />}>
                 <Route index element={<Quiz />} />
+              </Route>
+              <Route path="/quiz/selecao" element={<AppLayout />}>
+                <Route index element={<QuizSelecao />} />
+              </Route>
+              <Route path="/quiz/lenda" element={<AppLayout />}>
+                <Route index element={<QuizLenda />} />
               </Route>
               <Route
                 element={

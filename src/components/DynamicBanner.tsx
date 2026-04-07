@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { FREE_MAX_PARTICIPANTES, PREMIUM_MAX_PARTICIPANTES } from "@/lib/constants";
+import { FREE_MAX_PARTICIPANTES, PREMIUM_MAX_PARTICIPANTES, PREMIUM_PRO_MAX_PARTICIPANTES } from "@/lib/constants";
 
 interface BannerData {
   id: string;
@@ -250,12 +250,15 @@ const DynamicBanner = ({ userBolaoIds, userContext }: DynamicBannerProps) => {
       .select("criador_id, profiles(plano)")
       .eq("id", bolaoId)
       .single();
-    const hasPremiumMember = (participants || []).some(
-      (p: any) => p.profiles?.plano === "premium" || p.profiles?.plano === "premium_pro"
-    ) || bolaoData?.profiles?.plano === "premium" || bolaoData?.profiles?.plano === "premium_pro";
-    const maxCapacity = hasPremiumMember ? PREMIUM_MAX_PARTICIPANTES : FREE_MAX_PARTICIPANTES;
+    const allPlanos = [
+      ...(participants || []).map((p: any) => p.profiles?.plano),
+      bolaoData?.profiles?.plano,
+    ];
+    const hasProMember = allPlanos.includes("premium_pro");
+    const hasPremiumMember = hasProMember || allPlanos.includes("premium");
+    const maxCapacity = hasProMember ? PREMIUM_PRO_MAX_PARTICIPANTES : hasPremiumMember ? PREMIUM_MAX_PARTICIPANTES : FREE_MAX_PARTICIPANTES;
     if (currentCount >= maxCapacity) {
-      toast.error(`Este grupo está lotado! Limite de ${maxCapacity} participantes.${!hasPremiumMember ? " Se alguém do grupo fizer upgrade para Premium, o limite sobe para 50!" : ""}`);
+      toast.error(`Este grupo está lotado! Limite de ${maxCapacity} participantes.${!hasPremiumMember ? " Com Premium o limite sobe para 30, e com Premium PRO para 50!" : !hasProMember ? " Com Premium PRO o limite sobe para 50!" : ""}`);
       return false;
     }
     return true;

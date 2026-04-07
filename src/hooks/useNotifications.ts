@@ -88,7 +88,7 @@ export const useNotifications = (): UseNotificationsReturn => {
 
       await PushNotifications.register();
     } catch (err) {
-      console.error("Erro ao registrar push notifications:", err);
+      void err;
       pushRegistered.current = false;
     }
   }, [user]);

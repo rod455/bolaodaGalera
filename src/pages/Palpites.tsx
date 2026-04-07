@@ -13,7 +13,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import AdRewardModal from "@/components/AdRewardModal";
 import AdLoadingOverlay from "@/components/AdLoadingOverlay";
 import { useRewardedAd } from "@/hooks/useRewardedAd";
 import type { Jogo, Palpite } from "@/lib/types";
@@ -21,6 +20,7 @@ import { FASE_ORDER } from "@/lib/constants";
 import { traduzirFase, formatDataJogo, rodadaNum } from "@/lib/formatters";
 import SEOHead from "@/components/SEOHead";
 import { useGamification } from "@/hooks/useGamification";
+import AdBanner from "@/components/AdBanner";
 import XPToast from "@/components/XPToast";
 import { trackEvent } from "@/lib/analytics";
 import { triggerFeedback } from "@/components/FeedbackBanner";
@@ -58,10 +58,9 @@ const Palpites = () => {
   const [isFanatico, setIsFanatico] = useState(false);
   const [campeonatosList, setCampeonatosList] = useState<{id: string; nome: string}[]>([]);
   const [activeCampeonato, setActiveCampeonato] = useState<string>("Todos");
-  const { showAd, adLoading, resolveWebAd, needsAd } = useRewardedAd();
+  const { showAd, adLoading, needsAd } = useRewardedAd();
   const { darXP } = useGamification();
   const [xpToast, setXPToast] = useState<{xp: number, msg: string} | null>(null);
-  const [showAdModal, setShowAdModal] = useState(false);
 
   // ═══ Celebração primeiro palpite (onboarding) ═══
   const [showCelebration, setShowCelebration] = useState(false);
@@ -224,7 +223,7 @@ const Palpites = () => {
   };
 
   useEffect(() => {
-    if (id && user) loadData().catch((e) => console.error("[Palpites] loadData error:", e));
+    if (id && user) loadData().catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, user]);
 
@@ -485,7 +484,6 @@ const Palpites = () => {
   return (
     <div className="space-y-5 animate-fade-in">
       <SEOHead title="Meus Palpites" noindex />
-      <AdRewardModal open={showAdModal} onComplete={resolveWebAd} message="Assista para salvar seu palpite" />
       {/* ═══ Celebração primeiro palpite (onboarding) ═══ */}
       <FirstPalpiteCelebration
         open={showCelebration}
@@ -706,6 +704,9 @@ const Palpites = () => {
           ))}
         </div>
       </>)}
+
+      {/* Banner Ad entre jogos abertos e fechados */}
+      <AdBanner />
 
       {jogosFechados.length > 0 && (<>
         <div className="flex items-center gap-2">

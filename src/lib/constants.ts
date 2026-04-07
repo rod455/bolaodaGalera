@@ -123,7 +123,8 @@ export const FASE_TRADUCAO: Record<string, string> = {
 export const FREE_MAX_CRIAR = 1;
 export const FREE_MAX_PRIVADOS = 3;
 export const FREE_MAX_PARTICIPANTES = 15;
-export const PREMIUM_MAX_PARTICIPANTES = 50;
+export const PREMIUM_MAX_PARTICIPANTES = 30;
+export const PREMIUM_PRO_MAX_PARTICIPANTES = 50;
 
 // ── Imagens fallback para cards de bolão ──
 export const FALLBACK_IMAGES = [

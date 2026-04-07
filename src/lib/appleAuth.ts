@@ -1,17 +1,14 @@
 // ═══════════════════════════════════════════════════════
-// Google Auth Helper
-// - App nativo: usa @capgo/capacitor-social-login (Google nativo)
+// Apple Auth Helper
+// - App nativo iOS: usa @capgo/capacitor-social-login (Apple nativo)
 // - Web: usa supabase.auth.signInWithOAuth (redirect)
 // ═══════════════════════════════════════════════════════
 
 import { Capacitor, registerPlugin } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
 
-const WEB_CLIENT_ID = "259731661832-a7v1j6nnd2as7lhdlnkfsmg0fl4jq2sh.apps.googleusercontent.com";
-
-// Tipagem do plugin
 interface SocialLoginPlugin {
-  initialize(options: { google: { webClientId: string } }): Promise<void>;
+  initialize(options: { apple: Record<string, never> }): Promise<void>;
   login(options: { provider: string; options: Record<string, any> }): Promise<{
     provider: string;
     result: {
@@ -31,58 +28,54 @@ let socialLogin: SocialLoginPlugin | null = null;
 let initialized = false;
 
 /**
- * Inicializar o Social Login (chamar uma vez no app startup)
+ * Inicializar o Apple Social Login (chamar uma vez no app startup)
  */
-export async function initGoogleAuth() {
+export async function initAppleAuth() {
   if (!Capacitor.isNativePlatform()) return;
+  if (Capacitor.getPlatform() !== "ios") return;
   if (initialized) return;
 
   try {
     socialLogin = registerPlugin<SocialLoginPlugin>("SocialLogin");
-    await socialLogin.initialize({
-      google: {
-        webClientId: WEB_CLIENT_ID,
-      },
-      ...(Capacitor.getPlatform() === "ios" ? { apple: {} } : {}),
-    } as any);
+    await socialLogin.initialize({ apple: {} });
     initialized = true;
   } catch {
+    // Plugin não disponível
   }
 }
 
 /**
- * Fazer login com Google.
+ * Fazer login com Apple.
  */
-export async function signInWithGoogle(
+export async function signInWithApple(
   redirectPath: string = "/home"
 ): Promise<{ success: boolean; error?: string }> {
-  // ═══ APP NATIVO ═══
-  if (Capacitor.isNativePlatform()) {
+  // ═══ APP NATIVO iOS ═══
+  if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === "ios") {
     try {
       if (!socialLogin) {
-        // Tentar inicializar se ainda não foi
-        await initGoogleAuth();
+        await initAppleAuth();
         if (!socialLogin) {
-          return { success: false, error: "Google Auth não disponível" };
+          return { success: false, error: "Apple Auth não disponível" };
         }
       }
 
       const result = await socialLogin.login({
-        provider: "google",
+        provider: "apple",
         options: {
-          scopes: ["profile", "email"],
+          scopes: ["email", "name"],
         },
       });
 
       const idToken = result?.result?.idToken;
 
       if (!idToken) {
-        return { success: false, error: "Token do Google não recebido" };
+        return { success: false, error: "Token da Apple não recebido" };
       }
 
       // Usar idToken para autenticar no Supabase
       const { error } = await supabase.auth.signInWithIdToken({
-        provider: "google",
+        provider: "apple",
         token: idToken,
       });
 
@@ -95,18 +88,19 @@ export async function signInWithGoogle(
       if (
         err?.message?.includes("cancel") ||
         err?.message?.includes("Cancel") ||
-        err?.code === "SIGN_IN_CANCELLED"
+        err?.code === "1000" ||
+        err?.code === "ASAuthorizationError.canceled"
       ) {
         return { success: false, error: "Login cancelado" };
       }
-      return { success: false, error: err?.message || "Erro ao fazer login com Google" };
+      return { success: false, error: err?.message || "Erro ao fazer login com Apple" };
     }
   }
 
   // ═══ WEB ═══
   try {
     const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
+      provider: "apple",
       options: {
         redirectTo: window.location.origin + redirectPath,
       },
@@ -118,6 +112,6 @@ export async function signInWithGoogle(
 
     return { success: true };
   } catch (err: any) {
-    return { success: false, error: err?.message || "Erro ao fazer login com Google" };
+    return { success: false, error: err?.message || "Erro ao fazer login com Apple" };
   }
 }

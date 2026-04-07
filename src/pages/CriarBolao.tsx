@@ -11,12 +11,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserPlan } from "@/hooks/useUserPlan";
 import { useRewardedAd } from "@/hooks/useRewardedAd";
-import AdRewardModal from "@/components/AdRewardModal";
 import RegrasModal from "@/components/RegrasModal";
 import type { RegraInfo } from "@/lib/types";
 import { MODO_REGRAS, MODOS_PONTUACAO } from "@/lib/constants";
 import SEOHead from "@/components/SEOHead";
 import { useGamification } from "@/hooks/useGamification";
+import AdBanner from "@/components/AdBanner";
 import XPToast from "@/components/XPToast";
 import { trackEvent } from "@/lib/analytics";
 
@@ -95,8 +95,7 @@ const CriarBolao = () => {
   const [xpToast, setXPToast] = useState<{xp: number, msg: string} | null>(null);
 
   const { plano: userPlano } = useUserPlan();
-  const { showAd, adLoading, resolveWebAd, needsAd } = useRewardedAd();
-  const [showAdModal, setShowAdModal] = useState(false);
+  const { showAd, adLoading, needsAd } = useRewardedAd();
   const [adCallback, setAdCallback] = useState<(() => void) | null>(null);
 
   useEffect(() => { loadCampeonatos(); }, []);
@@ -509,6 +508,9 @@ const CriarBolao = () => {
         </Card>
       )}
 
+      {/* Banner Ad antes do campeonato */}
+      <AdBanner />
+
       {/* 3. Campeonato por Categoria */}
       <Card id="section-campeonato" className="rounded-2xl shadow-sm">
         <CardHeader className="pb-3">
@@ -661,7 +663,6 @@ const CriarBolao = () => {
       <RegrasModal regras={infoModal} open={!!infoModal} onClose={() => setInfoModal(null)} />
 
       {/* Ad Reward Modal */}
-      <AdRewardModal open={showAdModal} onComplete={resolveWebAd} message="Assista para criar seu bolão" />
 
       {/* Modal: Configurar Regras */}
       {modoRegras && (

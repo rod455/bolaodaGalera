@@ -101,8 +101,14 @@ const Planos = () => {
     }
   };
 
-  // ═══ Stripe checkout (Android/Web) ═══
+  // ═══ Stripe checkout (Android/Web) — BLOQUEADO no iOS ═══
   const handleStripeCheckout = async (priceId: string) => {
+    // Apple Guideline 3.1.1: iOS must use IAP only
+    if (isIOS) {
+      toast.error("Use a assinatura pelo app para continuar.");
+      return;
+    }
+
     if (!session) {
       toast.error("Você precisa estar logado");
       return;
@@ -115,6 +121,21 @@ const Planos = () => {
       });
 
       if (error) throw error;
+
+      // Upgrade com proration (sem checkout, já atualizado)
+      if (data?.upgraded) {
+        trackEvent('upgrade_premium', { plano: data.plano });
+        toast.success("Plano atualizado com sucesso! O valor foi ajustado proporcionalmente.");
+        window.location.href = data.url;
+        return;
+      }
+
+      // Já tem o mesmo plano ativo
+      if (data?.upgraded === false && data?.message) {
+        toast.info(data.message);
+        return;
+      }
+
       if (data?.url) {
         const planoMap: Record<string, string> = {
           [STRIPE_PRICES.premium_mensal]: 'premium',
@@ -309,7 +330,7 @@ const Planos = () => {
             </div>
             <div className="flex items-center gap-2.5">
               <Check className="w-4 h-4 text-copa-green-500 flex-shrink-0" />
-              <span className="text-sm">Até 50 participantes por grupo</span>
+              <span className="text-sm">Até 30 participantes por grupo</span>
             </div>
             <div className="flex items-center gap-2.5">
               <Check className="w-4 h-4 text-copa-green-500 flex-shrink-0" />
@@ -353,6 +374,10 @@ const Planos = () => {
               {loadingCheckout ? "Redirecionando..." : "Assinar Premium"}
             </Button>
           )}
+
+          <p className="text-center text-[10px] text-muted-foreground/70 leading-tight mt-1">
+            A assinatura renova automaticamente. Cancele a qualquer momento nas configurações da sua conta Apple.
+          </p>
         </CardContent>
       </Card>
 
@@ -390,6 +415,10 @@ const Planos = () => {
             <div className="flex items-center gap-2.5">
               <Check className="w-4 h-4 text-copa-green-500 flex-shrink-0" />
               <span className="text-sm">Todos os benefícios Premium</span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <Check className="w-4 h-4 text-copa-green-500 flex-shrink-0" />
+              <span className="text-sm font-semibold text-copa-green-700">Até 50 participantes por grupo</span>
             </div>
             <div className="flex items-center gap-2.5">
               <Check className="w-4 h-4 text-copa-green-500 flex-shrink-0" />
@@ -458,6 +487,9 @@ const Planos = () => {
           <p className="text-center text-xs text-muted-foreground">
             Desbloqueie todas as funcionalidades do app
           </p>
+          <p className="text-center text-[10px] text-muted-foreground/70 leading-tight mt-1">
+            A assinatura renova automaticamente. Cancele a qualquer momento nas configurações da sua conta Apple.
+          </p>
         </CardContent>
       </Card>
 
@@ -472,6 +504,27 @@ const Planos = () => {
           Restaurar compras anteriores
         </button>
       )}
+
+      {/* Links obrigatórios — Política de Privacidade e Termos de Uso */}
+      <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground pt-2 pb-4">
+        <a
+          href="/termos-de-uso.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:text-foreground transition-colors"
+        >
+          Termos de Uso
+        </a>
+        <span>·</span>
+        <a
+          href="/privacidade.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:text-foreground transition-colors"
+        >
+          Política de Privacidade
+        </a>
+      </div>
 
       <RegrasModal
         regras={infoModal}

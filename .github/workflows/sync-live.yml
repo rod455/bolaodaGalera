@@ -42,7 +42,7 @@ jobs:
       - uses: actions/setup-node@v4
         if: steps.check.outputs.has_games == 'true'
         with:
-          node-version: '20'
+          node-version: '22'
       - run: npm install @supabase/supabase-js
         if: steps.check.outputs.has_games == 'true'
       - name: Smart live sync

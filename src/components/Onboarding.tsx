@@ -205,7 +205,7 @@ const QuickBolaoStep = ({
     } catch (err: any) {
       // Rollback: se o bolão foi criado mas as etapas seguintes falharam, limpar
       if (createdBolaoId) {
-        console.error("[Onboarding] Rollback bolão:", createdBolaoId, err);
+        void err;
         await supabase.from("bolao_campeonatos").delete().eq("bolao_id", createdBolaoId).catch(() => {});
         await supabase.from("bolao_participantes").delete().eq("bolao_id", createdBolaoId).catch(() => {});
         await supabase.from("boloes").delete().eq("id", createdBolaoId).catch(() => {});

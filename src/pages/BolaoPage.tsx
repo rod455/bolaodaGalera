@@ -24,6 +24,7 @@ import { MODO_LABELS, MODO_REGRAS, getInviteUrl, PLAY_STORE_URL } from "@/lib/co
 import { shareViaWhatsApp } from "@/lib/utils";
 import { formatDataJogo, traduzirFase, getInitials } from "@/lib/formatters";
 import SEOHead from "@/components/SEOHead";
+import AdBanner from "@/components/AdBanner";
 import { useGamification } from "@/hooks/useGamification";
 import NivelBadge from "@/components/NivelBadge";
 import XPToast from "@/components/XPToast";
@@ -269,8 +270,8 @@ const BolaoPage = () => {
 
   useEffect(() => {
     let active = true;
-    if (id && user) loadBolao().catch((e) => console.error("[BolaoPage] loadBolao error:", e));
-    const interval = setInterval(() => { if (id && user && active) loadBolao().catch((e) => console.error("[BolaoPage] loadBolao interval error:", e)); }, 60000);
+    if (id && user) loadBolao().catch(() => {});
+    const interval = setInterval(() => { if (id && user && active) loadBolao().catch(() => {}); }, 60000);
     return () => { active = false; clearInterval(interval); };
   }, [id, user]);
 
@@ -1288,6 +1289,9 @@ const BolaoPage = () => {
           userId={user?.id || ""}
         />
       )}
+
+      {/* Banner Ad entre ranking e palpites */}
+      <AdBanner />
 
       {/* ═══ 2. PALPITES ou MATA A MATA ═══ */}
       {bolao?.modo_pontuacao === "mata_mata" ? (

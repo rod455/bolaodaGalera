@@ -29,6 +29,25 @@ const PRICE_PLAN_MAP: Record<string, string> = {
   "price_1T1U0KC1YtBHMBc2gqSGO0jD": "premium_pro",
 };
 
+// Helper para chamadas à API do Stripe
+async function stripeRequest(stripeKey: string, path: string, method: string, body?: Record<string, string>): Promise<any> {
+  const res = await fetch(`${STRIPE_API}${path}`, {
+    method,
+    headers: {
+      "Authorization": `Bearer ${stripeKey}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: body ? new URLSearchParams(body).toString() : undefined,
+  });
+  return { ok: res.ok, data: await res.json() };
+}
+
+// Buscar subscriptions ativas do customer
+async function getActiveSubscriptions(stripeKey: string, customerId: string): Promise<any[]> {
+  const { data } = await stripeRequest(stripeKey, `/subscriptions?customer=${customerId}&status=active&limit=10`, "GET");
+  return data?.data || [];
+}
+
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
 
@@ -92,20 +111,12 @@ serve(async (req) => {
 
     if (!customerId) {
       console.log("[create-checkout] Creating Stripe customer...");
-      const custRes = await fetch(`${STRIPE_API}/customers`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${stripeKey}`,
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({
-          email: user.email || "",
-          "metadata[supabase_user_id]": user.id,
-        }).toString(),
+      const { ok, data: custData } = await stripeRequest(stripeKey, "/customers", "POST", {
+        email: user.email || "",
+        "metadata[supabase_user_id]": user.id,
       });
-      const custData = await custRes.json();
 
-      if (!custRes.ok) {
+      if (!ok) {
         console.error("[create-checkout] Stripe customer error:", custData.error?.message);
         return new Response(JSON.stringify({ error: "Erro ao processar pagamento" }), {
           status: 500, headers: corsHeaders,
@@ -117,15 +128,87 @@ serve(async (req) => {
       await supabase.from("profiles").update({ stripe_customer_id: customerId }).eq("id", user.id);
     }
 
-    // Criar sessão de checkout
+    // ═══ UPGRADE COM PRORATION ═══
+    // Se o usuário já tem subscription ativa, faz upgrade direto via API
+    // em vez de criar nova subscription (evita cobrança dupla)
+    const activeSubs = await getActiveSubscriptions(stripeKey, customerId!);
+    const existingSub = activeSubs.find((sub: any) => {
+      const existingPriceId = sub.items?.data?.[0]?.price?.id;
+      return existingPriceId && existingPriceId !== priceId && PRICE_PLAN_MAP[existingPriceId];
+    });
+
+    if (existingSub) {
+      const existingItemId = existingSub.items.data[0].id;
+      const existingPriceId = existingSub.items.data[0].price.id;
+      console.log(`[create-checkout] Upgrade: ${existingPriceId} → ${priceId} (sub: ${existingSub.id})`);
+
+      // Atualizar subscription com proration
+      const { ok: updateOk, data: updateData } = await stripeRequest(
+        stripeKey,
+        `/subscriptions/${existingSub.id}`,
+        "POST",
+        {
+          "items[0][id]": existingItemId,
+          "items[0][price]": priceId,
+          "proration_behavior": "create_prorations",
+          "metadata[supabase_user_id]": user.id,
+        }
+      );
+
+      if (!updateOk) {
+        console.error("[create-checkout] Upgrade error:", updateData.error?.message);
+        // Falhou o upgrade direto — cai pro checkout normal abaixo
+      } else {
+        const newPlano = PRICE_PLAN_MAP[priceId] || "premium";
+        const expiresAt = new Date(updateData.current_period_end * 1000).toISOString();
+
+        // Atualizar plano no banco
+        await supabase.from("profiles").update({
+          plano: newPlano,
+          stripe_subscription_id: existingSub.id,
+          plano_expira_em: expiresAt,
+        }).eq("id", user.id);
+
+        console.log(`[create-checkout] Upgrade OK: ${user.id} → ${newPlano} (proration applied)`);
+
+        // Cancelar outras subscriptions ativas (evitar duplicatas)
+        for (const sub of activeSubs) {
+          if (sub.id !== existingSub.id) {
+            await stripeRequest(stripeKey, `/subscriptions/${sub.id}`, "DELETE");
+            console.log(`[create-checkout] Subscription duplicada cancelada: ${sub.id}`);
+          }
+        }
+
+        return new Response(JSON.stringify({
+          upgraded: true,
+          plano: newPlano,
+          url: `${SITE_URL}/planos?status=sucesso&plano=${newPlano}`,
+        }), { headers: corsHeaders });
+      }
+    }
+
+    // Se já tem subscription IGUAL (mesmo price), não criar outra
+    const sameSub = activeSubs.find((sub: any) =>
+      sub.items?.data?.[0]?.price?.id === priceId
+    );
+    if (sameSub) {
+      const plano = PRICE_PLAN_MAP[priceId] || "premium";
+      console.log(`[create-checkout] Já tem subscription ativa com mesmo price: ${sameSub.id}`);
+      return new Response(JSON.stringify({
+        upgraded: false,
+        plano,
+        message: "Você já tem este plano ativo",
+        url: `${SITE_URL}/planos?status=sucesso&plano=${plano}`,
+      }), { headers: corsHeaders });
+    }
+
+    // ═══ CHECKOUT NORMAL (novo assinante) ═══
     const plano = PRICE_PLAN_MAP[priceId] || "premium";
-    const sessionRes = await fetch(`${STRIPE_API}/checkout/sessions`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${stripeKey}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: new URLSearchParams({
+    const { ok: sessionOk, data: sessionData } = await stripeRequest(
+      stripeKey,
+      "/checkout/sessions",
+      "POST",
+      {
         customer: customerId!,
         "line_items[0][price]": priceId,
         "line_items[0][quantity]": "1",
@@ -134,11 +217,10 @@ serve(async (req) => {
         cancel_url: `${SITE_URL}/planos?status=cancelado`,
         "metadata[supabase_user_id]": user.id,
         "subscription_data[metadata][supabase_user_id]": user.id,
-      }).toString(),
-    });
-    const sessionData = await sessionRes.json();
+      }
+    );
 
-    if (!sessionRes.ok) {
+    if (!sessionOk) {
       console.error("[create-checkout] Stripe checkout error:", sessionData.error?.message);
       return new Response(JSON.stringify({ error: "Erro ao criar sessão de pagamento" }), {
         status: 500, headers: corsHeaders,

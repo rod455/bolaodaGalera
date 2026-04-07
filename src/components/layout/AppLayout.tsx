@@ -39,6 +39,7 @@ const AppLayout = () => {
   };
 
   const handleNavClick = (path: string) => {
+    window.scrollTo(0, 0);
     if (path.endsWith(".html")) {
       window.location.href = path;
     } else {

@@ -23,7 +23,7 @@ function getCorsHeaders(req: Request) {
 }
 
 const DELAY_MS = 600;
-const HOURS_BEFORE = 12;
+const HOURS_BEFORE = 6;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 function firstName(nome: string | null): string {
@@ -134,7 +134,7 @@ serve(async (req) => {
 
     if (!jogosProximos || jogosProximos.length === 0) {
       return new Response(
-        JSON.stringify({ ok: true, message: "Sem jogos nas proximas 12h", enviados: 0 }),
+        JSON.stringify({ ok: true, message: "Sem jogos nas proximas 6h", enviados: 0 }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -245,9 +245,22 @@ serve(async (req) => {
       .not("email", "is", null)
       .neq("email", "");
 
-    const destinatarios = (profiles || []).filter((p: any) =>
+    const candidatos = (profiles || []).filter((p: any) =>
       p.email && p.email.includes("@") && !p.email.toLowerCase().startsWith("fake")
     );
+
+    // -- 5b. Pular usuarios que tem push notification ativo --
+    const candidatoIds = candidatos.map((p: any) => p.id);
+    const { data: pushTokens } = await supabase
+      .from("push_tokens")
+      .select("user_id")
+      .in("user_id", candidatoIds)
+      .eq("ativo", true);
+
+    const usersComPush = new Set((pushTokens || []).map((t: any) => t.user_id));
+    const destinatarios = candidatos.filter((p: any) => !usersComPush.has(p.id));
+
+    logGeral.push(`Usuarios com push ativo (pulados): ${usersComPush.size}, email: ${destinatarios.length}`);
 
     // -- 6. Enviar 1 email por usuario --
     let totalEnviados = 0;

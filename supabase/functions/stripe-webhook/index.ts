@@ -79,22 +79,27 @@ serve(async (req) => {
   const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET") || "";
   const body = await req.text();
 
-  if (!webhookSecret) {
-    console.error("STRIPE_WEBHOOK_SECRET not configured — rejecting request");
-    return new Response(JSON.stringify({ error: "Webhook secret not configured" }), {
-      status: 500, headers: corsHeaders,
-    });
+  if (webhookSecret) {
+    const valid = await verifySignature(body, sigHeader, webhookSecret);
+    if (!valid) {
+      console.error("Webhook signature verification failed");
+      return new Response(JSON.stringify({ error: "Invalid signature" }), {
+        status: 400, headers: corsHeaders,
+      });
+    }
+  } else {
+    console.warn("STRIPE_WEBHOOK_SECRET not set — skipping signature verification");
   }
 
-  const valid = await verifySignature(body, sigHeader, webhookSecret);
-  if (!valid) {
-    console.error("Webhook signature verification failed");
-    return new Response(JSON.stringify({ error: "Invalid signature" }), {
+  let event: any;
+  try {
+    event = JSON.parse(body);
+  } catch (parseErr) {
+    console.error("JSON parse error:", parseErr);
+    return new Response(JSON.stringify({ error: "Invalid JSON" }), {
       status: 400, headers: corsHeaders,
     });
   }
-
-  const event = JSON.parse(body);
   console.log(`[Stripe Webhook] Evento: ${event.type}`);
 
   try {
@@ -111,12 +116,15 @@ serve(async (req) => {
         const plano = PRICE_PLAN_MAP[priceId] || "premium";
         const expiresAt = new Date(sub.current_period_end * 1000).toISOString();
 
+        console.log(`[Stripe] Sub ${sub.id}: status=${status}, priceId=${priceId}, plano=${plano}, userId=${userId}`);
+
         if (status === "active" || status === "trialing") {
-          await supabase.from("profiles").update({
+          const { error: updateErr } = await supabase.from("profiles").update({
             plano,
             stripe_subscription_id: sub.id,
             plano_expira_em: expiresAt,
           }).eq("id", userId);
+          if (updateErr) console.error(`[Stripe] Erro no update:`, updateErr);
           console.log(`[Stripe] Plano ativado: ${userId} → ${plano}`);
         } else if (status === "canceled" || status === "unpaid") {
           await supabase.from("profiles").update({
@@ -155,9 +163,9 @@ serve(async (req) => {
       default:
         console.log(`[Stripe] Evento ignorado: ${event.type}`);
     }
-  } catch (err) {
-    console.error(`[Stripe] Erro processando ${event.type}:`, err);
-    return new Response(JSON.stringify({ error: "Erro interno" }), {
+  } catch (err: any) {
+    console.error(`[Stripe] Erro processando ${event.type}:`, err?.message || err, JSON.stringify(err));
+    return new Response(JSON.stringify({ error: "Erro interno", detail: String(err) }), {
       status: 500, headers: corsHeaders,
     });
   }

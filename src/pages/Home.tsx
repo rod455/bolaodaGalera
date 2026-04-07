@@ -15,7 +15,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import RegrasModal from "@/components/RegrasModal";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import AdRewardModal from "@/components/AdRewardModal";
 import { useRewardedAd } from "@/hooks/useRewardedAd";
 import { useUserPlan } from "@/hooks/useUserPlan";
 import DynamicBanner from "@/components/DynamicBanner";
@@ -24,9 +23,10 @@ import QuizBannerCarousel from "@/components/QuizBannerCarousel";
 import GuestHeroCarousel from "@/components/GuestHeroCarousel";
 import PromoCardBorder from "@/components/PromoCardBorder";
 import type { Bolao } from "@/lib/types";
-import { MODO_LABELS, MODO_REGRAS, FALLBACK_IMAGES, FREE_MAX_PRIVADOS as CONST_FREE_MAX_PRIVADOS, FREE_MAX_CRIAR as CONST_FREE_MAX_CRIAR, FREE_MAX_PARTICIPANTES, PREMIUM_MAX_PARTICIPANTES } from "@/lib/constants";
+import { MODO_LABELS, MODO_REGRAS, FALLBACK_IMAGES, FREE_MAX_PRIVADOS as CONST_FREE_MAX_PRIVADOS, FREE_MAX_CRIAR as CONST_FREE_MAX_CRIAR, FREE_MAX_PARTICIPANTES, PREMIUM_MAX_PARTICIPANTES, PREMIUM_PRO_MAX_PARTICIPANTES } from "@/lib/constants";
 import { formatDataJogo } from "@/lib/formatters";
 import SEOHead from "@/components/SEOHead";
+import AdBanner from "@/components/AdBanner";
 import { trackEvent } from "@/lib/analytics";
 import Onboarding, { isOnboardingDone, markOnboardingDone } from "@/components/Onboarding";
 import FeedbackBanner from "@/components/FeedbackBanner";
@@ -285,9 +285,9 @@ const Home = () => {
   const [showCodeInput, setShowCodeInput] = useState(false);
   const [codigoInput, setCodigoInput] = useState("");
   const [joiningByCode, setJoiningByCode] = useState(false);
-  const { showAd, resolveWebAd, needsAd } = useRewardedAd();
+  const { showAd, needsAd } = useRewardedAd();
   const { plano: userPlano } = useUserPlan();
-  const [showAdModal, setShowAdModal] = useState(false);
+
   const [regrasModal, setRegrasModal] = useState<string | null>(null);
   const [userEstado, setUserEstado] = useState<string | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -530,12 +530,15 @@ const Home = () => {
       .select("criador_id, profiles(plano)")
       .eq("id", bolaoId)
       .single();
-    const hasPremiumMember = (participants || []).some(
-      (p: any) => p.profiles?.plano === "premium" || p.profiles?.plano === "premium_pro"
-    ) || bolaoData?.profiles?.plano === "premium" || bolaoData?.profiles?.plano === "premium_pro";
-    const maxCapacity = hasPremiumMember ? PREMIUM_MAX_PARTICIPANTES : FREE_MAX_PARTICIPANTES;
+    const allPlanos = [
+      ...(participants || []).map((p: any) => p.profiles?.plano),
+      bolaoData?.profiles?.plano,
+    ];
+    const hasProMember = allPlanos.includes("premium_pro");
+    const hasPremiumMember = hasProMember || allPlanos.includes("premium");
+    const maxCapacity = hasProMember ? PREMIUM_PRO_MAX_PARTICIPANTES : hasPremiumMember ? PREMIUM_MAX_PARTICIPANTES : FREE_MAX_PARTICIPANTES;
     if (currentCount >= maxCapacity) {
-      toast.error(`Este grupo está lotado! Limite de ${maxCapacity} participantes.${!hasPremiumMember ? " Se alguém do grupo fizer upgrade para Premium, o limite sobe para 50!" : " Para grupos acima de 50, entre em contato."}`);
+      toast.error(`Este grupo está lotado! Limite de ${maxCapacity} participantes.${!hasPremiumMember ? " Com Premium o limite sobe para 30, e com Premium PRO para 50!" : !hasProMember ? " Com Premium PRO o limite sobe para 50!" : ""}`);
       return false;
     }
     return true;
@@ -611,7 +614,7 @@ const Home = () => {
         path="/home"
         keywords="bolão na copa, bolão da copa, bolão de futebol grátis, palpites futebol, bolão brasileirão 2026, bolão copa do mundo 2026, bolão entre amigos"
       />
-      <AdRewardModal open={showAdModal} onComplete={resolveWebAd} message="Assista para entrar no bolão" />
+
 
 
       {/* ═══ GUEST: Countdown ═══ */}
@@ -619,6 +622,9 @@ const Home = () => {
 
       {/* ═══ BANNERS DINÂMICOS — carrossel ═══ */}
       <DynamicBanner userBolaoIds={userBolaoIds} userContext={userBannerCtx} />
+
+      {/* ═══ Banner Ad — entre carrossel e conteúdo ═══ */}
+      <AdBanner />
 
       {/* ═══ GUEST: Google Login ═══ */}
       {!user && !/FBAN|FBAV|Instagram|Line|TikTok|Snapchat/i.test(navigator.userAgent) && (

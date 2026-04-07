@@ -6,7 +6,7 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   server: {
     androidScheme: 'https',
-    url: 'https://www.bolaonacopa.com.br',
+    iosScheme: 'https',
   },
   plugins: {
     Keyboard: {
