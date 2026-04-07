@@ -495,6 +495,27 @@ const Planos = () => {
         </button>
       )}
 
+      {/* Links obrigatórios — Política de Privacidade e Termos de Uso */}
+      <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground pt-2 pb-4">
+        <a
+          href="/termos-de-uso.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:text-foreground transition-colors"
+        >
+          Termos de Uso
+        </a>
+        <span>·</span>
+        <a
+          href="/privacidade.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:text-foreground transition-colors"
+        >
+          Política de Privacidade
+        </a>
+      </div>
+
       <RegrasModal
         regras={infoModal}
         open={!!infoModal}

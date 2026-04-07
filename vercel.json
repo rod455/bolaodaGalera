@@ -2,6 +2,7 @@
   "rewrites": [
     { "source": "/quiz-selecao", "destination": "/quiz-selecao.html" },
     { "source": "/quiz-resultado", "destination": "/quiz-resultado.html" },
+    { "source": "/termos-de-uso", "destination": "/termos-de-uso.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [

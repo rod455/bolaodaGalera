@@ -102,6 +102,7 @@ const App = () => {
     initGoogleAuth();
     initUTMTracker();
     // Rewarded interstitial na abertura — conta > 24h, não premium
+    // Delay increased to avoid interfering with app launch and review
     if (isNative) {
       setTimeout(async () => {
         try {
@@ -115,7 +116,7 @@ const App = () => {
         } catch {
           // Silently fail
         }
-      }, 2000);
+      }, 5000);
     }
   }, [isNative]);
 
