@@ -29,6 +29,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { initGoogleAuth } from "@/lib/googleAuth";
 import { initUTMTracker } from "@/lib/utm-tracker";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
+import { showAppOpenAd } from "@/hooks/useRewardedAd";
 
 
 const queryClient = new QueryClient();
@@ -100,7 +101,23 @@ const App = () => {
   useEffect(() => {
     initGoogleAuth();
     initUTMTracker();
-  }, []);
+    // Rewarded interstitial na abertura — conta > 24h, não premium
+    if (isNative) {
+      setTimeout(async () => {
+        try {
+          const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+          if (authError || !authUser) return;
+          const createdAt = new Date(authUser.created_at).getTime();
+          if (Date.now() - createdAt < 24 * 60 * 60 * 1000) return;
+          const { data } = await supabase.from("profiles").select("plano").eq("id", authUser.id).single();
+          const plano = (data as any)?.plano || "free";
+          showAppOpenAd(plano === "premium" || plano === "premium_pro");
+        } catch {
+          // Silently fail
+        }
+      }, 2000);
+    }
+  }, [isNative]);
 
   // Deep Link: capturar OAuth callback no app nativo
   useEffect(() => {

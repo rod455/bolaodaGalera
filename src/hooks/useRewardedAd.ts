@@ -399,3 +399,20 @@ export const useRewardedAd = () => {
   return { showAd, adLoading, isPremium, needsAd: !isPremium && isNative };
 };
 
+// ═══ App Open Ad — chamar no App.tsx ao iniciar ═══
+export async function showAppOpenAd(isPremium?: boolean): Promise<void> {
+  if (!isRunningInNativeApp()) return;
+  if (isPremium) return;
+
+  const AdMob = getAdMobPlugin();
+  if (!AdMob) return;
+
+  try {
+    await ensureAdMobReady();
+    await AdMob.prepareRewardInterstitialAd({ adId: REWARDED_INTERSTITIAL_ID, isTesting: false });
+    await AdMob.showRewardInterstitialAd();
+  } catch {
+    // Ad failed — continue normally
+  }
+}
+
