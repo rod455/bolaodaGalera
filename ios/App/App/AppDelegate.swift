@@ -4,26 +4,21 @@ import UserNotifications
 import FirebaseCore
 import AppTrackingTransparency
 
-@main
+@UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Firebase init wrapped in safety guard to prevent crash on launch
-        do {
-            if FirebaseApp.app() == nil {
-                FirebaseApp.configure()
-            }
-        } catch {
-            NSLog("[BolaoCopa] Firebase configure error: \(error.localizedDescription)")
+        if FirebaseApp.app() == nil {
+            FirebaseApp.configure()
         }
         UNUserNotificationCenter.current().delegate = self
         return true
     }
 
     func applicationDidBecomeActive(_ application: UIApplication) {
-        // Request ATT authorization when app becomes active (required before AdMob tracking)
         requestTrackingAuthorization()
     }
 
@@ -56,13 +51,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         NotificationCenter.default.post(name: .capacitorDidFailToRegisterForRemoteNotifications, object: error)
     }
 
-    // MARK: UISceneSession Lifecycle (iPadOS 26 compatibility)
-    func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -> UISceneConfiguration {
-        let config = UISceneConfiguration(name: nil, sessionRole: connectingSceneSession.role)
-        config.delegateClass = SceneDelegate.self
-        return config
-    }
-
     // MARK: - App Tracking Transparency (ATT)
     private var attRequested = false
 
@@ -70,27 +58,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         guard !attRequested else { return }
         attRequested = true
 
-        // Delay slightly to ensure the app UI is fully loaded
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             ATTrackingManager.requestTrackingAuthorization { status in
                 NSLog("[BolaoCopa] ATT status: \(status.rawValue)")
             }
-        }
-    }
-}
-
-// MARK: - UISceneDelegate for iPadOS 26 compatibility
-class SceneDelegate: UIResponder, UIWindowSceneDelegate {
-    var window: UIWindow?
-
-    func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
-        guard let windowScene = scene as? UIWindowScene else { return }
-        self.window = UIWindow(windowScene: windowScene)
-
-        let storyboard = UIStoryboard(name: "Main", bundle: nil)
-        if let vc = storyboard.instantiateInitialViewController() {
-            self.window?.rootViewController = vc
-            self.window?.makeKeyAndVisible()
         }
     }
 }
@@ -106,7 +77,6 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 didReceive response: UNNotificationResponse,
                                 withCompletionHandler completionHandler: @escaping () -> Void) {
-        // Encaminhar para o Capacitor para que o listener JS receba o evento
         NotificationCenter.default.post(name: NSNotification.Name("pushNotificationActionPerformed"), object: response)
         completionHandler()
     }
