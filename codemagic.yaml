@@ -31,6 +31,23 @@ workflows:
       - name: Sync Capacitor
         script: npx cap sync ios
 
+      - name: Add RevenueCat to Package.swift
+        script: |
+          set -ex
+          cd ios/App/CapApp-SPM
+          # Verificar se RevenueCat já está no Package.swift
+          if ! grep -q "RevenuecatPurchasesCapacitor" Package.swift; then
+            echo "Adding RevenueCat to Package.swift..."
+            # Adicionar dependency
+            sed -i '' 's|.package(name: "CapacitorFilesystem", path: "../../../node_modules/@capacitor/filesystem")|.package(name: "CapacitorFilesystem", path: "../../../node_modules/@capacitor/filesystem"),\n        .package(name: "RevenuecatPurchasesCapacitor", path: "../../../node_modules/@revenuecat/purchases-capacitor")|' Package.swift
+            # Adicionar target dependency
+            sed -i '' 's|.product(name: "CapacitorFilesystem", package: "CapacitorFilesystem")|.product(name: "CapacitorFilesystem", package: "CapacitorFilesystem"),\n                .product(name: "RevenuecatPurchasesCapacitor", package: "RevenuecatPurchasesCapacitor")|' Package.swift
+            echo "RevenueCat added to Package.swift"
+          else
+            echo "RevenueCat already in Package.swift"
+          fi
+          cat Package.swift
+
       - name: Verify RevenueCat in Package.swift
         script: |
           echo "=== Package.swift after cap sync ==="
@@ -66,7 +83,7 @@ workflows:
         script: |
           cd ios/App
           agvtool new-marketing-version 1.5.1
-          agvtool new-version -all 37
+          agvtool new-version -all 38
 
       - name: Build IPA
         script: |
