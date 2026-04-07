@@ -144,7 +144,8 @@ const QuizSelecao = () => {
   // Compartilha resultado com imagem
   const generateAndShare = useCallback(async (canal: string) => {
     if (!selecao) return;
-    const link = "bolaonacopa.com.br/quiz";
+    const isIOS = Capacitor.getPlatform() === "ios";
+    const link = isIOS ? "apps.apple.com/app/bolao-na-copa/id6761629695" : "bolaonacopa.com.br/quiz";
     const femininos = ["Argentina","Alemanha","Australia","Austria","Belgica","Bosnia","Colombia","Croacia","Dinamarca","Escocia","Espanha","Franca","Holanda","Inglaterra","Jamaica","Noruega","Suecia","Suica","Tunisia","Turquia","Rep. Tcheca","Costa Rica","Costa do Marfim","Nova Zelandia","Arabia Saudita","Coreia do Sul","Africa do Sul"];
     const artigo = femininos.some(f => selecao.nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(f)) ? "da" : "do";
     const texto = `${selecao.bandeira} Fui convocado para jogar pela Sele\u00e7\u00e3o ${artigo} ${selecao.nome}! Qual sele\u00e7\u00e3o te convocaria?\n\nDescubra em: ${link}`;
@@ -207,9 +208,12 @@ const QuizSelecao = () => {
       }).catch(() => toast.success("Texto copiado!"));
 
     } else if (canal === "share") {
-      const url = "https://www.bolaonacopa.com.br/quiz-selecao";
+      const url = isIOS ? "https://apps.apple.com/app/bolao-na-copa/id6761629695" : "https://www.bolaonacopa.com.br/quiz-selecao";
       try {
-        if (navigator.share) {
+        if (Capacitor.isNativePlatform()) {
+          const { Share } = await import("@capacitor/share");
+          await Share.share({ title: `Quiz na Copa: ${selecao.titulo}`, text: texto, url, dialogTitle: "Compartilhar resultado" });
+        } else if (navigator.share) {
           const shareData: ShareData = { title: `Quiz na Copa: ${selecao.titulo}`, text: texto, url };
           if (imageFile && navigator.canShare && navigator.canShare({ files: [imageFile] })) {
             shareData.files = [imageFile];

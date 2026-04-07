@@ -113,7 +113,11 @@ const QuizLenda = () => {
 
   const generateAndShare = useCallback(async (canal: string) => {
     if (!lenda) return;
-    const texto = lenda.share;
+    const isIOS = Capacitor.getPlatform() === "ios";
+    const storeLink = isIOS
+      ? "https://apps.apple.com/app/bolao-na-copa/id6761629695"
+      : "https://www.bolaonacopa.com.br/quiz-lenda";
+    const texto = `${lenda.share}\n\nBaixe o app: ${storeLink}`;
     trackEvent("quiz_share", { quiz_id: "quiz_lenda", resultado: lenda.id, canal });
 
     setSharing(true);
@@ -141,20 +145,35 @@ const QuizLenda = () => {
       }
       shareViaWhatsApp(texto);
     } else if (canal === "copiar") {
-      navigator.clipboard.writeText(texto).then(() => { setCopied(true); toast.success("Texto copiado!"); setTimeout(() => setCopied(false), 2500); }).catch(() => toast.success("Texto copiado!"));
+      try {
+        await navigator.clipboard.writeText(texto);
+        setCopied(true); toast.success("Texto copiado!"); setTimeout(() => setCopied(false), 2500);
+      } catch {
+        // Fallback: usar Share no nativo se clipboard não funcionar
+        if (Capacitor.isNativePlatform()) {
+          try {
+            const { Share } = await import("@capacitor/share");
+            await Share.share({ text: texto, dialogTitle: "Copiar resultado" });
+          } catch { /* silencioso */ }
+        }
+        toast.success("Texto copiado!");
+      }
     } else if (canal === "share") {
       try {
-        if (navigator.share) {
-          const shareData: ShareData = { title: lenda.titulo, text: texto, url: "https://www.bolaonacopa.com.br/quiz-lenda" };
+        if (Capacitor.isNativePlatform()) {
+          const { Share } = await import("@capacitor/share");
+          await Share.share({ title: lenda.titulo, text: texto, url: storeLink, dialogTitle: "Compartilhar resultado" });
+        } else if (navigator.share) {
+          const shareData: ShareData = { title: lenda.titulo, text: texto, url: storeLink };
           if (imageFile && navigator.canShare && navigator.canShare({ files: [imageFile] })) shareData.files = [imageFile];
           await navigator.share(shareData);
         } else {
-          await navigator.clipboard.writeText(`${texto}\nhttps://www.bolaonacopa.com.br/quiz-lenda`);
+          await navigator.clipboard.writeText(texto);
           toast.success("Link copiado para compartilhar!");
         }
       } catch (err: any) {
         if (err?.name !== "AbortError") {
-          try { await navigator.clipboard.writeText(`${texto}\nhttps://www.bolaonacopa.com.br/quiz-lenda`); toast.success("Link copiado!"); } catch { toast.error("Não foi possível compartilhar"); }
+          try { await navigator.clipboard.writeText(texto); toast.success("Link copiado!"); } catch { toast.error("Não foi possível compartilhar"); }
         }
       }
     }
