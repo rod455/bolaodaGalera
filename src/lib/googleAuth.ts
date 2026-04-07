@@ -60,10 +60,10 @@ export async function signInWithGoogle(
   if (Capacitor.isNativePlatform()) {
     try {
       if (!socialLogin) {
-        // Tentar inicializar se ainda não foi
         await initGoogleAuth();
         if (!socialLogin) {
-          return { success: false, error: "Google Auth não disponível" };
+          // Fallback para login web se plugin não disponível
+          return signInWithGoogleWeb(redirectPath);
         }
       }
 
@@ -80,7 +80,6 @@ export async function signInWithGoogle(
         return { success: false, error: "Token do Google não recebido" };
       }
 
-      // Usar idToken para autenticar no Supabase
       const { error } = await supabase.auth.signInWithIdToken({
         provider: "google",
         token: idToken,
@@ -99,11 +98,18 @@ export async function signInWithGoogle(
       ) {
         return { success: false, error: "Login cancelado" };
       }
-      return { success: false, error: err?.message || "Erro ao fazer login com Google" };
+      console.error("[GoogleAuth] Native login failed, falling back to web:", err);
+      // Fallback para login via web no iOS se nativo crashar
+      return signInWithGoogleWeb(redirectPath);
     }
   }
 
-  // ═══ WEB ═══
+  return signInWithGoogleWeb(redirectPath);
+}
+
+async function signInWithGoogleWeb(
+  redirectPath: string
+): Promise<{ success: boolean; error?: string }> {
   try {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
