@@ -595,6 +595,18 @@ const Auth = () => {
         </div>
         </>
         )}
+
+        {/* Links obrigatórios — Termos e Privacidade */}
+        <p className="text-center text-[11px] text-copa-green-200/70 mt-4 leading-relaxed">
+          Ao continuar, você concorda com nossos{" "}
+          <a href="/termos-de-uso.html" target="_blank" rel="noopener noreferrer" className="underline text-copa-green-100/80">
+            Termos de Uso
+          </a>{" "}
+          e{" "}
+          <a href="/privacidade.html" target="_blank" rel="noopener noreferrer" className="underline text-copa-green-100/80">
+            Política de Privacidade
+          </a>.
+        </p>
       </div>
     </div>
   );

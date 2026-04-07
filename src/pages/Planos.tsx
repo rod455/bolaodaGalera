@@ -101,8 +101,14 @@ const Planos = () => {
     }
   };
 
-  // ═══ Stripe checkout (Android/Web) ═══
+  // ═══ Stripe checkout (Android/Web) — BLOQUEADO no iOS ═══
   const handleStripeCheckout = async (priceId: string) => {
+    // Apple Guideline 3.1.1: iOS must use IAP only
+    if (isIOS) {
+      toast.error("Use a assinatura pelo app para continuar.");
+      return;
+    }
+
     if (!session) {
       toast.error("Você precisa estar logado");
       return;
@@ -368,6 +374,10 @@ const Planos = () => {
               {loadingCheckout ? "Redirecionando..." : "Assinar Premium"}
             </Button>
           )}
+
+          <p className="text-center text-[10px] text-muted-foreground/70 leading-tight mt-1">
+            A assinatura renova automaticamente. Cancele a qualquer momento nas configurações da sua conta Apple.
+          </p>
         </CardContent>
       </Card>
 

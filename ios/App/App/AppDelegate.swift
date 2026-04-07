@@ -2,6 +2,7 @@ import UIKit
 import Capacitor
 import UserNotifications
 import FirebaseCore
+import AppTrackingTransparency
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -21,6 +22,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return true
     }
 
+    func applicationDidBecomeActive(_ application: UIApplication) {
+        // Request ATT authorization when app becomes active (required before AdMob tracking)
+        requestTrackingAuthorization()
+    }
+
     func applicationWillResignActive(_ application: UIApplication) {
     }
 
@@ -28,9 +34,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func applicationWillEnterForeground(_ application: UIApplication) {
-    }
-
-    func applicationDidBecomeActive(_ application: UIApplication) {
     }
 
     func applicationWillTerminate(_ application: UIApplication) {
@@ -53,11 +56,26 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         NotificationCenter.default.post(name: .capacitorDidFailToRegisterForRemoteNotifications, object: error)
     }
 
-    // MARK: UISceneSession Lifecycle (iPadOS 26+ / iOS 17+)
+    // MARK: UISceneSession Lifecycle (iPadOS 26 compatibility)
     func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -> UISceneConfiguration {
         let config = UISceneConfiguration(name: nil, sessionRole: connectingSceneSession.role)
         config.delegateClass = SceneDelegate.self
         return config
+    }
+
+    // MARK: - App Tracking Transparency (ATT)
+    private var attRequested = false
+
+    private func requestTrackingAuthorization() {
+        guard !attRequested else { return }
+        attRequested = true
+
+        // Delay slightly to ensure the app UI is fully loaded
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            ATTrackingManager.requestTrackingAuthorization { status in
+                NSLog("[BolaoCopa] ATT status: \(status.rawValue)")
+            }
+        }
     }
 }
 
