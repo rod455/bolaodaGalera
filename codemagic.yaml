@@ -31,6 +31,15 @@ workflows:
       - name: Sync Capacitor
         script: npx cap sync ios
 
+      - name: Patch iOS config for AdMob
+        script: |
+          set -ex
+          # Substituir AdMob App ID do Android pelo iOS no capacitor.config.json
+          cd ios/App/App
+          sed -i '' 's/ca-app-pub-9316035916536420~4807390224/ca-app-pub-9316035916536420~7457000023/g' capacitor.config.json
+          echo "AdMob App ID patched for iOS:"
+          cat capacitor.config.json | grep -i admob || true
+
       - name: Setup iOS code signing
         script: |
           set -ex
@@ -49,7 +58,7 @@ workflows:
         script: |
           cd ios/App
           agvtool new-marketing-version 1.5.1
-          agvtool new-version -all 34
+          agvtool new-version -all 35
 
       - name: Build IPA
         script: |

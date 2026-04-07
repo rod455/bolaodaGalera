@@ -55,6 +55,15 @@
 	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-9316035916536420~7457000023</string>
+	<key>SKAdNetworkItems</key>
+	<array>
+		<dict>
+			<key>SKAdNetworkIdentifier</key>
+			<string>cstr6suwn9.skadnetwork</string>
+		</dict>
+	</array>
 	<key>NSUserTrackingUsageDescription</key>
 	<string>Usamos identificadores para exibir anúncios relevantes e melhorar sua experiência no app</string>
 	<key>CFBundleURLTypes</key>
