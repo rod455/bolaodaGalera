@@ -115,6 +115,21 @@ const Planos = () => {
       });
 
       if (error) throw error;
+
+      // Upgrade com proration (sem checkout, já atualizado)
+      if (data?.upgraded) {
+        trackEvent('upgrade_premium', { plano: data.plano });
+        toast.success("Plano atualizado com sucesso! O valor foi ajustado proporcionalmente.");
+        window.location.href = data.url;
+        return;
+      }
+
+      // Já tem o mesmo plano ativo
+      if (data?.upgraded === false && data?.message) {
+        toast.info(data.message);
+        return;
+      }
+
       if (data?.url) {
         const planoMap: Record<string, string> = {
           [STRIPE_PRICES.premium_mensal]: 'premium',
