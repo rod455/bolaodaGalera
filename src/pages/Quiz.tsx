@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ChevronDown, ChevronRight, Lock, Globe, Target, Shield, MapPin } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronRight, Lock, Target, Shield, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Capacitor } from "@capacitor/core";
 import { useUserPlan } from "@/hooks/useUserPlan";
 import SEOHead from "@/components/SEOHead";
 import { PLAY_STORE_URL } from "@/lib/constants";
-import { PERGUNTAS } from "@/lib/quiz-data";
-import { PERGUNTAS_LENDA } from "@/lib/quiz-lenda-data";
+// Quiz data imports removed — hub no longer previews questions
 
 // Dias ate a Copa (11 Jun 2026)
 const COPA_DATE = new Date("2026-06-11T00:00:00Z");
@@ -79,23 +78,35 @@ const Quiz = () => {
               10 perguntas revelam qual das <strong className="text-white">48 seleções</strong> da Copa 2026 combina com o seu jeito de jogar.
             </p>
 
-            {/* Preview perguntas */}
-            <div className="space-y-2">
-              {PERGUNTAS.slice(0, 3).map((p, i) => (
-                <div key={i} className="flex items-center gap-3 text-left rounded-xl px-3.5 py-2.5"
-                  style={{ background: "rgba(255,255,255,.048)", border: "1px solid rgba(255,255,255,.07)" }}>
-                  <div className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold"
-                    style={{ background: "rgba(250,204,21,.14)", border: "1.5px solid rgba(250,204,21,.38)", color: "#facc15" }}>{i + 1}</div>
-                  <span className="text-xs font-medium flex-1" style={{ color: "rgba(255,255,255,.82)" }}>{p.texto}</span>
-                  <span className="text-xs opacity-40 flex-shrink-0">{i === 0 ? "🔓" : "🔒"}</span>
-                </div>
-              ))}
+            {/* Por que fazer o quiz? */}
+            <div>
+              <h4 className="mb-2" style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(1.2rem,4vw,1.6rem)", color: "#fff" }}>
+                Por que fazer <span style={{ color: "#facc15" }}>o quiz?</span>
+              </h4>
+              <p className="text-xs leading-relaxed mb-3" style={{ color: "rgba(255,255,255,.55)" }}>
+                Não é só curiosidade. É uma forma de descobrir seu estilo de jogo — e de desafiar seus amigos do bolão.
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { ico: "🌍", t: "48 seleções reais", s: "Todas as seleções classificadas para a Copa 2026." },
+                  { ico: "🎯", t: "Algoritmo de perfil", s: "Suas respostas criam um perfil único. Não tem como 'acertar'." },
+                  { ico: "💬", t: "Compartilhe o resultado", s: "Envie para o grupo do bolão e veja quem discorda." },
+                  { ico: "🏆", t: "Entre no bolão", s: "Após o quiz, entre no bolão da Copa e palpite em todos os 104 jogos." },
+                ].map((c, i) => (
+                  <div key={i} className="rounded-xl p-3 text-left"
+                    style={{ background: "rgba(255,255,255,.045)", border: "1px solid rgba(255,255,255,.075)" }}>
+                    <div className="text-lg mb-1">{c.ico}</div>
+                    <p className="text-xs font-bold text-white mb-0.5">{c.t}</p>
+                    <p className="text-[10px] leading-relaxed" style={{ color: "rgba(255,255,255,.5)" }}>{c.s}</p>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <button onClick={() => navigate("/quiz/selecao")}
+            <button onClick={() => navigate("/quiz/selecao?start=true")}
               className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-black text-sm transition-all hover:-translate-y-0.5 active:scale-[0.98]"
               style={{ background: "#facc15", color: "#14532d", boxShadow: "0 8px 28px rgba(250,204,21,.33)" }}>
-              Começar o Quiz <ChevronRight className="w-4 h-4" />
+              ⚽ Começar o Quiz — Grátis
             </button>
 
             {!isPremium && (
@@ -103,6 +114,19 @@ const Quiz = () => {
                 Grátis com anúncio · <button onClick={() => navigate("/planos")} className="underline" style={{ color: "#facc15" }}>Premium sem anúncios</button>
               </p>
             )}
+
+            {/* Social proof */}
+            <div className="flex items-center justify-center gap-2">
+              <div className="flex">
+                {["M", "J", "A", "R", "+"].map((l, i) => (
+                  <div key={i} className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold -ml-1 first:ml-0"
+                    style={{ background: "#15803d", border: "2px solid #14532d", color: "#fff" }}>{l}</div>
+                ))}
+              </div>
+              <span className="text-[11px]" style={{ color: "rgba(255,255,255,.5)" }}>
+                <strong style={{ color: "#facc15" }}>+5.400 pessoas</strong> já fizeram o quiz hoje
+              </span>
+            </div>
           </div>
         )}
       </div>
@@ -140,21 +164,33 @@ const Quiz = () => {
               10 perguntas revelam qual das <strong className="text-white">25 maiores lendas</strong> do futebol combina com o seu estilo.
             </p>
 
-            {/* Preview perguntas */}
-            <div className="space-y-2">
-              {PERGUNTAS_LENDA.slice(0, 3).map((p, i) => (
-                <div key={i} className="flex items-center gap-3 text-left rounded-xl px-3.5 py-2.5"
-                  style={{ background: "rgba(255,255,255,.048)", border: "1px solid rgba(255,255,255,.07)" }}>
-                  <div className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold"
-                    style={{ background: "rgba(250,204,21,.14)", border: "1.5px solid rgba(250,204,21,.38)", color: "#facc15" }}>{i + 1}</div>
-                  <span className="text-xs font-medium flex-1" style={{ color: "rgba(255,255,255,.82)" }}>{p.texto}</span>
-                  <span className="text-xs opacity-40 flex-shrink-0">{i === 0 ? "🔓" : "🔒"}</span>
-                </div>
-              ))}
+            {/* Por que fazer o quiz? */}
+            <div>
+              <h4 className="mb-2" style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(1.2rem,4vw,1.6rem)", color: "#fff" }}>
+                Por que fazer <span style={{ color: "#facc15" }}>o quiz?</span>
+              </h4>
+              <p className="text-xs leading-relaxed mb-3" style={{ color: "rgba(255,255,255,.55)" }}>
+                Descubra qual lenda do futebol mundial tem o mesmo estilo que você — e desafie seus amigos.
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { ico: "👑", t: "25 lendas reais", s: "De Pelé a Mbappé — os maiores da história das Copas." },
+                  { ico: "🎯", t: "Algoritmo único", s: "Suas respostas definem seu perfil. Não tem como 'acertar'." },
+                  { ico: "💬", t: "Compartilhe o resultado", s: "Manda pro grupo e veja quem é o Pelé da galera." },
+                  { ico: "🏆", t: "Entre no bolão", s: "Após o quiz, entre no bolão da Copa e palpite nos jogos." },
+                ].map((c, i) => (
+                  <div key={i} className="rounded-xl p-3 text-left"
+                    style={{ background: "rgba(255,255,255,.045)", border: "1px solid rgba(255,255,255,.075)" }}>
+                    <div className="text-lg mb-1">{c.ico}</div>
+                    <p className="text-xs font-bold text-white mb-0.5">{c.t}</p>
+                    <p className="text-[10px] leading-relaxed" style={{ color: "rgba(255,255,255,.5)" }}>{c.s}</p>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Preview lendas */}
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap justify-center gap-1.5">
               {["👑 Pelé", "⚡ Ronaldo", "🐐 Messi", "🔥 Maradona", "🎩 Zidane"].map((l, i) => (
                 <span key={i} className="rounded-full px-2.5 py-1 text-[11px] font-semibold"
                   style={{ background: "rgba(255,255,255,.065)", border: "1px solid rgba(255,255,255,.09)", color: "rgba(255,255,255,.78)" }}>
@@ -167,10 +203,10 @@ const Quiz = () => {
               </span>
             </div>
 
-            <button onClick={() => navigate("/quiz/lenda")}
+            <button onClick={() => navigate("/quiz/lenda?start=true")}
               className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-black text-sm transition-all hover:-translate-y-0.5 active:scale-[0.98]"
               style={{ background: "#facc15", color: "#14532d", boxShadow: "0 8px 28px rgba(250,204,21,.33)" }}>
-              Começar o Quiz <ChevronRight className="w-4 h-4" />
+              👑 Começar o Quiz — Grátis
             </button>
 
             {!isPremium && (
@@ -178,6 +214,19 @@ const Quiz = () => {
                 Grátis com anúncio · <button onClick={() => navigate("/planos")} className="underline" style={{ color: "#facc15" }}>Premium sem anúncios</button>
               </p>
             )}
+
+            {/* Social proof */}
+            <div className="flex items-center justify-center gap-2">
+              <div className="flex">
+                {["M", "J", "A", "R", "+"].map((l, i) => (
+                  <div key={i} className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold -ml-1 first:ml-0"
+                    style={{ background: "#15803d", border: "2px solid #14532d", color: "#fff" }}>{l}</div>
+                ))}
+              </div>
+              <span className="text-[11px]" style={{ color: "rgba(255,255,255,.5)" }}>
+                <strong style={{ color: "#facc15" }}>+3.200 pessoas</strong> já fizeram o quiz hoje
+              </span>
+            </div>
           </div>
         )}
       </div>
