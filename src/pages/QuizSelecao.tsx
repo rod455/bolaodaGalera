@@ -56,9 +56,9 @@ const QuizSelecao = () => {
 
   // Track start quando vem da LP
   useEffect(() => {
+    window.scrollTo(0, 0);
     if (startDirect) {
       trackEvent("quiz_selecao_start", { source: "lp" });
-      window.scrollTo({ top: 0 });
     }
   }, [startDirect]);
 
