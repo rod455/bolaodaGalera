@@ -75,8 +75,9 @@ export const useRevenueCat = () => {
 
       try {
         const apiKey = isIOS ? RC_IOS_KEY : RC_ANDROID_KEY;
+        console.log("[RevenueCat] Init with key:", apiKey ? apiKey.substring(0, 10) + "..." : "NONE");
         if (!apiKey) {
-          // No API key configured
+          console.warn("[RevenueCat] No API key configured");
           setLoading(false);
           return;
         }
@@ -86,9 +87,11 @@ export const useRevenueCat = () => {
           appUserID: user?.id || undefined,
         });
         rcInitialized = true;
+        console.log("[RevenueCat] Configured successfully");
 
         // Fetch offerings
         const { offerings: offeringsResult } = await Purchases.getOfferings();
+        console.log("[RevenueCat] Offerings:", offeringsResult?.current ? "found" : "EMPTY");
         if (offeringsResult.current) {
           setOfferings(offeringsResult.current as RCOffering);
         }
@@ -96,8 +99,9 @@ export const useRevenueCat = () => {
         // Fetch customer info
         const { customerInfo: info } = await Purchases.getCustomerInfo();
         setCustomerInfo(info as RCCustomerInfo);
+        console.log("[RevenueCat] Customer info loaded");
       } catch (err) {
-        void err;
+        console.error("[RevenueCat] Init error:", err);
       } finally {
         setLoading(false);
       }

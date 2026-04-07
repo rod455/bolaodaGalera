@@ -31,6 +31,14 @@ workflows:
       - name: Sync Capacitor
         script: npx cap sync ios
 
+      - name: Verify RevenueCat in Package.swift
+        script: |
+          echo "=== Package.swift after cap sync ==="
+          cat ios/App/CapApp-SPM/Package.swift
+          echo ""
+          echo "=== Checking for RevenueCat ==="
+          grep -i revenuecat ios/App/CapApp-SPM/Package.swift && echo "RevenueCat: FOUND" || echo "RevenueCat: NOT FOUND"
+
       - name: Patch iOS config for AdMob
         script: |
           set -ex
@@ -58,7 +66,7 @@ workflows:
         script: |
           cd ios/App
           agvtool new-marketing-version 1.5.1
-          agvtool new-version -all 36
+          agvtool new-version -all 37
 
       - name: Build IPA
         script: |
