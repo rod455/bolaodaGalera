@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, ChevronDown, ChevronRight, Lock, Target, Shield, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,8 +26,18 @@ const Quiz = () => {
   const [expandedQuiz, setExpandedQuiz] = useState<string | null>(null);
   const diasCopa = getDaysUntilCopa();
 
+  const selecaoRef = useRef<HTMLDivElement>(null);
+  const lendaRef = useRef<HTMLDivElement>(null);
+
   const toggleQuiz = (id: string) => {
-    setExpandedQuiz(expandedQuiz === id ? null : id);
+    const isOpening = expandedQuiz !== id;
+    setExpandedQuiz(isOpening ? id : null);
+    if (isOpening) {
+      const ref = id === "selecao" ? selecaoRef : lendaRef;
+      setTimeout(() => {
+        ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+    }
   };
 
   return (
@@ -46,7 +56,7 @@ const Quiz = () => {
       </div>
 
       {/* ═══ Quiz Seleções — Faixa colapsável ═══ */}
-      <div className="rounded-2xl overflow-hidden shadow-md border border-copa-green-200">
+      <div ref={selecaoRef} className="rounded-2xl overflow-hidden shadow-md border border-copa-green-200">
         <button
           onClick={() => toggleQuiz("selecao")}
           className="w-full flex items-center gap-3 px-4 py-4 text-left transition-colors"
@@ -132,7 +142,7 @@ const Quiz = () => {
       </div>
 
       {/* ═══ Quiz Lendas — Faixa colapsável ═══ */}
-      <div className="rounded-2xl overflow-hidden shadow-md border border-copa-gold-200">
+      <div ref={lendaRef} className="rounded-2xl overflow-hidden shadow-md border border-copa-gold-200">
         <button
           onClick={() => toggleQuiz("lenda")}
           className="w-full flex items-center gap-3 px-4 py-4 text-left transition-colors"
