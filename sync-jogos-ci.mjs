@@ -153,6 +153,24 @@ async function syncLive() {
     }
 
     const updateData = { status: newStatus };
+
+    // ── PROTEÇÃO: nunca regredir um jogo encerrado ──
+    // Se o jogo já está encerrado no banco, não permitir que a API
+    // mude para ao_vivo ou agendado (bug da API ou delay)
+    if (game.status === 'encerrado' && newStatus !== 'encerrado') {
+      // Só atualizar placar se a API trouxe resultado final
+      if (placarA !== null && (game.placar_time_a === null || game.placar_time_a === undefined)) {
+        updateData.status = 'encerrado'; // manter encerrado
+        updateData.placar_time_a = placarA;
+        updateData.placar_time_b = placarB;
+        console.log(`  ${game.time_a} vs ${game.time_b} - encerrado, atualizando placar: ${placarA} x ${placarB}`);
+      } else {
+        console.log(`  ${game.time_a} vs ${game.time_b} - já encerrado, ignorando API status: ${matchData.status}`);
+        await new Promise(r => setTimeout(r, 7000));
+        continue;
+      }
+    }
+
     if (placarA !== null) updateData.placar_time_a = placarA;
     if (placarB !== null) updateData.placar_time_b = placarB;
 
