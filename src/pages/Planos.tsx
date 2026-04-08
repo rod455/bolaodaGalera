@@ -205,6 +205,15 @@ const Planos = () => {
   const isPremium = userPlano === "premium" || userPlano === "premium_pro";
   const isPro = userPlano === "premium_pro";
 
+  // Countdown para reajuste
+  const promoDeadline = new Date("2026-04-13T15:00:00Z"); // domingo 12h BRT
+  const promoNow = new Date();
+  const promoDiff = promoDeadline.getTime() - promoNow.getTime();
+  const promoAtiva = promoDiff > 0;
+  const promoDias = Math.floor(promoDiff / (1000 * 60 * 60 * 24));
+  const promoHoras = Math.floor((promoDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const promoTexto = promoDias > 0 ? `${promoDias} dia${promoDias > 1 ? "s" : ""} e ${promoHoras}h` : `${promoHoras}h`;
+
   return (
     <div className="space-y-6 animate-fade-in">
       <SEOHead
@@ -402,6 +411,15 @@ const Planos = () => {
             </Button>
           )}
 
+          {promoAtiva && !isPremium && (
+            <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-1">
+              <span className="text-sm flex-shrink-0">🔥</span>
+              <p className="text-[11px] text-amber-800 leading-snug">
+                <strong>Últimos dias com preços reduzidos:</strong> oferta válida por {promoTexto} — depois o preço sobe.
+              </p>
+            </div>
+          )}
+
           <p className="text-center text-[10px] text-muted-foreground/70 leading-tight mt-1">
             A assinatura renova automaticamente. Cancele a qualquer momento nas configurações da sua conta Apple.
           </p>
@@ -514,6 +532,15 @@ const Planos = () => {
                 ? "Upgrade para PRO"
                 : "Assinar Premium PRO"}
             </Button>
+          )}
+
+          {promoAtiva && !isPro && (
+            <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-1">
+              <span className="text-sm flex-shrink-0">🔥</span>
+              <p className="text-[11px] text-amber-800 leading-snug">
+                <strong>Últimos dias com preços reduzidos:</strong> oferta válida por {promoTexto} — depois o preço sobe.
+              </p>
+            </div>
           )}
 
           <p className="text-center text-xs text-muted-foreground">
