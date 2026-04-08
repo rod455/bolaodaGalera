@@ -327,13 +327,18 @@ const Planos = () => {
           <p className="text-sm font-semibold text-copa-green-600 mt-1">
             {billingPeriod === "mensal" ? (
               <>
-                R$ 9,90/mês
+                <span className="line-through text-muted-foreground font-normal text-xs">R$ 19,90/mês</span>{" "}
+                <span className="text-copa-green-600">R$ 9,90/mês</span>
                 <span className="block text-xs font-normal text-muted-foreground mt-0.5">
                   ou R$ 6,66/mês no <button onClick={() => setBillingPeriod("anual")} className="text-copa-green-500 hover:text-copa-green-600 underline">plano anual</button>
                 </span>
               </>
             ) : (
-              <>R$ 79,90/ano <span className="text-xs font-normal text-muted-foreground">(≈ R$ 6,66/mês)</span></>
+              <>
+                <span className="line-through text-muted-foreground font-normal text-xs">R$ 119,90/ano</span>{" "}
+                <span className="text-copa-green-600">R$ 79,90/ano</span>
+                <span className="text-xs font-normal text-muted-foreground"> (≈ R$ 6,66/mês)</span>
+              </>
             )}
           </p>
         </CardHeader>
@@ -422,13 +427,18 @@ const Planos = () => {
           <p className="text-sm font-semibold text-copa-green-600 mt-1">
             {billingPeriod === "mensal" ? (
               <>
-                R$ 14,90/mês
+                <span className="line-through text-muted-foreground font-normal text-xs">R$ 39,90/mês</span>{" "}
+                <span className="text-copa-green-600">R$ 14,90/mês</span>
                 <span className="block text-xs font-normal text-muted-foreground mt-0.5">
                   ou R$ 8,33/mês no <button onClick={() => setBillingPeriod("anual")} className="text-copa-green-500 hover:text-copa-green-600 underline">plano anual</button>
                 </span>
               </>
             ) : (
-              <>R$ 99,90/ano <span className="text-xs font-normal text-muted-foreground">(≈ R$ 8,33/mês)</span></>
+              <>
+                <span className="line-through text-muted-foreground font-normal text-xs">R$ 199,90/ano</span>{" "}
+                <span className="text-copa-green-600">R$ 99,90/ano</span>
+                <span className="text-xs font-normal text-muted-foreground"> (≈ R$ 8,33/mês)</span>
+              </>
             )}
           </p>
         </CardHeader>
