@@ -645,7 +645,7 @@ const Home = () => {
                 Premium PRO por <span style={{ color: "#facc15" }}>R$ 14,90/mês</span> com bolões ilimitados e sem anúncios
               </p>
               <p className="text-white/60 text-xs">
-                Oferta válida por <strong className="text-white">{tempoRestante}</strong> — depois o preço sobe.
+                Últimos dias com preços reduzidos: oferta válida por <strong className="text-white">{tempoRestante}</strong> — depois o preço sobe.
               </p>
               <button onClick={() => navigate("/planos")}
                 className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-black text-sm transition-all hover:-translate-y-0.5 active:scale-[0.98] mt-1"
