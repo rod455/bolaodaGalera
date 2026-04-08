@@ -221,6 +221,28 @@ const Planos = () => {
         <h2 className="text-2xl font-bold">Tipos de Planos</h2>
       </div>
 
+      {/* ═══ Banner urgência — preço sobe domingo ═══ */}
+      {(() => {
+        const deadline = new Date("2026-04-13T15:00:00Z");
+        const now = new Date();
+        const diff = deadline.getTime() - now.getTime();
+        if (diff <= 0) return null;
+        const dias = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const horas = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const tempoRestante = dias > 0 ? `${dias} dia${dias > 1 ? "s" : ""} e ${horas}h` : `${horas}h`;
+        return (
+          <div className="relative overflow-hidden rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 space-y-1.5">
+            <div className="flex items-center gap-2">
+              <span className="text-base">🔥</span>
+              <span className="text-xs font-bold text-amber-700 uppercase tracking-wide">Preço sobe em {tempoRestante}</span>
+            </div>
+            <p className="text-sm text-amber-900 leading-snug">
+              Quem assinar agora <strong>garante o preço atual para sempre</strong>, enquanto a assinatura estiver ativa.
+            </p>
+          </div>
+        );
+      })()}
+
       {/* Toggle mensal/anual */}
       <div className="flex items-center justify-center gap-1 bg-muted rounded-xl p-1">
         <button

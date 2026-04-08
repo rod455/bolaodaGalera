@@ -622,6 +622,41 @@ const Home = () => {
       {/* ═══ BANNERS DINÂMICOS — carrossel ═══ */}
       <DynamicBanner userBolaoIds={userBolaoIds} userContext={userBannerCtx} />
 
+      {/* ═══ Banner urgência Premium — só free logados ═══ */}
+      {user && userPlano === "free" && (() => {
+        const deadline = new Date("2026-04-13T15:00:00Z"); // domingo 12h BRT = 15h UTC
+        const now = new Date();
+        const diff = deadline.getTime() - now.getTime();
+        if (diff <= 0) return null;
+        const dias = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const horas = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const tempoRestante = dias > 0 ? `${dias} dia${dias > 1 ? "s" : ""} e ${horas}h` : `${horas}h`;
+        return (
+          <div className="relative overflow-hidden rounded-2xl border-2 border-copa-gold-400 shadow-lg"
+            style={{ background: "linear-gradient(135deg, #14532d 0%, #166534 50%, #1a4a2e 100%)" }}>
+            <div className="absolute inset-0 opacity-10"
+              style={{ backgroundImage: "repeating-linear-gradient(90deg,transparent,transparent 30px,rgba(250,204,21,.3) 30px,rgba(250,204,21,.3) 31px)" }} />
+            <div className="relative px-4 py-4 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🔥</span>
+                <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "#facc15" }}>Oferta por tempo limitado</span>
+              </div>
+              <p className="text-white font-bold text-base leading-snug">
+                Premium PRO por <span style={{ color: "#facc15" }}>R$ 14,90/mês</span> com bolões ilimitados e sem anúncios
+              </p>
+              <p className="text-white/60 text-xs">
+                Oferta válida por <strong className="text-white">{tempoRestante}</strong> — depois o preço sobe.
+              </p>
+              <button onClick={() => navigate("/planos")}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-black text-sm transition-all hover:-translate-y-0.5 active:scale-[0.98] mt-1"
+                style={{ background: "#facc15", color: "#14532d", boxShadow: "0 4px 16px rgba(250,204,21,.3)" }}>
+                Assine agora →
+              </button>
+            </div>
+          </div>
+        );
+      })()}
+
 
       {/* ═══ GUEST: Google Login ═══ */}
       {!user && !/FBAN|FBAV|Instagram|Line|TikTok|Snapchat/i.test(navigator.userAgent) && (
