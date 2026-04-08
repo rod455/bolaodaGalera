@@ -15,7 +15,6 @@ const getDaysUntilCopa = () => Math.max(0, Math.ceil((COPA_DATE.getTime() - Date
 // Quizzes futuros (Em Breve)
 const FUTURE_QUIZZES = [
   { emoji: "🎯", title: "Qual tipo de palpiteiro você é?", desc: "Analista, sortudo, torcedor ou o social?", icon: Target },
-  { emoji: "🏟️", title: "Qual posição você joga na vida?", desc: "Atacante, goleiro, meia ou zagueiro?", icon: Shield },
   { emoji: "🌎", title: "Em qual país-sede você estaria?", desc: "EUA, México ou Canadá?", icon: MapPin },
 ];
 
@@ -28,14 +27,15 @@ const Quiz = () => {
 
   const selecaoRef = useRef<HTMLDivElement>(null);
   const lendaRef = useRef<HTMLDivElement>(null);
+  const jogadorRef = useRef<HTMLDivElement>(null);
 
   const toggleQuiz = (id: string) => {
     const isOpening = expandedQuiz !== id;
     setExpandedQuiz(isOpening ? id : null);
     if (isOpening) {
-      const ref = id === "selecao" ? selecaoRef : lendaRef;
+      const refs: Record<string, React.RefObject<HTMLDivElement>> = { selecao: selecaoRef, lenda: lendaRef, jogador: jogadorRef };
       setTimeout(() => {
-        ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        refs[id]?.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 100);
     }
   };
@@ -235,6 +235,103 @@ const Quiz = () => {
               </div>
               <span className="text-[11px]" style={{ color: "rgba(255,255,255,.5)" }}>
                 <strong style={{ color: "#facc15" }}>+3.200 pessoas</strong> já fizeram o quiz hoje
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ═══ Quiz Jogador — Faixa colapsável ═══ */}
+      <div ref={jogadorRef} className="rounded-2xl overflow-hidden shadow-md border border-copa-green-200">
+        <button
+          onClick={() => toggleQuiz("jogador")}
+          className="w-full flex items-center gap-3 px-4 py-4 text-left transition-colors"
+          style={{ background: "linear-gradient(135deg, #14532d 0%, #0f3d1a 50%, #1a4a2e 100%)" }}
+        >
+          <span className="text-3xl flex-shrink-0">⚽</span>
+          <div className="flex-1 min-w-0">
+            <p style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "1.1rem", lineHeight: 1, color: "#fff" }}>
+              Qual jogador <span style={{ color: "#facc15" }}>você seria na vida?</span>
+            </p>
+            <p className="text-[11px] text-white/60 mt-0.5">20 posições · 7 perguntas · Com humor</p>
+          </div>
+          <ChevronDown className={`w-5 h-5 text-white/60 flex-shrink-0 transition-transform duration-300 ${expandedQuiz === "jogador" ? "rotate-180" : ""}`} />
+        </button>
+
+        {expandedQuiz === "jogador" && (
+          <div className="px-4 py-5 space-y-4 text-center" style={{ background: "linear-gradient(160deg, #14532d 0%, #0f3d1a 40%, #1a4a2e 100%)" }}>
+            <div className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-[10px] font-bold uppercase tracking-widest mx-auto"
+              style={{ background: "rgba(250,204,21,.14)", border: "1px solid rgba(250,204,21,.38)", color: "#facc15" }}>
+              ⚽ 20 posições · Futebol da vida real
+            </div>
+
+            <h3 className="leading-[0.9]" style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(2rem,8vw,3.5rem)", color: "#fff", textShadow: "0 4px 24px rgba(0,0,0,.4)" }}>
+              Qual jogador<br />
+              <span style={{ color: "#facc15" }}>você seria na vida?</span>
+            </h3>
+
+            <p className="leading-relaxed text-sm" style={{ color: "rgba(255,255,255,.72)" }}>
+              7 perguntas revelam qual das <strong className="text-white">20 posições do futebol</strong> combina com o seu jeito na vida real.
+            </p>
+
+            <div>
+              <h4 className="mb-2" style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(1.2rem,4vw,1.6rem)", color: "#fff" }}>
+                Centroavante, goleiro ou <span style={{ color: "#facc15" }}>falso 9?</span>
+              </h4>
+              <p className="text-xs leading-relaxed mb-3" style={{ color: "rgba(255,255,255,.55)" }}>
+                Descubra se você é o centroavante que some a semana e aparece na sexta, ou o goleiro que salva tudo na última hora.
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { ico: "🎯", t: "20 posições únicas", s: "Do centroavante ao lateral que virou centroavante." },
+                  { ico: "😂", t: "Humor garantido", s: "Cada resultado é uma descrição engraçada da sua personalidade." },
+                  { ico: "💬", t: "Compartilhe e compare", s: "Manda pro grupo e veja quem é o volante destruidor." },
+                  { ico: "⚡", t: "Rápido: 7 perguntas", s: "Quiz mais rápido — descubra sua posição em menos de 2 min." },
+                ].map((c, i) => (
+                  <div key={i} className="rounded-xl p-3 text-left"
+                    style={{ background: "rgba(255,255,255,.045)", border: "1px solid rgba(255,255,255,.075)" }}>
+                    <div className="text-lg mb-1">{c.ico}</div>
+                    <p className="text-xs font-bold text-white mb-0.5">{c.t}</p>
+                    <p className="text-[10px] leading-relaxed" style={{ color: "rgba(255,255,255,.5)" }}>{c.s}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex flex-wrap justify-center gap-1.5">
+              {["🎯 Centroavante", "🧊 Zag. Elegante", "🌀 Falso 9", "😴 Goleiro Zen", "🤷 Coringa"].map((l, i) => (
+                <span key={i} className="rounded-full px-2.5 py-1 text-[11px] font-semibold"
+                  style={{ background: "rgba(255,255,255,.065)", border: "1px solid rgba(255,255,255,.09)", color: "rgba(255,255,255,.78)" }}>
+                  {l}
+                </span>
+              ))}
+              <span className="rounded-full px-2.5 py-1 text-[11px] font-semibold"
+                style={{ background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.06)", color: "rgba(255,255,255,.4)" }}>
+                +15
+              </span>
+            </div>
+
+            <button onClick={() => navigate("/quiz/jogador?start=true")}
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-black text-sm transition-all hover:-translate-y-0.5 active:scale-[0.98]"
+              style={{ background: "#facc15", color: "#14532d", boxShadow: "0 8px 28px rgba(250,204,21,.33)" }}>
+              ⚽ Começar o Quiz — Grátis
+            </button>
+
+            {!isPremium && (
+              <p className="text-[10px] text-center" style={{ color: "rgba(255,255,255,.38)" }}>
+                Grátis com anúncio · <button onClick={() => navigate("/planos")} className="underline" style={{ color: "#facc15" }}>Premium sem anúncios</button>
+              </p>
+            )}
+
+            <div className="flex items-center justify-center gap-2">
+              <div className="flex">
+                {["M", "J", "A", "R", "+"].map((l, i) => (
+                  <div key={i} className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold -ml-1 first:ml-0"
+                    style={{ background: "#15803d", border: "2px solid #14532d", color: "#fff" }}>{l}</div>
+                ))}
+              </div>
+              <span className="text-[11px]" style={{ color: "rgba(255,255,255,.5)" }}>
+                <strong style={{ color: "#facc15" }}>+1.500 pessoas</strong> já descobriram sua posição
               </span>
             </div>
           </div>
