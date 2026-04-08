@@ -248,7 +248,7 @@ const Quiz = () => {
           className="w-full flex items-center gap-3 px-4 py-4 text-left transition-colors"
           style={{ background: "linear-gradient(135deg, #14532d 0%, #0f3d1a 50%, #1a4a2e 100%)" }}
         >
-          <span className="text-3xl flex-shrink-0">⚽</span>
+          <span className="text-3xl flex-shrink-0">🧑‍🦱</span>
           <div className="flex-1 min-w-0">
             <p style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "1.1rem", lineHeight: 1, color: "#fff" }}>
               Qual jogador <span style={{ color: "#facc15" }}>você seria na vida?</span>
