@@ -19,7 +19,7 @@ jobs:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
           five_days_ago=$(date -u -d '5 days ago' +%Y-%m-%dT00:00:00Z 2>/dev/null || date -u -v-5d +%Y-%m-%dT00:00:00Z)
-          four_hours_ahead=$(date -u -d '+4 hours' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -v+4H +%Y-%m-%dT%H:%M:%SZ)
+          four_hours_ahead=$(date -u -d '+6 hours' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -v+6H +%Y-%m-%dT%H:%M:%SZ)
 
           count=$(curl -s \
             "${SUPABASE_URL}/rest/v1/jogos?select=id&or=(status.eq.ao_vivo,status.eq.agendado)&data_hora=gte.${five_days_ago}&data_hora=lte.${four_hours_ahead}&limit=1" \
