@@ -16,6 +16,7 @@ import Planos from "./pages/Planos";
 import Quiz from "./pages/Quiz";
 import QuizSelecao from "./pages/QuizSelecao";
 import QuizLenda from "./pages/QuizLenda";
+import QuizJogador from "./pages/QuizJogador";
 import NotFound from "./pages/NotFound";
 import Unsubscribe from "./pages/Unsubscribe";
 import AppLayout from "./components/layout/AppLayout";
@@ -186,6 +187,9 @@ const App = () => {
               </Route>
               <Route path="/quiz/lenda" element={<AppLayout />}>
                 <Route index element={<QuizLenda />} />
+              </Route>
+              <Route path="/quiz/jogador" element={<AppLayout />}>
+                <Route index element={<QuizJogador />} />
               </Route>
               <Route
                 element={

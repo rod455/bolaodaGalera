@@ -4,6 +4,7 @@
     { "source": "/quiz-resultado", "destination": "/quiz-resultado.html" },
     { "source": "/termos-de-uso", "destination": "/termos-de-uso.html" },
     { "source": "/quiz-lenda", "destination": "/quiz-lenda.html" },
+    { "source": "/quiz-jogador", "destination": "/quiz-jogador.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
