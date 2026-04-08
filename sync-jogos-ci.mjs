@@ -208,6 +208,50 @@ async function syncLive() {
     jogosAtrasados.forEach(j => console.log(`  - ${j.time_a} vs ${j.time_b} (previsto: ${new Date(j.data_hora).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })})`));
   }
 
+  // ── Recuperação de jogos travados em ao_vivo ──
+  // Jogos ao_vivo há mais de 4h provavelmente já terminaram.
+  // Consulta a API para pegar o resultado final antes de encerrar.
+  const quatroHorasAtras = new Date(now.getTime() - 4 * 60 * 60 * 1000);
+  const { data: jogosTravados } = await supabase
+    .from('jogos')
+    .select('id, api_football_id, time_a, time_b, data_hora, placar_time_a, placar_time_b')
+    .eq('status', 'ao_vivo')
+    .lt('data_hora', quatroHorasAtras.toISOString());
+
+  if (jogosTravados && jogosTravados.length > 0) {
+    console.log(`\nRecuperacao: ${jogosTravados.length} jogo(s) travado(s) em ao_vivo:`);
+    for (const game of jogosTravados) {
+      if (!game.api_football_id) {
+        console.log(`  - ${game.time_a} vs ${game.time_b} - sem api_football_id, marcando como encerrado com placar atual`);
+        await supabase.from('jogos').update({ status: 'encerrado' }).eq('id', game.id);
+        continue;
+      }
+
+      // Consultar API para pegar resultado final
+      const matchData = await fdFetch(`/matches/${game.api_football_id}`);
+      if (matchData) {
+        const score = matchData.score || {};
+        const ft = score.fullTime || {};
+        const newStatus = mapStatus(matchData.status);
+        const placarA = ft.home !== undefined && ft.home !== null ? ft.home : game.placar_time_a;
+        const placarB = ft.away !== undefined && ft.away !== null ? ft.away : game.placar_time_b;
+
+        const finalStatus = (newStatus === 'ao_vivo' || newStatus === 'agendado') ? 'encerrado' : newStatus;
+        await supabase.from('jogos').update({
+          status: finalStatus,
+          placar_time_a: placarA,
+          placar_time_b: placarB,
+        }).eq('id', game.id);
+        console.log(`  [RECUPERADO] ${game.time_a} ${placarA} x ${placarB} ${game.time_b} [ao_vivo -> ${finalStatus}]`);
+      } else {
+        // API falhou — encerrar com placar atual (melhor que ficar travado)
+        console.log(`  [FALLBACK] ${game.time_a} vs ${game.time_b} - API falhou, encerrando com placar atual`);
+        await supabase.from('jogos').update({ status: 'encerrado' }).eq('id', game.id);
+      }
+      await new Promise(r => setTimeout(r, 7000));
+    }
+  }
+
   if (updated > 0) {
     const { error: logErr } = await supabase.from('sync_log').insert({
       campeonato_api_id: 0, tipo: 'github-actions-smart', jogos_atualizados: updated,
