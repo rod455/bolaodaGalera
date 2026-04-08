@@ -27,6 +27,8 @@ import { MODO_LABELS, MODO_REGRAS, FALLBACK_IMAGES, FREE_MAX_PRIVADOS as CONST_F
 import { formatDataJogo } from "@/lib/formatters";
 import SEOHead from "@/components/SEOHead";
 import { trackEvent } from "@/lib/analytics";
+import PremiumUpsellModal from "@/components/PremiumUpsellModal";
+import type { UpsellReason } from "@/components/PremiumUpsellModal";
 import Onboarding, { isOnboardingDone, markOnboardingDone } from "@/components/Onboarding";
 import FeedbackBanner from "@/components/FeedbackBanner";
 
@@ -291,6 +293,7 @@ const Home = () => {
   const [userEstado, setUserEstado] = useState<string | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [userBannerCtx, setUserBannerCtx] = useState<UserBannerContext | undefined>(undefined);
+  const [upsellModal, setUpsellModal] = useState<{ open: boolean; reason: UpsellReason }>({ open: false, reason: "grupo_lotado" });
 
   useEffect(() => { loadData(); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
@@ -537,7 +540,7 @@ const Home = () => {
     const hasPremiumMember = hasProMember || allPlanos.includes("premium");
     const maxCapacity = hasProMember ? PREMIUM_PRO_MAX_PARTICIPANTES : hasPremiumMember ? PREMIUM_MAX_PARTICIPANTES : FREE_MAX_PARTICIPANTES;
     if (currentCount >= maxCapacity) {
-      toast.error(`Este grupo está lotado! Limite de ${maxCapacity} participantes.${!hasPremiumMember ? " Com Premium o limite sobe para 30, e com Premium PRO para 50!" : !hasProMember ? " Com Premium PRO o limite sobe para 50!" : ""}`);
+      setUpsellModal({ open: true, reason: "grupo_lotado" });
       return false;
     }
     return true;
@@ -549,7 +552,7 @@ const Home = () => {
 
     // Bloquear se atingiu limite de privados no plano free
     if (atingiuLimitePrivados) {
-      toast.error(`Você atingiu o limite de ${FREE_MAX_PRIVADOS} bolões privados no plano Free. Faça upgrade para participar de mais!`);
+      setUpsellModal({ open: true, reason: "privado_limite" });
       navigate("/planos");
       return;
     }
@@ -925,6 +928,11 @@ const Home = () => {
           </div>
         </div>
       )}
+      <PremiumUpsellModal
+        open={upsellModal.open}
+        onClose={() => setUpsellModal({ ...upsellModal, open: false })}
+        reason={upsellModal.reason}
+      />
     </div>
   );
 };

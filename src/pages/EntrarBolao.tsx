@@ -14,6 +14,8 @@ import { useRewardedAd } from "@/hooks/useRewardedAd";
 import type { Bolao } from "@/lib/types";
 import { FALLBACK_IMAGES, FREE_MAX_PRIVADOS, FREE_MAX_PARTICIPANTES, PREMIUM_MAX_PARTICIPANTES, PREMIUM_PRO_MAX_PARTICIPANTES } from "@/lib/constants";
 import SEOHead from "@/components/SEOHead";
+import PremiumUpsellModal from "@/components/PremiumUpsellModal";
+import type { UpsellReason } from "@/components/PremiumUpsellModal";
 
 const EntrarBolao = () => {
   const navigate = useNavigate();
@@ -27,6 +29,7 @@ const EntrarBolao = () => {
   const [buscando, setBuscando] = useState(false);
   const { plano: userPlano } = useUserPlan();
   const { showAd, needsAd } = useRewardedAd();
+  const [upsellModal, setUpsellModal] = useState<{ open: boolean; reason: UpsellReason }>({ open: false, reason: "privado_limite" });
 
   const checkPrivateLimit = async (): Promise<boolean> => {
     if (userPlano !== "free" && userPlano) return true;
@@ -37,8 +40,7 @@ const EntrarBolao = () => {
       .eq("user_id", user.id);
     const privCount = (data || []).filter((p: any) => p.boloes && !p.boloes.is_nacional).length;
     if (privCount >= FREE_MAX_PRIVADOS) {
-      toast.error(`Você atingiu o limite de ${FREE_MAX_PRIVADOS} bolões privados no plano Free. Faça upgrade para participar de mais!`);
-      navigate("/planos");
+      setUpsellModal({ open: true, reason: "privado_limite" });
       return false;
     }
     return true;
@@ -73,7 +75,7 @@ const EntrarBolao = () => {
     const maxCapacity = hasProMember ? PREMIUM_PRO_MAX_PARTICIPANTES : hasPremiumMember ? PREMIUM_MAX_PARTICIPANTES : FREE_MAX_PARTICIPANTES;
 
     if (currentCount >= maxCapacity) {
-      toast.error(`Este grupo está lotado! Limite de ${maxCapacity} participantes.${!hasPremiumMember ? " Com Premium o limite sobe para 30, e com Premium PRO para 50!" : !hasProMember ? " Com Premium PRO o limite sobe para 50!" : ""}`);
+      setUpsellModal({ open: true, reason: "grupo_lotado" });
       return false;
     }
     return true;
@@ -430,6 +432,11 @@ const EntrarBolao = () => {
         )}
       </div>
 
+      <PremiumUpsellModal
+        open={upsellModal.open}
+        onClose={() => setUpsellModal({ ...upsellModal, open: false })}
+        reason={upsellModal.reason}
+      />
     </div>
   );
 };
