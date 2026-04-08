@@ -858,6 +858,15 @@ const QuizSelecao = () => {
                 </button>
               </div>
 
+              {/* CTA Premium */}
+              {!isPremium && (
+                <button onClick={() => navigate("/planos")}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-semibold transition-all mt-1"
+                  style={{ background: "rgba(250,204,21,.1)", border: "1px solid rgba(250,204,21,.25)", color: "#facc15" }}>
+                  <Crown className="w-3.5 h-3.5" /> Premium PRO: todos os quizzes sem anúncios — R$ 14,90/mês
+                </button>
+              )}
+
               {/* CTA dourado */}
               <button onClick={() => navigate("/home")}
                 className="w-full flex items-center justify-center gap-2.5 py-4 rounded-xl font-black text-base transition-all hover:-translate-y-0.5 active:scale-[0.98] relative overflow-hidden"

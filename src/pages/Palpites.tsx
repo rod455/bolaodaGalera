@@ -60,6 +60,7 @@ const Palpites = () => {
   const { showAd, adLoading, needsAd } = useRewardedAd();
   const { darXP } = useGamification();
   const [xpToast, setXPToast] = useState<{xp: number, msg: string} | null>(null);
+  const [showAdUpsell, setShowAdUpsell] = useState(false);
 
   // ═══ Celebração primeiro palpite (onboarding) ═══
   const [showCelebration, setShowCelebration] = useState(false);
@@ -411,6 +412,8 @@ const Palpites = () => {
     if (needsAd) {
       const adResult = await showAd("palpite");
       if (!adResult) return;
+      // Mostrar banner de upsell após assistir o ad
+      setTimeout(() => setShowAdUpsell(true), 3000);
     }
     setSalvando(jogoId);
     try {
@@ -494,6 +497,30 @@ const Palpites = () => {
       />
       {adLoading && <AdLoadingOverlay />}
       {xpToast && <XPToast xp={xpToast.xp} message={xpToast.msg} onDone={() => setXPToast(null)} />}
+
+      {/* ═══ Banner upsell pós-ad ═══ */}
+      {showAdUpsell && (
+        <div className="fixed bottom-20 left-4 right-4 z-50 animate-fade-in md:left-auto md:right-6 md:max-w-sm">
+          <div className="relative bg-white border-2 border-copa-gold-400 rounded-2xl shadow-xl px-4 py-3.5 space-y-2">
+            <button onClick={() => setShowAdUpsell(false)}
+              className="absolute top-2 right-2 p-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+              <span className="text-xs">✕</span>
+            </button>
+            <div className="flex items-center gap-2">
+              <span className="text-lg">😤</span>
+              <p className="text-sm font-bold text-gray-800">Cansou dos anúncios?</p>
+            </div>
+            <p className="text-xs text-muted-foreground leading-snug">
+              Premium PRO: <strong className="text-gray-700">sem anúncios</strong>, bolões ilimitados e todos os modos de jogo.
+            </p>
+            <button onClick={() => { setShowAdUpsell(false); navigate("/planos"); }}
+              className="w-full py-2 rounded-lg font-bold text-xs transition-all"
+              style={{ background: "#facc15", color: "#14532d" }}>
+              Assinar por R$ 14,90/mês →
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ═══ Dialog: Copiar palpite para outros bolões ═══ */}
       <Dialog open={showCopyDialog} onOpenChange={setShowCopyDialog}>

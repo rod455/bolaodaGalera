@@ -159,10 +159,17 @@ const FirstPalpiteCelebration = ({
               </Button>
             </div>
 
+            {/* CTA Premium */}
+            <a href="/planos"
+              className="w-full mt-3 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-all"
+              style={{ background: "rgba(250,204,21,.12)", border: "1px solid rgba(250,204,21,.3)", color: "#d97706" }}>
+              ⚡ Premium PRO: sem anúncios + bolões ilimitados — R$ 14,90/mês
+            </a>
+
             {/* Botão secundário para pular */}
             <button
               onClick={onClose}
-              className="w-full mt-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-1"
+              className="w-full mt-2 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-1"
             >
               Convidar depois — continuar palpitando
               <ChevronRight className="w-3.5 h-3.5" />
