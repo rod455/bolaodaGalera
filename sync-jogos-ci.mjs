@@ -222,32 +222,35 @@ async function syncLive() {
     console.log(`\nRecuperacao: ${jogosTravados.length} jogo(s) travado(s) em ao_vivo:`);
     for (const game of jogosTravados) {
       if (!game.api_football_id) {
-        console.log(`  - ${game.time_a} vs ${game.time_b} - sem api_football_id, marcando como encerrado com placar atual`);
-        await supabase.from('jogos').update({ status: 'encerrado' }).eq('id', game.id);
+        console.log(`  - ${game.time_a} vs ${game.time_b} - sem api_football_id, mantendo ao_vivo`);
         continue;
       }
 
       // Consultar API para pegar resultado final
       const matchData = await fdFetch(`/matches/${game.api_football_id}`);
-      if (matchData) {
-        const score = matchData.score || {};
-        const ft = score.fullTime || {};
-        const newStatus = mapStatus(matchData.status);
-        const placarA = ft.home !== undefined && ft.home !== null ? ft.home : game.placar_time_a;
-        const placarB = ft.away !== undefined && ft.away !== null ? ft.away : game.placar_time_b;
-
-        const finalStatus = (newStatus === 'ao_vivo' || newStatus === 'agendado') ? 'encerrado' : newStatus;
-        await supabase.from('jogos').update({
-          status: finalStatus,
-          placar_time_a: placarA,
-          placar_time_b: placarB,
-        }).eq('id', game.id);
-        console.log(`  [RECUPERADO] ${game.time_a} ${placarA} x ${placarB} ${game.time_b} [ao_vivo -> ${finalStatus}]`);
-      } else {
-        // API falhou — encerrar com placar atual (melhor que ficar travado)
-        console.log(`  [FALLBACK] ${game.time_a} vs ${game.time_b} - API falhou, encerrando com placar atual`);
-        await supabase.from('jogos').update({ status: 'encerrado' }).eq('id', game.id);
+      if (!matchData) {
+        console.log(`  - ${game.time_a} vs ${game.time_b} - API falhou, mantendo ao_vivo`);
+        await new Promise(r => setTimeout(r, 7000));
+        continue;
       }
+
+      const score = matchData.score || {};
+      const ft = score.fullTime || {};
+      const newStatus = mapStatus(matchData.status);
+
+      // Só encerra se a API confirmar que o jogo terminou E tiver placar
+      if (newStatus !== 'encerrado' || ft.home === undefined || ft.home === null) {
+        console.log(`  - ${game.time_a} vs ${game.time_b} - API status: ${matchData.status}, mantendo ao_vivo`);
+        await new Promise(r => setTimeout(r, 7000));
+        continue;
+      }
+
+      await supabase.from('jogos').update({
+        status: 'encerrado',
+        placar_time_a: ft.home,
+        placar_time_b: ft.away,
+      }).eq('id', game.id);
+      console.log(`  [RECUPERADO] ${game.time_a} ${ft.home} x ${ft.away} ${game.time_b} [ao_vivo -> encerrado]`);
       await new Promise(r => setTimeout(r, 7000));
     }
   }
