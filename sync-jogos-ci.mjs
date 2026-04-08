@@ -107,13 +107,13 @@ async function syncLive() {
   fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
   fiveDaysAgo.setHours(0, 0, 0, 0);
 
-  const fourHoursAhead = new Date(now.getTime() + 4 * 60 * 60 * 1000);
+  const sixHoursAhead = new Date(now.getTime() + 6 * 60 * 60 * 1000);
 
   const { data: games, error } = await supabase
     .from('jogos')
     .select('id, api_football_id, status, data_hora, time_a, time_b, placar_time_a, placar_time_b')
     .gte('data_hora', fiveDaysAgo.toISOString())
-    .lte('data_hora', fourHoursAhead.toISOString())
+    .lte('data_hora', sixHoursAhead.toISOString())
     .or('status.eq.ao_vivo,status.eq.agendado,and(status.eq.encerrado,placar_time_a.is.null)');
 
   if (error) {
