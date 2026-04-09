@@ -99,34 +99,27 @@ serve(async (req) => {
     let enviados = 0;
     let erros = 0;
 
-    for (const userId of elegiveisComBolao) {
-      const referencia = `copa_quiz_${quizId}_${userId.substring(0, 8)}`;
+    // Inserir notificações em lote diretamente no banco
+    const notificacoes = elegiveisComBolao.map((userId) => ({
+      user_id: userId,
+      tipo: "novo_quiz",
+      titulo: `🆕 Novo Quiz: ${quizNome}`,
+      mensagem: "Responda e descubra seu resultado! Compartilhe com os amigos do bolão.",
+      dados: { rota: quizRota },
+      lida: false,
+      push_enviada: false,
+    }));
 
-      try {
-        const res = await fetch(`${SUPABASE_URL}/functions/v1/send-push-notification`, {
-          method: "POST",
-          headers: {
-            "apikey": SERVICE_KEY,
-            "Authorization": `Bearer ${SERVICE_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            user_id: userId,
-            tipo: "novo_quiz",
-            titulo: `🆕 Novo Quiz: ${quizNome}`,
-            mensagem: "Responda e descubra seu resultado! Compartilhe com os amigos do bolão.",
-            dados: { rota: quizRota },
-            referencia,
-          }),
-        });
-
-        if (res.ok) enviados++;
-        else erros++;
-      } catch {
-        erros++;
+    // Inserir em batches de 50
+    for (let i = 0; i < notificacoes.length; i += 50) {
+      const batch = notificacoes.slice(i, i + 50);
+      const { error } = await supabase.from("notificacoes").insert(batch);
+      if (error) {
+        console.error("[Novo Quiz Push] Erro batch:", error.message);
+        erros += batch.length;
+      } else {
+        enviados += batch.length;
       }
-
-      await new Promise((r) => setTimeout(r, 100));
     }
 
     const resultado = {
