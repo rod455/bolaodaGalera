@@ -213,6 +213,33 @@ const QuizJogador = () => {
               7 perguntas revelam qual das <strong className="text-white">20 posições do futebol</strong> combina com o seu jeito na vida real. Centroavante, goleiro, falso 9... ou algo que você nem esperava.
             </p>
 
+            {/* CTA */}
+            <div className="w-full max-w-[460px] mt-8 text-center">
+              <button onClick={handleStart}
+                className="w-full max-w-[330px] mx-auto flex items-center justify-center gap-3 py-4 rounded-2xl font-black text-base transition-all hover:-translate-y-0.5 active:scale-[0.98]"
+                style={{ background: "#facc15", color: "#14532d", boxShadow: "0 8px 28px rgba(250,204,21,.33)" }}>
+                ⚽ Começar o Quiz <ChevronRight className="w-5 h-5" />
+              </button>
+              {!isPremium && (
+                <p className="text-xs mt-2" style={{ color: "rgba(255,255,255,.38)" }}>
+                  Grátis com anúncio · <button onClick={() => navigate("/planos")} className="underline" style={{ color: "#facc15" }}>Premium sem anúncios</button>
+                </p>
+              )}
+            </div>
+
+            {/* Social proof */}
+            <div className="flex items-center justify-center gap-2 mt-5">
+              <div className="flex">
+                {["M", "J", "A", "R", "+"].map((l, i) => (
+                  <div key={i} className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold -ml-1.5 first:ml-0"
+                    style={{ background: "#15803d", border: "2px solid #14532d", color: "#fff" }}>{l}</div>
+                ))}
+              </div>
+              <p className="text-xs" style={{ color: "rgba(255,255,255,.58)" }}>
+                <strong style={{ color: "#facc15" }}>+1.500 pessoas</strong> já descobriram sua posição
+              </p>
+            </div>
+
             {/* Preview perguntas */}
             <div className="w-full max-w-[460px] mt-10 space-y-2.5">
               {PERGUNTAS_JOGADOR.slice(0, 4).map((p, i) => (
@@ -256,32 +283,6 @@ const QuizJogador = () => {
               </div>
             </div>
 
-            {/* CTA */}
-            <div className="w-full max-w-[460px] mt-10 text-center">
-              <button onClick={handleStart}
-                className="w-full max-w-[330px] mx-auto flex items-center justify-center gap-3 py-4 rounded-2xl font-black text-base transition-all hover:-translate-y-0.5 active:scale-[0.98]"
-                style={{ background: "#facc15", color: "#14532d", boxShadow: "0 8px 28px rgba(250,204,21,.33)" }}>
-                ⚽ Começar o Quiz <ChevronRight className="w-5 h-5" />
-              </button>
-              {!isPremium && (
-                <p className="text-xs mt-2" style={{ color: "rgba(255,255,255,.38)" }}>
-                  Grátis com anúncio · <button onClick={() => navigate("/planos")} className="underline" style={{ color: "#facc15" }}>Premium sem anúncios</button>
-                </p>
-              )}
-            </div>
-
-            {/* Social proof */}
-            <div className="flex items-center justify-center gap-2 mt-7">
-              <div className="flex">
-                {["M", "J", "A", "R", "+"].map((l, i) => (
-                  <div key={i} className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold -ml-1.5 first:ml-0"
-                    style={{ background: "#15803d", border: "2px solid #14532d", color: "#fff" }}>{l}</div>
-                ))}
-              </div>
-              <p className="text-xs" style={{ color: "rgba(255,255,255,.58)" }}>
-                <strong style={{ color: "#facc15" }}>+1.500 pessoas</strong> já descobriram sua posição
-              </p>
-            </div>
           </section>
 
           <footer className="text-center py-6 text-xs" style={{ color: "rgba(255,255,255,.22)", borderTop: "1px solid rgba(255,255,255,.045)" }}>
