@@ -1,0 +1,34 @@
+name: Push Copa Countdown (Semanal)
+
+on:
+  schedule:
+    # Toda segunda-feira às 15h UTC (12h BRT)
+    - cron: '0 15 * * 1'
+  workflow_dispatch:
+
+jobs:
+  push-countdown:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Copa Countdown Push
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          echo "Enviando push de countdown da Copa..."
+          response=$(curl -s -w "\n%{http_code}" \
+            "${SUPABASE_URL}/functions/v1/push-copa-countdown" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_KEY}" \
+            -H "Content-Type: application/json" \
+            -X POST)
+
+          http_code=$(echo "$response" | tail -1)
+          body=$(echo "$response" | head -n -1)
+
+          echo "HTTP Status: $http_code"
+          echo "Response: $body"
+
+          if [ "$http_code" != "200" ]; then
+            echo "Erro ao enviar push"
+            exit 1
+          fi

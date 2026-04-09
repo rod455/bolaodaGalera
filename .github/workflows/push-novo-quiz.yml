@@ -1,0 +1,49 @@
+name: Push Novo Quiz
+
+on:
+  workflow_dispatch:
+    inputs:
+      quiz_id:
+        description: 'ID do quiz (ex: quiz_jogador, quiz_lenda)'
+        required: true
+        default: 'quiz_jogador'
+      quiz_nome:
+        description: 'Nome do quiz para a notificação'
+        required: true
+        default: 'Qual jogador você seria na vida?'
+      quiz_rota:
+        description: 'Rota do quiz no app (ex: /quiz/jogador)'
+        required: true
+        default: '/quiz/jogador'
+
+jobs:
+  push-quiz:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Quiz Push Notification
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          echo "Enviando push de novo quiz: ${{ github.event.inputs.quiz_id }}"
+          response=$(curl -s -w "\n%{http_code}" \
+            "${SUPABASE_URL}/functions/v1/push-novo-quiz" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_KEY}" \
+            -H "Content-Type: application/json" \
+            -X POST \
+            -d '{
+              "quiz_id": "${{ github.event.inputs.quiz_id }}",
+              "quiz_nome": "${{ github.event.inputs.quiz_nome }}",
+              "quiz_rota": "${{ github.event.inputs.quiz_rota }}"
+            }')
+
+          http_code=$(echo "$response" | tail -1)
+          body=$(echo "$response" | head -n -1)
+
+          echo "HTTP Status: $http_code"
+          echo "Response: $body"
+
+          if [ "$http_code" != "200" ]; then
+            echo "Erro ao enviar push"
+            exit 1
+          fi
