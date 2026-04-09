@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import NotificationCenter from "@/components/NotificationCenter";
 import InstallAppBanner from "@/components/InstallAppBanner";
+import HelpButton from "@/components/HelpButton";
 
 import { getStoreUrl } from "@/lib/constants";
 const PLAY_STORE_URL = getStoreUrl();
@@ -186,6 +187,9 @@ const AppLayout = () => {
 
       {/* ═══ Banner instalar app (só Android mobile, não no app nativo) ═══ */}
       <InstallAppBanner />
+
+      {/* ═══ Botão flutuante de ajuda ═══ */}
+      {isLoggedIn && <HelpButton />}
 
       {/* Footer - desktop only */}
       <footer className="text-center py-4 text-xs text-muted-foreground border-t hidden md:block">

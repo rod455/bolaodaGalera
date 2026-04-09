@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { User, Mail, Lock, Trash2, Crown, Check, Pencil, LogOut, Camera, Loader2, Zap, ExternalLink, Share2, UserPlus, Copy, Gift, MessageCircle, AlertTriangle, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,8 +23,10 @@ import NivelBadge from "@/components/NivelBadge";
 
 const Perfil = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, signOut } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const feedbackRef = useRef<HTMLDivElement>(null);
   const { plano: userPlano, loading: loadingPlano } = useUserPlan();
   const { userXP, referralCode } = useGamification();
   const [loadingPortal, setLoadingPortal] = useState(false);
@@ -45,6 +47,13 @@ const Perfil = () => {
   const [editName, setEditName] = useState("");
   const [uploading, setUploading] = useState(false);
   const [savingName, setSavingName] = useState(false);
+
+  // Scroll para feedback se vier de ?feedback=true
+  useEffect(() => {
+    if (searchParams.get("feedback") === "true" && feedbackRef.current) {
+      setTimeout(() => feedbackRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 500);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (user) {
@@ -662,6 +671,7 @@ const Perfil = () => {
       <NotificacaoPreferencias />
 
       {/* Dúvidas e Sugestões */}
+      <div ref={feedbackRef} />
       <Card className="rounded-2xl shadow-sm border-blue-200 overflow-hidden">
         <CardContent className="p-5">
           <div className="flex items-center gap-3 mb-3">
