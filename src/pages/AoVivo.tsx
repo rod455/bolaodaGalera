@@ -32,7 +32,7 @@ const AoVivo = () => {
         loadJogos().catch(() => {});
         setLastRefresh(new Date());
       }
-    }, 60000);
+    }, 120000);
     return () => { active = false; clearInterval(interval); };
   }, [user]);
 

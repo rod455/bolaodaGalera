@@ -28,18 +28,28 @@ const QuizBannerCarousel = () => {
   useEffect(() => {
     const fetchBanners = async () => {
       try {
+        // Cache de 10 min
+        const cacheKey = "banners_quiz_cache";
+        const cacheTimeKey = "banners_quiz_cache_t";
+        const cached = sessionStorage.getItem(cacheKey);
+        const cachedTime = sessionStorage.getItem(cacheTimeKey);
+        if (cached && cachedTime && Date.now() - Number(cachedTime) < 600000) {
+          try { const d = JSON.parse(cached); if (d?.length > 0) { setBanners(d); return; } } catch {}
+        }
+
         const now = new Date().toISOString();
         const { data } = await supabase
           .from("banners_quiz")
-          .select("*")
+          .select("id, titulo, subtitulo, emoji, cta_texto, link, imagem_url, imagem_mobile_url, cor_fundo, cor_texto")
           .eq("ativo", true)
           .lte("data_inicio", now)
           .or(`data_fim.is.null,data_fim.gt.${now}`)
           .order("posicao", { ascending: true });
-        if (data && data.length > 0) setBanners(data as QuizBanner[]);
-      } catch {
-        // Failed to fetch banners — component will simply not render
-      }
+        if (data && data.length > 0) {
+          setBanners(data as QuizBanner[]);
+          try { sessionStorage.setItem(cacheKey, JSON.stringify(data)); sessionStorage.setItem(cacheTimeKey, String(Date.now())); } catch {}
+        }
+      } catch {}
     };
     fetchBanners();
   }, []);

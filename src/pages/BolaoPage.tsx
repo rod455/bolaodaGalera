@@ -270,7 +270,7 @@ const BolaoPage = () => {
   useEffect(() => {
     let active = true;
     if (id && user) loadBolao().catch(() => {});
-    const interval = setInterval(() => { if (id && user && active) loadBolao().catch(() => {}); }, 60000);
+    const interval = setInterval(() => { if (id && user && active) loadBolao().catch(() => {}); }, 120000);
     return () => { active = false; clearInterval(interval); };
   }, [id, user]);
 

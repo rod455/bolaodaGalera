@@ -94,6 +94,18 @@ const DynamicBanner = ({ userBolaoIds, userContext }: DynamicBannerProps) => {
 
   useEffect(() => {
     const fetchBanners = async () => {
+      // Cache de 10 min para reduzir egress do Supabase
+      const cacheKey = "banners_home_cache";
+      const cacheTimeKey = "banners_home_cache_t";
+      const cached = sessionStorage.getItem(cacheKey);
+      const cachedTime = sessionStorage.getItem(cacheTimeKey);
+      if (cached && cachedTime && Date.now() - Number(cachedTime) < 600000) {
+        try {
+          const data = JSON.parse(cached);
+          if (data) { applyBanners(data); return; }
+        } catch {}
+      }
+
       const now = new Date().toISOString();
       const { data } = await supabase
         .from("banners_home")
@@ -104,40 +116,36 @@ const DynamicBanner = ({ userBolaoIds, userContext }: DynamicBannerProps) => {
         .order("posicao", { ascending: true });
 
       if (data) {
-        const contexto = user ? "logados" : "deslogados";
-        const filtrados = (data as BannerData[]).filter((b) => {
-          // 1. Filtro logados/deslogados (existente)
-          if (b.mostrar_para !== "todos" && b.mostrar_para !== contexto) return false;
-
-          // 2. Filtro por segmento (novo)
-          const seg = b.segmento || "todos";
-          if (seg === "todos") return true;
-          if (seg === "deslogados") return !user;
-          if (!user || !userContext) return seg === "todos";
-
-          switch (seg) {
-            case "novo":
-              return userContext.diasDesdeCadastro <= 3;
-            case "ativo":
-              return userContext.temBolaoPrivado && userContext.qtdParticipantesMax > 1;
-            case "so_nacional":
-              return !userContext.temBolaoPrivado;
-            case "solitario":
-              return userContext.temBolaoSolitario;
-            default:
-              return true;
-          }
-        }).filter((b) => {
-          // 3. Filtros numéricos opcionais
-          if (!userContext) return true;
-          if (b.dias_desde_cadastro_min != null && userContext.diasDesdeCadastro < b.dias_desde_cadastro_min) return false;
-          if (b.dias_desde_cadastro_max != null && userContext.diasDesdeCadastro > b.dias_desde_cadastro_max) return false;
-          if (b.tem_bolao_privado != null && userContext.temBolaoPrivado !== b.tem_bolao_privado) return false;
-          if (b.qtd_participantes_min != null && userContext.qtdParticipantesMax < b.qtd_participantes_min) return false;
-          return true;
-        });
-        setBanners(filtrados);
+        try { sessionStorage.setItem(cacheKey, JSON.stringify(data)); sessionStorage.setItem(cacheTimeKey, String(Date.now())); } catch {}
+        applyBanners(data);
       }
+      setLoading(false);
+    };
+
+    const applyBanners = (data: any[]) => {
+      const contexto = user ? "logados" : "deslogados";
+      const filtrados = (data as BannerData[]).filter((b) => {
+        if (b.mostrar_para !== "todos" && b.mostrar_para !== contexto) return false;
+        const seg = b.segmento || "todos";
+        if (seg === "todos") return true;
+        if (seg === "deslogados") return !user;
+        if (!user || !userContext) return seg === "todos";
+        switch (seg) {
+          case "novo": return userContext.diasDesdeCadastro <= 3;
+          case "ativo": return userContext.temBolaoPrivado && userContext.qtdParticipantesMax > 1;
+          case "so_nacional": return !userContext.temBolaoPrivado;
+          case "solitario": return userContext.temBolaoSolitario;
+          default: return true;
+        }
+      }).filter((b) => {
+        if (!userContext) return true;
+        if (b.dias_desde_cadastro_min != null && userContext.diasDesdeCadastro < b.dias_desde_cadastro_min) return false;
+        if (b.dias_desde_cadastro_max != null && userContext.diasDesdeCadastro > b.dias_desde_cadastro_max) return false;
+        if (b.tem_bolao_privado != null && userContext.temBolaoPrivado !== b.tem_bolao_privado) return false;
+        if (b.qtd_participantes_min != null && userContext.qtdParticipantesMax < b.qtd_participantes_min) return false;
+        return true;
+      });
+      setBanners(filtrados);
       setLoading(false);
     };
     fetchBanners();

@@ -282,7 +282,7 @@ const Palpites = () => {
       }
 
       const { data: allGames } = await supabase
-        .from("jogos").select("*").in("campeonato_id", campIds)
+        .from("jogos").select("id, campeonato_id, time_a, time_b, escudo_a, escudo_b, data_hora, status, placar_time_a, placar_time_b, fase, rodada, grupo").in("campeonato_id", campIds)
         .order("data_hora", { ascending: true });
 
       let uniqueJogos = (allGames || []) as Jogo[];
