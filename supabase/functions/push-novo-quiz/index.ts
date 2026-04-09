@@ -127,11 +127,11 @@ serve(async (req) => {
         titulo,
         mensagem,
         dados: { rota: quizRota },
-        referencia: `copa_quiz_${quizId}_${userId.substring(0, 8)}`,
         lida: false,
         push_enviada: false,
       }));
-      await supabase.from("notificacoes").insert(notificacoes);
+      const { error: insertErr } = await supabase.from("notificacoes").insert(notificacoes);
+      if (insertErr) console.error("[Novo Quiz] Insert error:", insertErr.message);
       enviados += batch.length;
 
       // Enviar FCM para cada user do batch
@@ -142,8 +142,8 @@ serve(async (req) => {
             const ok = await sendFCM(accessToken, fcmToken, titulo, mensagem, { tipo: "novo_quiz", rota: quizRota });
             if (ok) {
               pushEnviados++;
-              // Marcar push_enviada = true
-              await supabase.from("notificacoes").update({ push_enviada: true }).eq("user_id", userId).eq("referencia", `copa_quiz_${quizId}_${userId.substring(0, 8)}`);
+              // Marcar push_enviada = true (última notificação do user)
+              await supabase.from("notificacoes").update({ push_enviada: true }).eq("user_id", userId).eq("tipo", "novo_quiz").order("created_at", { ascending: false }).limit(1);
             } else {
               // Token inválido — desativar
               await supabase.from("push_tokens").update({ ativo: false }).eq("token", fcmToken);
