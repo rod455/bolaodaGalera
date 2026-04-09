@@ -189,7 +189,7 @@ const AppLayout = () => {
       <InstallAppBanner />
 
       {/* ═══ Botão flutuante de ajuda ═══ */}
-      {isLoggedIn && <HelpButton />}
+      <HelpButton />
 
       {/* Footer - desktop only */}
       <footer className="text-center py-4 text-xs text-muted-foreground border-t hidden md:block">
