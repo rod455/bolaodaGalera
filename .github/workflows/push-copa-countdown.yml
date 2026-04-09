@@ -13,7 +13,7 @@ jobs:
       - name: Send Copa Countdown Push
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           echo "Enviando push de countdown da Copa..."
           response=$(curl -s -w "\n%{http_code}" \
