@@ -40,10 +40,11 @@ const RC_ANDROID_KEY = ""; // Android key (usa Stripe direto no Android)
 
 let rcInitialized = false;
 
+import { Purchases } from "@revenuecat/purchases-capacitor";
+
 async function getRC() {
   try {
-    const mod = await import("@revenuecat/purchases-capacitor");
-    return mod.Purchases;
+    return Purchases;
   } catch {
     return null;
   }
@@ -67,11 +68,14 @@ export const useRevenueCat = () => {
     }
 
     const init = async () => {
-      const Purchases = await getRC();
-      if (!Purchases) {
+      console.log("[RevenueCat] Starting init... isNative:", isNative, "isIOS:", isIOS);
+      const RCPurchases = await getRC();
+      if (!RCPurchases) {
+        console.error("[RevenueCat] Plugin not available (getRC returned null)");
         setLoading(false);
         return;
       }
+      console.log("[RevenueCat] Plugin loaded:", typeof RCPurchases);
 
       try {
         const apiKey = isIOS ? RC_IOS_KEY : RC_ANDROID_KEY;
@@ -82,7 +86,7 @@ export const useRevenueCat = () => {
           return;
         }
 
-        await Purchases.configure({
+        await RCPurchases.configure({
           apiKey,
           appUserID: user?.id || undefined,
         });
@@ -90,14 +94,14 @@ export const useRevenueCat = () => {
         console.log("[RevenueCat] Configured successfully");
 
         // Fetch offerings
-        const { offerings: offeringsResult } = await Purchases.getOfferings();
+        const { offerings: offeringsResult } = await RCPurchases.getOfferings();
         console.log("[RevenueCat] Offerings:", offeringsResult?.current ? "found" : "EMPTY");
         if (offeringsResult.current) {
           setOfferings(offeringsResult.current as RCOffering);
         }
 
         // Fetch customer info
-        const { customerInfo: info } = await Purchases.getCustomerInfo();
+        const { customerInfo: info } = await RCPurchases.getCustomerInfo();
         setCustomerInfo(info as RCCustomerInfo);
         console.log("[RevenueCat] Customer info loaded");
       } catch (err) {
@@ -115,9 +119,6 @@ export const useRevenueCat = () => {
     if (!rcInitialized || !user?.id) return;
 
     const loginUser = async () => {
-      const Purchases = await getRC();
-      if (!Purchases) return;
-
       try {
         const { customerInfo: info } = await Purchases.logIn({ appUserID: user.id });
         setCustomerInfo(info as RCCustomerInfo);
@@ -131,8 +132,7 @@ export const useRevenueCat = () => {
 
   // Purchase a package
   const purchase = useCallback(async (productId: string): Promise<boolean> => {
-    const Purchases = await getRC();
-    if (!Purchases || !offerings) return false;
+    if (!offerings) return false;
 
     const pkg = offerings.availablePackages.find(
       (p) => p.product.identifier === productId
@@ -170,9 +170,6 @@ export const useRevenueCat = () => {
 
   // Restore purchases
   const restore = useCallback(async (): Promise<boolean> => {
-    const Purchases = await getRC();
-    if (!Purchases) return false;
-
     try {
       const { customerInfo: info } = await Purchases.restorePurchases();
       setCustomerInfo(info as RCCustomerInfo);
