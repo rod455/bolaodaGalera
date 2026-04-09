@@ -44,12 +44,12 @@ const QuizLenda = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
     if (startDirect) {
-      trackEvent("quiz_start", { quiz_id: "quiz_lenda", source: "lp" });
+      trackEvent("quiz_lenda_start", { source: "lp" });
     }
   }, [startDirect]);
 
   const handleStart = () => {
-    trackEvent("quiz_start", { quiz_id: "quiz_lenda", source: "app" });
+    trackEvent("quiz_lenda_start", { source: "app" });
     setStep("pergunta");
     setPerguntaIdx(0);
     setRespostas([]);
@@ -74,7 +74,7 @@ const QuizLenda = () => {
       setStep("calculando");
       const resultado = calcularLenda(novasRespostas);
       setLenda(resultado);
-      trackEvent("quiz_complete", { quiz_id: "quiz_lenda", resultado: resultado.id });
+      trackEvent("quiz_lenda_complete", { resultado: resultado.id });
 
       setTimeout(() => {
         if (isPremium) {
@@ -92,7 +92,7 @@ const QuizLenda = () => {
 
   const handleAdGate = async () => {
     if (needsAd) {
-      trackEvent("quiz_ad_shown", { quiz_id: "quiz_lenda" });
+      trackEvent("quiz_lenda_ad_shown", {});
       const adResult = await showAd("quiz");
       if (!adResult) return;
     }
@@ -118,7 +118,7 @@ const QuizLenda = () => {
       ? "https://apps.apple.com/app/bolao-na-copa/id6761629695"
       : "https://www.bolaonacopa.com.br/quiz-lenda";
     const texto = `${lenda.share}\n\nBaixe o app: ${storeLink}`;
-    trackEvent("quiz_share", { quiz_id: "quiz_lenda", resultado: lenda.id, canal });
+    trackEvent("quiz_lenda_share", { resultado: lenda.id, canal });
 
     setSharing(true);
     const imageFile = await generateImage();
