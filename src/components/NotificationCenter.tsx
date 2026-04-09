@@ -176,7 +176,7 @@ const NotificationCenter = () => {
                     {/* Conteúdo */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
-                        <p className={`text-sm leading-tight ${!notificacao.lida ? "font-semibold" : "font-medium text-muted-foreground"}`}>
+                        <p className={`text-sm leading-tight ${!notificacao.lida ? "font-semibold text-gray-900" : "font-medium text-muted-foreground"}`}>
                           {notificacao.titulo}
                         </p>
                         <span className="text-[10px] text-muted-foreground whitespace-nowrap flex-shrink-0">
