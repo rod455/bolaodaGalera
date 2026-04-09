@@ -75,11 +75,15 @@ serve(async (req) => {
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 
-    // Autenticação
+    // Autenticação — aceita service role key de qualquer env var
     const apikey = req.headers.get("apikey") || "";
     const authHeader = req.headers.get("authorization") || "";
-    const token = authHeader.startsWith("Bearer ") ? authHeader.substring(7) : "";
-    if (token !== SERVICE_KEY && apikey !== SERVICE_KEY) {
+    const token = authHeader.startsWith("Bearer ") ? authHeader.substring(7) : authHeader.replace("Bearer ", "");
+    const validKeys = [
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
+      Deno.env.get("CUSTOM_SERVICE_KEY"),
+    ].filter(Boolean);
+    if (!validKeys.some((k) => k === token || k === apikey)) {
       return new Response(JSON.stringify({ error: "Nao autorizado" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
