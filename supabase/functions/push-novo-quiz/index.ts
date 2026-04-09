@@ -106,6 +106,7 @@ serve(async (req) => {
         const res = await fetch(`${SUPABASE_URL}/functions/v1/send-push-notification`, {
           method: "POST",
           headers: {
+            "apikey": SERVICE_KEY,
             "Authorization": `Bearer ${SERVICE_KEY}`,
             "Content-Type": "application/json",
           },
