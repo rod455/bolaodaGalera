@@ -14,7 +14,8 @@ const HelpButton = () => {
     } else {
       const subject = encodeURIComponent("Dúvida sobre o Bolão na Copa");
       const body = encodeURIComponent("Olá, tenho uma dúvida:\n\n");
-      window.location.href = `mailto:${EMAIL}?subject=${subject}&body=${body}`;
+      // Abre composição do Gmail (funciona em qualquer browser/app)
+      window.open(`https://mail.google.com/mail/?view=cm&to=${EMAIL}&su=${subject}&body=${body}`, "_blank");
     }
   };
 
