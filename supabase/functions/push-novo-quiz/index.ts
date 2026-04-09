@@ -75,14 +75,16 @@ serve(async (req) => {
 
     const elegiveisIds = userIds.filter((uid) => (pushCount[uid] || 0) < MAX_PUSHS_SEMANA);
 
-    // Filtrar: só quem participa de algum bolão
+    // Filtrar: quem participa de algum bolão (incluindo nacionais)
     const { data: participantesData } = await supabase
       .from("bolao_participantes")
       .select("user_id")
       .in("user_id", elegiveisIds);
 
     const temBolao = new Set((participantesData || []).map((p: any) => p.user_id));
-    const elegiveisComBolao = elegiveisIds.filter((uid) => temBolao.has(uid));
+    const elegiveisComBolao = body.enviar_para_todos
+      ? elegiveisIds
+      : elegiveisIds.filter((uid) => temBolao.has(uid));
 
     if (elegiveisComBolao.length === 0) {
       return new Response(JSON.stringify({ ok: true, message: "Nenhum usuario elegivel" }), {

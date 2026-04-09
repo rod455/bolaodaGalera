@@ -156,10 +156,24 @@ serve(async (req) => {
       }
     });
 
+    // Buscar o bolão privado de cada usuário para o CTA
+    const { data: participacoesData } = await supabase
+      .from("bolao_participantes")
+      .select("user_id, bolao_id, boloes(is_nacional)")
+      .in("user_id", elegiveisIds);
+
+    // Mapa user_id → primeiro bolão privado
+    const userBolao: Record<string, string> = {};
+    (participacoesData || []).forEach((p: any) => {
+      if (p.boloes && !p.boloes.is_nacional && !userBolao[p.user_id]) {
+        userBolao[p.user_id] = p.bolao_id;
+      }
+    });
+
     // Enviar push para cada usuário elegível
     let enviados = 0;
     let erros = 0;
-    const semana = Math.floor(now.getTime() / (7 * 24 * 60 * 60 * 1000)); // semana do ano para variar mensagem
+    const semana = Math.floor(now.getTime() / (7 * 24 * 60 * 60 * 1000));
 
     for (const userId of elegiveisIds) {
       const temBolao = temBolaoPrivado.has(userId) || criadores.has(userId);
@@ -182,7 +196,7 @@ serve(async (req) => {
             tipo: "copa_countdown",
             titulo,
             mensagem,
-            dados: { rota: temBolao ? "/home" : "/criar" },
+            dados: { rota: temBolao && userBolao[userId] ? `/bolao/${userBolao[userId]}` : "/criar" },
             referencia,
           }),
         });
