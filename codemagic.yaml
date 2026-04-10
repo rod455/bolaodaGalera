@@ -83,7 +83,11 @@ workflows:
         script: |
           cd ios/App
           agvtool new-marketing-version 1.5.1
-          agvtool new-version -all 40
+          agvtool new-version -all 41
+          # Fallback: forçar no pbxproj diretamente
+          sed -i '' 's/CURRENT_PROJECT_VERSION = [0-9]*/CURRENT_PROJECT_VERSION = 41/g' App.xcodeproj/project.pbxproj
+          echo "Build version set to:"
+          grep CURRENT_PROJECT_VERSION App.xcodeproj/project.pbxproj
 
       - name: Build IPA
         script: |
