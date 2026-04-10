@@ -280,6 +280,36 @@
 
     .alt-bg { background: var(--green-50); }
 
+    /* ── Sub Nav (landing pages) ── */
+    .sub-nav {
+      background: var(--green-50);
+      border-bottom: 1px solid #d1fae5;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .sub-nav a {
+      padding: 6px 14px;
+      border-radius: 100px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-decoration: none;
+      color: var(--green-700);
+      background: white;
+      border: 1px solid #d1fae5;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .sub-nav a:hover {
+      background: var(--green-600);
+      color: white;
+      border-color: var(--green-600);
+    }
+
     /* ── Steps ── */
     .steps {
       display: grid;
@@ -579,6 +609,15 @@
       <a href="/auth" class="primary">Criar Conta</a>
     </div>
   </nav>
+
+  <!-- Sub Nav: Landing Pages -->
+  <div class="sub-nav">
+    <a href="/bolao-copa-2026">⚽ Copa 2026</a>
+    <a href="/bolao-brasileirao">🏟️ Brasileirão</a>
+    <a href="/bolao-copa-empresa">🏢 Empresas</a>
+    <a href="/bolao-copa-familia">👨‍👩‍👧‍👦 Família e Amigos</a>
+    <a href="/como-fazer-bolao-copa">📋 Como Fazer Bolão</a>
+  </div>
 
   <!-- Hero -->
   <div class="hero">
