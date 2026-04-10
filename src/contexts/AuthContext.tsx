@@ -19,6 +19,36 @@ const AuthContext = createContext<AuthContextType>({
 
 export const useAuth = () => useContext(AuthContext);
 
+// Processar referral pendente do localStorage
+function processarReferralPendente(userId: string) {
+  try {
+    const raw = localStorage.getItem("pending_referral");
+    if (!raw) return;
+
+    localStorage.removeItem("pending_referral");
+    // Formato: { code: "ABC123", ts: 1234567890 } ou string legado "ABC123"
+    let code: string | null = null;
+    try {
+      const parsed = JSON.parse(raw);
+      // Expiração de 24h
+      if (parsed.code && Date.now() - parsed.ts < 24 * 60 * 60 * 1000) {
+        code = parsed.code;
+      }
+    } catch {
+      code = raw; // formato legado (string pura)
+    }
+    if (code) {
+      supabase.rpc("processar_referral", {
+        p_referred_id: userId,
+        p_referral_code: code,
+      }).catch((err) => {
+        console.error("Erro ao processar referral:", err);
+        localStorage.setItem("pending_referral", raw);
+      });
+    }
+  } catch {}
+}
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -30,6 +60,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+
+      // Processar referral para usuários já logados que clicaram num link de referral
+      if (session?.user) {
+        processarReferralPendente(session.user.id);
+      }
     });
 
     // Listen for auth changes
@@ -47,33 +82,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         // Processar referral pendente (salvo no localStorage antes do OAuth redirect)
         if (event === "SIGNED_IN" && session?.user) {
-          try {
-            const raw = localStorage.getItem("pending_referral");
-            if (raw) {
-              localStorage.removeItem("pending_referral");
-              // Formato: { code: "ABC123", ts: 1234567890 } ou string legado "ABC123"
-              let code: string | null = null;
-              try {
-                const parsed = JSON.parse(raw);
-                // Expiração de 24h
-                if (parsed.code && Date.now() - parsed.ts < 24 * 60 * 60 * 1000) {
-                  code = parsed.code;
-                }
-              } catch {
-                code = raw; // formato legado (string pura)
-              }
-              if (code) {
-                supabase.rpc("processar_referral", {
-                  p_referred_id: session.user.id,
-                  p_referral_code: code,
-                }).catch((err) => {
-                  console.error("Erro ao processar referral:", err);
-                  // Restaurar referral para tentar novamente no próximo login
-                  localStorage.setItem("pending_referral", raw!);
-                });
-              }
-            }
-          } catch {}
+          processarReferralPendente(session.user.id);
         }
       }
     );

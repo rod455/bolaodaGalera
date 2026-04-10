@@ -124,12 +124,12 @@ const Auth = () => {
   const bolaoRedirect = searchParams.get("bolao");
   const refCode = searchParams.get("ref");
 
-  // Salvar refCode no localStorage para não perder durante OAuth redirect
-  useEffect(() => {
-    if (refCode) {
-      localStorage.setItem("pending_referral", JSON.stringify({ code: refCode, ts: Date.now() }));
-    }
-  }, [refCode]);
+  // Salvar refCode no localStorage SINCRONO — antes de qualquer redirect
+  // useEffect roda depois do render, mas se o usuário já está logado
+  // o <Navigate> desmonta o componente antes do useEffect executar
+  if (refCode && typeof window !== "undefined") {
+    localStorage.setItem("pending_referral", JSON.stringify({ code: refCode, ts: Date.now() }));
+  }
 
   // If already logged in AND not resetting password, redirect
   if (!loading && session && !isResettingPassword) {
