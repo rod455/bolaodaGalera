@@ -18,9 +18,9 @@ interface XPProgressCardProps {
 }
 
 const REFERRAL_REWARDS = [
-  { convites: 5, reward: "Premium PRO por 1 mês", emoji: "🎁" },
-  { convites: 10, reward: "Premium PRO por 3 meses", emoji: "🏆" },
-  { convites: 20, reward: "Premium PRO por 1 ano", emoji: "👑" },
+  { convites: 10, reward: "Premium PRO por 1 mês", emoji: "🎁" },
+  { convites: 20, reward: "Premium PRO por 3 meses", emoji: "🏆" },
+  { convites: 30, reward: "Premium PRO por 1 ano", emoji: "👑" },
 ];
 
 const XPProgressCard = ({ userXP, referralCode, variant = "full" }: XPProgressCardProps) => {
