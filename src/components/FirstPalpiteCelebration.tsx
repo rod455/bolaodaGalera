@@ -111,7 +111,7 @@ const FirstPalpiteCelebration = ({
     <>
       {showConfetti && <Confetti />}
 
-      <div className="fixed inset-0 z-[10001] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+      <div className="fixed inset-0 z-[10001] bg-black/60 flex items-center justify-center p-4 animate-fade-in">
         <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl overflow-hidden">
           {/* Header com gradiente */}
           <div className="bg-gradient-to-br from-copa-green-600 to-copa-green-700 px-6 pt-6 pb-8 text-center relative">
