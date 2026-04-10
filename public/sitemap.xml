@@ -10,16 +10,46 @@
 
   <!-- Landing pages estáticas (alto valor SEO) -->
   <url>
+    <loc>https://www.bolaonacopa.com.br/bolao-copa-2026</loc>
+    <lastmod>2026-04-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.bolaonacopa.com.br/como-fazer-bolao-copa</loc>
+    <lastmod>2026-04-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.bolaonacopa.com.br/bolao-copa-empresa</loc>
+    <lastmod>2026-04-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.bolaonacopa.com.br/bolao-brasileirao</loc>
+    <lastmod>2026-04-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.bolaonacopa.com.br/bolao-copa-familia</loc>
+    <lastmod>2026-04-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://www.bolaonacopa.com.br/bolao-copa-do-mundo-2026.html</loc>
     <lastmod>2026-04-03</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.bolaonacopa.com.br/como-funciona.html</loc>
     <lastmod>2026-04-03</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
+    <priority>0.7</priority>
   </url>
 
   <!-- Quiz -->

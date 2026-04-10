@@ -1,5 +1,13 @@
 {
+  "redirects": [
+    { "source": "/bolao-copa", "destination": "/bolao-copa-2026", "statusCode": 301 }
+  ],
   "rewrites": [
+    { "source": "/bolao-copa-2026", "destination": "/bolao-copa-2026.html" },
+    { "source": "/bolao-copa-empresa", "destination": "/bolao-copa-empresa.html" },
+    { "source": "/bolao-copa-familia", "destination": "/bolao-copa-familia.html" },
+    { "source": "/como-fazer-bolao-copa", "destination": "/como-fazer-bolao-copa.html" },
+    { "source": "/bolao-brasileirao", "destination": "/bolao-brasileirao.html" },
     { "source": "/quiz-selecao", "destination": "/quiz-selecao.html" },
     { "source": "/quiz-resultado", "destination": "/quiz-resultado.html" },
     { "source": "/termos-de-uso", "destination": "/termos-de-uso.html" },
