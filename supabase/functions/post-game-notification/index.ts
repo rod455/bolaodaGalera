@@ -219,7 +219,8 @@ serve(async (req) => {
     // Só envia se NÃO tem mais jogos em andamento ou agendados
     // para hoje nesse campeonato
     const hoje = now.toISOString().substring(0, 10); // YYYY-MM-DD
-    const fimDoDia = `${hoje}T23:59:59.999Z`;
+    // Buffer de 4h para cobrir fuso BRT (UTC-3) + margem
+    const fimDoDia = new Date(new Date(`${hoje}T23:59:59.999Z`).getTime() + 4 * 60 * 60 * 1000).toISOString();
     const campsProntos = new Map<string, any[]>();
     const campsAguardando: string[] = [];
 
@@ -238,7 +239,7 @@ serve(async (req) => {
         .from("jogos")
         .select("id, status")
         .eq("campeonato_id", campId)
-        .in("status", ["em_andamento", "agendado"])
+        .in("status", ["ao_vivo", "agendado"])
         .gte("data_hora", lookback.toISOString())
         .lte("data_hora", fimDoDia)
         .limit(1);

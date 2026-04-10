@@ -66,7 +66,8 @@ const MataMataPick = ({
       } else {
         setJogos(data as Jogo[]);
       }
-    } catch {
+    } catch (err) {
+      console.error("Erro ao carregar jogos do Mata a Mata:", err);
     } finally {
       setLoading(false);
     }

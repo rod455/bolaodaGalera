@@ -54,11 +54,11 @@ serve(async (req) => {
   }
 
   try {
-    // ── Auth: aceita CUSTOM_SERVICE_KEY (enviado pelo workflow) ──
-    const SERVICE_KEY = Deno.env.get("CUSTOM_SERVICE_KEY");
+    // ── Auth: aceita SUPABASE_SERVICE_ROLE_KEY ou CUSTOM_SERVICE_KEY ──
+    const validKeys = [Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"), Deno.env.get("CUSTOM_SERVICE_KEY")].filter(Boolean);
     const authHeader = req.headers.get("Authorization") || "";
     const token = authHeader.replace("Bearer ", "");
-    if (!SERVICE_KEY || token !== SERVICE_KEY) {
+    if (validKeys.length === 0 || !validKeys.includes(token)) {
       return new Response(
         JSON.stringify({ error: "Nao autorizado" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -73,7 +73,8 @@ serve(async (req) => {
       );
     }
 
-    const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || Deno.env.get("CUSTOM_SERVICE_KEY")!;
+    const supabase = createClient(SUPABASE_URL, serviceKey);
     const logGeral: string[] = [];
 
     // ── 1. Bolões com exatamente 1 participante (o criador) ──

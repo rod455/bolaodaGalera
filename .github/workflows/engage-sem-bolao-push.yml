@@ -1,8 +1,9 @@
 name: Engage - Sem Bolao (Push)
 
 on:
-  schedule:
-    - cron: '0 14 * * 3'
+  # DESABILITADO: edge function notify-no-bolao-push ainda nao foi criada
+  # schedule:
+  #   - cron: '0 14 * * 3'
   workflow_dispatch:
 
 jobs:

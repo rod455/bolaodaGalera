@@ -31,7 +31,7 @@ const XPProgressCard = ({ userXP, referralCode, variant = "full" }: XPProgressCa
   const progress = getXPProgress(userXP.xp_total, userXP.nivel);
 
   const getReferralText = () => {
-    const url = Capacitor.isNativePlatform() ? PLAY_STORE_URL : getReferralUrl(referralCode!, "whatsapp");
+    const url = Capacitor.isNativePlatform() ? PLAY_STORE_URL : getReferralUrl(referralCode ?? "", "whatsapp");
     return Capacitor.isNativePlatform() ? `🏆 Vem jogar no Bolão na Copa comigo!\n\nQuero ver quem sabe mais do que eu!\n\nBaixe o app: ${url}` : `🏆 Vem jogar no Bolão na Copa comigo!\n\nUse meu código: ${referralCode}\n\nCadastre aqui: ${url}`;
   };
 

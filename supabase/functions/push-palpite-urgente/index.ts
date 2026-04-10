@@ -119,10 +119,10 @@ serve(async (req) => {
   }
 
   try {
-    const SERVICE_KEY = Deno.env.get("CUSTOM_SERVICE_KEY");
+    const validKeys = [Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"), Deno.env.get("CUSTOM_SERVICE_KEY")].filter(Boolean);
     const authHeader = req.headers.get("Authorization") || "";
     const token = authHeader.replace("Bearer ", "");
-    if (!SERVICE_KEY || token !== SERVICE_KEY) {
+    if (validKeys.length === 0 || !validKeys.includes(token)) {
       return new Response(
         JSON.stringify({ error: "Nao autorizado" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -137,7 +137,8 @@ serve(async (req) => {
       );
     }
 
-    const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || Deno.env.get("CUSTOM_SERVICE_KEY")!;
+    const supabase = createClient(SUPABASE_URL, serviceKey);
 
     const now = new Date();
     const limite = new Date(now.getTime() + HOURS_BEFORE * 60 * 60 * 1000);

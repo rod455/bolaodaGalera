@@ -1,8 +1,9 @@
 name: Engage - Sem Bolao (Email + Sininho)
 
 on:
-  schedule:
-    - cron: '0 14 * * 1'
+  # DESABILITADO: edge function notify-no-bolao ainda nao foi criada
+  # schedule:
+  #   - cron: '0 14 * * 1'
   workflow_dispatch:
 
 jobs:

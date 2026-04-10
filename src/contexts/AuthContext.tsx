@@ -66,7 +66,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 supabase.rpc("processar_referral", {
                   p_referred_id: session.user.id,
                   p_referral_code: code,
-                }).catch(() => {});
+                }).catch((err) => {
+                  console.error("Erro ao processar referral:", err);
+                  // Restaurar referral para tentar novamente no próximo login
+                  localStorage.setItem("pending_referral", raw!);
+                });
               }
             }
           } catch {}

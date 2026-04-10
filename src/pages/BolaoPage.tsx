@@ -681,8 +681,10 @@ const BolaoPage = () => {
     if (!user || !id) return;
     setLeaving(true);
     try {
-      await supabase.from("palpites").delete().eq("user_id", user.id).eq("bolao_id", id);
-      await supabase.from("bolao_participantes").delete().eq("user_id", user.id).eq("bolao_id", id);
+      const { error: errPalpites } = await supabase.from("palpites").delete().eq("user_id", user.id).eq("bolao_id", id);
+      if (errPalpites) throw errPalpites;
+      const { error: errPart } = await supabase.from("bolao_participantes").delete().eq("user_id", user.id).eq("bolao_id", id);
+      if (errPart) throw errPart;
       toast.success("Você saiu do bolão.");
       navigate("/home");
     } catch {

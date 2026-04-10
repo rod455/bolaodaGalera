@@ -1,8 +1,9 @@
 name: Email Resumo Semanal
 
 on:
-  schedule:
-    - cron: '0 13 * * 1'
+  # DESABILITADO: edge function email-resumo-semanal ainda nao foi criada
+  # schedule:
+  #   - cron: '0 13 * * 1'
   workflow_dispatch:
 
 jobs:

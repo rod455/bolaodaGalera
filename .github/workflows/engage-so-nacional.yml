@@ -1,9 +1,10 @@
 name: Engage - So Nacional
 
 on:
-  schedule:
-    - cron: '0 14 * * 4'
-    - cron: '0 14 * * 6'
+  # DESABILITADO: edge functions notify-only-nacional e notify-only-nacional-push ainda nao foram criadas
+  # schedule:
+  #   - cron: '0 14 * * 4'
+  #   - cron: '0 14 * * 6'
   workflow_dispatch:
 
 jobs:
