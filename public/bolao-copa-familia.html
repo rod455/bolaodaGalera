@@ -448,10 +448,32 @@
       .hero { padding: 40px 16px; }
       section { padding: 36px 16px; }
       .cta-btn { padding: 14px 32px; font-size: 1rem; }
+      .top-nav .nav-links { gap: 4px; }
+      .top-nav .nav-links a { padding: 6px 10px; font-size: 0.75rem; }
     }
+    .top-nav { background: white; border-bottom: 1px solid #e5e7eb; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+    .top-nav .logo { display: flex; align-items: center; gap: 8px; text-decoration: none; font-weight: 800; font-size: 1rem; color: var(--green-700); }
+    .top-nav .logo img { width: 32px; height: 32px; }
+    .top-nav .nav-links { display: flex; gap: 6px; align-items: center; }
+    .top-nav .nav-links a { padding: 7px 14px; border-radius: 10px; font-size: 0.82rem; font-weight: 600; text-decoration: none; color: var(--text-muted); transition: all 0.2s; }
+    .top-nav .nav-links a:hover { background: var(--green-50); color: var(--green-700); }
+    .top-nav .nav-links a.primary { background: var(--green-600); color: white; }
+    .top-nav .nav-links a.primary:hover { background: var(--green-700); }
   </style>
 </head>
 <body>
+
+  <nav class="top-nav">
+    <a href="/home" class="logo">
+      <img src="https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/604913%20(512%20x%20512%20px).png" alt="Bolão na Copa" width="32" height="32">
+      Bolão na Copa
+    </a>
+    <div class="nav-links">
+      <a href="/como-funciona.html">Como Funciona</a>
+      <a href="/ao-vivo">Ao Vivo</a>
+      <a href="/auth" class="primary">Criar Conta</a>
+    </div>
+  </nav>
 
   <!-- Hero -->
   <div class="hero">
