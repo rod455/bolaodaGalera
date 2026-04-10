@@ -116,11 +116,22 @@ const Planos = () => {
 
     setLoadingCheckout(priceId);
     try {
+      // Garantir sessão atualizada antes de chamar a edge function
+      const { data: { session: freshSession } } = await supabase.auth.getSession();
+      if (!freshSession?.access_token) {
+        toast.error("Sessão expirada. Faça login novamente.");
+        setLoadingCheckout(null);
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke("create-checkout", {
         body: { priceId },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("[Planos] Invoke error:", error);
+        throw error;
+      }
 
       // Upgrade com proration (sem checkout, já atualizado)
       if (data?.upgraded) {
@@ -169,7 +180,8 @@ const Planos = () => {
       } else {
         throw new Error("URL de checkout não retornada");
       }
-    } catch {
+    } catch (err) {
+      console.error("[Planos] Checkout error:", err);
       toast.error("Erro ao iniciar pagamento. Tente novamente.");
     } finally {
       setLoadingCheckout(null);

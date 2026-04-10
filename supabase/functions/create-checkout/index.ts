@@ -6,6 +6,8 @@ const ALLOWED_ORIGINS = [
   "https://www.bolaonacopa.com.br",
   "https://bolaonacopa.lovable.app",
   "https://bolaodacopa-ten.vercel.app",
+  "https://localhost",        // Capacitor Android/iOS
+  "capacitor://localhost",    // Capacitor fallback
 ];
 
 function getCorsHeaders(req: Request) {
