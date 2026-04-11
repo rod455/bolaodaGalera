@@ -57,7 +57,12 @@ export async function signInWithGoogle(
   redirectPath: string = "/home"
 ): Promise<{ success: boolean; error?: string }> {
   // ═══ APP NATIVO ═══
-  if (Capacitor.isNativePlatform()) {
+  // iPad: usar OAuth web (plugin nativo não suporta apresentação em popover no iPad)
+  const isIPad = Capacitor.isNativePlatform() &&
+    (navigator.userAgent.includes("iPad") ||
+     (navigator.userAgent.includes("Macintosh") && navigator.maxTouchPoints > 1));
+
+  if (Capacitor.isNativePlatform() && !isIPad) {
     try {
       if (!socialLogin) {
         await initGoogleAuth();
