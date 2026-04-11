@@ -100,6 +100,11 @@ export async function signInWithGoogle(
     }
 
     try {
+      // Logout silencioso antes de cada login para limpar sessão em cache.
+      // O plugin reutiliza o token anterior se o usuário já estava logado,
+      // e esse token antigo não contém o nonce que geramos → erro no Supabase.
+      try { await socialLogin.logout({ provider: "google" }); } catch {}
+
       // Gerar nonce — padrão Supabase:
       // Plugin recebe hashedNonce → Google inclui no JWT → Supabase recebe rawNonce,
       // faz SHA-256 e compara com o JWT. Sem isso, o Google gera nonce internamente
