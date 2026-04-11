@@ -274,12 +274,9 @@ const Auth = () => {
   // Detectar WebView do Instagram/Facebook/TikTok (Google OAuth não funciona nesses browsers)
   const isWebView = /FBAN|FBAV|Instagram|Line|TikTok|Snapchat/i.test(navigator.userAgent);
 
-  // Detectar iPad (Google Sign In nativo não funciona no iPad — usar Apple Sign In)
-  const isIPad = Capacitor.isNativePlatform() &&
-    (navigator.userAgent.includes("iPad") ||
-     (navigator.userAgent.includes("Macintosh") && navigator.maxTouchPoints > 1));
-
-  const hideGoogleLogin = isWebView || isIPad;
+  // iOS: esconder Google Sign In (plugin nativo crasha com NSException)
+  // Usuários iOS usam Apple Sign In (nativo) ou email/senha
+  const hideGoogleLogin = isWebView || (Capacitor.isNativePlatform() && Capacitor.getPlatform() === "ios");
 
   return (
     <div className="min-h-screen bg-copa-green-500 flex flex-col items-center justify-start p-6 overflow-y-auto pt-8 pb-[40vh]">

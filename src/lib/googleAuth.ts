@@ -1,6 +1,7 @@
 // ═══════════════════════════════════════════════════════
 // Google Auth Helper
-// - App nativo: usa @capgo/capacitor-social-login (Google nativo)
+// - App nativo (iPhone): usa @capgo/capacitor-social-login (Google nativo)
+// - App nativo (iPad): desabilitado (botão escondido em Auth.tsx)
 // - Web: usa supabase.auth.signInWithOAuth (redirect)
 // ═══════════════════════════════════════════════════════
 
@@ -35,6 +36,8 @@ let initialized = false;
  */
 export async function initGoogleAuth() {
   if (!Capacitor.isNativePlatform()) return;
+  // iOS: não inicializar Google Sign In (usar Apple Sign In)
+  if (Capacitor.getPlatform() === "ios") return;
   if (initialized) return;
 
   try {
@@ -46,7 +49,12 @@ export async function initGoogleAuth() {
       ...(Capacitor.getPlatform() === "ios" ? { apple: {} } : {}),
     } as any);
     initialized = true;
-  } catch {
+    console.log("[GoogleAuth] Plugin inicializado com sucesso");
+  } catch (err) {
+    console.error("[GoogleAuth] Falha ao inicializar plugin:", err);
+    // Se inicialização falhou, limpar referência para forçar fallback web
+    socialLogin = null;
+    initialized = false;
   }
 }
 
@@ -58,15 +66,17 @@ export async function signInWithGoogle(
 ): Promise<{ success: boolean; error?: string }> {
   // ═══ APP NATIVO ═══
   if (Capacitor.isNativePlatform()) {
-    try {
-      if (!socialLogin) {
-        await initGoogleAuth();
-        if (!socialLogin) {
-          // Fallback para login web se plugin não disponível
-          return signInWithGoogleWeb(redirectPath);
-        }
+    // Se plugin não inicializou corretamente, NÃO tentar login nativo
+    // (evita NSException que crasha o app)
+    if (!initialized || !socialLogin) {
+      await initGoogleAuth();
+      if (!initialized || !socialLogin) {
+        console.warn("[GoogleAuth] Plugin não disponível, usando fallback web");
+        return signInWithGoogleWeb(redirectPath);
       }
+    }
 
+    try {
       const result = await socialLogin.login({
         provider: "google",
         options: {
@@ -98,9 +108,8 @@ export async function signInWithGoogle(
       ) {
         return { success: false, error: "Login cancelado" };
       }
-      console.error("[GoogleAuth] Native login failed, falling back to web:", err);
-      // Fallback para login via web no iOS se nativo crashar
-      return signInWithGoogleWeb(redirectPath);
+      console.error("[GoogleAuth] Native login failed:", err);
+      return { success: false, error: err?.message || "Erro ao fazer login com Google. Tente com email." };
     }
   }
 
