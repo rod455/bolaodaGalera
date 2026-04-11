@@ -85,7 +85,7 @@ const Palpites = () => {
     // Buscar todos os bolões que o usuário participa
     const { data: participacoes } = await supabase
       .from("bolao_participantes")
-      .select("bolao_id, boloes(id, nome)")
+      .select("bolao_id, boloes(id, nome, modo_pontuacao, time_favorito)")
       .eq("user_id", user.id);
 
     if (!participacoes || participacoes.length <= 1) return;
@@ -93,7 +93,12 @@ const Palpites = () => {
     // Outros bolões (excluindo o atual)
     const outrosBoloes = (participacoes || [])
       .filter((p: any) => p.boloes && p.boloes.id !== id)
-      .map((p: any) => ({ bolaoId: p.boloes.id, nome: p.boloes.nome }));
+      .map((p: any) => ({
+        bolaoId: p.boloes.id,
+        nome: p.boloes.nome,
+        modoPontuacao: p.boloes.modo_pontuacao,
+        timeFavorito: p.boloes.time_favorito,
+      }));
 
     if (outrosBoloes.length === 0) return;
 
@@ -118,7 +123,13 @@ const Palpites = () => {
         .eq("bolao_id", ob.bolaoId);
 
       const campIds = (bcData || []).map((bc: any) => bc.campeonato_id);
-      const temJogo = jogosIguais ? jogosIguais.some(j => campIds.includes(j.campeonato_id)) : false;
+      // Se o bolão é fanático, só copia se o jogo envolver o time favorito
+      const timeFavBolao = ob.timeFavorito;
+      const jogoEnvolveTimeFav = !timeFavBolao ||
+        jogo.time_a === timeFavBolao || jogo.time_b === timeFavBolao;
+      const temJogo = jogoEnvolveTimeFav && jogosIguais
+        ? jogosIguais.some(j => campIds.includes(j.campeonato_id))
+        : false;
 
       let jaTemPalpite = false;
       let palpiteAtual: string | undefined = undefined;
