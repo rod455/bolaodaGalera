@@ -57,7 +57,8 @@ const AppLayout = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* ═══ DESKTOP: Header ═══ */}
-      <header className="bg-copa-green-500 text-white sticky top-0 z-50 shadow-md hidden md:block">
+      <header className="bg-copa-green-500 text-white sticky top-0 z-50 shadow-md hidden md:block"
+        style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
         <div className="container max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src={LOGO_URL} alt="Bolão na Copa" className="w-10 h-10 object-contain" />
