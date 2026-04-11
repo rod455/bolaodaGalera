@@ -274,9 +274,7 @@ const Auth = () => {
   // Detectar WebView do Instagram/Facebook/TikTok (Google OAuth não funciona nesses browsers)
   const isWebView = /FBAN|FBAV|Instagram|Line|TikTok|Snapchat/i.test(navigator.userAgent);
 
-  // iOS: esconder Google Sign In (plugin nativo crasha com NSException)
-  // Usuários iOS usam Apple Sign In (nativo) ou email/senha
-  const hideGoogleLogin = isWebView || (Capacitor.isNativePlatform() && Capacitor.getPlatform() === "ios");
+  const hideGoogleLogin = isWebView;
 
   return (
     <div className="min-h-screen bg-copa-green-500 flex flex-col items-center justify-start p-6 overflow-y-auto pt-8 pb-[40vh]">

@@ -36,8 +36,6 @@ let initialized = false;
  */
 export async function initGoogleAuth() {
   if (!Capacitor.isNativePlatform()) return;
-  // iOS: não inicializar Google Sign In (usar Apple Sign In)
-  if (Capacitor.getPlatform() === "ios") return;
   if (initialized) return;
 
   try {
