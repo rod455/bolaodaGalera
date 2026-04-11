@@ -89,6 +89,16 @@ export async function signInWithGoogle(
 ): Promise<{ success: boolean; error?: string }> {
   // ═══ APP NATIVO ═══
   if (Capacitor.isNativePlatform()) {
+    // iPad: o plugin nativo de Google Sign-In crasha no iPad (apresentação popover).
+    // Usar OAuth web no iPad — mesma experiência, sem crash.
+    const isIPad =
+      Capacitor.getPlatform() === "ios" &&
+      (/iPad/i.test(navigator.userAgent) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1));
+    if (isIPad) {
+      return signInWithGoogleWeb(redirectPath);
+    }
+
     // Se plugin não inicializou corretamente, NÃO tentar login nativo
     // (evita NSException que crasha o app)
     if (!initialized || !socialLogin) {
