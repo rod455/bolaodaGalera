@@ -33,6 +33,28 @@ interface SocialLoginPlugin {
 let socialLogin: SocialLoginPlugin | null = null;
 let initialized = false;
 
+// ══ Nonce Utils ══
+// Fluxo correto para Supabase:
+//   1. Gerar rawNonce (aleatório)
+//   2. SHA-256(rawNonce) = hashedNonce → enviar ao plugin/Google (vai para o JWT)
+//   3. rawNonce → enviar ao Supabase (que faz SHA-256 e compara com o JWT)
+
+function generateRawNonce(): string {
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return Array.from(array)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+async function sha256Hex(message: string): Promise<string> {
+  const data = new TextEncoder().encode(message);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 /**
  * Inicializar o Social Login (chamar uma vez no app startup)
  */
@@ -78,26 +100,33 @@ export async function signInWithGoogle(
     }
 
     try {
+      // Gerar nonce — padrão Supabase:
+      // Plugin recebe hashedNonce → Google inclui no JWT → Supabase recebe rawNonce,
+      // faz SHA-256 e compara com o JWT. Sem isso, o Google gera nonce internamente
+      // e o Supabase não tem como verificar → erro "invalid nonce".
+      const rawNonce = generateRawNonce();
+      const hashedNonce = await sha256Hex(rawNonce);
+
+      console.log("[GoogleAuth] Iniciando login com nonce");
+
       const result = await socialLogin.login({
         provider: "google",
         options: {
           scopes: ["profile", "email"],
+          nonce: hashedNonce, // Plugin/Google usa o hash no JWT
         },
       });
 
       const idToken = result?.result?.idToken;
-      const nonce = result?.result?.nonce;
 
       if (!idToken) {
         return { success: false, error: "Token do Google não recebido" };
       }
 
-      console.log("[GoogleAuth] nonce present:", !!nonce);
-
       const { error } = await supabase.auth.signInWithIdToken({
         provider: "google",
         token: idToken,
-        ...(nonce ? { nonce } : {}),
+        nonce: rawNonce, // Supabase faz SHA-256 e compara com o JWT
       });
 
       if (error) {
