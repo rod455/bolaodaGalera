@@ -78,6 +78,14 @@
 				<string>com.googleusercontent.apps.259731661832-c4kampg0pu5dca2k9lb9dsfjgp1aqqjd</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.bolaonacopa.app.oauth</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>bolaonacopa</string>
+			</array>
+		</dict>
 	</array>
 	<key>FacebookAppID</key>
 	<string>000000000000000</string>

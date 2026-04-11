@@ -96,7 +96,11 @@ export async function signInWithGoogle(
       (/iPad/i.test(navigator.userAgent) ||
         (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1));
     if (isIPad) {
-      return signInWithGoogleWeb(redirectPath);
+      // No iPad nativo, usar scheme customizado como redirectTo.
+      // O Safari não consegue navegar para https://localhost (que é o origin do app),
+      // então o OAuth nunca voltaria para o app. Com bolaonacopa://, o iOS intercepta
+      // o redirect e dispara o evento appUrlOpen no App.tsx.
+      return signInWithGoogleWeb(redirectPath, true);
     }
 
     // Se plugin não inicializou corretamente, NÃO tentar login nativo
@@ -166,13 +170,20 @@ export async function signInWithGoogle(
 }
 
 async function signInWithGoogleWeb(
-  redirectPath: string
+  redirectPath: string,
+  useAppScheme = false
 ): Promise<{ success: boolean; error?: string }> {
+  // No iPad nativo: usar bolaonacopa:// para que o iOS intercepte o redirect
+  // e abra o app via appUrlOpen (ver App.tsx). Na web, usar a origin normal.
+  const redirectTo = useAppScheme
+    ? `bolaonacopa:/${redirectPath}`
+    : window.location.origin + redirectPath;
+
   try {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: window.location.origin + redirectPath,
+        redirectTo,
       },
     });
 

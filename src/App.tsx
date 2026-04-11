@@ -151,9 +151,32 @@ const App = () => {
     window.addEventListener("hashchange", checkDeepLink);
     document.addEventListener("resume", checkDeepLink);
 
+    // appUrlOpen: captura redirect OAuth via scheme bolaonacopa://
+    // Usado no Google Sign-In do iPad — o Safari não consegue navegar para
+    // https://localhost, então o redirect usa bolaonacopa:// que o iOS
+    // intercepta e entrega aqui via appUrlOpen.
+    const urlOpenListener = CapApp.addListener("appUrlOpen", (event) => {
+      const url = event.url;
+      if (!url.includes("access_token")) return;
+      const hashIndex = url.indexOf("#");
+      if (hashIndex === -1) return;
+      const params = new URLSearchParams(url.substring(hashIndex + 1));
+      const accessToken = params.get("access_token");
+      const refreshToken = params.get("refresh_token");
+      if (accessToken && refreshToken) {
+        supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        }).then(({ error }) => {
+          if (!error) window.location.replace("/home");
+        });
+      }
+    });
+
     return () => {
       window.removeEventListener("hashchange", checkDeepLink);
       document.removeEventListener("resume", checkDeepLink);
+      urlOpenListener.then((l) => l.remove()).catch(() => {});
     };
   }, [isNative]);
 
