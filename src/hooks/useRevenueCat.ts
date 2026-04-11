@@ -62,48 +62,47 @@ export const useRevenueCat = () => {
 
   // Initialize RevenueCat
   useEffect(() => {
-    if (!isNative || rcInitialized) {
+    if (!isNative) {
       setLoading(false);
       return;
     }
 
     const init = async () => {
-      console.log("[RevenueCat] Starting init... isNative:", isNative, "isIOS:", isIOS);
       const RCPurchases = await getRC();
       if (!RCPurchases) {
-        console.error("[RevenueCat] Plugin not available (getRC returned null)");
+        console.error("[RevenueCat] Plugin not available");
         setLoading(false);
         return;
       }
-      console.log("[RevenueCat] Plugin loaded:", typeof RCPurchases);
 
       try {
-        const apiKey = isIOS ? RC_IOS_KEY : RC_ANDROID_KEY;
-        console.log("[RevenueCat] Init with key:", apiKey ? apiKey.substring(0, 10) + "..." : "NONE");
-        if (!apiKey) {
-          console.warn("[RevenueCat] No API key configured");
-          setLoading(false);
-          return;
+        if (!rcInitialized) {
+          // Primeira inicialização — configurar o SDK
+          const apiKey = isIOS ? RC_IOS_KEY : RC_ANDROID_KEY;
+          if (!apiKey) {
+            console.warn("[RevenueCat] No API key configured");
+            setLoading(false);
+            return;
+          }
+          await RCPurchases.configure({
+            apiKey,
+            appUserID: user?.id || undefined,
+          });
+          rcInitialized = true;
+          console.log("[RevenueCat] Configured successfully");
         }
 
-        await RCPurchases.configure({
-          apiKey,
-          appUserID: user?.id || undefined,
-        });
-        rcInitialized = true;
-        console.log("[RevenueCat] Configured successfully");
-
-        // Fetch offerings
+        // Sempre buscar dados ao montar (primeira vez ou remontagem após navegação).
+        // Sem isso, offerings fica null na remontagem porque o useState reseta,
+        // mas rcInitialized=true faz o useEffect sair cedo → isAvailable=false → IAP quebrado.
         const { offerings: offeringsResult } = await RCPurchases.getOfferings();
         console.log("[RevenueCat] Offerings:", offeringsResult?.current ? "found" : "EMPTY");
         if (offeringsResult.current) {
           setOfferings(offeringsResult.current as RCOffering);
         }
 
-        // Fetch customer info
         const { customerInfo: info } = await RCPurchases.getCustomerInfo();
         setCustomerInfo(info as RCCustomerInfo);
-        console.log("[RevenueCat] Customer info loaded");
       } catch (err) {
         console.error("[RevenueCat] Init error:", err);
       } finally {

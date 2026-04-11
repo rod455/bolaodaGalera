@@ -29,7 +29,9 @@ let socialLogin: SocialLoginPlugin | null = null;
 let initialized = false;
 
 /**
- * Inicializar o Apple Social Login (chamar uma vez no app startup)
+ * Registrar referência ao plugin SocialLogin para Apple Sign-In.
+ * NÃO chama initialize() — googleAuth.ts já inicializa o plugin com { apple: {} }
+ * no startup do app. Chamar initialize() duas vezes causaria conflito de estado.
  */
 export async function initAppleAuth() {
   if (!Capacitor.isNativePlatform()) return;
@@ -38,10 +40,9 @@ export async function initAppleAuth() {
 
   try {
     socialLogin = registerPlugin<SocialLoginPlugin>("SocialLogin");
-    await socialLogin.initialize({ apple: {} });
     initialized = true;
   } catch {
-    // Plugin não disponível
+    socialLogin = null;
   }
 }
 
