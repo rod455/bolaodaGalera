@@ -14,6 +14,7 @@ interface SocialLoginPlugin {
     result: {
       idToken: string;
       accessToken?: string;
+      nonce?: string;
       profile?: {
         email: string;
         name: string;
@@ -68,15 +69,19 @@ export async function signInWithApple(
       });
 
       const idToken = result?.result?.idToken;
+      const nonce = result?.result?.nonce;
 
       if (!idToken) {
         return { success: false, error: "Token da Apple não recebido" };
       }
 
-      // Usar idToken para autenticar no Supabase
+      console.log("[AppleAuth] nonce present:", !!nonce);
+
+      // Usar idToken para autenticar no Supabase (nonce obrigatório para Apple)
       const { error } = await supabase.auth.signInWithIdToken({
         provider: "apple",
         token: idToken,
+        ...(nonce ? { nonce } : {}),
       });
 
       if (error) {

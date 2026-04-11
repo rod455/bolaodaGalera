@@ -274,7 +274,14 @@ const Auth = () => {
   // Detectar WebView do Instagram/Facebook/TikTok (Google OAuth não funciona nesses browsers)
   const isWebView = /FBAN|FBAV|Instagram|Line|TikTok|Snapchat/i.test(navigator.userAgent);
 
-  const hideGoogleLogin = isWebView;
+  // iPad: o plugin nativo crasha no iPad — esconder botão Google (mesma razão que commit d2ff4e6)
+  // iPads modernos se identificam como MacIntel com maxTouchPoints > 1
+  const isIPad = isIOS && (
+    /iPad/i.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+  );
+
+  const hideGoogleLogin = isWebView || isIPad;
 
   return (
     <div className="min-h-screen bg-copa-green-500 flex flex-col items-center justify-start p-6 overflow-y-auto pt-8 pb-[40vh]">
