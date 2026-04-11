@@ -19,6 +19,7 @@ interface SocialLoginPlugin {
     result: {
       idToken: string;
       accessToken?: string;
+      nonce?: string;
       profile?: {
         email: string;
         name: string;
@@ -85,14 +86,18 @@ export async function signInWithGoogle(
       });
 
       const idToken = result?.result?.idToken;
+      const nonce = result?.result?.nonce;
 
       if (!idToken) {
         return { success: false, error: "Token do Google não recebido" };
       }
 
+      console.log("[GoogleAuth] nonce present:", !!nonce);
+
       const { error } = await supabase.auth.signInWithIdToken({
         provider: "google",
         token: idToken,
+        ...(nonce ? { nonce } : {}),
       });
 
       if (error) {
