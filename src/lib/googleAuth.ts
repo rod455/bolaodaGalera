@@ -9,10 +9,11 @@ import { Capacitor, registerPlugin } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
 
 const WEB_CLIENT_ID = "259731661832-a7v1j6nnd2as7lhdlnkfsmg0fl4jq2sh.apps.googleusercontent.com";
+const IOS_CLIENT_ID = "259731661832-c4kampg0pu5dca2k9lb9dsfjgp1aqqjd.apps.googleusercontent.com";
 
 // Tipagem do plugin
 interface SocialLoginPlugin {
-  initialize(options: { google: { webClientId: string } }): Promise<void>;
+  initialize(options: { google: { webClientId: string; iOSClientId?: string } }): Promise<void>;
   login(options: { provider: string; options: Record<string, any> }): Promise<{
     provider: string;
     result: {
@@ -43,6 +44,7 @@ export async function initGoogleAuth() {
     await socialLogin.initialize({
       google: {
         webClientId: WEB_CLIENT_ID,
+        ...(Capacitor.getPlatform() === "ios" ? { iOSClientId: IOS_CLIENT_ID } : {}),
       },
       ...(Capacitor.getPlatform() === "ios" ? { apple: {} } : {}),
     } as any);

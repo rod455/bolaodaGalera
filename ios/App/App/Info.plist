@@ -55,6 +55,8 @@
 	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>GIDClientID</key>
+	<string>259731661832-c4kampg0pu5dca2k9lb9dsfjgp1aqqjd.apps.googleusercontent.com</string>
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-9316035916536420~7457000023</string>
 	<key>SKAdNetworkItems</key>
