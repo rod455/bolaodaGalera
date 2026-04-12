@@ -19,6 +19,16 @@ const AuthContext = createContext<AuthContextType>({
 
 export const useAuth = () => useContext(AuthContext);
 
+// Registrar sessão por plataforma (máximo 1x por dia por dispositivo)
+function registrarSessao(userId: string) {
+  const hoje = new Date().toISOString().slice(0, 10);
+  const chave = `session_log_${userId}_${hoje}`;
+  if (localStorage.getItem(chave)) return;
+  localStorage.setItem(chave, "1");
+  const origem = Capacitor.isNativePlatform() ? Capacitor.getPlatform() : "web";
+  supabase.from("user_sessions").insert({ user_id: userId, origem }).catch(() => {});
+}
+
 // Processar referral pendente do localStorage
 function processarReferralPendente(userId: string) {
   try {
@@ -64,6 +74,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Processar referral para usuários já logados que clicaram num link de referral
       if (session?.user) {
         processarReferralPendente(session.user.id);
+        registrarSessao(session.user.id);
       }
     });
 
@@ -83,6 +94,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Processar referral pendente (salvo no localStorage antes do OAuth redirect)
         if (event === "SIGNED_IN" && session?.user) {
           processarReferralPendente(session.user.id);
+          registrarSessao(session.user.id);
         }
       }
     );
