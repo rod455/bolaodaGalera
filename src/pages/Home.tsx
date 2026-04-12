@@ -468,7 +468,7 @@ const Home = () => {
     for (const p of participacoes) {
       const bolao = p.boloes as any;
       if (!bolao?.campeonato_id) continue;
-      const { data: jogos } = await supabase.from("jogos").select("id, time_a, time_b, escudo_a, escudo_b, data_hora, status, campeonato_id").eq("campeonato_id", bolao.campeonato_id).eq("status", "agendado").gt("data_hora", cutoff.toISOString()).lte("data_hora", in12h.toISOString());
+      const { data: jogos } = await supabase.from("jogos").select("id, time_a, time_b, data_hora, status, campeonato_id").eq("campeonato_id", bolao.campeonato_id).eq("status", "agendado").gt("data_hora", cutoff.toISOString()).lte("data_hora", in12h.toISOString());
       if (!jogos || jogos.length === 0) continue;
       const jogoIds = jogos.map((j: any) => j.id);
       const { data: palpites } = await supabase.from("palpites").select("jogo_id").eq("user_id", user.id).eq("bolao_id", p.bolao_id).in("jogo_id", jogoIds);
