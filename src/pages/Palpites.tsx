@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
 import {
   ArrowLeft, Save, Loader2, Lock, CheckCircle2, Clock,
   ChevronLeft, ChevronRight, Heart, Copy, Check, Filter,
@@ -204,6 +205,7 @@ const Palpites = () => {
               user_id: user.id,
               placar_time_a: pendingCopy.placarA,
               placar_time_b: pendingCopy.placarB,
+              origem: Capacitor.getPlatform(),
             });
         }
       }
@@ -435,7 +437,7 @@ const Palpites = () => {
         setPalpitesDB((prev) => ({ ...prev, [jogoId]: { ...existing, placar_time_a: placarA, placar_time_b: placarB } }));
       } else {
         const { data, error } = await supabase.from("palpites")
-          .insert({ jogo_id: jogoId, bolao_id: id, user_id: user.id, placar_time_a: placarA, placar_time_b: placarB })
+          .insert({ jogo_id: jogoId, bolao_id: id, user_id: user.id, placar_time_a: placarA, placar_time_b: placarB, origem: Capacitor.getPlatform() })
           .select("id, jogo_id, placar_time_a, placar_time_b, pontos").single();
         if (error) {
           if (error.message?.includes("row-level security") || error.code === "42501") { toast.error("Palpite encerrado! Faltam menos de 10 minutos para o jogo."); return; }

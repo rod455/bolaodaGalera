@@ -642,6 +642,7 @@ const BolaoPage = () => {
           user_id: user.id,
           placar_time_a: p.placar_time_a,
           placar_time_b: p.placar_time_b,
+          origem: Capacitor.getPlatform(),
         }));
 
       if (toInsert.length === 0) {
