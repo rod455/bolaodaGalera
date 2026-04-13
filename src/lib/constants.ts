@@ -152,11 +152,15 @@ export const APP_STORE_URL = "https://apps.apple.com/app/bolao-na-copa/id6761629
 
 // Retorna a URL da loja correta baseado na plataforma
 import { Capacitor } from "@capacitor/core";
-export function getStoreUrl(): string {
+export function isIOSPlatform(): boolean {
   try {
-    if (Capacitor.getPlatform() === "ios") return APP_STORE_URL;
+    if (Capacitor.getPlatform() === "ios") return true;
+    if (typeof navigator !== "undefined" && /iPhone|iPad|iPod/i.test(navigator.userAgent)) return true;
   } catch {}
-  return PLAY_STORE_URL;
+  return false;
+}
+export function getStoreUrl(): string {
+  return isIOSPlatform() ? APP_STORE_URL : PLAY_STORE_URL;
 }
 const BASE_URL = "https://www.bolaonacopa.com.br";
 

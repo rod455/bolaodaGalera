@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { User, Mail, Lock, Trash2, Crown, Check, Pencil, LogOut, Camera, Loader2, Zap, ExternalLink, Share2, UserPlus, Copy, Gift, MessageCircle, AlertTriangle, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getReferralUrl, PLAY_STORE_URL } from "@/lib/constants";
+import { getReferralUrl, getStoreUrl } from "@/lib/constants";
 import { shareViaWhatsApp } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -642,7 +642,7 @@ const Perfil = () => {
           <div className="flex gap-2">
             <Button
               onClick={() => {
-                const url = Capacitor.isNativePlatform() ? PLAY_STORE_URL : (referralCode ? getReferralUrl(referralCode, "copy") : "https://www.bolaonacopa.com.br/auth?utm_source=convite&utm_medium=copy");
+                const url = Capacitor.isNativePlatform() ? getStoreUrl() : (referralCode ? getReferralUrl(referralCode, "copy") : "https://www.bolaonacopa.com.br/auth?utm_source=convite&utm_medium=copy");
                 navigator.clipboard.writeText(url);
                 toast.success("Link copiado!");
               }}
@@ -654,7 +654,7 @@ const Perfil = () => {
             </Button>
             <Button
               onClick={() => {
-                const url = Capacitor.isNativePlatform() ? PLAY_STORE_URL : (referralCode ? getReferralUrl(referralCode, "whatsapp") : "https://www.bolaonacopa.com.br/auth?utm_source=convite&utm_medium=whatsapp");
+                const url = Capacitor.isNativePlatform() ? getStoreUrl() : (referralCode ? getReferralUrl(referralCode, "whatsapp") : "https://www.bolaonacopa.com.br/auth?utm_source=convite&utm_medium=whatsapp");
                 const text = `🏆 Vem jogar no Bolão na Copa! Faça seus palpites e dispute com seus amigos. Cadastre-se aqui: ${url}`;
                 shareViaWhatsApp(text);
               }}

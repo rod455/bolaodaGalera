@@ -16,7 +16,7 @@ import {
   perfilParaPorcentagens, calcularCompatibilidade,
   type SelecaoQuiz, type Perfil,
 } from "@/lib/quiz-data";
-// Removed PLAY_STORE_URL import — now only used in hub
+import { PLAY_STORE_URL, APP_STORE_URL } from "@/lib/constants";
 import { shareViaWhatsApp } from "@/lib/utils";
 
 type QuizStep = "intro" | "pergunta" | "calculando" | "ad-gate" | "resultado";
@@ -369,9 +369,18 @@ const QuizSelecao = () => {
           </div>
         </div>
 
-        {/* CTA Baixar app */}
+        {/* CTA Baixar app — Android */}
         {!Capacitor.isNativePlatform() && /Android/i.test(navigator.userAgent) && (
           <a href={PLAY_STORE_URL} target="_blank" rel="noopener"
+            className="flex items-center justify-center gap-2 w-full h-12 bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800 font-black rounded-xl shadow-lg text-sm transition-colors">
+            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-4 h-4 -ml-3" />
+            Quero todos os quizzes — Baixar grátis
+          </a>
+        )}
+        {/* CTA Baixar app — iOS Safari */}
+        {!Capacitor.isNativePlatform() && /iPhone|iPad|iPod/i.test(navigator.userAgent) && (
+          <a href={APP_STORE_URL} target="_blank" rel="noopener"
             className="flex items-center justify-center gap-2 w-full h-12 bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800 font-black rounded-xl shadow-lg text-sm transition-colors">
             <ChevronRight className="w-4 h-4" />
             <ChevronRight className="w-4 h-4 -ml-3" />
