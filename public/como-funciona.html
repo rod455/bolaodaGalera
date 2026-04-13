@@ -1016,6 +1016,26 @@
     </p>
   </footer>
 
+  <!-- Esconder referências Google Play dentro do app nativo iOS/Android -->
+  <script>
+    (function() {
+      function isCapacitor() {
+        return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+      }
+      function hidePlayStore() {
+        if (!isCapacitor()) return;
+        // Esconder todos os links/botões que apontam para Google Play
+        document.querySelectorAll('a[href*="play.google.com"]').forEach(function(el) {
+          el.style.display = 'none';
+        });
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', hidePlayStore);
+      } else {
+        hidePlayStore();
+      }
+    })();
+  </script>
   <!-- Anti-scraping -->
   <script>
     // Bloquear clique direito e seleção de texto

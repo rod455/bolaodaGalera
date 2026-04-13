@@ -314,5 +314,15 @@
   // substitui placeholder
   document.body.innerHTML = document.body.innerHTML.replace('{dias_para_copa}', dias);
 </script>
+  <script>
+    (function() {
+      function isCapacitor() { return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()); }
+      function hidePlayStore() {
+        if (!isCapacitor()) return;
+        document.querySelectorAll('a[href*="play.google.com"]').forEach(function(el) { el.style.display = 'none'; });
+      }
+      if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', hidePlayStore); } else { hidePlayStore(); }
+    })();
+  </script>
 </body>
 </html>
