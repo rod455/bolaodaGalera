@@ -18,10 +18,10 @@ import { trackEvent } from "@/lib/analytics";
 
 // ═══ Price IDs do Stripe (Android/Web) ═══
 const STRIPE_PRICES = {
-  premium_mensal: "price_1T1TxnC1YtBHMBc2hJMfOwqL",
-  premium_anual: "price_1T1TyYC1YtBHMBc2E12oGz6Q",
-  premium_pro_mensal: "price_1T1TzjC1YtBHMBc2CGkzhsUe",
-  premium_pro_anual: "price_1T1U0KC1YtBHMBc2gqSGO0jD",
+  premium_mensal: "price_1TInzQC1YtBHMBc2x4A0qqvv",
+  premium_anual: "price_1TInyIC1YtBHMBc22Un0xubk",
+  premium_pro_mensal: "price_1TInzoC1YtBHMBc2q9hXSUcL",
+  premium_pro_anual: "price_1TInxHC1YtBHMBc2jObJAvDk",
 };
 
 // ═══ Product IDs do RevenueCat/Apple (iOS) ═══
@@ -161,10 +161,10 @@ const Planos = () => {
           [STRIPE_PRICES.premium_pro_anual]: 'anual',
         };
         const valorMap: Record<string, number> = {
-          [STRIPE_PRICES.premium_mensal]: 9.90,
-          [STRIPE_PRICES.premium_anual]: 79.90,
-          [STRIPE_PRICES.premium_pro_mensal]: 14.90,
-          [STRIPE_PRICES.premium_pro_anual]: 119.90,
+          [STRIPE_PRICES.premium_mensal]: 19.90,
+          [STRIPE_PRICES.premium_anual]: 119.90,
+          [STRIPE_PRICES.premium_pro_mensal]: 39.90,
+          [STRIPE_PRICES.premium_pro_anual]: 199.90,
         };
         trackEvent('iniciar_premium', {
           plano: planoMap[priceId] || 'premium',
@@ -229,8 +229,8 @@ const Planos = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       <SEOHead
-        title="Planos Premium — Bolões Ilimitados a partir de R$9,90/mês"
-        description="Desbloqueie modos de pontuação exclusivos, bolões ilimitados, sem anúncios e mais. Bolão na Copa Premium a partir de R$9,90/mês ou R$79,90/ano."
+        title="Planos Premium — Bolões Ilimitados a partir de R$19,90/mês"
+        description="Desbloqueie modos de pontuação exclusivos, bolões ilimitados, sem anúncios e mais. Bolão na Copa Premium a partir de R$19,90/mês ou R$119,90/ano."
         path="/planos"
         keywords="bolão na copa premium, planos bolão, bolão sem anúncios, bolão ilimitado"
       />
@@ -348,17 +348,15 @@ const Planos = () => {
           <p className="text-sm font-semibold text-copa-green-600 mt-1">
             {billingPeriod === "mensal" ? (
               <>
-                <span className="line-through text-muted-foreground font-normal text-xs">R$ 19,90/mês</span>{" "}
-                <span className="text-copa-green-600">R$ 9,90/mês</span>
+                <span className="text-copa-green-600">R$ 19,90/mês</span>
                 <span className="block text-xs font-normal text-muted-foreground mt-0.5">
-                  ou R$ 6,66/mês no <button onClick={() => setBillingPeriod("anual")} className="text-copa-green-500 hover:text-copa-green-600 underline">plano anual</button>
+                  ou R$ 9,99/mês no <button onClick={() => setBillingPeriod("anual")} className="text-copa-green-500 hover:text-copa-green-600 underline">plano anual</button>
                 </span>
               </>
             ) : (
               <>
-                <span className="line-through text-muted-foreground font-normal text-xs">R$ 119,90/ano</span>{" "}
-                <span className="text-copa-green-600">R$ 79,90/ano</span>
-                <span className="text-xs font-normal text-muted-foreground"> (≈ R$ 6,66/mês)</span>
+                <span className="text-copa-green-600">R$ 119,90/ano</span>
+                <span className="text-xs font-normal text-muted-foreground"> (≈ R$ 9,99/mês)</span>
               </>
             )}
           </p>
@@ -457,17 +455,15 @@ const Planos = () => {
           <p className="text-sm font-semibold text-copa-green-600 mt-1">
             {billingPeriod === "mensal" ? (
               <>
-                <span className="line-through text-muted-foreground font-normal text-xs">R$ 39,90/mês</span>{" "}
-                <span className="text-copa-green-600">R$ 14,90/mês</span>
+                <span className="text-copa-green-600">R$ 39,90/mês</span>
                 <span className="block text-xs font-normal text-muted-foreground mt-0.5">
-                  ou R$ 8,33/mês no <button onClick={() => setBillingPeriod("anual")} className="text-copa-green-500 hover:text-copa-green-600 underline">plano anual</button>
+                  ou R$ 16,66/mês no <button onClick={() => setBillingPeriod("anual")} className="text-copa-green-500 hover:text-copa-green-600 underline">plano anual</button>
                 </span>
               </>
             ) : (
               <>
-                <span className="line-through text-muted-foreground font-normal text-xs">R$ 199,90/ano</span>{" "}
-                <span className="text-copa-green-600">R$ 99,90/ano</span>
-                <span className="text-xs font-normal text-muted-foreground"> (≈ R$ 8,33/mês)</span>
+                <span className="text-copa-green-600">R$ 199,90/ano</span>
+                <span className="text-xs font-normal text-muted-foreground"> (≈ R$ 16,66/mês)</span>
               </>
             )}
           </p>
