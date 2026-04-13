@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { ChevronRight, UserPlus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 
@@ -399,7 +400,7 @@ const GuestHeroCarousel = ({ participantesCount, handleGoogleLogin }: GuestHeroC
         </div>
       )}
 
-      {!/FBAN|FBAV|Instagram|Line|TikTok|Snapchat/i.test(navigator.userAgent) && (
+      {Capacitor.getPlatform() !== "ios" && !/FBAN|FBAV|Instagram|Line|TikTok|Snapchat/i.test(navigator.userAgent) && (
         <button
           onClick={(e) => { if (clickBlocked) return; handleGoogleLogin(); }}
           className="w-full mt-4 flex items-center justify-center gap-3 bg-white border border-gray-200 hover:border-copa-green-400 hover:shadow-md rounded-xl py-3.5 font-semibold text-sm text-gray-600 transition-all"

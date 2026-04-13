@@ -628,7 +628,7 @@ const Home = () => {
 
 
       {/* ═══ GUEST: Google Login ═══ */}
-      {!user && !/FBAN|FBAV|Instagram|Line|TikTok|Snapchat/i.test(navigator.userAgent) && (
+      {!user && Capacitor.getPlatform() !== "ios" && !/FBAN|FBAV|Instagram|Line|TikTok|Snapchat/i.test(navigator.userAgent) && (
         <button
           onClick={handleGoogleLogin}
           className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 hover:border-copa-green-400 hover:shadow-md rounded-xl py-3.5 font-semibold text-sm text-gray-600 transition-all"
@@ -860,8 +860,14 @@ const Home = () => {
         <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] px-4 py-3"
           style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom, 0.75rem))" }}>
           <div className="container max-w-4xl mx-auto">
-            {/* Browser normal: dois botões (Google + email) */}
-            {!/FBAN|FBAV|Instagram|Line|TikTok|Snapchat/i.test(navigator.userAgent) ? (
+            {/* iOS nativo: apenas botão de criar conta (Apple Sign-In na tela de auth) */}
+            {Capacitor.getPlatform() === "ios" ? (
+              <Button onClick={() => navigate("/auth?modo=cadastro")}
+                className="w-full h-11 bg-copa-gold-400 hover:bg-copa-gold-500 text-gray-900 font-extrabold text-sm rounded-xl shadow-md">
+                Criar conta grátis
+              </Button>
+            ) : !/FBAN|FBAV|Instagram|Line|TikTok|Snapchat/i.test(navigator.userAgent) ? (
+              /* Browser normal: dois botões (Google + email) */
               <div className="flex items-center gap-2">
                 <button onClick={handleGoogleLogin}
                   className="flex-1 h-10 flex items-center justify-center gap-2 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-600">
