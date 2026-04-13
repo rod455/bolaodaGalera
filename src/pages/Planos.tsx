@@ -217,15 +217,6 @@ const Planos = () => {
   const isPremium = userPlano === "premium" || userPlano === "premium_pro";
   const isPro = userPlano === "premium_pro";
 
-  // Countdown para reajuste
-  const promoDeadline = new Date("2026-04-13T15:00:00Z"); // domingo 12h BRT
-  const promoNow = new Date();
-  const promoDiff = promoDeadline.getTime() - promoNow.getTime();
-  const promoAtiva = promoDiff > 0;
-  const promoDias = Math.floor(promoDiff / (1000 * 60 * 60 * 24));
-  const promoHoras = Math.floor((promoDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const promoTexto = promoDias > 0 ? `${promoDias} dia${promoDias > 1 ? "s" : ""} e ${promoHoras}h` : `${promoHoras}h`;
-
   return (
     <div className="space-y-6 animate-fade-in">
       <SEOHead
@@ -241,28 +232,6 @@ const Planos = () => {
         </Button>
         <h2 className="text-2xl font-bold">Tipos de Planos</h2>
       </div>
-
-      {/* ═══ Banner urgência — preço sobe domingo ═══ */}
-      {(() => {
-        const deadline = new Date("2026-04-13T15:00:00Z");
-        const now = new Date();
-        const diff = deadline.getTime() - now.getTime();
-        if (diff <= 0) return null;
-        const dias = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const horas = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const tempoRestante = dias > 0 ? `${dias} dia${dias > 1 ? "s" : ""} e ${horas}h` : `${horas}h`;
-        return (
-          <div className="relative overflow-hidden rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 space-y-1.5">
-            <div className="flex items-center gap-2">
-              <span className="text-base">🔥</span>
-              <span className="text-xs font-bold text-amber-700 uppercase tracking-wide">Preço sobe em {tempoRestante}</span>
-            </div>
-            <p className="text-sm text-amber-900 leading-snug">
-              Quem assinar agora <strong>garante o preço atual para sempre</strong>, enquanto a assinatura estiver ativa.
-            </p>
-          </div>
-        );
-      })()}
 
       {/* Toggle mensal/anual */}
       <div className="flex items-center justify-center gap-1 bg-muted rounded-xl p-1">
@@ -285,9 +254,6 @@ const Planos = () => {
           }`}
         >
           Anual
-          <span className="absolute -top-2 -right-1 text-[9px] font-bold bg-copa-gold-400 text-copa-green-800 rounded-full px-1.5 py-0.5">
-            -33%
-          </span>
         </button>
       </div>
 
@@ -421,14 +387,6 @@ const Planos = () => {
             </Button>
           )}
 
-          {promoAtiva && !isPremium && (
-            <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-1">
-              <span className="text-sm flex-shrink-0">🔥</span>
-              <p className="text-[11px] text-amber-800 leading-snug">
-                <strong>Últimos dias com preços reduzidos:</strong> oferta válida por {promoTexto} — depois o preço sobe.
-              </p>
-            </div>
-          )}
 
           <p className="text-center text-[10px] text-muted-foreground/70 leading-tight mt-1">
             A assinatura renova automaticamente. Cancele a qualquer momento nas configurações da sua conta Apple.
@@ -542,14 +500,6 @@ const Planos = () => {
             </Button>
           )}
 
-          {promoAtiva && !isPro && (
-            <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-1">
-              <span className="text-sm flex-shrink-0">🔥</span>
-              <p className="text-[11px] text-amber-800 leading-snug">
-                <strong>Últimos dias com preços reduzidos:</strong> oferta válida por {promoTexto} — depois o preço sobe.
-              </p>
-            </div>
-          )}
 
           <p className="text-center text-xs text-muted-foreground">
             Desbloqueie todas as funcionalidades do app
