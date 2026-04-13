@@ -49,8 +49,9 @@
   <text x="200" y="51" font-family="'Barlow Condensed', sans-serif" font-size="12" font-weight="700" fill="#FCD34D" text-anchor="middle" letter-spacing="3">🌍 MUNDIAL 2026</text>
 
   <!-- Título principal (centralizado) -->
-  <text x="200" y="155" font-family="'Bebas Neue', sans-serif" font-size="76" fill="url(#gold2m)" filter="url(#glow3m)" letter-spacing="2" text-anchor="middle">COPA 2026</text>
-  <text x="200" y="210" font-family="'Bebas Neue', sans-serif" font-size="38" fill="rgba(255,255,255,0.85)" letter-spacing="3" text-anchor="middle">⚽ FUTEBOL MUNDIAL 🏆</text>
+  <text x="200" y="108" font-family="'Bebas Neue', sans-serif" font-size="38" fill="white" filter="url(#glow3m)" letter-spacing="2" text-anchor="middle">BOLÃO DA</text>
+  <text x="200" y="170" font-family="'Bebas Neue', sans-serif" font-size="62" fill="url(#gold2m)" filter="url(#glow3m)" letter-spacing="2" text-anchor="middle">COPA 2026</text>
+  <text x="200" y="224" font-family="'Bebas Neue', sans-serif" font-size="38" fill="rgba(255,255,255,0.85)" letter-spacing="3" text-anchor="middle">⚽ FUTEBOL MUNDIAL 🏆</text>
 
   <!-- Subtítulo -->
   <text x="200" y="258" font-family="'Barlow Condensed', sans-serif" font-size="13" font-weight="700" fill="rgba(255,255,255,0.60)" letter-spacing="1" text-anchor="middle">48 SELEÇÕES · MILHARES DE PALPITES</text>
