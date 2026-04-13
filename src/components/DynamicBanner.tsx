@@ -95,8 +95,8 @@ const DynamicBanner = ({ userBolaoIds, userContext }: DynamicBannerProps) => {
   useEffect(() => {
     const fetchBanners = async () => {
       // Cache de 10 min para reduzir egress do Supabase
-      const cacheKey = "banners_home_cache";
-      const cacheTimeKey = "banners_home_cache_t";
+      const cacheKey = "banners_home_cache_v2";
+      const cacheTimeKey = "banners_home_cache_v2_t";
       const cached = sessionStorage.getItem(cacheKey);
       const cachedTime = sessionStorage.getItem(cacheTimeKey);
       if (cached && cachedTime && Date.now() - Number(cachedTime) < 600000) {

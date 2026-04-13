@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
   <defs>
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Barlow+Condensed:wght@700;900&amp;display=swap');
@@ -22,30 +22,30 @@
   </defs>
 
   <!-- Fundo -->
-  <rect width="400" height="500" fill="url(#bgm)" rx="16"/>
-  <rect width="400" height="500" fill="url(#stripesm)" rx="16"/>
+  <rect width="400" height="400" fill="url(#bgm)" rx="16"/>
+  <rect width="400" height="400" fill="url(#stripesm)" rx="16"/>
 
   <!-- Bola de futebol (fundo, canto inferior direito) -->
-  <circle cx="340" cy="420" r="130" fill="rgba(255,255,255,0.03)"/>
-  <circle cx="340" cy="420" r="104" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
-  <polygon points="340,330 365,345 365,375 340,390 315,375 315,345" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
-  <polygon points="385,358 410,373 410,403 385,418 360,403 360,373" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="1.5"/>
-  <polygon points="295,358 320,373 320,403 295,418 270,403 270,373" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="1.5"/>
-  <polygon points="340,390 365,405 365,435 340,450 315,435 315,405" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="1.5"/>
+  <circle cx="340" cy="340" r="110" fill="rgba(255,255,255,0.03)"/>
+  <circle cx="340" cy="340" r="88" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+  <polygon points="340,260 363,273 363,299 340,312 317,299 317,273" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+  <polygon points="383,286 406,299 406,325 383,338 360,325 360,299" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="1.5"/>
+  <polygon points="297,286 320,299 320,325 297,338 274,325 274,299" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="1.5"/>
+  <polygon points="340,312 363,325 363,351 340,364 317,351 317,325" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="1.5"/>
 
   <!-- Badge superior -->
-  <rect x="100" y="38" width="200" height="30" rx="15" fill="rgba(251,191,36,0.15)" stroke="rgba(251,191,36,0.4)" stroke-width="1"/>
-  <text x="200" y="59" font-family="'Barlow Condensed', sans-serif" font-size="13" font-weight="700" fill="#FCD34D" text-anchor="middle" letter-spacing="3">⚽ TEMPORADA 2026</text>
+  <rect x="100" y="32" width="200" height="28" rx="14" fill="rgba(251,191,36,0.15)" stroke="rgba(251,191,36,0.4)" stroke-width="1"/>
+  <text x="200" y="51" font-family="'Barlow Condensed', sans-serif" font-size="12" font-weight="700" fill="#FCD34D" text-anchor="middle" letter-spacing="3">⚽ TEMPORADA 2026</text>
 
   <!-- Título principal (centralizado) -->
-  <text x="200" y="130" font-family="'Bebas Neue', sans-serif" font-size="32" fill="white" filter="url(#glowm)" letter-spacing="2" text-anchor="middle">CHEGOU A HORA DO</text>
-  <text x="200" y="196" font-family="'Bebas Neue', sans-serif" font-size="58" fill="url(#goldm)" filter="url(#glowm)" letter-spacing="2" text-anchor="middle">BRASILEIRÃO</text>
-  <text x="200" y="258" font-family="'Bebas Neue', sans-serif" font-size="58" fill="url(#goldm)" filter="url(#glowm)" letter-spacing="2" text-anchor="middle">2026</text>
+  <text x="200" y="108" font-family="'Bebas Neue', sans-serif" font-size="29" fill="white" filter="url(#glowm)" letter-spacing="2" text-anchor="middle">CHEGOU A HORA DO</text>
+  <text x="200" y="168" font-family="'Bebas Neue', sans-serif" font-size="54" fill="url(#goldm)" filter="url(#glowm)" letter-spacing="2" text-anchor="middle">BRASILEIRÃO</text>
+  <text x="200" y="228" font-family="'Bebas Neue', sans-serif" font-size="54" fill="url(#goldm)" filter="url(#glowm)" letter-spacing="2" text-anchor="middle">2026</text>
 
   <!-- Subtítulo -->
-  <text x="200" y="294" font-family="'Barlow Condensed', sans-serif" font-size="15" font-weight="700" fill="rgba(255,255,255,0.70)" letter-spacing="1" text-anchor="middle">MONTE SEU BOLÃO · DESAFIE SEUS AMIGOS</text>
+  <text x="200" y="260" font-family="'Barlow Condensed', sans-serif" font-size="14" font-weight="700" fill="rgba(255,255,255,0.70)" letter-spacing="1" text-anchor="middle">MONTE SEU BOLÃO · DESAFIE SEUS AMIGOS</text>
 
   <!-- CTA Button -->
-  <rect x="50" y="318" width="300" height="52" rx="26" fill="url(#goldm)"/>
-  <text x="200" y="350" font-family="'Bebas Neue', sans-serif" font-size="21" fill="#0f3d1f" text-anchor="middle" letter-spacing="1">CRIAR MEU BOLÃO AGORA!</text>
+  <rect x="50" y="280" width="300" height="48" rx="24" fill="url(#goldm)"/>
+  <text x="200" y="310" font-family="'Bebas Neue', sans-serif" font-size="20" fill="#0f3d1f" text-anchor="middle" letter-spacing="1">CRIAR MEU BOLÃO AGORA!</text>
 </svg>
