@@ -254,6 +254,9 @@ const Planos = () => {
           }`}
         >
           Anual
+          <span className="absolute -top-2 -right-1 text-[9px] font-bold bg-copa-gold-400 text-copa-green-800 rounded-full px-1.5 py-0.5">
+            -50%
+          </span>
         </button>
       </div>
 
