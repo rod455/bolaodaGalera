@@ -57,7 +57,7 @@
   <text x="98" y="215" font-family="'Bebas Neue', sans-serif" font-size="40" fill="rgba(255,255,255,0.85)" letter-spacing="3">2026 🏆</text>
 
   <!-- Subtítulo -->
-  <text x="100" y="238" font-family="'Barlow Condensed', sans-serif" font-size="15" font-weight="700" fill="rgba(255,255,255,0.65)" letter-spacing="1">32 SELEÇÕES · MILHARES DE PALPITES · UM CAMPEÃO</text>
+  <text x="100" y="238" font-family="'Barlow Condensed', sans-serif" font-size="15" font-weight="700" fill="rgba(255,255,255,0.65)" letter-spacing="1">48 SELEÇÕES · MILHARES DE PALPITES · UM CAMPEÃO</text>
 
   <!-- CTA Button -->
   <rect x="100" y="252" width="220" height="34" rx="17" fill="url(#gold2)"/>
