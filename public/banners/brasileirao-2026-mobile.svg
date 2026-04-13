@@ -39,7 +39,7 @@
 
   <!-- Título principal (centralizado) -->
   <text x="200" y="108" font-family="'Bebas Neue', sans-serif" font-size="29" fill="white" filter="url(#glowm)" letter-spacing="2" text-anchor="middle">CHEGOU A HORA DO</text>
-  <text x="200" y="168" font-family="'Bebas Neue', sans-serif" font-size="54" fill="url(#goldm)" filter="url(#glowm)" letter-spacing="2" text-anchor="middle">BRASILEIRÃO</text>
+  <text x="200" y="168" font-family="'Bebas Neue', sans-serif" font-size="50" fill="url(#goldm)" filter="url(#glowm)" letter-spacing="2" text-anchor="middle">BOLÃO NACIONAL</text>
   <text x="200" y="228" font-family="'Bebas Neue', sans-serif" font-size="54" fill="url(#goldm)" filter="url(#glowm)" letter-spacing="2" text-anchor="middle">2026</text>
 
   <!-- Subtítulo -->

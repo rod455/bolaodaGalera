@@ -12,13 +12,13 @@ interface SEOHeadProps {
 const DEFAULTS = {
   siteName: "Bolão na Copa",
   baseUrl: "https://www.bolaonacopa.com.br",
-  defaultTitle: "Bolão na Copa — Bolão de Futebol Grátis | Copa do Mundo 2026, Brasileirão e mais",
+  defaultTitle: "Bolão na Copa — Bolão de Futebol Grátis | Temporada 2026 e mais",
   defaultDescription:
-    "Bolão na Copa: crie bolões de futebol grátis e dispute com amigos! Palpites no Brasileirão, Copa do Mundo 2026, Champions League e mais. Cadastre-se em 10 segundos.",
+    "Bolão na Copa: crie bolões de futebol grátis e dispute com amigos! Palpites em campeonatos nacionais e internacionais, Champions League e mais. Cadastre-se em 10 segundos.",
   defaultImage:
     "https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/bolao-capas/og-cover.png",
   defaultKeywords:
-    "bolão na copa, bolão da copa, bolão de futebol, bolão grátis, palpites futebol, bolão copa do mundo 2026, bolão brasileirão, bolão entre amigos",
+    "bolão na copa, bolão de futebol, bolão grátis, palpites futebol, bolão copa 2026, bolão campeonato, bolão entre amigos",
 };
 
 const SEOHead = ({

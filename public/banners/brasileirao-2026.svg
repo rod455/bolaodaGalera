@@ -40,7 +40,7 @@
 
   <!-- Título principal -->
   <text x="98" y="132" font-family="'Bebas Neue', sans-serif" font-size="46" fill="white" filter="url(#glow)" letter-spacing="2">CHEGOU A HORA DO</text>
-  <text x="98" y="200" font-family="'Bebas Neue', sans-serif" font-size="58" fill="url(#gold)" filter="url(#glow)" letter-spacing="2">BRASILEIRÃO 2026</text>
+  <text x="98" y="200" font-family="'Bebas Neue', sans-serif" font-size="58" fill="url(#gold)" filter="url(#glow)" letter-spacing="2">BOLÃO NACIONAL 2026</text>
 
   <!-- Subtítulo -->
   <text x="100" y="234" font-family="'Barlow Condensed', sans-serif" font-size="16" font-weight="700" fill="rgba(255,255,255,0.75)" letter-spacing="1">MONTE SEU BOLÃO · DESAFIE SEUS AMIGOS</text>

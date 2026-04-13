@@ -44,7 +44,7 @@ const Quiz = () => {
     <div className="space-y-4 animate-fade-in">
       <SEOHead
         title="Quiz na Copa — Descubra sua seleção, sua lenda e mais"
-        description="Quizzes interativos sobre a Copa do Mundo 2026. Descubra para qual seleção você seria convocado, qual lenda do futebol você seria e muito mais."
+        description="Quizzes interativos de futebol. Descubra qual seleção combinaria com você, qual lenda do futebol você seria e muito mais."
         path="/quiz"
         keywords="quiz copa do mundo, quiz selecao, quiz lenda futebol, bolao na copa quiz"
       />
