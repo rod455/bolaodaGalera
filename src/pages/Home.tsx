@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { Capacitor } from "@capacitor/core";
 import { signInWithGoogle } from "@/lib/googleAuth";
+import { signInWithApple } from "@/lib/appleAuth";
 import {
   PlusCircle, Keyboard, Users, MapPin, ChevronRight, ChevronUp, ChevronDown, GripVertical,
   Trophy, Globe, LogIn, AlertTriangle, Clock, X, Loader2, Calendar, Search, Info, UserPlus, Crown,
@@ -297,6 +298,18 @@ const Home = () => {
 
   useEffect(() => { loadData(); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
+
+  const handleAppleLogin = async () => {
+    try {
+      trackEvent('Criar_Conta', { metodo: 'apple_home' });
+      const result = await signInWithApple("/home");
+      if (!result.success && result.error && result.error !== "Login cancelado") {
+        navigate("/auth?modo=cadastro");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao fazer login com Apple");
+    }
+  };
 
   const handleGoogleLogin = async () => {
     try {
@@ -627,7 +640,18 @@ const Home = () => {
 
 
 
-      {/* ═══ GUEST: Google Login ═══ */}
+      {/* ═══ GUEST: Login rápido ═══ */}
+      {!user && Capacitor.getPlatform() === "ios" && (
+        <button
+          onClick={handleAppleLogin}
+          className="w-full flex items-center justify-center gap-3 bg-black hover:bg-gray-900 rounded-xl py-3.5 font-semibold text-sm text-white transition-all"
+        >
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+          </svg>
+          Cadastre-se rápido com Apple
+        </button>
+      )}
       {!user && Capacitor.getPlatform() !== "ios" && !/FBAN|FBAV|Instagram|Line|TikTok|Snapchat/i.test(navigator.userAgent) && (
         <button
           onClick={handleGoogleLogin}
@@ -860,12 +884,15 @@ const Home = () => {
         <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] px-4 py-3"
           style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom, 0.75rem))" }}>
           <div className="container max-w-4xl mx-auto">
-            {/* iOS nativo: apenas botão de criar conta (Apple Sign-In na tela de auth) */}
+            {/* iOS nativo: botão Apple Sign-In */}
             {Capacitor.getPlatform() === "ios" ? (
-              <Button onClick={() => navigate("/auth?modo=cadastro")}
-                className="w-full h-11 bg-copa-gold-400 hover:bg-copa-gold-500 text-gray-900 font-extrabold text-sm rounded-xl shadow-md">
-                Criar conta grátis
-              </Button>
+              <button onClick={handleAppleLogin}
+                className="w-full h-11 flex items-center justify-center gap-2 bg-black hover:bg-gray-900 rounded-xl font-semibold text-sm text-white transition-all">
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+                </svg>
+                Cadastre-se com Apple
+              </button>
             ) : !/FBAN|FBAV|Instagram|Line|TikTok|Snapchat/i.test(navigator.userAgent) ? (
               /* Browser normal: dois botões (Google + email) */
               <div className="flex items-center gap-2">

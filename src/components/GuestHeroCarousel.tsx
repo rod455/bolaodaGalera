@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { signInWithApple } from "@/lib/appleAuth";
 
 interface BannerData {
   id: string;
@@ -63,6 +64,13 @@ const GuestHeroCarousel = ({ participantesCount, handleGoogleLogin }: GuestHeroC
   const navigate = useNavigate();
   const [banners, setBanners] = useState<BannerData[]>([]);
   const [current, setCurrent] = useState(0);
+
+  const handleAppleLogin = async () => {
+    const result = await signInWithApple("/home");
+    if (!result.success && result.error && result.error !== "Login cancelado") {
+      navigate("/auth?modo=cadastro");
+    }
+  };
   const [clickBlocked, setClickBlocked] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -400,7 +408,17 @@ const GuestHeroCarousel = ({ participantesCount, handleGoogleLogin }: GuestHeroC
         </div>
       )}
 
-      {Capacitor.getPlatform() !== "ios" && !/FBAN|FBAV|Instagram|Line|TikTok|Snapchat/i.test(navigator.userAgent) && (
+      {Capacitor.getPlatform() === "ios" ? (
+        <button
+          onClick={(e) => { if (clickBlocked) return; handleAppleLogin(); }}
+          className="w-full mt-4 flex items-center justify-center gap-3 bg-black hover:bg-gray-900 rounded-xl py-3.5 font-semibold text-sm text-white transition-all"
+        >
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+          </svg>
+          Cadastre-se rápido com Apple
+        </button>
+      ) : !/FBAN|FBAV|Instagram|Line|TikTok|Snapchat/i.test(navigator.userAgent) ? (
         <button
           onClick={(e) => { if (clickBlocked) return; handleGoogleLogin(); }}
           className="w-full mt-4 flex items-center justify-center gap-3 bg-white border border-gray-200 hover:border-copa-green-400 hover:shadow-md rounded-xl py-3.5 font-semibold text-sm text-gray-600 transition-all"
@@ -413,7 +431,7 @@ const GuestHeroCarousel = ({ participantesCount, handleGoogleLogin }: GuestHeroC
           </svg>
           Cadastre-se rápido com Google
         </button>
-      )}
+      ) : null}
 
       <style>{`.no-scrollbar::-webkit-scrollbar { display: none; }`}</style>
     </div>
