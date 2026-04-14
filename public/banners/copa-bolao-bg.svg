@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#071a0f"/>
+      <stop offset="45%" style="stop-color:#0d2e1a"/>
+      <stop offset="100%" style="stop-color:#0a1f30"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffe066"/>
+      <stop offset="50%" style="stop-color:#f59e0b"/>
+      <stop offset="100%" style="stop-color:#b45309"/>
+    </linearGradient>
+    <linearGradient id="fieldLine" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a5c2a;stop-opacity:0"/>
+      <stop offset="100%" style="stop-color:#1a5c2a;stop-opacity:0.55"/>
+    </linearGradient>
+    <radialGradient id="trophyGlow" cx="68%" cy="45%" r="35%">
+      <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:0.22"/>
+      <stop offset="100%" style="stop-color:#f59e0b;stop-opacity:0"/>
+    </radialGradient>
+    <radialGradient id="ballGlow" cx="25%" cy="55%" r="25%">
+      <stop offset="0%" style="stop-color:#22c55e;stop-opacity:0.18"/>
+      <stop offset="100%" style="stop-color:#22c55e;stop-opacity:0"/>
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="6" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <clipPath id="clip"><rect width="800" height="400" rx="0"/></clipPath>
+  </defs>
+
+  <rect width="800" height="400" fill="url(#bg)"/>
+
+  <!-- Field green wash bottom -->
+  <rect width="800" height="400" fill="url(#fieldLine)"/>
+
+  <!-- Stadium lights top corners -->
+  <ellipse cx="0"   cy="0"   rx="220" ry="150" fill="rgba(255,255,255,0.025)"/>
+  <ellipse cx="800" cy="0"   rx="200" ry="130" fill="rgba(255,255,255,0.02)"/>
+  <ellipse cx="400" cy="0"   rx="160" ry="90"  fill="rgba(255,255,200,0.015)"/>
+
+  <!-- Field lines (subtle) -->
+  <ellipse cx="400" cy="560" rx="320" ry="200" fill="none" stroke="rgba(255,255,255,0.055)" stroke-width="1.5"/>
+  <ellipse cx="400" cy="560" rx="200" ry="130" fill="none" stroke="rgba(255,255,255,0.04)"  stroke-width="1"/>
+  <line x1="400" y1="360" x2="400" y2="400" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+  <line x1="0"   y1="358" x2="800" y2="358" stroke="rgba(255,255,255,0.045)" stroke-width="1"/>
+
+  <!-- Glow halos -->
+  <ellipse cx="545" cy="175" rx="200" ry="200" fill="url(#trophyGlow)"/>
+  <ellipse cx="195" cy="230" rx="160" ry="160" fill="url(#ballGlow)"/>
+
+  <!-- ═══ TROPHY ═══ -->
+  <!-- Light rays -->
+  <line x1="545" y1="72" x2="520" y2="10"  stroke="rgba(255,210,0,0.07)" stroke-width="28" stroke-linecap="round"/>
+  <line x1="545" y1="72" x2="575" y2="5"   stroke="rgba(255,210,0,0.05)" stroke-width="20" stroke-linecap="round"/>
+  <line x1="545" y1="72" x2="620" y2="30"  stroke="rgba(255,210,0,0.04)" stroke-width="14" stroke-linecap="round"/>
+  <line x1="545" y1="72" x2="470" y2="25"  stroke="rgba(255,210,0,0.04)" stroke-width="14" stroke-linecap="round"/>
+
+  <!-- Cup body -->
+  <path d="M498 72 L592 72 L582 195 C580 228 562 248 545 256 C528 248 510 228 508 195 Z"
+        fill="url(#gold)" filter="url(#glow)" opacity="0.92"/>
+  <!-- Cup shine -->
+  <path d="M510 85 L530 85 L526 160 C525 178 518 192 512 198 L508 195 C509 172 510 128 510 85 Z"
+        fill="rgba(255,255,255,0.12)"/>
+  <!-- Left handle -->
+  <path d="M498 95 Q455 125 462 168 Q468 200 508 196"
+        fill="none" stroke="url(#gold)" stroke-width="13" stroke-linecap="round" opacity="0.9"/>
+  <!-- Right handle -->
+  <path d="M592 95 Q635 125 628 168 Q622 200 582 196"
+        fill="none" stroke="url(#gold)" stroke-width="13" stroke-linecap="round" opacity="0.9"/>
+  <!-- Base stem -->
+  <rect x="530" y="256" width="30" height="30" rx="2" fill="url(#gold)" opacity="0.88"/>
+  <!-- Base plate -->
+  <rect x="510" y="284" width="70" height="11" rx="3" fill="url(#gold)" opacity="0.9"/>
+  <rect x="498" y="293" width="94" height="9"  rx="3" fill="url(#gold)" opacity="0.85"/>
+  <!-- Star on trophy -->
+  <text x="545" y="178" font-size="32" text-anchor="middle" fill="rgba(255,255,255,0.55)" filter="url(#glow)">★</text>
+
+  <!-- Sparkle cross (top of trophy) -->
+  <line x1="545" y1="52" x2="545" y2="66" stroke="rgba(255,220,0,0.7)" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="538" y1="59" x2="552" y2="59" stroke="rgba(255,220,0,0.7)" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="540" y1="55" x2="550" y2="63" stroke="rgba(255,220,0,0.3)" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="550" y1="55" x2="540" y2="63" stroke="rgba(255,220,0,0.3)" stroke-width="1.5" stroke-linecap="round"/>
+
+  <!-- ═══ FOOTBALL (classic black & white) ═══ -->
+  <circle cx="195" cy="232" r="74" fill="#141414" stroke="rgba(255,255,255,0.08)" stroke-width="1.5" filter="url(#softGlow)" opacity="0.95"/>
+  <!-- Pentagon patches -->
+  <polygon points="195,174 217,190 209,215 181,215 173,190" fill="rgba(255,255,255,0.0)" stroke="rgba(255,255,255,0.45)" stroke-width="1.8"/>
+  <polygon points="195,174 217,190 209,215 181,215 173,190" fill="rgba(10,10,10,0.8)"/>
+  <polygon points="217,190 243,190 250,215 226,230 209,215" fill="rgba(10,10,10,0.8)" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
+  <polygon points="243,190 256,167 240,148 216,155 217,190" fill="rgba(10,10,10,0.8)" stroke="rgba(255,255,255,0.30)" stroke-width="1.5"/>
+  <polygon points="195,174 216,155 204,133 181,133 169,155" fill="rgba(10,10,10,0.8)" stroke="rgba(255,255,255,0.30)" stroke-width="1.5"/>
+  <polygon points="173,190 157,167 169,155 181,133 169,155 152,172 152,198 173,215" fill="rgba(10,10,10,0.8)" stroke="rgba(255,255,255,0.30)" stroke-width="1.5"/>
+  <polygon points="181,215 173,215 152,215 152,238 173,248 195,248" fill="rgba(10,10,10,0.75)" stroke="rgba(255,255,255,0.28)" stroke-width="1.5"/>
+  <polygon points="209,215 226,230 220,253 195,248 181,215" fill="rgba(10,10,10,0.75)" stroke="rgba(255,255,255,0.28)" stroke-width="1.5"/>
+  <!-- Shine -->
+  <ellipse cx="174" cy="205" rx="20" ry="13" fill="rgba(255,255,255,0.07)" transform="rotate(-25 174 205)"/>
+
+  <!-- ═══ STARS scattered ═══ -->
+  <text x="75"  y="75"  font-size="20" fill="rgba(255,210,0,0.55)" filter="url(#glow)">★</text>
+  <text x="355" y="55"  font-size="11" fill="rgba(255,210,0,0.38)">★</text>
+  <text x="430" y="88"  font-size="24" fill="rgba(255,210,0,0.42)" filter="url(#glow)">★</text>
+  <text x="700" y="110" font-size="15" fill="rgba(255,210,0,0.40)" filter="url(#glow)">★</text>
+  <text x="740" y="68"  font-size="9"  fill="rgba(255,210,0,0.28)">★</text>
+  <text x="660" y="310" font-size="17" fill="rgba(255,210,0,0.32)">★</text>
+  <text x="100" y="355" font-size="11" fill="rgba(255,210,0,0.25)">★</text>
+  <text x="310" y="370" font-size="8"  fill="rgba(255,210,0,0.22)">★</text>
+  <text x="760" y="340" font-size="12" fill="rgba(255,210,0,0.28)">★</text>
+
+  <!-- Small sparkle cross (right area) -->
+  <line x1="680" y1="178" x2="680" y2="190" stroke="rgba(255,210,0,0.45)" stroke-width="2" stroke-linecap="round"/>
+  <line x1="674" y1="184" x2="686" y2="184" stroke="rgba(255,210,0,0.45)" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Floating dots confetti -->
+  <circle cx="290" cy="95"  r="3"   fill="rgba(255,210,0,0.45)"/>
+  <circle cx="335" cy="130" r="2"   fill="rgba(255,255,255,0.3)"/>
+  <circle cx="450" cy="120" r="2.5" fill="rgba(255,210,0,0.38)"/>
+  <circle cx="385" cy="162" r="2"   fill="rgba(255,255,255,0.25)"/>
+  <circle cx="500" cy="345" r="3"   fill="rgba(255,210,0,0.32)"/>
+  <circle cx="118" cy="295" r="2"   fill="rgba(255,255,255,0.22)"/>
+  <circle cx="725" cy="195" r="2.5" fill="rgba(255,210,0,0.28)"/>
+  <circle cx="760" cy="265" r="2"   fill="rgba(255,255,255,0.20)"/>
+  <circle cx="60"  cy="320" r="3"   fill="rgba(255,210,0,0.22)"/>
+</svg>
