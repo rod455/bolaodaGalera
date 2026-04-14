@@ -48,17 +48,17 @@
   <text x="655" y="235" font-size="12" fill="rgba(255,215,0,0.28)">★</text>
   <text x="700" y="258" font-size="9"  fill="rgba(255,215,0,0.20)">★</text>
 
-  <!-- Badge superior -->
-  <rect x="98" y="38" width="220" height="30" rx="15" fill="rgba(251,191,36,0.12)" stroke="rgba(251,191,36,0.35)" stroke-width="1"/>
-  <text x="208" y="59" font-family="'Barlow Condensed', sans-serif" font-size="13" font-weight="700" fill="#FCD34D" text-anchor="middle" letter-spacing="3">🌍 MUNDIAL 2026</text>
+  <!-- Badge superior genérico -->
+  <rect x="98" y="38" width="200" height="30" rx="15" fill="rgba(251,191,36,0.12)" stroke="rgba(251,191,36,0.35)" stroke-width="1"/>
+  <text x="198" y="59" font-family="'Barlow Condensed', sans-serif" font-size="13" font-weight="700" fill="#FCD34D" text-anchor="middle" letter-spacing="3">🏆 COPA 2026</text>
 
   <!-- Título principal -->
   <text x="98" y="124" font-family="'Bebas Neue', sans-serif" font-size="44" fill="white" filter="url(#glow3)" letter-spacing="2">BOLÃO DA</text>
   <text x="98" y="192" font-family="'Bebas Neue', sans-serif" font-size="64" fill="url(#gold2)" filter="url(#glow3)" letter-spacing="2">COPA 2026</text>
-  <text x="98" y="238" font-family="'Bebas Neue', sans-serif" font-size="40" fill="rgba(255,255,255,0.85)" letter-spacing="3">⚽ FUTEBOL MUNDIAL 🏆</text>
+  <text x="98" y="236" font-family="'Bebas Neue', sans-serif" font-size="38" fill="rgba(255,255,255,0.85)" letter-spacing="3">⚽ FUTEBOL MUNDIAL 🏆</text>
 
-  <!-- Subtítulo -->
-  <text x="100" y="264" font-family="'Barlow Condensed', sans-serif" font-size="15" font-weight="700" fill="rgba(255,255,255,0.65)" letter-spacing="1">48 SELEÇÕES · MILHARES DE PALPITES · UM CAMPEÃO</text>
+  <!-- Subtítulo genérico -->
+  <text x="100" y="264" font-family="'Barlow Condensed', sans-serif" font-size="15" font-weight="700" fill="rgba(255,255,255,0.55)" letter-spacing="1">MILHARES DE PALPITES · UM CAMPEÃO</text>
 
   <!-- CTA Button -->
   <rect x="98" y="280" width="240" height="40" rx="20" fill="url(#gold2)"/>
