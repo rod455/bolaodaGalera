@@ -252,7 +252,7 @@ const QuizSelecao = () => {
       <div className="space-y-6 animate-fade-in">
         <SEOHead
           title="Quiz na Copa — Para qual seleção você seria convocado?"
-          description="Responda 10 perguntas e descubra para qual das 48 seleções da Copa do Mundo 2026 você seria convocado. Quiz na Copa — grátis!"
+          description="Responda 10 perguntas e descubra qual seleção do futebol mundial combina com você. Quiz na Copa — grátis!"
           path="/quiz"
           keywords="quiz copa do mundo, quiz selecao, quiz futebol, bolao na copa quiz"
         />
@@ -280,7 +280,7 @@ const QuizSelecao = () => {
 
             <div className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-[10px] font-bold uppercase tracking-widest"
               style={{ background: "rgba(250,204,21,.14)", border: "1px solid rgba(250,204,21,.38)", color: "#facc15" }}>
-              ⚽ 48 seleções · Copa 2026
+              ⚽ Seleções do mundo · Copa 2026
             </div>
 
             <h3 className="leading-[0.88]" style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(2.5rem,10vw,5rem)", textShadow: "0 4px 24px rgba(0,0,0,.4)" }}>
@@ -289,7 +289,7 @@ const QuizSelecao = () => {
             </h3>
 
             <p className="max-w-[420px] leading-relaxed" style={{ fontSize: "clamp(.88rem,2.5vw,1rem)", color: "rgba(255,255,255,.72)" }}>
-              10 perguntas revelam qual das <strong className="text-white">48 seleções</strong> da Copa 2026 combina com o seu jeito de jogar. Pode ser uma surpresa — ou exatamente o que você esperava.
+              10 perguntas revelam qual <strong className="text-white">seleção do mundo</strong> combina com o seu jeito de jogar. Pode ser uma surpresa — ou exatamente o que você esperava.
             </p>
 
             {/* CTA — antes das perguntas para facil acesso */}
@@ -419,7 +419,7 @@ const QuizSelecao = () => {
       <div className="animate-fade-in -mx-4 -mt-6" style={{ background: "#14532d", color: "#fff", fontFamily: "'Inter', sans-serif" }}>
         <SEOHead
           title="Quiz na Copa — Para qual seleção você seria convocado?"
-          description="Responda 10 perguntas e descubra qual das 48 seleções da Copa do Mundo 2026 combina com seu estilo de jogo."
+          description="Responda 10 perguntas e descubra qual seleção do futebol mundial combina com seu estilo de jogo."
           path="/quiz"
           keywords="quiz copa do mundo, quiz selecao, quiz futebol, bolao na copa quiz"
         />
@@ -445,7 +445,7 @@ const QuizSelecao = () => {
 
             <div className="inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[11px] font-bold uppercase tracking-widest mb-4"
               style={{ background: "rgba(250,204,21,.14)", border: "1px solid rgba(250,204,21,.38)", color: "#facc15" }}>
-              ⚽ 48 seleções · Copa 2026
+              ⚽ Seleções do mundo · Copa 2026
             </div>
 
             <h1 className="leading-[0.88] mb-2" style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(2.8rem,11vw,6.5rem)", textShadow: "0 4px 28px rgba(0,0,0,.45)" }}>
@@ -454,7 +454,7 @@ const QuizSelecao = () => {
             </h1>
 
             <p className="max-w-[480px] mx-auto mt-3 leading-relaxed" style={{ fontSize: "clamp(.95rem,2.8vw,1.15rem)", color: "rgba(255,255,255,.72)" }}>
-              10 perguntas revelam qual das <strong className="text-white">48 seleções</strong> da Copa 2026 combina com o seu jeito de jogar. Pode ser uma surpresa — ou exatamente o que você esperava.
+              10 perguntas revelam qual <strong className="text-white">seleção do mundo</strong> combina com o seu jeito de jogar. Pode ser uma surpresa — ou exatamente o que você esperava.
             </p>
 
             {/* Preview perguntas */}
@@ -513,7 +513,7 @@ const QuizSelecao = () => {
                 Descubra agora<br /><span style={{ color: "#facc15" }}>100% grátis</span>
               </h2>
               <p className="text-xs mb-6" style={{ color: "rgba(255,255,255,.45)" }}>
-                Quiz completo · 48 seleções possíveis · bolão da Copa 2026
+                Quiz completo · seleções do mundo · bolão da Copa 2026
               </p>
               <button onClick={handleStart}
                 className="w-full max-w-[330px] mx-auto flex items-center justify-center gap-3 py-4 rounded-2xl font-black text-base transition-all hover:-translate-y-0.5 active:scale-[0.98]"
@@ -544,7 +544,7 @@ const QuizSelecao = () => {
           {/* ── STATS STRIP ── */}
           <div className="flex items-center justify-center gap-4 flex-wrap py-3.5 px-5 text-xs"
             style={{ background: "rgba(250,204,21,.07)", borderTop: "1px solid rgba(250,204,21,.15)", borderBottom: "1px solid rgba(250,204,21,.15)", color: "rgba(255,255,255,.6)" }}>
-            <span>⚽ <strong style={{ color: "#facc15" }}>48 seleções</strong> possíveis</span>
+            <span>⚽ <strong style={{ color: "#facc15" }}>Seleções do mundo</strong></span>
             <span>🎯 <strong style={{ color: "#facc15" }}>10 perguntas</strong> precisas</span>
             <span>🔥 <strong style={{ color: "#facc15" }}>100% grátis</strong></span>
             <span>📊 <strong style={{ color: "#facc15" }}>Ranking</strong> ao vivo no bolao</span>
@@ -560,7 +560,7 @@ const QuizSelecao = () => {
             </p>
             <div className="grid grid-cols-2 gap-2.5" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))" }}>
               {[
-                { ico: "🌍", t: "48 seleções reais", s: "Todas as seleções classificadas para a Copa 2026." },
+                { ico: "🌍", t: "Seleções do futebol mundial", s: "As principais seleções do futebol mundial." },
                 { ico: "🎯", t: "Algoritmo de perfil", s: "Suas respostas criam um perfil único. Não tem como 'acertar'." },
                 { ico: "💬", t: "Compartilhe o resultado", s: "Envie para o grupo do bolao e veja quem discorda." },
                 { ico: "🏆", t: "Entre no bolao", s: "Apos o quiz, entre no bolao da Copa e palpite em todos os 104 jogos." },
@@ -705,7 +705,7 @@ const QuizSelecao = () => {
           <Loader2 className="w-24 h-24 animate-spin absolute -top-2 -left-2" style={{ color: "#15803d" }} />
         </div>
         <h2 className="text-xl font-bold mb-2">Calculando sua seleção...</h2>
-        <p className="text-sm" style={{ color: "rgba(255,255,255,.5)" }}>Analisando suas respostas entre 48 seleções</p>
+        <p className="text-sm" style={{ color: "rgba(255,255,255,.5)" }}>Analisando suas respostas entre as seleções do mundo</p>
         <div className="mt-6 flex gap-2 animate-pulse">
           {SELECOES.slice(0, 5).map((s, i) => (
             <span key={i} className="text-2xl" style={{ animationDelay: `${i * 200}ms` }}>{s.bandeira}</span>
@@ -905,7 +905,7 @@ const QuizSelecao = () => {
               Para qual seleção<br /><span style={{ color: "#facc15" }}>seus amigos seriam convocados?</span>
             </h2>
             <p className="text-sm leading-relaxed mb-6" style={{ color: "rgba(255,255,255,.48)" }}>
-              47 resultados possíveis. Pode ser qualquer seleção das 48 da Copa 2026.
+              Muitos resultados possíveis. Pode ser qualquer seleção do futebol mundial.
             </p>
 
             <div className="flex flex-wrap justify-center gap-2 mb-6">

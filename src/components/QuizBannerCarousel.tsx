@@ -126,7 +126,7 @@ const QuizBannerCarousel = () => {
         <div className="relative z-10 flex flex-col items-center px-5 py-8 space-y-3">
           <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-widest"
             style={{ background: "rgba(250,204,21,.14)", border: "1px solid rgba(250,204,21,.38)", color: banner.cor_texto }}>
-            {banner.emoji} 48 seleções · Copa 2026
+            {banner.emoji} Seleções do mundo · Copa 2026
           </div>
           <h3 className="leading-[0.9]" style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(1.8rem,7vw,3rem)", color: "#fff", textShadow: "0 2px 16px rgba(0,0,0,.3)" }}>
             {banner.titulo.split("?")[0]}
