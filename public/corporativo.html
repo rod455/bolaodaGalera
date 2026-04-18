@@ -266,7 +266,7 @@
     }
     .planos h2 em { color: var(--gold); font-style: normal; }
     .planos-sub { font-size: 1rem; color: var(--text-muted); margin-bottom: 48px; }
-    .planos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; text-align: left; }
+    .planos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; text-align: left; max-width: 760px; margin: 0 auto; }
     .plano-card {
       background: var(--white); border: 1px solid var(--gray);
       border-radius: 16px; padding: 32px;
@@ -299,10 +299,24 @@
       font-size: 0.95rem; font-weight: 700;
       text-decoration: none; cursor: pointer; border: none; transition: all .2s;
     }
-    .btn-plano.free-btn { background: var(--off-white); color: var(--dark); border: 1px solid var(--gray); }
-    .btn-plano.free-btn:hover { background: var(--gray); }
     .btn-plano.pro-btn { background: var(--gold); color: #1a1a00; }
     .btn-plano.pro-btn:hover { background: var(--gold-light); }
+    .plano-card.orcamento {
+      background: rgba(255,255,255,0.04); border: 1px dashed rgba(201,162,39,0.4);
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      text-align: center; gap: 12px;
+    }
+    .orcamento-icon { font-size: 2.2rem; }
+    .orcamento-titulo { font-size: 1.2rem; font-weight: 800; color: var(--white); }
+    .orcamento-sub { font-size: 0.85rem; color: rgba(255,255,255,0.5); line-height: 1.5; }
+    .btn-orcamento {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 24px; border-radius: 10px;
+      background: transparent; border: 1px solid var(--gold);
+      color: var(--gold); font-weight: 700; font-size: 0.9rem;
+      text-decoration: none; transition: all .2s; margin-top: 8px;
+    }
+    .btn-orcamento:hover { background: var(--gold); color: #1a1a00; }
 
     /* ── CTA FINAL ── */
     .cta-final { background: var(--dark); padding: 80px 24px; text-align: center; }
@@ -332,7 +346,8 @@
       .cenario-grid { grid-template-columns: 1fr; gap: 40px; }
       .steps-grid { grid-template-columns: repeat(2, 1fr); }
       .features-grid { grid-template-columns: 1fr; }
-      .planos-grid { grid-template-columns: 1fr; }
+      .planos-grid { grid-template-columns: 1fr; max-width: 100%; }
+      .plano-card.orcamento { min-height: 200px; }
       .nav-btns .btn-outline { display: none; }
       .stats-row { gap: 20px; }
     }
@@ -523,28 +538,14 @@
 <section class="planos">
   <div class="planos-inner">
     <div class="section-badge-dark">Planos</div>
-    <h2>Gratuito para a maioria.<br><em>Escalável para grandes equipes.</em></h2>
-    <p class="planos-sub">Comece grátis e expanda conforme a empresa crescer no bolão.</p>
+    <h2>Simples.<br><em>Sem surpresas.</em></h2>
+    <p class="planos-sub">Um plano para equipes de até 50 pessoas. Acima disso, orçamento personalizado.</p>
     <div class="planos-grid">
-      <div class="plano-card">
-        <span class="plano-tag free">Grátis</span>
-        <div class="plano-nome">Starter</div>
-        <div class="plano-preco">R$ 0</div>
-        <div class="plano-periodo">para sempre</div>
-        <ul class="plano-features">
-          <li><span class="check">✓</span> Até 15 participantes</li>
-          <li><span class="check">✓</span> Todos os modos de jogo</li>
-          <li><span class="check">✓</span> Ranking automático</li>
-          <li><span class="check">✓</span> Notificações de jogos</li>
-          <li><span class="check">✓</span> Compartilhamento por link</li>
-        </ul>
-        <a href="/auth?modo=cadastro" class="btn-plano free-btn">Criar grátis agora</a>
-      </div>
       <div class="plano-card destaque">
-        <span class="plano-tag pro">Premium</span>
-        <div class="plano-nome" style="color:#fff;">Corporativo</div>
-        <div class="plano-preco">R$ 19<span style="font-size:1rem;font-family:Inter,sans-serif;color:rgba(255,255,255,0.5)">/mês</span></div>
-        <div class="plano-periodo" style="color:rgba(255,255,255,0.4);">por bolão</div>
+        <span class="plano-tag pro">Corporativo</span>
+        <div class="plano-nome" style="color:#fff;">Bolão Corporativo</div>
+        <div class="plano-preco">R$ 149<span style="font-size:1.4rem;font-family:Inter,sans-serif;color:var(--gold-light)">,90</span><span style="font-size:1rem;font-family:Inter,sans-serif;color:rgba(255,255,255,0.5)">/mês</span></div>
+        <div class="plano-periodo" style="color:rgba(255,255,255,0.4);">por bolão · até 50 participantes</div>
         <ul class="plano-features">
           <li><span class="check">✓</span> Até 50 participantes</li>
           <li><span class="check">✓</span> Ranking por departamento</li>
@@ -553,7 +554,14 @@
           <li><span class="check">✓</span> Personalização do bolão</li>
           <li><span class="check">✓</span> Relatório de engajamento</li>
         </ul>
-        <a href="#contato" class="btn-plano pro-btn">Solicitar orçamento</a>
+        <button id="btn-assinar" onclick="assinarCorporativo()" class="btn-plano pro-btn">Assinar agora</button>
+      </div>
+      <div class="plano-card destaque orcamento">
+        <div class="orcamento-icon">🏢</div>
+        <div class="orcamento-titulo">Equipe acima de 50 pessoas?</div>
+        <div class="orcamento-sub">Criamos um plano personalizado para sua empresa. Entre em contato e montamos a solução ideal.</div>
+        <a href="https://wa.me/5531994826794?text=Ol%C3%A1%2C%20quero%20um%20or%C3%A7amento%20para%20equipe%20acima%20de%2050%20pessoas"
+           target="_blank" rel="noopener" class="btn-orcamento">💬 Solicitar orçamento</a>
       </div>
     </div>
   </div>
@@ -597,5 +605,42 @@
   <p style="margin-top:8px;">Bolão na Copa &copy; 2026</p>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+  const _sb = supabase.createClient(
+    'https://hvgsdxcdufekksxgqyoj.supabase.co',
+    'sb_publishable_w1jtxTu8GKPLQw1TYd3Cng_769fH4hz'
+  );
+
+  async function assinarCorporativo() {
+    const btn = document.getElementById('btn-assinar');
+    btn.textContent = '⏳ Aguarde...';
+    btn.style.opacity = '0.7';
+    btn.style.pointerEvents = 'none';
+
+    const { data: { session } } = await _sb.auth.getSession();
+    if (!session) {
+      window.location.href = '/auth?modo=cadastro';
+      return;
+    }
+
+    try {
+      const res = await fetch('https://hvgsdxcdufekksxgqyoj.supabase.co/functions/v1/create-checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + session.access_token
+        },
+        body: JSON.stringify({ priceId: 'price_1TNdckC1YtBHMBc2ulK4fQfr' })
+      });
+      const data = await res.json();
+      if (data.url) { window.location.href = data.url; return; }
+    } catch (e) {}
+
+    btn.textContent = 'Assinar agora';
+    btn.style.opacity = '';
+    btn.style.pointerEvents = '';
+  }
+</script>
 </body>
 </html>
