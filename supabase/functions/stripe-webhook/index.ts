@@ -30,7 +30,10 @@ const PRICE_PLAN_MAP: Record<string, string> = {
   "price_1T1TyYC1YtBHMBc2E12oGz6Q": "premium",
   "price_1T1TzjC1YtBHMBc2CGkzhsUe": "premium_pro",
   "price_1T1U0KC1YtBHMBc2gqSGO0jD": "premium_pro",
+  "price_1TNdckC1YtBHMBc2ulK4fQfr": "premium_pro", // Bolão Corporativo
 };
+
+const CORPORATE_PRICE_ID = "price_1TNdckC1YtBHMBc2ulK4fQfr";
 
 // ── Verificação de assinatura HMAC-SHA256 do Stripe ──
 async function verifySignature(payload: string, sigHeader: string, secret: string): Promise<boolean> {
@@ -126,6 +129,11 @@ serve(async (req) => {
           }).eq("id", userId);
           if (updateErr) console.error(`[Stripe] Erro no update:`, updateErr);
           console.log(`[Stripe] Plano ativado: ${userId} → ${plano}`);
+
+          // Notificar dono quando plano corporativo é ativado
+          if (priceId === CORPORATE_PRICE_ID && event.type === "customer.subscription.created") {
+            await notificarVendaCorporativa(supabase, userId, sub);
+          }
         } else if (status === "canceled" || status === "unpaid") {
           await supabase.from("profiles").update({
             plano: "free",
@@ -174,6 +182,52 @@ serve(async (req) => {
     headers: corsHeaders,
   });
 });
+
+// ── Notificar dono sobre nova venda corporativa ──
+async function notificarVendaCorporativa(supabase: any, userId: string, sub: any) {
+  const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+  const OWNER_EMAIL = Deno.env.get("OWNER_EMAIL") || "contato@bolaonacopa.com.br";
+  if (!RESEND_API_KEY) return;
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("nome, email")
+    .eq("id", userId)
+    .single();
+
+  const customerName = profile?.nome || "Cliente";
+  const customerEmail = profile?.email || "email não encontrado";
+  const subscriptionId = sub.id;
+  const now = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+
+  const html = `
+    <h2>🏢 Nova venda — Bolão Corporativo</h2>
+    <table style="border-collapse:collapse;width:100%;max-width:500px;">
+      <tr><td style="padding:8px;font-weight:bold;">Cliente</td><td style="padding:8px;">${customerName}</td></tr>
+      <tr><td style="padding:8px;font-weight:bold;">E-mail</td><td style="padding:8px;">${customerEmail}</td></tr>
+      <tr><td style="padding:8px;font-weight:bold;">User ID</td><td style="padding:8px;">${userId}</td></tr>
+      <tr><td style="padding:8px;font-weight:bold;">Assinatura</td><td style="padding:8px;">${subscriptionId}</td></tr>
+      <tr><td style="padding:8px;font-weight:bold;">Data/hora</td><td style="padding:8px;">${now}</td></tr>
+    </table>
+    <p style="margin-top:16px;">Entre em contato com o cliente para organizar o bolão corporativo. ⚽</p>
+  `;
+
+  try {
+    await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from: "Bolão na Copa <noreply@bolaonacopa.com.br>",
+        to: [OWNER_EMAIL],
+        subject: `🏢 Nova venda corporativa — ${customerName}`,
+        html,
+      }),
+    });
+    console.log(`[Stripe] Email corporativo enviado para ${OWNER_EMAIL}`);
+  } catch (e) {
+    console.error("[Stripe] Erro ao enviar email corporativo:", e);
+  }
+}
 
 // ── Resolver user ID: metadata ou stripe_customer_id ──
 async function resolveUserId(supabase: any, sub: any): Promise<string | null> {
