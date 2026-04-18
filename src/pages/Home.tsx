@@ -362,7 +362,7 @@ const Home = () => {
 
         (participacoes || []).forEach((p: any) => {
           participandoIds.add(p.bolao_id);
-          if (p.boloes && !p.boloes.is_nacional && p.boloes.is_publico !== false) {
+          if (p.boloes && !p.boloes.is_nacional) {
             privList.push(p.boloes);
             posicoes[p.boloes.id] = p.posicao_ranking;
           }
