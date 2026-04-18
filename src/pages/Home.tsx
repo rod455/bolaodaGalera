@@ -362,7 +362,7 @@ const Home = () => {
 
         (participacoes || []).forEach((p: any) => {
           participandoIds.add(p.bolao_id);
-          if (p.boloes && !p.boloes.is_nacional) {
+          if (p.boloes && !p.boloes.is_nacional && p.boloes.is_publico !== false) {
             privList.push(p.boloes);
             posicoes[p.boloes.id] = p.posicao_ranking;
           }
@@ -831,10 +831,7 @@ const Home = () => {
         })()}
 
         <div className="space-y-4">
-          {(user ? nacionais : nacionais.filter(b => {
-            const campNome = ((b as any).campeonatos?.nome_popular || (b as any).campeonatos?.nome || "").toLowerCase();
-            return campNome.includes("copa do mundo") || campNome.includes("world cup") || campNome.includes("copa 2026");
-          })).map((b, i) => {
+          {(user ? nacionais : []).map((b, i) => {
             const isPaulistao = b.id === PAULISTAO_BOLAO_ID;
             const card = (
               <NacionalCard key={b.id} bolao={b} participantes={participantesCount[b.id] || 0}
