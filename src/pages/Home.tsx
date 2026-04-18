@@ -33,8 +33,13 @@ import type { UpsellReason } from "@/components/PremiumUpsellModal";
 import Onboarding, { isOnboardingDone, markOnboardingDone } from "@/components/Onboarding";
 import FeedbackBanner from "@/components/FeedbackBanner";
 
-// ID do bolão do Paulistão (promoção R$200)
 const PAULISTAO_BOLAO_ID = "71851d2a-88fa-4ec4-a780-7c1e450869ef";
+
+const BOLOES_ARQUIVADOS = new Set([
+  "71851d2a-88fa-4ec4-a780-7c1e450869ef", // Paulistão 2026 - Fase Final
+  "21d68ba2-89f4-4585-a21d-d9a046150b94", // Mineiro 2026 - Fase Final
+  "a8cbcb1a-2e6f-4e66-b070-3e874e531552", // Finais Estaduais 2026
+]);
 
 interface ProximoJogo {
   time_a: string; time_b: string;
@@ -362,7 +367,7 @@ const Home = () => {
 
         (participacoes || []).forEach((p: any) => {
           participandoIds.add(p.bolao_id);
-          if (p.boloes && !p.boloes.is_nacional) {
+          if (p.boloes && !p.boloes.is_nacional && !BOLOES_ARQUIVADOS.has(p.boloes.id)) {
             privList.push(p.boloes);
             posicoes[p.boloes.id] = p.posicao_ranking;
           }
