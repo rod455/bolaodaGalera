@@ -167,7 +167,15 @@ serve(async (req) => {
     const apikey = req.headers.get("apikey") || "";
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const token = authHeader.startsWith("Bearer ") ? authHeader.substring(7) : "";
-    const isServiceCall = token === SERVICE_KEY || apikey === SERVICE_KEY;
+
+    // Verificar se é service_role pelo payload do JWT (role === 'service_role')
+    const isServiceRole = (t: string) => {
+      try {
+        const payload = JSON.parse(atob(t.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+        return payload.role === "service_role";
+      } catch { return false; }
+    };
+    const isServiceCall = token === SERVICE_KEY || apikey === SERVICE_KEY || isServiceRole(token);
 
     const {
       user_id,
