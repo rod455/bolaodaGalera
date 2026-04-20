@@ -82,7 +82,7 @@ public class MainActivity extends BridgeActivity implements ModifiedMainActivity
             NotificationChannel channel = new NotificationChannel(
                 "bolao_default",
                 "Bolao na Copa",
-                NotificationManager.IMPORTANCE_DEFAULT
+                NotificationManager.IMPORTANCE_HIGH
             );
             channel.setDescription("Notificacoes do Bolao na Copa");
             NotificationManager manager = getSystemService(NotificationManager.class);
