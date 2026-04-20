@@ -249,7 +249,7 @@ serve(async (req) => {
       p.email && p.email.includes("@") && !p.email.toLowerCase().startsWith("fake")
     );
 
-    // -- 5b. Pular usuarios que tem push notification ativo --
+    // -- 5b. Separar usuarios com push ativo (recebem push) dos sem push (recebem email) --
     const candidatoIds = candidatos.map((p: any) => p.id);
     const { data: pushTokens } = await supabase
       .from("push_tokens")
@@ -259,8 +259,9 @@ serve(async (req) => {
 
     const usersComPush = new Set((pushTokens || []).map((t: any) => t.user_id));
     const destinatarios = candidatos.filter((p: any) => !usersComPush.has(p.id));
+    const destinatariosPush = [...userPendencias.keys()].filter((id) => usersComPush.has(id));
 
-    logGeral.push(`Usuarios com push ativo (pulados): ${usersComPush.size}, email: ${destinatarios.length}`);
+    logGeral.push(`Usuarios com push: ${destinatariosPush.length}, com email: ${destinatarios.length}`);
 
     // -- 6. Enviar 1 email por usuario --
     let totalEnviados = 0;
@@ -297,7 +298,7 @@ serve(async (req) => {
               user_id: dest.id,
               rodada_key: p.rodadaKey,
               campeonato: p.campeonato,
-            }).then(() => {});
+            });
           }
           const tituloNotif = campNames.length === 1
             ? `Palpites pendentes - ${campNames[0]}`
@@ -305,15 +306,15 @@ serve(async (req) => {
           const mensagemNotif = campNames.length === 1
             ? `${pendencias[0].jogo} comeca ${pendencias[0].hora}. Faca seus palpites!`
             : `Voce tem jogos sem palpite em: ${campNames.join(", ")}. Nao perca pontos!`;
-          await supabase.from("notificacoes").insert({
-            user_id: dest.id,
-            tipo: "palpite_pendente",
-            titulo: tituloNotif,
-            mensagem: mensagemNotif,
-            dados: { rota: "/home" },
-            lida: false,
-            push_enviada: false,
-          }).then(() => {});
+          const referencia = `palpite_pendente:${dest.id}:${pendencias.map(p => p.rodadaKey).join(",")}`;
+          await supabase.rpc("criar_notificacao", {
+            p_user_id: dest.id,
+            p_tipo: "palpite_pendente",
+            p_titulo: tituloNotif,
+            p_mensagem: mensagemNotif,
+            p_dados: { rota: "/home" },
+            p_referencia: referencia,
+          });
         } else {
           totalErros++;
           const errText = await res.text();
@@ -328,6 +329,44 @@ serve(async (req) => {
     }
 
     logGeral.push(`Total: ${totalEnviados} emails enviados para ${destinatarios.length} usuarios`);
+
+    // -- 7. Enviar push para usuarios com token FCM --
+    const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "";
+    let totalPush = 0;
+    for (const userId of destinatariosPush) {
+      const pendencias = userPendencias.get(userId);
+      if (!pendencias || pendencias.length === 0) continue;
+      const campNames = pendencias.map((p) => p.campeonato);
+      const tituloNotif = campNames.length === 1
+        ? `Palpites pendentes - ${campNames[0]}`
+        : `Palpites pendentes em ${campNames.length} campeonatos`;
+      const mensagemNotif = campNames.length === 1
+        ? `${pendencias[0].jogo} comeca ${pendencias[0].hora}. Faca seus palpites!`
+        : `Voce tem jogos sem palpite em: ${campNames.join(", ")}. Nao perca pontos!`;
+      const referencia = `palpite_pendente:${userId}:${pendencias.map(p => p.rodadaKey).join(",")}`;
+      try {
+        await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-push-notification`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${SERVICE_KEY}`,
+          },
+          body: JSON.stringify({
+            user_id: userId,
+            tipo: "palpite_pendente",
+            titulo: tituloNotif,
+            mensagem: mensagemNotif,
+            dados: { rota: "/home" },
+            referencia,
+          }),
+        });
+        totalPush++;
+      } catch (e) {
+        logGeral.push(`Erro push ${userId}: ${String(e)}`);
+      }
+      await sleep(DELAY_MS);
+    }
+    logGeral.push(`Total: ${totalPush} pushs enviados`);
 
     return new Response(
       JSON.stringify({
