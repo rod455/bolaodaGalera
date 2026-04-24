@@ -611,6 +611,7 @@ const Home = () => {
   if (showOnboarding && user) {
     return createPortal(
       <div
+        data-onboarding="true"
         className="fixed top-0 left-0 right-0 bottom-0 bg-white overflow-y-auto"
         style={{ zIndex: 99999, paddingTop: "env(safe-area-inset-top, 0px)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >

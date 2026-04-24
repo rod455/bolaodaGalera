@@ -65,13 +65,14 @@ const BackButtonHandler = () => {
 
     const listener = CapApp.addListener("backButton", () => {
       const currentPath = pathnameRef.current;
-      const shouldExit = EXIT_ROUTES.some(
+      const onboardingActive = !!document.querySelector("[data-onboarding]");
+      const shouldExit = !onboardingActive && EXIT_ROUTES.some(
         (r) => currentPath === r || currentPath === r + "/"
       );
 
       if (shouldExit) {
         CapApp.exitApp();
-      } else {
+      } else if (!onboardingActive) {
         navigate(-1);
       }
     });

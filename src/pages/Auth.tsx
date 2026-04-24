@@ -122,6 +122,7 @@ const Auth = () => {
   };
 
   const bolaoRedirect = searchParams.get("bolao");
+  const returnTo = searchParams.get("returnTo");
   const refCode = searchParams.get("ref");
 
   // Salvar refCode no localStorage SINCRONO — antes de qualquer redirect
@@ -133,9 +134,8 @@ const Auth = () => {
 
   // If already logged in AND not resetting password, redirect
   if (!loading && session && !isResettingPassword) {
-    if (bolaoRedirect) {
-      return <Navigate to={`/bolao/${bolaoRedirect}`} replace />;
-    }
+    if (bolaoRedirect) return <Navigate to={`/bolao/${bolaoRedirect}`} replace />;
+    if (returnTo) return <Navigate to={returnTo} replace />;
     return <Navigate to="/home" replace />;
   }
 
@@ -152,7 +152,7 @@ const Auth = () => {
         });
         if (error) throw error;
         toast.success("Login realizado com sucesso!");
-        navigate(bolaoRedirect ? `/bolao/${bolaoRedirect}` : "/home");
+        navigate(bolaoRedirect ? `/bolao/${bolaoRedirect}` : returnTo || "/home");
       } else {
         // Register
         if (password.length < 8) {
@@ -204,7 +204,7 @@ const Auth = () => {
   const handleAppleLogin = async () => {
     try {
       trackEvent('Criar_Conta', { metodo: 'apple' });
-      const redirectPath = bolaoRedirect ? `/bolao/${bolaoRedirect}` : "/home";
+      const redirectPath = bolaoRedirect ? `/bolao/${bolaoRedirect}` : returnTo || "/home";
       const result = await signInWithApple(redirectPath);
 
       // Referral é processado automaticamente no AuthContext via pending_referral
@@ -227,7 +227,7 @@ const Auth = () => {
   const handleGoogleLogin = async () => {
     try {
       trackEvent('Criar_Conta', { metodo: 'google' });
-      const redirectPath = bolaoRedirect ? `/bolao/${bolaoRedirect}` : "/home";
+      const redirectPath = bolaoRedirect ? `/bolao/${bolaoRedirect}` : returnTo || "/home";
       const result = await signInWithGoogle(redirectPath);
 
       // Referral é processado automaticamente no AuthContext via pending_referral

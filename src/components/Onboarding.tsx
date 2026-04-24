@@ -254,6 +254,8 @@ const QuickBolaoStep = ({
           <div className="flex items-center gap-2 text-sm text-muted-foreground py-3">
             <Loader2 className="w-4 h-4 animate-spin" /> Carregando...
           </div>
+        ) : campeonatos.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-3 text-center">Nenhum campeonato disponível no momento.</p>
         ) : (
           <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto">
             {campeonatos.map((c) => (
