@@ -40,9 +40,11 @@ const AppLayout = () => {
     return location.pathname === basePath || location.pathname.startsWith(basePath + "/");
   };
 
+  const STATIC_PATHS = ["/como-funciona", "/influenciadores", "/sobre", "/comparativo", "/corporativo"];
+
   const handleNavClick = (path: string) => {
     window.scrollTo(0, 0);
-    if (path.endsWith(".html")) {
+    if (path.endsWith(".html") || STATIC_PATHS.includes(path)) {
       window.location.href = path;
     } else {
       navigate(path);

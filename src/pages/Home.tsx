@@ -864,7 +864,7 @@ const Home = () => {
 
       {/* ═══ GUEST: Banner Como Funciona ═══ */}
       {!user && (
-        <div onClick={() => { navigate('/como-funciona'); }}
+        <div onClick={() => { window.location.href = "/como-funciona"; }}
           className="relative overflow-hidden rounded-2xl cursor-pointer bg-gradient-to-br from-copa-green-600 to-copa-green-700 p-6 text-white shadow-lg text-center">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-10 translate-x-10 blur-2xl" />
           <div className="relative z-10 space-y-3 flex flex-col items-center">
