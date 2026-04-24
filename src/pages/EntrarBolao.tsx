@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   PlusCircle, Keyboard, Search, Users, ChevronRight, Loader2, Calendar,
 } from "lucide-react";
@@ -19,6 +19,7 @@ import type { UpsellReason } from "@/components/PremiumUpsellModal";
 
 const EntrarBolao = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const [codigo, setCodigo] = useState("");
   const [publicos, setPublicos] = useState<Bolao[]>([]);
@@ -82,9 +83,20 @@ const EntrarBolao = () => {
   };
 
   useEffect(() => {
+    const codigoFromUrl = searchParams.get("codigo");
+    if (codigoFromUrl) setCodigo(codigoFromUrl.toUpperCase());
     if (user) loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
+
+  // Auto-submete quando código vem da URL e usuário está pronto
+  useEffect(() => {
+    const codigoFromUrl = searchParams.get("codigo");
+    if (codigoFromUrl && user && !loading) {
+      handleEntrarCodigo();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, loading]);
 
   const loadData = async () => {
     try {
