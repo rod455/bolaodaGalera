@@ -303,7 +303,7 @@ const Palpites = () => {
       if (fanaticoMode && bolaoTimeFavorito) {
         uniqueJogos = uniqueJogos.filter(
           (j) => j.time_a === bolaoTimeFavorito || j.time_b === bolaoTimeFavorito
-               || j.campeonato_id === bolao.campeonato_id
+               || (campIds.length > 1 && j.campeonato_id === bolao.campeonato_id)
         );
       }
       setJogos(uniqueJogos);
