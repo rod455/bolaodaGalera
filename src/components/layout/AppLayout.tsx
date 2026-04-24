@@ -31,7 +31,7 @@ const AppLayout = () => {
     : [
         { path: "/home", label: "Home", icon: Home },
         { path: "/quiz", label: "Quiz na Copa", icon: Globe },
-        { path: "/como-funciona.html", label: "Como Funciona", icon: HelpCircle },
+        { path: "/como-funciona", label: "Como Funciona", icon: HelpCircle },
         { path: "/auth?modo=cadastro", label: "Criar Conta", icon: LogIn },
       ];
 
@@ -155,7 +155,7 @@ const AppLayout = () => {
               className={`flex-1 py-2 text-xs font-medium text-center transition-colors ${location.pathname === "/quiz" ? "text-copa-gold-400 border-b-2 border-copa-gold-400" : "text-white/60 hover:text-white"}`}>
               Quiz da Copa
             </button>
-            <button onClick={() => { window.location.href = "/como-funciona.html"; }}
+            <button onClick={() => { window.location.href = "/como-funciona"; }}
               className="flex-1 py-2 text-xs font-medium text-center text-white/60 hover:text-white transition-colors">
               Como Funciona
             </button>

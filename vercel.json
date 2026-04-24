@@ -13,6 +13,7 @@
     { "source": "/termos-de-uso", "destination": "/termos-de-uso.html" },
     { "source": "/quiz-lenda", "destination": "/quiz-lenda.html" },
     { "source": "/quiz-jogador", "destination": "/quiz-jogador.html" },
+    { "source": "/como-funciona", "destination": "/como-funciona.html" },
     { "source": "/corporativo", "destination": "/corporativo.html" },
     { "source": "/sobre", "destination": "/sobre.html" },
     { "source": "/comparativo", "destination": "/comparativo.html" },
