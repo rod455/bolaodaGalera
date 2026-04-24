@@ -15,6 +15,7 @@
     { "source": "/quiz-jogador", "destination": "/quiz-jogador.html" },
     { "source": "/como-funciona", "destination": "/como-funciona.html" },
     { "source": "/corporativo", "destination": "/corporativo.html" },
+    { "source": "/influenciadores", "destination": "/influenciadores.html" },
     { "source": "/sobre", "destination": "/sobre.html" },
     { "source": "/comparativo", "destination": "/comparativo.html" },
     { "source": "/bolao-champions-league", "destination": "/bolao-champions-league.html" },
