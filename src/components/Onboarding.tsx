@@ -54,10 +54,12 @@ const WelcomeStep = ({
   onNext,
   onSkip,
   onSkipDirect,
+  onHasCodigo,
 }: {
   onNext: () => void;
   onSkip: () => void;
   onSkipDirect: () => void;
+  onHasCodigo: () => void;
 }) => (
   <div className="min-h-screen flex flex-col bg-gradient-to-br from-copa-green-600 via-copa-green-700 to-copa-green-900 relative overflow-hidden"
     style={{ paddingTop: "max(1.5rem, env(safe-area-inset-top, 1.5rem))" }}>
@@ -109,7 +111,7 @@ const WelcomeStep = ({
         <ChevronRight className="w-5 h-5 ml-1" />
       </Button>
       <button
-        onClick={onSkip}
+        onClick={onHasCodigo}
         className="w-full text-white/50 hover:text-white/70 text-xs transition-colors py-1"
       >
         Já tenho um código de convite
@@ -404,6 +406,14 @@ const Onboarding = ({ onComplete }: OnboardingProps) => {
     onComplete();
   };
 
+  // Usuário já tem código de convite — encerra onboarding e vai para /entrar
+  const handleHasCodigo = () => {
+    trackEvent("onboarding_skip", { skipped_at_step: STEPS[step], method: "has_codigo" });
+    markOnboardingDone();
+    onComplete();
+    navigate("/entrar");
+  };
+
   const confirmSkip = () => {
     setShowSkipConfirm(false);
     trackEvent("onboarding_skip", { skipped_at_step: STEPS[step], method: "modal" });
@@ -424,7 +434,7 @@ const Onboarding = ({ onComplete }: OnboardingProps) => {
   const renderStep = () => {
     switch (STEPS[step]) {
       case "welcome":
-        return <WelcomeStep onNext={goNext} onSkip={trySkip} onSkipDirect={directSkip} />;
+        return <WelcomeStep onNext={goNext} onSkip={trySkip} onSkipDirect={directSkip} onHasCodigo={handleHasCodigo} />;
       case "quick_bolao":
         return <QuickBolaoStep onCreated={handleBolaoCreated} onBack={goBack} onSkip={trySkip} />;
       default:
