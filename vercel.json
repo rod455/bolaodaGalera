@@ -14,6 +14,11 @@
     { "source": "/quiz-lenda", "destination": "/quiz-lenda.html" },
     { "source": "/quiz-jogador", "destination": "/quiz-jogador.html" },
     { "source": "/corporativo", "destination": "/corporativo.html" },
+    { "source": "/sobre", "destination": "/sobre.html" },
+    { "source": "/comparativo", "destination": "/comparativo.html" },
+    { "source": "/bolao-champions-league", "destination": "/bolao-champions-league.html" },
+    { "source": "/bolao-copa-do-brasil", "destination": "/bolao-copa-do-brasil.html" },
+    { "source": "/bolao-libertadores", "destination": "/bolao-libertadores.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
