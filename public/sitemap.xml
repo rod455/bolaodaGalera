@@ -86,6 +86,38 @@
     <priority>0.6</priority>
   </url>
 
+  <!-- Novas landing pages de campeonatos e institucional -->
+  <url>
+    <loc>https://www.bolaonacopa.com.br/sobre</loc>
+    <lastmod>2026-04-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.bolaonacopa.com.br/comparativo</loc>
+    <lastmod>2026-04-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.bolaonacopa.com.br/bolao-champions-league</loc>
+    <lastmod>2026-04-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.bolaonacopa.com.br/bolao-copa-do-brasil</loc>
+    <lastmod>2026-04-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.bolaonacopa.com.br/bolao-libertadores</loc>
+    <lastmod>2026-04-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
   <!-- Páginas institucionais -->
   <url>
     <loc>https://www.bolaonacopa.com.br/regulamento-bolao-paulistao.html</loc>

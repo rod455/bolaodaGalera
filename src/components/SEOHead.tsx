@@ -7,6 +7,7 @@ interface SEOHeadProps {
   image?: string;
   noindex?: boolean;
   keywords?: string;
+  schema?: object;
 }
 
 const DEFAULTS = {
@@ -28,6 +29,7 @@ const SEOHead = ({
   image = DEFAULTS.defaultImage,
   noindex = false,
   keywords,
+  schema,
 }: SEOHeadProps) => {
   // Padrão: "Bolão na Copa — {título da página}" para que o nome do site
   // apareça primeiro nas buscas do Google
@@ -56,6 +58,13 @@ const SEOHead = ({
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={image} />
+
+      {/* JSON-LD Schema */}
+      {schema && (
+        <script type="application/ld+json">
+          {JSON.stringify(schema)}
+        </script>
+      )}
     </Helmet>
   );
 };

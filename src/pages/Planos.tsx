@@ -224,6 +224,37 @@ const Planos = () => {
         description="Desbloqueie modos de pontuação exclusivos, bolões ilimitados, sem anúncios e mais. Bolão na Copa Premium a partir de R$19,90/mês ou R$119,90/ano."
         path="/planos"
         keywords="bolão na copa premium, planos bolão, bolão sem anúncios, bolão ilimitado"
+        schema={{
+          "@context": "https://schema.org",
+          "@type": "Product",
+          "name": "Bolão na Copa Premium",
+          "description": "Planos premium para bolões de futebol ilimitados com modos de pontuação exclusivos e sem anúncios.",
+          "url": "https://www.bolaonacopa.com.br/planos",
+          "brand": {
+            "@type": "Brand",
+            "name": "Bolão na Copa"
+          },
+          "offers": [
+            {
+              "@type": "Offer",
+              "name": "Premium Mensal",
+              "price": "19.90",
+              "priceCurrency": "BRL",
+              "priceValidUntil": "2026-12-31",
+              "availability": "https://schema.org/InStock",
+              "url": "https://www.bolaonacopa.com.br/planos"
+            },
+            {
+              "@type": "Offer",
+              "name": "Premium Anual",
+              "price": "119.90",
+              "priceCurrency": "BRL",
+              "priceValidUntil": "2026-12-31",
+              "availability": "https://schema.org/InStock",
+              "url": "https://www.bolaonacopa.com.br/planos"
+            }
+          ]
+        }}
       />
       {/* Header */}
       <div className="flex items-center gap-3">

@@ -1,0 +1,41 @@
+# Bolão na Copa
+
+> Plataforma brasileira de bolão de futebol online. Crie bolões grátis com amigos, família ou colegas de trabalho e faça palpites em mais de 10 campeonatos: Copa do Mundo 2026, Brasileirão, Libertadores, Champions League, Copa do Brasil e mais.
+
+## Sobre o produto
+
+- [Sobre o Bolão na Copa](https://www.bolaonacopa.com.br/sobre): O que é a plataforma, como funciona e quem está por trás
+- [Como funciona](https://www.bolaonacopa.com.br/como-funciona): Guia passo a passo para criar e participar de bolões
+- [Comparativo de planos](https://www.bolaonacopa.com.br/comparativo): Diferenças entre plano Gratuito, Premium e Premium PRO
+- [Planos e preços](https://www.bolaonacopa.com.br/planos): Preços atualizados dos planos Premium
+
+## Landing pages por campeonato
+
+- [Bolão Copa do Mundo 2026](https://www.bolaonacopa.com.br/bolao-copa-2026): Bolão online para a Copa do Mundo FIFA 2026 (EUA, Canadá e México)
+- [Bolão Brasileirão](https://www.bolaonacopa.com.br/bolao-brasileirao): Bolão do Campeonato Brasileiro Série A
+- [Bolão Libertadores](https://www.bolaonacopa.com.br/bolao-libertadores): Bolão da Copa Libertadores da América
+- [Bolão Champions League](https://www.bolaonacopa.com.br/bolao-champions-league): Bolão da UEFA Champions League
+- [Bolão Copa do Brasil](https://www.bolaonacopa.com.br/bolao-copa-do-brasil): Bolão da Copa do Brasil
+- [Bolão para empresas](https://www.bolaonacopa.com.br/bolao-copa-empresa): Como usar o Bolão na Copa no ambiente corporativo
+- [Bolão em família](https://www.bolaonacopa.com.br/bolao-copa-familia): Como criar um bolão familiar
+
+## Funcionalidades
+
+- Palpites em jogos com pontuação automática
+- Sistema de ranking em tempo real
+- Modos de pontuação: Clássico, Exato e Resultado
+- Jogos ao vivo com atualização automática de placar
+- Compartilhamento por WhatsApp e link direto
+- App disponível para Android e iOS (via Capacitor)
+- Sistema de XP e níveis de usuário
+- Programa de indicação com recompensas
+
+## Público-alvo
+
+Fãs de futebol brasileiros que querem tornar jogos mais emocionantes com amigos, família ou colegas de trabalho. Foco em Copa do Mundo, Brasileirão e torneios sul-americanos e europeus.
+
+## Informações técnicas
+
+- Plataforma web: https://www.bolaonacopa.com.br
+- Lançado em 2024, atualizado para Copa 2026
+- Suporte a pagamentos via Stripe (web/Android) e Apple IAP via RevenueCat (iOS)

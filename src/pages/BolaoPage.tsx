@@ -854,6 +854,18 @@ const BolaoPage = () => {
         title={bolao ? `Bolão ${bolao.nome}` : "Bolão"}
         description={bolao ? `Participe do bolão ${bolao.nome} e faça seus palpites!` : "Bolão na Copa"}
         path={`/bolao/${id}`}
+        schema={bolao ? {
+          "@context": "https://schema.org",
+          "@type": "SportsEvent",
+          "name": `Bolão ${bolao.nome}`,
+          "description": `Bolão de futebol online: ${bolao.nome}. Faça seus palpites e dispute com amigos.`,
+          "url": `https://www.bolaonacopa.com.br/bolao/${id}`,
+          "organizer": {
+            "@type": "Organization",
+            "name": "Bolão na Copa",
+            "url": "https://www.bolaonacopa.com.br"
+          }
+        } : undefined}
       />
       {/* Header */}
       <div className="flex items-center gap-3">
