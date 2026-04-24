@@ -385,6 +385,94 @@
       color: var(--text-muted);
     }
 
+    /* ── Monetização ── */
+    .money-section {
+      background: linear-gradient(135deg, #0f172a, #1e1b4b);
+      color: white;
+      border-top: none;
+    }
+
+    .money-section h2 {
+      color: var(--gold-400);
+      font-size: 1.7rem;
+    }
+
+    .money-section .subtitle {
+      text-align: center;
+      color: rgba(255,255,255,0.65);
+      font-size: 0.95rem;
+      margin-bottom: 36px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .money-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+    }
+
+    .money-card {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px;
+      padding: 32px 28px;
+      position: relative;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .money-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+    }
+
+    .money-card .soon-badge {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: var(--gold-400);
+      color: #1a1a1a;
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 3px 10px;
+      border-radius: 100px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .money-card .money-icon {
+      font-size: 2.8rem;
+      margin-bottom: 16px;
+    }
+
+    .money-card h3 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      margin-bottom: 10px;
+      color: white;
+    }
+
+    .money-card p {
+      font-size: 0.88rem;
+      color: rgba(255,255,255,0.65);
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .money-card .example {
+      background: rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.8);
+      border-left: 3px solid var(--gold-400);
+    }
+
+    .money-card .example strong {
+      color: var(--gold-400);
+    }
+
     .faq {
       background: white;
     }
@@ -572,6 +660,53 @@
           <p>Mostre a tabela ao vivo, comemore os acertos e mantenha a turma engajada rodada após rodada.</p>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- Monetização -->
+  <section class="money-section">
+    <div class="container">
+      <h2 style="text-align:center; margin-bottom:12px;">Seu bolão pode gerar renda</h2>
+      <p class="subtitle">Além de engajar sua comunidade, o Bolão na Copa vai oferecer formas de você monetizar seu conteúdo de futebol. Em breve.</p>
+
+      <div class="money-grid">
+
+        <div class="money-card">
+          <span class="soon-badge">Em breve</span>
+          <div class="money-icon">&#128279;</div>
+          <h3>Comissão por indicação</h3>
+          <p>Divulgue com seu link ou código exclusivo. A cada seguidor que assinar um plano Premium, você recebe uma comissão recorrente — sem limite de indicações.</p>
+          <div class="example">
+            <strong>Exemplo:</strong> 50 seguidores assinam Premium por R$19,90/mês → você recebe 25% = <strong>R$248,75/mês</strong> recorrente
+          </div>
+        </div>
+
+        <div class="money-card">
+          <span class="soon-badge">Em breve</span>
+          <div class="money-icon">&#127942;</div>
+          <h3>Bolão pago para a comunidade</h3>
+          <p>Crie torneios com taxa de entrada para seus seguidores. A plataforma gerencia a cobrança e o repasse. Você define o valor, o prêmio e as regras.</p>
+          <div class="example">
+            <strong>Exemplo:</strong> bolão com entrada de R$20 e 100 participantes → <strong>R$2.000 em prêmios</strong> para distribuir como quiser
+          </div>
+        </div>
+
+        <div class="money-card">
+          <span class="soon-badge">Em breve</span>
+          <div class="money-icon">&#127775;</div>
+          <h3>Patrocínio de marcas</h3>
+          <p>Conectamos você com marcas interessadas em patrocinar bolões com audiência engajada. A marca financia o prêmio, você gera o conteúdo — e fica com a verba.</p>
+          <div class="example">
+            <strong>Exemplo:</strong> marca patrocina R$500 em prêmios para o seu bolão da Copa → você entrega <strong>3 stories + 1 post</strong> de divulgação
+          </div>
+        </div>
+
+      </div>
+
+      <p style="text-align:center; margin-top:36px; font-size:0.85rem; color:rgba(255,255,255,0.45);">
+        Quer ser avisado quando essas funcionalidades estiverem disponíveis?
+        <a href="https://wa.me/5531994826794?text=Quero+ser+avisado+sobre+monetiza%C3%A7%C3%A3o+para+influenciadores" target="_blank" rel="noopener" style="color:var(--gold-400); font-weight:700;">Fale com a gente pelo WhatsApp</a>
+      </p>
     </div>
   </section>
 
