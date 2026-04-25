@@ -32,7 +32,7 @@ interface CategoriaConfig {
 const CATEGORIAS: CategoriaConfig[] = [
   { id: "estaduais", label: "Estaduais", emoji: "🏟️", keywords: ["Mineiro", "Paulistão", "Gaúcho", "Carioca", "Baiano", "Catarinense", "Paranaense", "Pernambucano"] },
   { id: "nacionais", label: "Nacionais", emoji: "🇧🇷", keywords: ["Brasileirão", "Copa do Brasil", "Serie A", "Serie B"] },
-  { id: "internacionais", label: "Internacionais", emoji: "🌍", keywords: ["Champions", "Libertadores", "Copa do Mundo", "World Cup", "Europa League"] },
+  { id: "internacionais", label: "Internacionais", emoji: "🌍", keywords: ["Champions", "Libertadores", "Europa League", "Mundial"] },
 ];
 
 function categorizeCampeonato(camp: Campeonato): string {
@@ -41,7 +41,7 @@ function categorizeCampeonato(camp: Campeonato): string {
     if (cat.keywords.some((kw) => text.includes(kw.toLowerCase()))) return cat.id;
     if (cat.id === "estaduais" && (camp.tipo === "estadual")) return cat.id;
     if (cat.id === "nacionais" && (camp.tipo === "nacional")) return cat.id;
-    if (cat.id === "internacionais" && (camp.tipo === "internacional" || camp.tipo === "continental")) return cat.id;
+    if (cat.id === "internacionais" && (camp.tipo === "internacional" || camp.tipo === "continental" || camp.tipo === "mundial")) return cat.id;
   }
   return "outros";
 }

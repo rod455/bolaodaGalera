@@ -204,8 +204,9 @@ const AppLayout = () => {
       <HelpButton />
 
       {/* Footer - desktop only */}
-      <footer className="text-center py-4 text-xs text-muted-foreground border-t hidden md:block">
-        Bolão na Copa &copy; {new Date().getFullYear()}
+      <footer className="text-center py-4 text-xs text-muted-foreground border-t hidden md:block space-y-1">
+        <p>Bolão na Copa &copy; {new Date().getFullYear()}</p>
+        <p className="text-[10px] opacity-60">Aplicativo independente, sem vínculo ou afiliação com FIFA, CBF, UEFA ou qualquer entidade esportiva oficial.</p>
       </footer>
     </div>
   );

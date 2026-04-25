@@ -19,7 +19,7 @@ const DEFAULTS = {
   defaultImage:
     "https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/bolao-capas/og-cover.png",
   defaultKeywords:
-    "bolão na copa, bolão de futebol, bolão grátis, palpites futebol, bolão copa 2026, bolão campeonato, bolão entre amigos",
+    "bolão na copa, bolão de futebol, bolão grátis, palpites futebol, bolão futebol 2026, bolão campeonato, bolão entre amigos",
 };
 
 const SEOHead = ({

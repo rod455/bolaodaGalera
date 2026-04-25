@@ -162,7 +162,7 @@ const Quiz = () => {
           <div className="px-4 py-5 space-y-4 text-center" style={{ background: "linear-gradient(160deg, #14532d 0%, #1a3a1a 40%, #2d1a00 100%)" }}>
             <div className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-[10px] font-bold uppercase tracking-widest mx-auto"
               style={{ background: "rgba(250,204,21,.14)", border: "1px solid rgba(250,204,21,.38)", color: "#facc15" }}>
-              👑 25 lendas · Copa do Mundo
+              👑 25 lendas · Futebol Mundial
             </div>
 
             <h3 className="leading-[0.9]" style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(2rem,8vw,3.5rem)", color: "#fff", textShadow: "0 4px 24px rgba(0,0,0,.4)" }}>
