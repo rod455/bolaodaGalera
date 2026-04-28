@@ -155,6 +155,7 @@ const QuickBolaoStep = ({
           .from("campeonatos")
           .select("id, nome_popular, logo_url, ativo")
           .eq("ativo", true)
+          .eq("visivel", true)
           .order("nome_popular");
         if (data && data.length > 0) {
           setCampeonatos(data);
