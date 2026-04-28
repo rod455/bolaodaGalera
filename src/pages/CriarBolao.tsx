@@ -48,7 +48,7 @@ const CATEGORIAS: CategoriaConfig[] = [
   { id: "estaduais", label: "Campeonatos Estaduais", emoji: "🏟️", tipos: ["estadual"], keywords: ["Mineiro", "Paulistão", "Gaúcho", "Carioca", "Baiano", "Catarinense", "Paranaense", "Pernambucano"] },
   { id: "nacionais", label: "Campeonatos Nacionais", emoji: "🇧🇷", tipos: ["nacional"], keywords: ["Brasileirão", "Copa do Brasil", "Serie A", "Serie B"] },
   { id: "copa_mundo", label: "Copa do Mundo", emoji: "🌍", tipos: ["mundial"], keywords: ["Copa do Mundo", "Mundial"] },
-  { id: "europeus", label: "Campeonatos Europeus", emoji: "⭐", tipos: ["continental"], keywords: ["Champions League", "Europa League", "Conference League", "Premier League", "La Liga", "Bundesliga", "Serie A IT", "Ligue 1"] },
+  { id: "internacionais", label: "Campeonatos Internacionais", emoji: "⭐", tipos: ["continental"], keywords: ["Champions League", "Europa League", "Conference League", "Libertadores", "Sul-Americana", "Premier League", "La Liga", "Bundesliga", "Serie A IT", "Ligue 1"] },
 ];
 
 const categorizeCampeonato = (camp: Campeonato): string => {
