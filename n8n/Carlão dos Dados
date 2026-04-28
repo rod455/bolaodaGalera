@@ -1,0 +1,538 @@
+{
+  "name": "Carlão dos Dados",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 6 * * *"
+            }
+          ]
+        }
+      },
+      "id": "70afe6ff-060f-4841-b340-e10671786d34",
+      "name": "Cron 06:00 (D-1)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1984,
+        -256
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Calcula a data de referência (D-1) e janelas de comparação\nconst now = new Date();\nconst dRef = new Date(now);\ndRef.setDate(dRef.getDate() - 1);\nconst yyyy = dRef.getFullYear();\nconst mm = String(dRef.getMonth() + 1).padStart(2, '0');\nconst dd = String(dRef.getDate()).padStart(2, '0');\nconst dataRef = `${yyyy}-${mm}-${dd}`;\n\n// Janelas para Meta/Google Ads (D-1)\nconst dayStart = `${dataRef}T00:00:00-03:00`;\nconst dayEnd = `${dataRef}T23:59:59-03:00`;\n\n// Para AdMob (formato YYYY-MM-DD)\nreturn [{\n  json: {\n    data_referencia: dataRef,\n    day_start_iso: dayStart,\n    day_end_iso: dayEnd,\n    admob_date: { year: yyyy, month: dRef.getMonth() + 1, day: dRef.getDate() }\n  }\n}];"
+      },
+      "id": "d7aff906-94f8-47c9-83ba-c23562d78f50",
+      "name": "Definir contexto temporal",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1760,
+        -256
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://hvgsdxcdufekksxgqyoj.supabase.co/rest/v1/v_kpis_diarios",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "select",
+              "value": "*"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d8632b82-d0a5-4944-bfbb-955c6a42ede6",
+      "name": "Supabase: v_kpis_diarios",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1504,
+        -416
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "fvIiL0PqtWSCWgTN",
+          "name": "Supabase - Bolão na Copa"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://hvgsdxcdufekksxgqyoj.supabase.co/rest/v1/v_kpis_historico_30d",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "select",
+              "value": "*"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "132eb417-2efd-4c29-8378-5d84838e47a3",
+      "name": "Supabase: histórico 30d",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1504,
+        -208
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "fvIiL0PqtWSCWgTN",
+          "name": "Supabase - Bolão na Copa"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://admob.googleapis.com/v1/accounts/{{ $credentials.admobAccountId }}/networkReport:generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"reportSpec\": {\n    \"dateRange\": {\n      \"startDate\": {\n        \"year\": {{ $json.admob_date.year }},\n        \"month\": {{ $json.admob_date.month }},\n        \"day\": {{ $json.admob_date.day }}\n      },\n      \"endDate\": {\n        \"year\": {{ $json.admob_date.year }},\n        \"month\": {{ $json.admob_date.month }},\n        \"day\": {{ $json.admob_date.day }}\n      }\n    },\n    \"dimensions\": [\"DATE\"],\n    \"metrics\": [\"AD_REQUESTS\", \"MATCHED_REQUESTS\", \"IMPRESSIONS\", \"ESTIMATED_EARNINGS\", \"IMPRESSION_RPM\", \"MATCH_RATE\"],\n    \"localizationSettings\": {\n      \"currencyCode\": \"BRL\",\n      \"languageCode\": \"pt-BR\"\n    }\n  }\n}",
+        "options": {}
+      },
+      "id": "63bd48a3-4396-485e-b0c8-9798ac0cfd5f",
+      "name": "AdMob: receita & eCPM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1504,
+        -48
+      ],
+      "alwaysOutputData": false,
+      "notes": "IMPORTANTE: substitua manualmente o accountId no URL pelo seu pub-XXXXXXXXXXXX"
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.facebook.com/v19.0/act_SUBSTITUIR_AD_ACCOUNT_ID/insights",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "spend,impressions,clicks,ctr,cpc,actions,reach"
+            },
+            {
+              "name": "time_range",
+              "value": "={\"since\":\"{{ $('Definir contexto temporal').item.json.data_referencia }}\",\"until\":\"{{ $('Definir contexto temporal').item.json.data_referencia }}\"}"
+            },
+            {
+              "name": "level",
+              "value": "account"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d029cdce-8813-442d-9172-6b0d7f961de0",
+      "name": "Meta Ads: gastos D-1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1504,
+        112
+      ],
+      "alwaysOutputData": false,
+      "notes": "IMPORTANTE: substitua SUBSTITUIR_AD_ACCOUNT_ID no URL pelo seu ID Meta Ads"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://googleads.googleapis.com/v17/customers/SUBSTITUIR_CUSTOMER_ID/googleAds:search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "developer-token",
+              "value": "SUBSTITUIR_DEVELOPER_TOKEN"
+            },
+            {
+              "name": "login-customer-id",
+              "value": "SUBSTITUIR_MANAGER_ID"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"SELECT customer.id, metrics.cost_micros, metrics.impressions, metrics.clicks, metrics.ctr, metrics.conversions FROM customer WHERE segments.date = '{{ $('Definir contexto temporal').item.json.data_referencia }}'\"\n}",
+        "options": {}
+      },
+      "id": "caa20695-956f-4168-a8f8-3752b0d25f61",
+      "name": "Google Ads: gastos D-1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1504,
+        272
+      ],
+      "alwaysOutputData": false,
+      "notes": "IMPORTANTE: substitua SUBSTITUIR_CUSTOMER_ID, SUBSTITUIR_DEVELOPER_TOKEN, SUBSTITUIR_MANAGER_ID"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ═══════════════════════════════════════════════════════════\n// CONSOLIDAÇÃO v4 — Schema v5 (canal + social + power-users)\n//\n// Mudanças vs v3:\n// - Lê palpites por canal (web/android/ios/null) \n// - Lê palpites em campeonato ativo vs futuro\n// - Lê bolões \"vivos socialmente\"\n// - Estima receita potencial AdMob por canal Android\n// - Inclui top campeonatos do dia (cross-reference com v_palpites_por_campeonato)\n// ═══════════════════════════════════════════════════════════\n\nconst num = (v, def = 0) => {\n  const n = Number(v);\n  return Number.isFinite(n) ? n : def;\n};\nconst round = (v, d = 2) => Number(Number(v).toFixed(d));\n\nconst safeGetJson = (nodeName) => {\n  try {\n    const item = $(nodeName).first();\n    return item?.json ?? null;\n  } catch (e) {\n    return null;\n  }\n};\n\n// Status de cada fonte\nconst fontes_de_dados = {\n  supabase_kpis: 'nao_configurada',\n  supabase_historico: 'nao_configurada',\n  supabase_campeonatos: 'nao_configurada',\n  admob: 'nao_configurada',\n  meta_ads: 'nao_configurada',\n  google_ads: 'nao_configurada'\n};\n\n// === Supabase KPIs ===\nconst kpisRaw = safeGetJson('Supabase: v_kpis_diarios');\nconst kpis = Array.isArray(kpisRaw) ? (kpisRaw[0] || {}) : (kpisRaw || {});\nfontes_de_dados.supabase_kpis = kpis && Object.keys(kpis).length > 0 ? 'ativa' : 'erro';\n\n// === Histórico 30d ===\nconst histRaw = safeGetJson('Supabase: histórico 30d');\nconst historico = Array.isArray(histRaw) ? histRaw : (histRaw ? [histRaw] : []);\nfontes_de_dados.supabase_historico = historico.length > 0 ? 'ativa' : 'sem_dados';\n\n// === Top campeonatos do dia (NOVO v5) ===\n// Esse node é OPCIONAL — se você adicionou ao workflow, lê dele\nconst campsRaw = safeGetJson('Supabase: palpites por campeonato');\nconst top_campeonatos_dia = Array.isArray(campsRaw) ? campsRaw : (campsRaw ? [campsRaw] : []);\nfontes_de_dados.supabase_campeonatos = top_campeonatos_dia.length > 0 ? 'ativa' : 'sem_dados';\n\n// === AdMob ===\nlet admobImpressoes = 0, admobReceita = 0, ecpm = 0, fillRate = 0;\ntry {\n  const admobRaw = safeGetJson('AdMob: receita & eCPM');\n  if (admobRaw === null) {\n    fontes_de_dados.admob = 'nao_configurada';\n  } else {\n    fontes_de_dados.admob = 'ativa';\n    const rows = Array.isArray(admobRaw) ? admobRaw : [admobRaw];\n    let admobRow = null;\n    for (const r of rows) {\n      if (r?.row?.metricValues) { admobRow = r.row.metricValues; break; }\n      if (r?.metricValues) { admobRow = r.metricValues; break; }\n    }\n    if (admobRow) {\n      admobImpressoes = num(admobRow?.IMPRESSIONS?.integerValue);\n      const micros = num(admobRow?.ESTIMATED_EARNINGS?.microsValue);\n      admobReceita = round(micros / 1_000_000, 2);\n      ecpm = round(num(admobRow?.IMPRESSION_RPM?.doubleValue), 2);\n      fillRate = round(num(admobRow?.MATCH_RATE?.doubleValue) * 100, 2);\n    } else {\n      fontes_de_dados.admob = 'sem_dados';\n    }\n  }\n} catch (e) { fontes_de_dados.admob = 'erro'; }\n\n// === Meta Ads ===\nlet gastoMeta = 0, impressoesMeta = 0, cliquesMeta = 0, ctrMeta = 0;\ntry {\n  const metaRaw = safeGetJson('Meta Ads: gastos D-1');\n  if (metaRaw === null) {\n    fontes_de_dados.meta_ads = 'nao_configurada';\n  } else {\n    fontes_de_dados.meta_ads = 'ativa';\n    const metaData = metaRaw?.data?.[0];\n    if (metaData) {\n      gastoMeta = round(num(metaData.spend), 2);\n      impressoesMeta = num(metaData.impressions);\n      cliquesMeta = num(metaData.clicks);\n      ctrMeta = round(num(metaData.ctr), 2);\n    } else {\n      fontes_de_dados.meta_ads = 'sem_dados';\n    }\n  }\n} catch (e) { fontes_de_dados.meta_ads = 'erro'; }\n\n// === Google Ads ===\nlet gastoGoogle = 0, impressoesGoogle = 0, cliquesGoogle = 0;\ntry {\n  const gAdsRaw = safeGetJson('Google Ads: gastos D-1');\n  if (gAdsRaw === null) {\n    fontes_de_dados.google_ads = 'nao_configurada';\n  } else {\n    fontes_de_dados.google_ads = 'ativa';\n    const results = gAdsRaw?.results || [];\n    if (results.length > 0) {\n      for (const r of results) {\n        gastoGoogle += num(r?.metrics?.costMicros) / 1_000_000;\n        impressoesGoogle += num(r?.metrics?.impressions);\n        cliquesGoogle += num(r?.metrics?.clicks);\n      }\n      gastoGoogle = round(gastoGoogle, 2);\n    } else {\n      fontes_de_dados.google_ads = 'sem_dados';\n    }\n  }\n} catch (e) { fontes_de_dados.google_ads = 'erro'; }\n\n// === Cálculos derivados ===\n\nconst novosCadastros = num(kpis?.novos_cadastros_dia);\nconst cadastrosReferidos = num(kpis?.cadastros_referidos_dia);\nconst totalUsuarios = num(kpis?.total_usuarios);\nconst cadastrosEmailConfirmado = num(kpis?.cadastros_email_confirmado);\nconst taxaConfirmacaoEmail = num(kpis?.taxa_confirmacao_email_pct);\nconst ativacaoCriouBolao = num(kpis?.ativacao_criou_bolao);\nconst ativacaoEntrouBolao = num(kpis?.ativacao_entrou_bolao);\nconst ativacaoPalpitou = num(kpis?.ativacao_palpitou);\nconst ativados24h = num(kpis?.ativados_24h);\nconst taxaAtivacao = num(kpis?.taxa_ativacao_pct);\nconst dau = num(kpis?.dau);\nconst wau = num(kpis?.wau);\nconst mau = num(kpis?.mau);\nconst stickiness = num(kpis?.stickiness_pct);\nconst palpitesDia = num(kpis?.total_palpites_dia);\nconst usuariosComStreak = num(kpis?.usuarios_com_streak);\nconst streakMedio = num(kpis?.streak_medio);\nconst usuariosPontuandoDia = num(kpis?.usuarios_pontuando_dia);\nconst boloesCriadosDia = num(kpis?.boloes_criados_dia);\nconst boloesPrivadosDia = num(kpis?.boloes_privados_dia);\nconst boloesPublicosDia = num(kpis?.boloes_publicos_dia);\nconst boloesComAmigosDia = num(kpis?.boloes_com_amigos_dia);\nconst totalParticipacoesDia = num(kpis?.total_participacoes_dia);\nconst participacoesOrganicasDia = num(kpis?.participacoes_organicas_dia);\nconst boloesEmCampAtivoDia = num(kpis?.boloes_em_camp_ativo_dia);\nconst boloesEmCampFuturoDia = num(kpis?.boloes_em_camp_futuro_dia);\nconst usuariosPresosCampFuturo = num(kpis?.usuarios_presos_camp_futuro);\nconst totalPremium = num(kpis?.total_premium);\nconst totalPremiumBasico = num(kpis?.total_premium_basico);\nconst totalPremiumPro = num(kpis?.total_premium_pro);\nconst novasAssinaturas = num(kpis?.novas_assinaturas_dia);\n\n// ═══ NOVO v5: Métricas de canal ═══\nconst palpitesAndroid = num(kpis?.palpites_android);\nconst palpitesWeb = num(kpis?.palpites_web);\nconst palpitesIos = num(kpis?.palpites_ios);\nconst palpitesOrigemNull = num(kpis?.palpites_origem_null);\nconst pctPalpitesAndroid = num(kpis?.pct_palpites_android);\n\nconst palpitesEmCampAtivo = num(kpis?.palpites_em_camp_ativo);\nconst palpitesEmCampFuturo = num(kpis?.palpites_em_camp_futuro);\nconst boloesSocialmenteVivos = num(kpis?.boloes_socialmente_vivos);\nconst powerUsersTop10 = num(kpis?.power_users_top10_palpites);\n\n// % palpites em campeonato ativo (foco do produto hoje)\nconst pctPalpitesAtivo = palpitesDia > 0 \n  ? round((palpitesEmCampAtivo / palpitesDia) * 100, 2) \n  : 0;\n\n// % com origem identificada\nconst palpitesComOrigem = palpitesAndroid + palpitesWeb + palpitesIos;\nconst pctOrigemIdentificada = palpitesDia > 0\n  ? round((palpitesComOrigem / palpitesDia) * 100, 2)\n  : 0;\n\n// Receita potencial por canal (só Android tem ads ativos)\n// Estimativa simples: cada palpite ~5 impressões de ad\nconst impressoesAdmobEstimadasAndroid = palpitesAndroid * 5;\nconst receitaAdmobEstimada = ecpm > 0 \n  ? round((impressoesAdmobEstimadasAndroid / 1000) * ecpm, 2)\n  : null;\n\n// Taxa de bolões \"sociais\"\nconst taxaBoloesSociais = boloesPrivadosDia > 0 \n  ? round((boloesComAmigosDia / boloesPrivadosDia) * 100, 2) \n  : 0;\n\n// % bolões em camp ativo\nconst pctBoloesEmCampAtivo = boloesCriadosDia > 0\n  ? round((boloesEmCampAtivoDia / boloesCriadosDia) * 100, 2)\n  : 0;\n\n// CAC\nconst temDadosMidia = fontes_de_dados.meta_ads === 'ativa' || fontes_de_dados.google_ads === 'ativa';\nconst gastoTotal = round(gastoMeta + gastoGoogle, 2);\nconst cacBlended = (temDadosMidia && novosCadastros > 0) ? round(gastoTotal / novosCadastros, 2) : null;\nconst cacMeta = (fontes_de_dados.meta_ads === 'ativa' && novosCadastros > 0) ? round(gastoMeta / novosCadastros, 2) : null;\nconst cacGoogle = (fontes_de_dados.google_ads === 'ativa' && novosCadastros > 0) ? round(gastoGoogle / novosCadastros, 2) : null;\n\nlet cadastrosOrganicosEst = null;\nlet cadastrosPagosEst = null;\nif (temDadosMidia) {\n  cadastrosOrganicosEst = gastoTotal > 0 && cacBlended > 0\n    ? Math.max(0, novosCadastros - Math.round(gastoTotal / Math.max(cacBlended, 1)))\n    : novosCadastros;\n  cadastrosPagosEst = novosCadastros - cadastrosOrganicosEst;\n}\n\n// MRR\nconst mrrEstimado = round((totalPremiumBasico * 9.90) + (totalPremiumPro * 14.90), 2);\nconst arpu = totalUsuarios > 0 ? round((mrrEstimado + admobReceita * 30) / totalUsuarios, 2) : 0;\nconst ltvEstimado = round(arpu * 6, 2);\nconst ltvCac = (cacBlended && cacBlended > 0) ? round(ltvEstimado / cacBlended, 2) : null;\nconst conversaoPremium = totalUsuarios > 0\n  ? round((totalPremium / totalUsuarios) * 100, 2)\n  : 0;\n\n// Comparativos\nconst hist7 = historico.slice(-7);\nconst hist30 = historico;\n\nconst avg = (arr, key) => {\n  if (!arr || arr.length === 0) return 0;\n  const vals = arr.map(r => num(r?.[key])).filter(v => v > 0);\n  return vals.length > 0 ? round(vals.reduce((a, b) => a + b, 0) / vals.length, 2) : 0;\n};\n\nconst delta = (atual, base) => {\n  if (!base || base === 0) return null;\n  return round(((atual - base) / base) * 100, 2);\n};\n\nconst comparativos = {\n  novos_cadastros: {\n    atual: novosCadastros,\n    media_7d: avg(hist7, 'novos_cadastros'),\n    delta_7d_pct: delta(novosCadastros, avg(hist7, 'novos_cadastros'))\n  },\n  taxa_ativacao: {\n    atual: taxaAtivacao,\n    media_7d: avg(hist7, 'taxa_ativacao_pct'),\n    delta_7d_pct: delta(taxaAtivacao, avg(hist7, 'taxa_ativacao_pct'))\n  },\n  dau: {\n    atual: dau,\n    media_7d: avg(hist7, 'dau'),\n    delta_7d_pct: delta(dau, avg(hist7, 'dau'))\n  },\n  palpites_android: {\n    atual: palpitesAndroid,\n    media_7d: avg(hist7, 'palpites_android'),\n    delta_7d_pct: delta(palpitesAndroid, avg(hist7, 'palpites_android'))\n  },\n  boloes_socialmente_vivos: {\n    atual: boloesSocialmenteVivos,\n    media_7d: avg(hist7, 'boloes_socialmente_vivos'),\n    delta_7d_pct: delta(boloesSocialmenteVivos, avg(hist7, 'boloes_socialmente_vivos'))\n  }\n};\n\nconst anomalias = [];\nfor (const [metric, comp] of Object.entries(comparativos)) {\n  if (comp.delta_7d_pct !== null && Math.abs(comp.delta_7d_pct) >= 25) {\n    anomalias.push({\n      metrica: metric,\n      direcao: comp.delta_7d_pct > 0 ? 'subiu' : 'caiu',\n      delta_pct: comp.delta_7d_pct,\n      severidade: Math.abs(comp.delta_7d_pct) >= 50 ? 'alta' : 'media'\n    });\n  }\n}\n\nconst primeira_execucao = historico.length === 0;\nconst dataRef = $('Definir contexto temporal').item.json.data_referencia;\n\nreturn [{\n  json: {\n    data_referencia: dataRef,\n    primeira_execucao,\n    fontes_de_dados,\n    \n    // Aquisição\n    novos_cadastros: novosCadastros,\n    cadastros_referidos: cadastrosReferidos,\n    cadastros_organicos: cadastrosOrganicosEst,\n    cadastros_pagos: cadastrosPagosEst,\n    total_usuarios: totalUsuarios,\n    \n    // Ativação\n    cadastros_email_confirmado: cadastrosEmailConfirmado,\n    taxa_confirmacao_email_pct: taxaConfirmacaoEmail,\n    ativacao_criou_bolao: ativacaoCriouBolao,\n    ativacao_entrou_bolao: ativacaoEntrouBolao,\n    ativacao_palpitou: ativacaoPalpitou,\n    ativados_24h: ativados24h,\n    taxa_ativacao_pct: taxaAtivacao,\n    \n    // Engajamento\n    dau, wau, mau,\n    stickiness_pct: stickiness,\n    palpites_dia: palpitesDia,\n    \n    // Engajamento profundo\n    usuarios_com_streak: usuariosComStreak,\n    streak_medio: streakMedio,\n    usuarios_pontuando_dia: usuariosPontuandoDia,\n    \n    // ═══ NOVO v5: Análise de canal ═══\n    canal: {\n      palpites_android: palpitesAndroid,\n      palpites_web: palpitesWeb,\n      palpites_ios: palpitesIos,\n      palpites_origem_null: palpitesOrigemNull,\n      pct_android: pctPalpitesAndroid,\n      pct_origem_identificada: pctOrigemIdentificada,\n      receita_admob_estimada_brl: receitaAdmobEstimada\n    },\n    \n    // ═══ NOVO v5: Saúde social ═══\n    social: {\n      boloes_socialmente_vivos: boloesSocialmenteVivos,\n      power_users_top10: powerUsersTop10,\n      taxa_boloes_sociais_pct: taxaBoloesSociais\n    },\n    \n    // ═══ NOVO v5: Distribuição de palpites por campeonato ═══\n    palpites_em_camp_ativo: palpitesEmCampAtivo,\n    palpites_em_camp_futuro: palpitesEmCampFuturo,\n    pct_palpites_em_camp_ativo: pctPalpitesAtivo,\n    top_campeonatos_dia,  // array com top 10\n    \n    // Bolões\n    boloes_criados_dia: boloesCriadosDia,\n    boloes_privados_dia: boloesPrivadosDia,\n    boloes_publicos_dia: boloesPublicosDia,\n    boloes_com_amigos_dia: boloesComAmigosDia,\n    total_participacoes_dia: totalParticipacoesDia,\n    participacoes_organicas_dia: participacoesOrganicasDia,\n    \n    // Contexto de campeonatos\n    boloes_em_camp_ativo_dia: boloesEmCampAtivoDia,\n    boloes_em_camp_futuro_dia: boloesEmCampFuturoDia,\n    pct_boloes_em_camp_ativo: pctBoloesEmCampAtivo,\n    usuarios_presos_camp_futuro: usuariosPresosCampFuturo,\n    \n    // Mídia paga\n    gasto_meta_brl: fontes_de_dados.meta_ads === 'ativa' ? gastoMeta : null,\n    gasto_google_brl: fontes_de_dados.google_ads === 'ativa' ? gastoGoogle : null,\n    gasto_total_brl: temDadosMidia ? gastoTotal : null,\n    cac_blended_brl: cacBlended,\n    cac_meta_brl: cacMeta,\n    cac_google_brl: cacGoogle,\n    \n    // AdMob\n    admob_impressoes: fontes_de_dados.admob === 'ativa' ? admobImpressoes : null,\n    admob_receita_brl: fontes_de_dados.admob === 'ativa' ? admobReceita : null,\n    ecpm_brl: fontes_de_dados.admob === 'ativa' ? ecpm : null,\n    fill_rate_pct: fontes_de_dados.admob === 'ativa' ? fillRate : null,\n    \n    // Assinaturas\n    novas_assinaturas: novasAssinaturas,\n    total_premium: totalPremium,\n    total_premium_basico: totalPremiumBasico,\n    total_premium_pro: totalPremiumPro,\n    mrr_brl: mrrEstimado,\n    arpu_brl: arpu,\n    conversao_free_premium_pct: conversaoPremium,\n    ltv_estimado_brl: ltvEstimado,\n    ltv_cac_ratio: ltvCac,\n    \n    // Comparativos\n    comparativos,\n    anomalias,\n    historico_30d: historico\n  }\n}];"
+      },
+      "id": "4c17dacb-96a6-4a51-b60d-28bf932a9075",
+      "name": "Consolidar e calcular KPIs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1120,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-opus-4-7\",\n  \"max_tokens\": 4096,\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Você é Carlos, analista sênior de dados com 10 anos de experiência em produtos digitais B2C, especialmente apps freemium de esporte e gaming. Trabalha no Bolão na Copa.\\n\\n# CONTEXTO ESTRATÉGICO\\n\\nModelo: Freemium — Free / Premium R$9,90/mês / Premium PRO R$14,90/mês.\\nReceitas: AdMob (apenas Android, free users) + Stripe (assinantes).\\nHorizonte: 1 a 3 meses críticos antes da Copa do Mundo 2026.\\nPrioridade #1: CRESCIMENTO (mais usuários). Tudo o resto é secundário.\\nTournaments: Copa 2026 (foco principal — sem jogos ainda), Brasileirão, Libertadores, Paulistão, Champions, etc.\\n\\n# CONTEXTO DO PRODUTO HOJE\\n\\nHipótese central: O Brasileirão é o motor do produto HOJE (5.850 jogos rolando). A Copa 2026 é DEMANDA REPRESADA (329 bolões criados, 0 jogos até junho). Isso explica os usuários presos.\\n\\nMix atual:\\n- Copa do Mundo: 329 bolões / 0 jogos rolando (demanda represada)\\n- Brasileirão: 45 bolões / 5.850 jogos (motor de engajamento)\\n- Copa do Brasil: 38 bolões / 608 jogos\\n- Champions: 11 bolões / 638 jogos\\n- Libertadores: 8 bolões / 496 jogos\\n- Mineiro/Paulistão: terminaram\\n\\nReceita Android: Apenas usuários Android veem AdMob. Web e iOS NÃO geram receita de ads.\\n\\n# DEFINIÇÕES\\n\\nAtivação = Cadastrou + (criou bolão OU entrou em bolão) em 24h. NÃO use 'palpitou em 24h' como ativação.\\n\\nUsuário 'preso' = só tem bolão em campeonato sem jogos.\\n\\nBolão socialmente vivo = bolão em campeonato ativo com >1 user palpitando no dia.\\n\\nPower-users = top 10 usuários por volume de palpites no dia.\\n\\n# BENCHMARKS REAIS\\n\\n- Taxa de ativação: 40-60% saudável, >70% excepcional\\n- Stickiness DAU/MAU: 10-20% para apps de esporte\\n- Conversão Free→Premium: 1-3% normal, 3-5% bom\\n- eCPM Brasil esporte: R$5-15\\n- Viralidade (% bolões com >1 participante): >40% saudável\\n- Confirmação email: >90% saudável\\n- LTV/CAC: >3x alvo. NULL = sem dados\\n\\n# DADOS DE HOJE\\n\\n{{ JSON.stringify(JSON.stringify($json)).slice(1,-1) }}\\n\\n# REGRAS DE INTEGRIDADE\\n\\nO campo fontes_de_dados informa status de cada API:\\n- 'ativa' → dado real\\n- 'nao_configurada' → fonte não conectada, NÃO TIRE CONCLUSÕES\\n- 'erro' → API falhou\\n- 'sem_dados' → API respondeu vazio\\n\\nCampos null = dado faltando (não zero).\\n\\n# REGRAS DE ANÁLISE\\n\\n1. Priorize CRESCIMENTO.\\n2. Diferencie Copa 2026 (demanda represada) de churn real.\\n3. Análise de canal importa para receita: Android = receita AdMob; web/iOS = receita perdida.\\n4. Bolões socialmente vivos é a métrica de saúde.\\n5. Power-users como sinal positivo (base para referral).\\n6. Se primeira_execucao=true, NÃO cobre comparações 7d/30d.\\n7. Brutalmente honesto: dados ausentes ficam ausentes.\\n8. Use os benchmarks acima.\\n9. Máximo 5 insights, 5 alertas, 5 ações.\\n10. Toda recomendação com número/fato.\\n11. Mencione campeonatos específicos.\\n\\n# SUA ENTREGA\\n\\nResponda em JSON válido com esta estrutura exata:\\n\\n{\\n  \\\"resumo_executivo\\\": \\\"2-3 frases. Comece com o número mais importante DO DIA. Mencione Copa 2026 vs Brasileirão se relevante.\\\",\\n  \\\"farol\\\": \\\"verde|amarelo|vermelho\\\",\\n  \\\"farol_justificativa\\\": \\\"1 frase\\\",\\n  \\\"fontes_pendentes\\\": [\\\"meta_ads\\\", \\\"google_ads\\\", \\\"admob\\\"],\\n  \\\"insights\\\": [\\n    {\\n      \\\"titulo\\\": \\\"Título curto\\\",\\n      \\\"descricao\\\": \\\"Análise em 1-2 frases com números.\\\",\\n      \\\"categoria\\\": \\\"aquisicao|ativacao|engajamento|monetizacao|canal|social|retencao\\\",\\n      \\\"importancia\\\": \\\"alta|media|baixa\\\"\\n    }\\n  ],\\n  \\\"alertas\\\": [\\n    {\\n      \\\"tipo\\\": \\\"anomalia|risco|oportunidade\\\",\\n      \\\"mensagem\\\": \\\"O que aconteceu e por que importa\\\",\\n      \\\"severidade\\\": \\\"alta|media|baixa\\\"\\n    }\\n  ],\\n  \\\"acoes_recomendadas\\\": [\\n    {\\n      \\\"acao\\\": \\\"Ação específica\\\",\\n      \\\"justificativa\\\": \\\"Por que fazer agora\\\",\\n      \\\"prazo\\\": \\\"hoje|esta_semana|este_mes\\\",\\n      \\\"prioridade\\\": \\\"P0|P1|P2\\\",\\n      \\\"impacto_esperado\\\": \\\"crescimento|retencao|monetizacao|viralidade|canal\\\"\\n    }\\n  ],\\n  \\\"analise_completa\\\": \\\"200-300 palavras. Estrutura: 1) aquisição, 2) ativação real, 3) saúde do engajamento, 4) timing Copa 2026. Linguagem C-level.\\\"\\n}\\n\\nRetorne APENAS o JSON, sem markdown, sem texto antes/depois.\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "4264eabd-d126-4c69-87c3-f56a417a8702",
+      "name": "Claude: Carlos analisa",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -880,
+        -48
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "KtYsfR82d5mdXT56",
+          "name": "Anthropic API"
+        }
+      },
+      "notes": "Usa HTTP direto na API Anthropic. Credencial: HTTP Header Auth com Authorization: Bearer sk-ant-..."
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json;\n\nlet text = '';\nif (raw.content && Array.isArray(raw.content) && raw.content[0]?.text) {\n  text = raw.content[0].text;\n} else if (typeof raw === 'string') {\n  text = raw;\n} else if (raw.text) {\n  text = raw.text;\n} else if (raw.completion) {\n  text = raw.completion;\n} else {\n  text = JSON.stringify(raw);\n}\n\n// Detectar truncamento: stop_reason === 'max_tokens' indica resposta cortada\nconst stopReason = raw.stop_reason || raw.stopReason;\nconst truncated = stopReason === 'max_tokens';\n\n// Remover markdown fences se vierem\ntext = text.trim()\n  .replace(/^```json\\s*/i, '')\n  .replace(/^```\\s*/i, '')\n  .replace(/```\\s*$/i, '')\n  .trim();\n\n// Extrair só do primeiro { até o último }\nconst firstBrace = text.indexOf('{');\nconst lastBrace = text.lastIndexOf('}');\nif (firstBrace >= 0 && lastBrace > firstBrace) {\n  text = text.slice(firstBrace, lastBrace + 1);\n}\n\nlet parsed;\ntry {\n  parsed = JSON.parse(text);\n} catch (e) {\n  if (truncated) {\n    throw new Error(\n      `Resposta do Claude foi truncada (stop_reason=max_tokens). ` +\n      `Aumente max_tokens no nó anterior. Erro de parse: ${e.message}`\n    );\n  }\n  throw new Error(`JSON inválido do Carlos: ${e.message}\\nOutput: ${text.slice(0, 500)}...`);\n}\n\nreturn [{ json: { ...parsed, _truncated: truncated, _stop_reason: stopReason } }];"
+      },
+      "id": "73f90b9d-1330-4252-bb1b-316c13e7dbbd",
+      "name": "Parse output Carlos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -640,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Gera URLs de gráficos via QuickChart (sem necessidade de API key)\nconst d = $input.first().json;\nconst hist = d.historico_30d || [];\n\nconst labels = hist.map(h => {\n  const dt = new Date(h.data_referencia);\n  return `${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')}`;\n});\n\n// Adiciona dia atual\nconst dRef = new Date(d.data_referencia);\nlabels.push(`${String(dRef.getDate()).padStart(2,'0')}/${String(dRef.getMonth()+1).padStart(2,'0')}`);\n\nconst cadastrosData = [...hist.map(h => Number(h.novos_cadastros) || 0), d.novos_cadastros];\nconst dauData = [...hist.map(h => Number(h.dau) || 0), d.dau];\nconst cacData = [...hist.map(h => Number(h.cac_blended_brl) || 0), d.cac_blended_brl];\nconst ecpmData = [...hist.map(h => Number(h.ecpm_brl) || 0), d.ecpm_brl];\n\nconst makeChart = (config) => {\n  return 'https://quickchart.io/chart?bkg=white&w=600&h=300&c=' + encodeURIComponent(JSON.stringify(config));\n};\n\nconst grafico_cadastros = makeChart({\n  type: 'line',\n  data: {\n    labels,\n    datasets: [{ label: 'Novos cadastros', data: cadastrosData, borderColor: '#16a34a', backgroundColor: 'rgba(22,163,74,0.1)', fill: true, tension: 0.3 }]\n  },\n  options: { plugins: { title: { display: true, text: 'Novos cadastros — 30 dias' } } }\n});\n\nconst grafico_dau = makeChart({\n  type: 'line',\n  data: {\n    labels,\n    datasets: [{ label: 'DAU', data: dauData, borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,0.1)', fill: true, tension: 0.3 }]\n  },\n  options: { plugins: { title: { display: true, text: 'Usuários ativos diários (DAU)' } } }\n});\n\nconst grafico_cac = makeChart({\n  type: 'bar',\n  data: {\n    labels,\n    datasets: [{ label: 'CAC (R$)', data: cacData, backgroundColor: '#f59e0b' }]\n  },\n  options: { plugins: { title: { display: true, text: 'CAC blended diário (R$)' } } }\n});\n\nconst grafico_ecpm = makeChart({\n  type: 'line',\n  data: {\n    labels,\n    datasets: [{ label: 'eCPM (R$)', data: ecpmData, borderColor: '#9333ea', backgroundColor: 'rgba(147,51,234,0.1)', fill: true, tension: 0.3 }]\n  },\n  options: { plugins: { title: { display: true, text: 'eCPM AdMob (R$)' } } }\n});\n\nreturn [{ json: { ...d, graficos: { grafico_cadastros, grafico_dau, grafico_cac, grafico_ecpm } } }];"
+      },
+      "id": "b8de26b6-d204-4153-a99e-73ba88e833bf",
+      "name": "Gerar URLs de gráficos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst dataRef = $('Definir contexto temporal').first().json.data_referencia;\n\nconst farolEmoji = {verde: '🟢', amarelo: '🟡', vermelho: '🔴'}[data.farol] || '⚪';\nconst farolColor = {verde: '#22c55e', amarelo: '#eab308', vermelho: '#ef4444'}[data.farol] || '#9ca3af';\n\nconst renderInsights = (insights = []) => insights.map(i => `\n  <div style=\"margin-bottom:16px;padding:12px;background:#f9fafb;border-left:3px solid #3b82f6;border-radius:4px;\">\n    <div style=\"font-weight:600;color:#111827;margin-bottom:4px;\">${i.titulo}</div>\n    <div style=\"color:#374151;font-size:14px;\">${i.descricao}</div>\n    <div style=\"margin-top:6px;font-size:12px;color:#6b7280;\">\n      <span style=\"text-transform:uppercase;\">${i.categoria}</span> · \n      <span>importância: ${i.importancia}</span>\n    </div>\n  </div>\n`).join('');\n\nconst renderAlertas = (alertas = []) => alertas.map(a => `\n  <div style=\"margin-bottom:12px;padding:12px;background:#fef2f2;border-left:3px solid #ef4444;border-radius:4px;\">\n    <div style=\"font-weight:600;color:#991b1b;margin-bottom:4px;text-transform:uppercase;font-size:12px;\">${a.tipo} · ${a.severidade}</div>\n    <div style=\"color:#374151;font-size:14px;\">${a.mensagem}</div>\n  </div>\n`).join('');\n\nconst renderAcoes = (acoes = []) => acoes.map(a => `\n  <div style=\"margin-bottom:12px;padding:12px;background:#eff6ff;border-left:3px solid #2563eb;border-radius:4px;\">\n    <div style=\"font-weight:600;color:#1e3a8a;margin-bottom:4px;\">${a.prioridade} · ${a.acao}</div>\n    <div style=\"color:#374151;font-size:14px;margin-bottom:4px;\">${a.justificativa}</div>\n    <div style=\"font-size:12px;color:#6b7280;\">prazo: ${a.prazo} · impacto: ${a.impacto_esperado}</div>\n  </div>\n`).join('');\n\nconst html = `<!DOCTYPE html>\n<html><head><meta charset=\"utf-8\"><title>Carlão D-1 ${dataRef}</title></head>\n<body style=\"font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f3f4f6;margin:0;padding:24px;\">\n  <div style=\"max-width:680px;margin:0 auto;background:#fff;border-radius:8px;padding:32px;\">\n    <div style=\"border-bottom:2px solid #e5e7eb;padding-bottom:16px;margin-bottom:24px;\">\n      <div style=\"font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;\">Carlão dos Dados · ${dataRef}</div>\n      <h1 style=\"margin:8px 0 0;font-size:24px;color:#111827;\">${farolEmoji} OnePage Diário</h1>\n    </div>\n\n    <div style=\"background:${farolColor}15;border-left:4px solid ${farolColor};padding:16px;margin-bottom:24px;border-radius:4px;\">\n      <div style=\"font-weight:600;color:#111827;margin-bottom:8px;\">Resumo executivo</div>\n      <div style=\"color:#374151;line-height:1.5;\">${data.resumo_executivo}</div>\n      <div style=\"margin-top:12px;font-size:13px;color:#6b7280;font-style:italic;\">${data.farol_justificativa}</div>\n    </div>\n\n    <h2 style=\"font-size:16px;color:#111827;margin:24px 0 12px;border-bottom:1px solid #e5e7eb;padding-bottom:6px;\">💡 Insights</h2>\n    ${renderInsights(data.insights)}\n\n    <h2 style=\"font-size:16px;color:#111827;margin:24px 0 12px;border-bottom:1px solid #e5e7eb;padding-bottom:6px;\">🚨 Alertas</h2>\n    ${renderAlertas(data.alertas)}\n\n    <h2 style=\"font-size:16px;color:#111827;margin:24px 0 12px;border-bottom:1px solid #e5e7eb;padding-bottom:6px;\">🎯 Ações recomendadas</h2>\n    ${renderAcoes(data.acoes_recomendadas)}\n\n    <h2 style=\"font-size:16px;color:#111827;margin:24px 0 12px;border-bottom:1px solid #e5e7eb;padding-bottom:6px;\">📊 Análise completa</h2>\n    <div style=\"color:#374151;line-height:1.6;font-size:14px;white-space:pre-wrap;\">${data.analise_completa}</div>\n\n    ${data.fontes_pendentes?.length ? `\n    <div style=\"margin-top:32px;padding:12px;background:#fffbeb;border-radius:4px;font-size:12px;color:#92400e;\">\n      ⚠️ Fontes pendentes de configuração: ${data.fontes_pendentes.join(', ')}\n    </div>` : ''}\n\n    <div style=\"margin-top:32px;padding-top:16px;border-top:1px solid #e5e7eb;font-size:11px;color:#9ca3af;text-align:center;\">\n      Gerado por Carlão · Bolão na Copa\n    </div>\n  </div>\n</body></html>`;\n\nreturn [{ json: { ...data, html } }];"
+      },
+      "id": "247acf52-8e92-48b0-b01b-dabc5a941763",
+      "name": "Montar OnePage HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"from\": \"Carlos <carlos@bolaonacopa.com.br>\",\n  \"to\": [\n    \"appfactory.rlm@gmail.com\",\n    \"rodrigomoraessilva455@gmail.com\",\n    \"LuizFMViana@gmail.com\"\n  ],\n  \"subject\": {{ JSON.stringify(`📊 Carlos | OnePage ${$('Definir contexto temporal').item.json.data_referencia} | ${({verde:'🟢',amarelo:'🟡',vermelho:'🔴'})[$('Parse output Carlos').item.json.farol] || '⚪'} ${$('Parse output Carlos').item.json.resumo_executivo.substring(0, 80)}`) }},\n  \"html\": {{ JSON.stringify($('Montar OnePage HTML').item.json.html) }}\n}",
+        "options": {}
+      },
+      "id": "6683afc8-317c-403d-9912-dd206dab6454",
+      "name": "Enviar email (Resend)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        96,
+        -80
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "uimDrhqSsI2hjY0o",
+          "name": "Resend API"
+        }
+      },
+      "notes": "AJUSTE: 1) 'from' precisa ser de domínio verificado no Resend; 2) 'to' com seus destinatários reais"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hvgsdxcdufekksxgqyoj.supabase.co/rest/v1/relatorios_executivos",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"data_referencia\": {{ JSON.stringify($('Definir contexto temporal').item.json.data_referencia) }},\n  \"novos_cadastros\": {{ $('Consolidar e calcular KPIs').item.json.novos_cadastros ?? null }},\n  \"cadastros_organicos\": {{ $('Consolidar e calcular KPIs').item.json.cadastros_organicos ?? null }},\n  \"cadastros_pagos\": {{ $('Consolidar e calcular KPIs').item.json.cadastros_pagos ?? null }},\n  \"taxa_ativacao_pct\": {{ $('Consolidar e calcular KPIs').item.json.taxa_ativacao_pct ?? null }},\n  \"dau\": {{ $('Consolidar e calcular KPIs').item.json.dau ?? null }},\n  \"wau\": {{ $('Consolidar e calcular KPIs').item.json.wau ?? null }},\n  \"mau\": {{ $('Consolidar e calcular KPIs').item.json.mau ?? null }},\n  \"stickiness_pct\": {{ $('Consolidar e calcular KPIs').item.json.stickiness_pct ?? null }},\n  \"gasto_meta_brl\": {{ $('Consolidar e calcular KPIs').item.json.gasto_meta_brl ?? null }},\n  \"gasto_google_brl\": {{ $('Consolidar e calcular KPIs').item.json.gasto_google_brl ?? null }},\n  \"gasto_total_brl\": {{ $('Consolidar e calcular KPIs').item.json.gasto_total_brl ?? null }},\n  \"cac_blended_brl\": {{ $('Consolidar e calcular KPIs').item.json.cac_blended_brl ?? null }},\n  \"cac_meta_brl\": {{ $('Consolidar e calcular KPIs').item.json.cac_meta_brl ?? null }},\n  \"cac_google_brl\": {{ $('Consolidar e calcular KPIs').item.json.cac_google_brl ?? null }},\n  \"admob_impressoes\": {{ $('Consolidar e calcular KPIs').item.json.admob_impressoes ?? null }},\n  \"admob_receita_brl\": {{ $('Consolidar e calcular KPIs').item.json.admob_receita_brl ?? null }},\n  \"ecpm_brl\": {{ $('Consolidar e calcular KPIs').item.json.ecpm_brl ?? null }},\n  \"fill_rate_pct\": {{ $('Consolidar e calcular KPIs').item.json.fill_rate_pct ?? null }},\n  \"novas_assinaturas\": {{ $('Consolidar e calcular KPIs').item.json.novas_assinaturas ?? null }},\n  \"mrr_brl\": {{ $('Consolidar e calcular KPIs').item.json.mrr_brl ?? null }},\n  \"arpu_brl\": {{ $('Consolidar e calcular KPIs').item.json.arpu_brl ?? null }},\n  \"conversao_free_premium_pct\": {{ $('Consolidar e calcular KPIs').item.json.conversao_free_premium_pct ?? null }},\n  \"ltv_estimado_brl\": {{ $('Consolidar e calcular KPIs').item.json.ltv_estimado_brl ?? null }},\n  \"ltv_cac_ratio\": {{ $('Consolidar e calcular KPIs').item.json.ltv_cac_ratio ?? null }},\n  \"total_usuarios\": {{ $('Consolidar e calcular KPIs').item.json.total_usuarios ?? null }},\n  \"total_premium\": {{ $('Consolidar e calcular KPIs').item.json.total_premium ?? null }},\n  \"farol\": {{ JSON.stringify($('Parse output Carlos').item.json.farol) }},\n  \"farol_justificativa\": {{ JSON.stringify($('Parse output Carlos').item.json.farol_justificativa) }},\n  \"resumo_executivo\": {{ JSON.stringify($('Parse output Carlos').item.json.resumo_executivo) }},\n  \"insights\": {{ JSON.stringify($('Parse output Carlos').item.json.insights) }},\n  \"alertas\": {{ JSON.stringify($('Parse output Carlos').item.json.alertas) }},\n  \"acoes_recomendadas\": {{ JSON.stringify($('Parse output Carlos').item.json.acoes_recomendadas) }},\n  \"analise_completa\": {{ JSON.stringify($('Parse output Carlos').item.json.analise_completa) }},\n  \"fontes_pendentes\": {{ JSON.stringify($('Parse output Carlos').item.json.fontes_pendentes ?? []) }},\n  \"raw_data\": {{ JSON.stringify($('Consolidar e calcular KPIs').item.json) }}\n}",
+        "options": {}
+      },
+      "id": "56c6373b-e183-41a7-bb5d-2cb542407151",
+      "name": "Salvar memória (Supabase)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        96,
+        176
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "fvIiL0PqtWSCWgTN",
+          "name": "Supabase - Bolão na Copa"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Cron 06:00 (D-1)": {
+      "main": [
+        [
+          {
+            "node": "Definir contexto temporal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Definir contexto temporal": {
+      "main": [
+        [
+          {
+            "node": "Supabase: v_kpis_diarios",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Supabase: histórico 30d",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AdMob: receita & eCPM",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Meta Ads: gastos D-1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Google Ads: gastos D-1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: v_kpis_diarios": {
+      "main": [
+        [
+          {
+            "node": "Consolidar e calcular KPIs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: histórico 30d": {
+      "main": [
+        [
+          {
+            "node": "Consolidar e calcular KPIs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AdMob: receita & eCPM": {
+      "main": [
+        [
+          {
+            "node": "Consolidar e calcular KPIs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Meta Ads: gastos D-1": {
+      "main": [
+        [
+          {
+            "node": "Consolidar e calcular KPIs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Ads: gastos D-1": {
+      "main": [
+        [
+          {
+            "node": "Consolidar e calcular KPIs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consolidar e calcular KPIs": {
+      "main": [
+        [
+          {
+            "node": "Claude: Carlos analisa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude: Carlos analisa": {
+      "main": [
+        [
+          {
+            "node": "Parse output Carlos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse output Carlos": {
+      "main": [
+        [
+          {
+            "node": "Gerar URLs de gráficos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gerar URLs de gráficos": {
+      "main": [
+        [
+          {
+            "node": "Montar OnePage HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Montar OnePage HTML": {
+      "main": [
+        [
+          {
+            "node": "Enviar email (Resend)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Salvar memória (Supabase)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a4693aa2-775c-49cf-a6fc-28a3026a8f36",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e4884678da5898104f978b2aa600c898bbafbdce631f0b4b5f5d201e80ba3ae7"
+  },
+  "id": "QBC2FZjOdQBZ3ws7",
+  "tags": [
+    {
+      "createdAt": "2026-04-28T09:52:46.643Z",
+      "updatedAt": "2026-04-28T09:52:46.643Z",
+      "id": "ZaXRAyEi96pzn8Hb",
+      "name": "agente"
+    },
+    {
+      "createdAt": "2026-04-28T09:52:46.608Z",
+      "updatedAt": "2026-04-28T09:52:46.608Z",
+      "id": "wqWXHwyygcn87nft",
+      "name": "diario"
+    }
+  ]
+}
