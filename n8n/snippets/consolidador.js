@@ -151,25 +151,71 @@ const platformsArr = Object.values(platformsAgg).map(p => ({
   ecpm_brl: p.impressoes > 0 ? round((p.receita / p.impressoes) * 1000, 2) : 0
 })).sort((a, b) => b.receita - a.receita);
 
-// === Meta Ads ===
-let gastoMeta = 0, impressoesMeta = 0, cliquesMeta = 0, ctrMeta = 0;
+// === Meta Ads (v6: breakdown por campanha) ===
+let gastoMeta = 0, impressoesMeta = 0, cliquesMeta = 0, ctrMeta = 0, alcanceMeta = 0, freqMeta = 0;
+let metaCampanhas = [];
+let metaCadastrosAttr = 0;
 try {
   const metaRaw = safeGetJson('Meta Ads: gastos D-1');
   if (metaRaw === null) {
     fontes_de_dados.meta_ads = 'nao_configurada';
   } else {
     fontes_de_dados.meta_ads = 'ativa';
-    const metaData = metaRaw?.data?.[0];
-    if (metaData) {
-      gastoMeta = round(num(metaData.spend), 2);
-      impressoesMeta = num(metaData.impressions);
-      cliquesMeta = num(metaData.clicks);
-      ctrMeta = round(num(metaData.ctr), 2);
-    } else {
+    const campanhas = metaRaw?.data || [];
+    if (campanhas.length === 0) {
       fontes_de_dados.meta_ads = 'sem_dados';
+    } else {
+      let totalReach = 0, totalFreqWeighted = 0;
+      for (const c of campanhas) {
+        const sp = round(num(c.spend), 2);
+        const imp = num(c.impressions);
+        const cli = num(c.clicks);
+        const ctr = num(c.ctr);
+        const reach = num(c.reach);
+        const freq = num(c.frequency);
+        const actions = c.actions || [];
+        const cpas = c.cost_per_action_type || [];
+        // detectar conversões (cadastros): action_type contendo 'complete_registration' ou 'lead'
+        const cadastros = actions
+          .filter(a => /complete_registration|lead|registration|sign_up/i.test(a.action_type))
+          .reduce((s, a) => s + num(a.value), 0);
+        const cpaCadastro = cpas
+          .filter(a => /complete_registration|lead|registration|sign_up/i.test(a.action_type))
+          .map(a => num(a.value))[0] || (cadastros > 0 ? round(sp / cadastros, 2) : null);
+        
+        gastoMeta += sp;
+        impressoesMeta += imp;
+        cliquesMeta += cli;
+        totalReach += reach;
+        totalFreqWeighted += freq * imp;
+        metaCadastrosAttr += cadastros;
+        
+        metaCampanhas.push({
+          nome: c.campaign_name || 'sem_nome',
+          gasto: sp,
+          impressoes: imp,
+          cliques: cli,
+          ctr_pct: ctr,
+          alcance: reach,
+          frequencia: freq,
+          cadastros_attr: cadastros,
+          cpa_cadastro: cpaCadastro,
+          cpc: cli > 0 ? round(sp / cli, 2) : null
+        });
+      }
+      gastoMeta = round(gastoMeta, 2);
+      ctrMeta = impressoesMeta > 0 ? round((cliquesMeta / impressoesMeta) * 100, 2) : 0;
+      alcanceMeta = totalReach;
+      freqMeta = impressoesMeta > 0 ? round(totalFreqWeighted / impressoesMeta, 2) : 0;
     }
   }
 } catch (e) { fontes_de_dados.meta_ads = 'erro'; }
+
+// Rankings de campanhas Meta
+const top_meta_por_gasto = [...metaCampanhas].sort((a, b) => b.gasto - a.gasto).slice(0, 5);
+const top_meta_por_ctr = [...metaCampanhas].filter(c => c.impressoes >= 500).sort((a, b) => b.ctr_pct - a.ctr_pct).slice(0, 5);
+const meta_campanhas_baixo_desempenho = [...metaCampanhas].filter(c => c.gasto >= 5 && (c.ctr_pct < 0.5 || c.frequencia > 4)).sort((a, b) => b.gasto - a.gasto).slice(0, 5);
+const meta_campanhas_top_cadastros = [...metaCampanhas].filter(c => c.cadastros_attr > 0).sort((a, b) => b.cadastros_attr - a.cadastros_attr).slice(0, 5);
 
 // === Google Ads ===
 let gastoGoogle = 0, impressoesGoogle = 0, cliquesGoogle = 0;
@@ -422,6 +468,19 @@ return [{
     
     // Mídia paga
     gasto_meta_brl: fontes_de_dados.meta_ads === 'ativa' ? gastoMeta : null,
+    meta_impressoes: fontes_de_dados.meta_ads === 'ativa' ? impressoesMeta : null,
+    meta_cliques: fontes_de_dados.meta_ads === 'ativa' ? cliquesMeta : null,
+    meta_ctr_pct: fontes_de_dados.meta_ads === 'ativa' ? ctrMeta : null,
+    meta_alcance: fontes_de_dados.meta_ads === 'ativa' ? alcanceMeta : null,
+    meta_frequencia: fontes_de_dados.meta_ads === 'ativa' ? freqMeta : null,
+    meta_cadastros_attr: fontes_de_dados.meta_ads === 'ativa' ? metaCadastrosAttr : null,
+    meta_breakdown: fontes_de_dados.meta_ads === 'ativa' ? {
+      total_campanhas: metaCampanhas.length,
+      top_por_gasto: top_meta_por_gasto,
+      top_por_ctr: top_meta_por_ctr,
+      top_por_cadastros: meta_campanhas_top_cadastros,
+      baixo_desempenho: meta_campanhas_baixo_desempenho
+    } : null,
     gasto_google_brl: fontes_de_dados.google_ads === 'ativa' ? gastoGoogle : null,
     gasto_total_brl: temDadosMidia ? gastoTotal : null,
     cac_blended_brl: cacBlended,

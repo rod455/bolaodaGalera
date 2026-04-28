@@ -1,0 +1,27 @@
+{
+  "url": "https://graph.facebook.com/v19.0/act_920810663323108/insights",
+  "sendQuery": true,
+  "queryParameters": {
+    "parameters": [
+      {
+        "name": "fields",
+        "value": "campaign_name,spend,impressions,clicks,ctr,cpc,reach,frequency,actions,cost_per_action_type"
+      },
+      {
+        "name": "time_range",
+        "value": "={\"since\":\"{{ $('Definir contexto temporal').item.json.data_referencia }}\",\"until\":\"{{ $('Definir contexto temporal').item.json.data_referencia }}\"}"
+      },
+      {
+        "name": "level",
+        "value": "campaign"
+      },
+      {
+        "name": "limit",
+        "value": "500"
+      }
+    ]
+  },
+  "options": {},
+  "authentication": "genericCredentialType",
+  "genericAuthType": "httpHeaderAuth"
+}
