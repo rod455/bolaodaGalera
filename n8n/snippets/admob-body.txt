@@ -1,0 +1,11 @@
+={
+  "reportSpec": {
+    "dateRange": {
+      "startDate": { "year": {{ $json.admob_date.year }}, "month": {{ $json.admob_date.month }}, "day": {{ $json.admob_date.day }} },
+      "endDate": { "year": {{ $json.admob_date.year }}, "month": {{ $json.admob_date.month }}, "day": {{ $json.admob_date.day }} }
+    },
+    "dimensions": ["DATE", "AD_UNIT", "FORMAT", "PLATFORM"],
+    "metrics": ["AD_REQUESTS", "MATCHED_REQUESTS", "IMPRESSIONS", "ESTIMATED_EARNINGS", "IMPRESSION_RPM", "MATCH_RATE", "CLICKS", "IMPRESSION_CTR"],
+    "localizationSettings": { "currencyCode": "BRL", "languageCode": "pt-BR" }
+  }
+}
