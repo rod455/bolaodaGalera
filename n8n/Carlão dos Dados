@@ -100,11 +100,13 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://admob.googleapis.com/v1/accounts/{{ $credentials.admobAccountId }}/networkReport:generate",
+        "url": "https://admob.googleapis.com/v1/accounts/pub-9316035916536420/networkReport:generate",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"reportSpec\": {\n    \"dateRange\": {\n      \"startDate\": {\n        \"year\": {{ $json.admob_date.year }},\n        \"month\": {{ $json.admob_date.month }},\n        \"day\": {{ $json.admob_date.day }}\n      },\n      \"endDate\": {\n        \"year\": {{ $json.admob_date.year }},\n        \"month\": {{ $json.admob_date.month }},\n        \"day\": {{ $json.admob_date.day }}\n      }\n    },\n    \"dimensions\": [\"DATE\"],\n    \"metrics\": [\"AD_REQUESTS\", \"MATCHED_REQUESTS\", \"IMPRESSIONS\", \"ESTIMATED_EARNINGS\", \"IMPRESSION_RPM\", \"MATCH_RATE\"],\n    \"localizationSettings\": {\n      \"currencyCode\": \"BRL\",\n      \"languageCode\": \"pt-BR\"\n    }\n  }\n}",
-        "options": {}
+        "options": {},
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleOAuth2Api"
       },
       "id": "63bd48a3-4396-485e-b0c8-9798ac0cfd5f",
       "name": "AdMob: receita & eCPM",
@@ -115,7 +117,7 @@
         -48
       ],
       "alwaysOutputData": false,
-      "notes": "IMPORTANTE: substitua manualmente o accountId no URL pelo seu pub-XXXXXXXXXXXX"
+      "notes": "AdMob Publisher: pub-9316035916536420. Auth: Google OAuth2 (scope admob.readonly). A conta logada deve ser dona da AdMob."
     },
     {
       "parameters": {
