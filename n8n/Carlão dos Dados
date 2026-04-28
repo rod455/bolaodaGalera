@@ -349,6 +349,20 @@
           "name": "Supabase - Bolão na Copa"
         }
       }
+    },
+    {
+      "parameters": {
+        "mode": "append",
+        "numberInputs": 5
+      },
+      "id": "merge-aguarda-fontes-001",
+      "name": "Aguardar todas as fontes",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        -1280,
+        -48
+      ]
     }
   ],
   "pinData": {},
@@ -399,7 +413,7 @@
       "main": [
         [
           {
-            "node": "Consolidar e calcular KPIs",
+            "node": "Aguardar todas as fontes",
             "type": "main",
             "index": 0
           }
@@ -410,9 +424,9 @@
       "main": [
         [
           {
-            "node": "Consolidar e calcular KPIs",
+            "node": "Aguardar todas as fontes",
             "type": "main",
-            "index": 0
+            "index": 1
           }
         ]
       ]
@@ -421,9 +435,9 @@
       "main": [
         [
           {
-            "node": "Consolidar e calcular KPIs",
+            "node": "Aguardar todas as fontes",
             "type": "main",
-            "index": 0
+            "index": 2
           }
         ]
       ]
@@ -432,9 +446,9 @@
       "main": [
         [
           {
-            "node": "Consolidar e calcular KPIs",
+            "node": "Aguardar todas as fontes",
             "type": "main",
-            "index": 0
+            "index": 3
           }
         ]
       ]
@@ -443,9 +457,9 @@
       "main": [
         [
           {
-            "node": "Consolidar e calcular KPIs",
+            "node": "Aguardar todas as fontes",
             "type": "main",
-            "index": 0
+            "index": 4
           }
         ]
       ]
@@ -504,6 +518,17 @@
           },
           {
             "node": "Salvar memória (Supabase)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aguardar todas as fontes": {
+      "main": [
+        [
+          {
+            "node": "Consolidar e calcular KPIs",
             "type": "main",
             "index": 0
           }
