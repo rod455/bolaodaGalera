@@ -76,6 +76,8 @@ const CriarBolao = () => {
   const [loadingCampeonatos, setLoadingCampeonatos] = useState(true);
   const [imagemFile, setImagemFile] = useState<File | null>(null);
   const [imagemPreview, setImagemPreview] = useState<string | null>(null);
+  const [imagemMobileFile, setImagemMobileFile] = useState<File | null>(null);
+  const [imagemMobilePreview, setImagemMobilePreview] = useState<string | null>(null);
   const [criando, setCriando] = useState(false);
   const [infoModal, setInfoModal] = useState<RegraInfo | null>(null);
   const [regrasAtivas, setRegrasAtivas] = useState<string[]>([]);
@@ -208,6 +210,16 @@ const CriarBolao = () => {
     reader.readAsDataURL(file);
   };
 
+  const handleImagemMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { toast.error("Imagem muito grande. Máximo 2MB."); return; }
+    setImagemMobileFile(file);
+    const reader = new FileReader();
+    reader.onload = () => setImagemMobilePreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
   const toggleRegra = (regraTexto: string) => {
     setRegrasAtivas((prev) =>
       prev.includes(regraTexto) ? prev.filter((r) => r !== regraTexto) : [...prev, regraTexto]
@@ -250,14 +262,25 @@ const CriarBolao = () => {
     try {
       const codigo = Math.random().toString(36).substring(2, 8).toUpperCase();
       let imagemUrl: string | null = null;
+      let imagemMobileUrl: string | null = null;
 
       if (imagemFile) {
         const ext = imagemFile.name.split(".").pop();
-        const path = `boloes/${codigo}.${ext}`;
+        const path = `boloes/${codigo}_web.${ext}`;
         const { error: uploadErr } = await supabase.storage.from("avatars").upload(path, imagemFile);
         if (!uploadErr) {
           const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
           imagemUrl = urlData.publicUrl;
+        }
+      }
+
+      if (imagemMobileFile) {
+        const ext = imagemMobileFile.name.split(".").pop();
+        const path = `boloes/${codigo}_mobile.${ext}`;
+        const { error: uploadErr } = await supabase.storage.from("avatars").upload(path, imagemMobileFile);
+        if (!uploadErr) {
+          const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+          imagemMobileUrl = urlData.publicUrl;
         }
       }
 
@@ -267,7 +290,9 @@ const CriarBolao = () => {
         : (descricao || null);
 
       const { data: newBolao, error } = await supabase.from("boloes").insert({
-        nome, descricao: descFinal, imagem_url: imagemUrl, imagem_url_mobile: imagemUrl,
+        nome, descricao: descFinal,
+        imagem_url: imagemUrl,
+        imagem_url_mobile: imagemMobileUrl || imagemUrl,
         codigo_convite: codigo, criador_id: user.id, campeonato_id: campeonatosSelecionados[0],
         modo_pontuacao: modoSelecionado, regras_ativas: isMataMata ? ["mata_mata"] : regrasAtivas,
         is_publico: false, is_nacional: false,
@@ -627,30 +652,55 @@ const CriarBolao = () => {
         </div>
       )}
 
-      {/* 4. Upload Cover */}
+      {/* 4. Upload Cover — Web + Mobile */}
       <Card id="section-imagem" className="border-dashed border-2 border-copa-green-200 rounded-2xl">
-        <CardContent className="flex flex-col items-center justify-center py-8">
-          <label className="cursor-pointer flex flex-col items-center hover:opacity-80 transition-opacity">
-            {imagemPreview ? (
-              <div className="relative w-full max-w-xs">
-                <img src={imagemPreview} alt="Preview" className="w-full h-32 object-cover rounded-xl" />
-                <button onClick={(e) => { e.preventDefault(); setImagemFile(null); setImagemPreview(null); }}
-                  className="absolute top-2 right-2 w-6 h-6 bg-black/50 rounded-full flex items-center justify-center hover:bg-black/70 transition-colors">
-                  <X className="w-3.5 h-3.5 text-white" />
-                </button>
-              </div>
-            ) : (
-              <>
-                <div className="w-14 h-14 bg-copa-green-100 rounded-full flex items-center justify-center mb-3">
-                  <Upload className="w-6 h-6 text-copa-green-500" />
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Adicionar imagem de capa <span className="text-xs text-muted-foreground/60">(opcional)</span>
-                </p>
-              </>
-            )}
-            <input type="file" accept="image/*" className="hidden" onChange={handleImagemChange} />
-          </label>
+        <CardContent className="py-6 space-y-4">
+          <p className="text-sm font-semibold text-center text-copa-green-700">Imagem de capa <span className="text-xs text-muted-foreground/60 font-normal">(opcional)</span></p>
+          <div className="grid grid-cols-2 gap-3">
+            {/* Web */}
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-center text-muted-foreground">Web (16:9)</p>
+              <label className="cursor-pointer flex flex-col items-center hover:opacity-80 transition-opacity">
+                {imagemPreview ? (
+                  <div className="relative w-full">
+                    <img src={imagemPreview} alt="Preview Web" className="w-full h-24 object-cover rounded-lg" />
+                    <button onClick={(e) => { e.preventDefault(); setImagemFile(null); setImagemPreview(null); }}
+                      className="absolute top-1 right-1 w-5 h-5 bg-black/50 rounded-full flex items-center justify-center hover:bg-black/70 transition-colors">
+                      <X className="w-3 h-3 text-white" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="w-full h-24 bg-copa-green-50 border-2 border-dashed border-copa-green-200 rounded-lg flex flex-col items-center justify-center gap-1">
+                    <Upload className="w-5 h-5 text-copa-green-400" />
+                    <span className="text-[10px] text-muted-foreground">1200 x 675px</span>
+                  </div>
+                )}
+                <input type="file" accept="image/*" className="hidden" onChange={handleImagemChange} />
+              </label>
+            </div>
+            {/* Mobile */}
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-center text-muted-foreground">Mobile (4:3)</p>
+              <label className="cursor-pointer flex flex-col items-center hover:opacity-80 transition-opacity">
+                {imagemMobilePreview ? (
+                  <div className="relative w-full">
+                    <img src={imagemMobilePreview} alt="Preview Mobile" className="w-full h-24 object-cover rounded-lg" />
+                    <button onClick={(e) => { e.preventDefault(); setImagemMobileFile(null); setImagemMobilePreview(null); }}
+                      className="absolute top-1 right-1 w-5 h-5 bg-black/50 rounded-full flex items-center justify-center hover:bg-black/70 transition-colors">
+                      <X className="w-3 h-3 text-white" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="w-full h-24 bg-copa-green-50 border-2 border-dashed border-copa-green-200 rounded-lg flex flex-col items-center justify-center gap-1">
+                    <Upload className="w-5 h-5 text-copa-green-400" />
+                    <span className="text-[10px] text-muted-foreground">900 x 675px</span>
+                  </div>
+                )}
+                <input type="file" accept="image/*" className="hidden" onChange={handleImagemMobileChange} />
+              </label>
+            </div>
+          </div>
+          <p className="text-[10px] text-center text-muted-foreground/60">Se enviar apenas uma, ela será usada em ambas as plataformas.</p>
         </CardContent>
       </Card>
 
