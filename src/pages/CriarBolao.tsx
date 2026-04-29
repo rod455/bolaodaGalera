@@ -267,7 +267,7 @@ const CriarBolao = () => {
         : (descricao || null);
 
       const { data: newBolao, error } = await supabase.from("boloes").insert({
-        nome, descricao: descFinal, imagem_url: imagemUrl,
+        nome, descricao: descFinal, imagem_url: imagemUrl, imagem_url_mobile: imagemUrl,
         codigo_convite: codigo, criador_id: user.id, campeonato_id: campeonatosSelecionados[0],
         modo_pontuacao: modoSelecionado, regras_ativas: isMataMata ? ["mata_mata"] : regrasAtivas,
         is_publico: false, is_nacional: false,

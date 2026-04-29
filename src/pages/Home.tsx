@@ -74,7 +74,7 @@ const BolaoCard = ({
 }) => (
   <Card className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-all rounded-2xl">
     <div className="relative h-36 overflow-hidden cursor-pointer" onClick={onAccess}>
-      <img src={bolao.imagem_url || imgFallback} alt={bolao.nome} className="w-full h-full object-cover"
+      <img src={(Capacitor.isNativePlatform() && (bolao as any).imagem_url_mobile) ? (bolao as any).imagem_url_mobile : bolao.imagem_url || imgFallback} alt={bolao.nome} className="w-full h-full object-cover"
         onError={(e) => { (e.target as HTMLImageElement).src = imgFallback; }} />
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
       <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between">
@@ -134,7 +134,7 @@ const NacionalCard = ({
 }) => (
   <Card className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-all rounded-2xl">
     <div className="relative h-40 overflow-hidden cursor-pointer" onClick={isParticipando ? onAcessar : undefined}>
-      <img src={bolao.imagem_url || imgFallback} alt={bolao.nome} className="w-full h-full object-cover"
+      <img src={(Capacitor.isNativePlatform() && (bolao as any).imagem_url_mobile) ? (bolao as any).imagem_url_mobile : bolao.imagem_url || imgFallback} alt={bolao.nome} className="w-full h-full object-cover"
         onError={(e) => { (e.target as HTMLImageElement).src = imgFallback; }} />
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
       {(bolao.campeonatos as any)?.logo_url && (

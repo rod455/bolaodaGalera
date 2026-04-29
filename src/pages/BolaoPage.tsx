@@ -185,6 +185,7 @@ const BolaoPage = () => {
   const [uploadingCapa, setUploadingCapa] = useState(false);
   const [capaEditor, setCapaEditor] = useState<{ url: string; file: File } | null>(null);
   const [capaPositionY, setCapaPositionY] = useState(50); // porcentagem vertical (0=topo, 100=base)
+  const [capaTarget, setCapaTarget] = useState<"ambos" | "web" | "mobile">("ambos");
   const [isDraggingCapa, setIsDraggingCapa] = useState(false);
   const [dragStartY, setDragStartY] = useState(0);
   const [dragStartPos, setDragStartPos] = useState(50);
@@ -251,14 +252,19 @@ const BolaoPage = () => {
       const publicUrl = urlData.publicUrl + "?t=" + Date.now();
       const positionValue = `center ${Math.round(capaPositionY)}%`;
 
+      const updateFields: Record<string, string> = { imagem_posicao: positionValue };
+      if (capaTarget === "ambos" || capaTarget === "web") updateFields.imagem_url = publicUrl;
+      if (capaTarget === "ambos" || capaTarget === "mobile") updateFields.imagem_url_mobile = publicUrl;
+
       const { error: updateError } = await supabase
         .from("boloes")
-        .update({ imagem_url: publicUrl, imagem_posicao: positionValue })
+        .update(updateFields)
         .eq("id", id);
       if (updateError) throw updateError;
 
-      setBolao((prev) => prev ? { ...prev, imagem_url: publicUrl, imagem_posicao: positionValue } as any : prev);
-      toast.success("Foto de capa atualizada!");
+      setBolao((prev) => prev ? { ...prev, ...updateFields } as any : prev);
+      const targetLabel = capaTarget === "ambos" ? "Web e Mobile" : capaTarget === "web" ? "Web" : "Mobile";
+      toast.success(`Capa atualizada para ${targetLabel}!`);
       URL.revokeObjectURL(capaEditor.url);
       setCapaEditor(null);
     } catch {
@@ -1042,7 +1048,9 @@ const BolaoPage = () => {
       <div className="relative h-48 rounded-2xl overflow-hidden shadow-md group">
         <img
           src={
-            bolao.imagem_url ||
+            (Capacitor.isNativePlatform() && (bolao as any).imagem_url_mobile)
+              ? (bolao as any).imagem_url_mobile
+              : bolao.imagem_url ||
             "https://images.unsplash.com/photo-1489944440615-453fc2b6a9a9?w=800&h=400&fit=crop"
           }
           alt={bolao.nome}
@@ -1112,6 +1120,15 @@ const BolaoPage = () => {
               <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-black/50 text-white text-[11px] font-medium px-3 py-1 rounded-full backdrop-blur-sm pointer-events-none">
                 ↕ Arraste para ajustar
               </div>
+            </div>
+            <div className="flex items-center gap-2 px-5 pt-3">
+              <span className="text-xs text-muted-foreground font-medium">Salvar para:</span>
+              {(["ambos", "web", "mobile"] as const).map((opt) => (
+                <button key={opt} onClick={() => setCapaTarget(opt)}
+                  className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-all ${capaTarget === opt ? "bg-copa-green-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+                  {opt === "ambos" ? "Web + Mobile" : opt === "web" ? "Web" : "Mobile"}
+                </button>
+              ))}
             </div>
             <div className="flex items-center justify-end gap-2 px-5 pb-5 pt-3">
               <Button
