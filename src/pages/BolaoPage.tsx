@@ -853,8 +853,32 @@ const BolaoPage = () => {
     .filter((j) => j.status === "encerrado")
     .sort((a, b) => new Date(b.data_hora).getTime() - new Date(a.data_hora).getTime());
 
+  const tema = (bolao as any)?.tema as {
+    cor_primaria?: string; cor_secundaria?: string; cor_fundo?: string;
+    cor_card?: string; cor_texto?: string; cor_texto_muted?: string;
+    cor_borda?: string; cor_botao?: string; cor_botao_texto?: string;
+    logo_empresa?: string;
+  } | null;
+
+  const temaStyle = tema ? {
+    "--t-primary": tema.cor_primaria || "#16a34a",
+    "--t-secondary": tema.cor_secundaria || "#000",
+    "--t-bg": tema.cor_fundo || "#0A0A0A",
+    "--t-card": tema.cor_card || "#1A1A1A",
+    "--t-text": tema.cor_texto || "#FFF",
+    "--t-muted": tema.cor_texto_muted || "#999",
+    "--t-border": tema.cor_borda || tema.cor_primaria || "#333",
+    "--t-btn": tema.cor_botao || tema.cor_primaria || "#16a34a",
+    "--t-btn-text": tema.cor_botao_texto || "#FFF",
+  } as React.CSSProperties : undefined;
+
+  const t = !!tema;
+
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div
+      className={`space-y-6 animate-fade-in ${t ? "rounded-2xl p-4 -mx-4" : ""}`}
+      style={t ? { ...temaStyle, backgroundColor: "var(--t-bg)", color: "var(--t-text)" } : undefined}
+    >
       {xpToast && <XPToast xp={xpToast.xp} message={xpToast.msg} onDone={() => setXPToast(null)} />}
       <SEOHead
         title={bolao ? `Bolão ${bolao.nome}` : "Bolão"}
@@ -1157,7 +1181,7 @@ const BolaoPage = () => {
       )}
 
       {/* ═══ 1. RANKING ═══ */}
-      <Card className="rounded-2xl shadow-sm">
+      <Card className="rounded-2xl shadow-sm" style={t ? { backgroundColor: "var(--t-card)", borderColor: "var(--t-border)", color: "var(--t-text)" } : undefined}>
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base font-bold flex items-center gap-2">
@@ -1239,7 +1263,7 @@ const BolaoPage = () => {
                       player.pos
                     )}
                   </span>
-                  <div className="w-8 h-8 bg-copa-green-100 rounded-full flex items-center justify-center text-xs font-bold text-copa-green-600">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${t ? "" : "bg-copa-green-100 text-copa-green-600"}`} style={t ? { backgroundColor: "var(--t-secondary)", color: "var(--t-primary)", border: "1px solid var(--t-border)" } : undefined}>
                     {player.avatar}
                   </div>
                   <span
@@ -1263,7 +1287,7 @@ const BolaoPage = () => {
                     )}
                   </span>
                 </div>
-                <span className="text-sm font-bold text-copa-green-600">
+                <span className={`text-sm font-bold ${t ? "" : "text-copa-green-600"}`} style={t ? { color: "var(--t-primary)" } : undefined}>
                   {player.pontos} pts
                 </span>
               </div>
@@ -1305,7 +1329,8 @@ const BolaoPage = () => {
                   toast.success("Link copiado para compartilhar!");
                 }
               }}
-              className="w-full mt-2 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-copa-green-50 border border-copa-green-200 text-copa-green-600 text-sm font-semibold hover:bg-copa-green-100 transition-colors"
+              className={`w-full mt-2 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-colors ${t ? "" : "bg-copa-green-50 border border-copa-green-200 text-copa-green-600 hover:bg-copa-green-100"}`}
+              style={t ? { backgroundColor: "var(--t-secondary)", borderColor: "var(--t-border)", color: "var(--t-primary)", border: "1px solid var(--t-border)" } : undefined}
             >
               <Users className="w-4 h-4" /> Convide seus amigos!
             </button>
@@ -1328,10 +1353,10 @@ const BolaoPage = () => {
       {bolao?.modo_pontuacao === "mata_mata" ? (
         <MataMataDashboard bolaoId={id!} campeonatoId={bolao.campeonato_id} />
       ) : (
-      <Card className="rounded-2xl shadow-sm border-copa-gold-200 bg-copa-gold-50">
+      <Card className={`rounded-2xl shadow-sm ${t ? "" : "border-copa-gold-200 bg-copa-gold-50"}`} style={t ? { backgroundColor: "var(--t-card)", borderColor: "var(--t-border)", color: "var(--t-text)" } : undefined}>
         <CardContent className="p-5">
           <div className="mb-3">
-            <h3 className="text-lg font-bold text-copa-green-700 mb-2">
+            <h3 className={`text-lg font-bold mb-2 ${t ? "" : "text-copa-green-700"}`} style={t ? { color: "var(--t-primary)" } : undefined}>
               Faça seus palpites
             </h3>
             <div className="flex items-center gap-1.5 min-w-0">
@@ -1404,6 +1429,7 @@ const BolaoPage = () => {
                     isLoadingPalpites={loadingPalpites === jogo.id}
                     currentUserId={user?.id}
                     onNavigate={() => navigate(`/bolao/${id}/palpites?jogo=${jogo.id}`)}
+                    themed={t}
                   />
                 ))}
               </div>
@@ -1430,6 +1456,7 @@ const BolaoPage = () => {
                     isLoadingPalpites={loadingPalpites === jogo.id}
                     currentUserId={user?.id}
                     onNavigate={() => navigate(`/bolao/${id}/palpites?jogo=${jogo.id}`)}
+                    themed={t}
                   />
                 ))}
               </div>
@@ -1490,6 +1517,7 @@ const BolaoPage = () => {
                     isLoadingPalpites={loadingPalpites === jogo.id}
                     currentUserId={user?.id}
                     onNavigate={() => navigate(`/bolao/${id}/palpites?jogo=${jogo.id}`)}
+                    themed={t}
                   />
                 ))}
               </div>
@@ -1507,9 +1535,9 @@ const BolaoPage = () => {
 
       {/* ═══ 4. ÚLTIMOS RESULTADOS ═══ */}
       {jogosEncerrados.length > 0 && (
-        <Card className="rounded-2xl shadow-sm">
+        <Card className="rounded-2xl shadow-sm" style={t ? { backgroundColor: "var(--t-card)", borderColor: "var(--t-border)", color: "var(--t-text)" } : undefined}>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base font-bold flex items-center gap-2 text-muted-foreground">
+            <CardTitle className="text-base font-bold flex items-center gap-2" style={t ? { color: "var(--t-muted)" } : undefined}>
               Últimos resultados
             </CardTitle>
           </CardHeader>
@@ -1525,6 +1553,7 @@ const BolaoPage = () => {
                 participantPalpites={participantPalpites[jogo.id] || []}
                 isLoadingPalpites={loadingPalpites === jogo.id}
                 currentUserId={user?.id}
+                themed={t}
               />
             ))}
           </CardContent>
@@ -1757,6 +1786,7 @@ const ExpandableJogoRow = ({
   currentUserId,
   onNavigate,
   highlight,
+  themed,
 }: {
   jogo: Jogo;
   palpite: Palpite | null;
@@ -1768,6 +1798,7 @@ const ExpandableJogoRow = ({
   currentUserId?: string;
   onNavigate?: () => void;
   highlight?: boolean;
+  themed?: boolean;
 }) => {
   const isEncerrado = jogo.status === "encerrado";
   const isAoVivo = jogo.status === "ao_vivo";
@@ -1796,10 +1827,11 @@ const ExpandableJogoRow = ({
 
   return (
     <div className={`rounded-xl overflow-hidden border transition-all ${
-      isEncerrado ? "bg-gray-50/80 border-gray-100"
+      themed ? ""
+        : isEncerrado ? "bg-gray-50/80 border-gray-100"
         : highlight ? "bg-copa-gold-50 border-copa-gold-200 shadow-sm"
         : "bg-white border-gray-100 hover:shadow-md"
-    }`}>
+    }`} style={themed ? { backgroundColor: "var(--t-secondary)", borderColor: "var(--t-border)", color: "var(--t-text)" } : undefined}>
       {/* Main game row */}
       <div className="px-4 py-3 space-y-2">
         {/* Fase / Rodada */}
