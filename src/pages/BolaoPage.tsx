@@ -1388,7 +1388,6 @@ const BolaoPage = () => {
                     </div>
                   );
                 })()}
-                </div>
               </div>
             );
           })() : null}
