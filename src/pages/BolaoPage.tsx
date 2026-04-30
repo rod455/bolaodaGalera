@@ -156,7 +156,8 @@ const BolaoPage = () => {
   const [palpites, setPalpites] = useState<Record<string, Palpite>>({});
   const [ranking, setRanking] = useState<RankingEntry[]>([]);
   const [rankingRodada, setRankingRodada] = useState<RankingEntry[]>([]);
-  const [rankingTab, setRankingTab] = useState<"geral" | "rodada">("geral");
+  const [rankingTab, setRankingTab] = useState<"premiacao" | "geral" | "rodada">("geral");
+  const [rankingTabInitialized, setRankingTabInitialized] = useState(false);
   const [loadingRodada, setLoadingRodada] = useState(false);
   const [showFullRanking, setShowFullRanking] = useState(false);
 
@@ -275,6 +276,13 @@ const BolaoPage = () => {
       setUploadingCapa(false);
     }
   };
+
+  useEffect(() => {
+    if (bolao && !rankingTabInitialized && (bolao as any).tema?.premiacao) {
+      setRankingTab("premiacao");
+      setRankingTabInitialized(true);
+    }
+  }, [bolao, rankingTabInitialized]);
 
   useEffect(() => {
     let active = true;
@@ -1280,16 +1288,30 @@ const BolaoPage = () => {
               )}
             </div>
           </div>
-          {/* ── Tabs: Geral | Esta Rodada ── */}
+          {/* ── Tabs: Premiação | Geral | Últimos Jogos ── */}
           {ranking.length > 0 && (
-            <div className="flex gap-1 mt-2 bg-muted/50 rounded-lg p-0.5">
+            <div className="flex gap-1 mt-2 bg-muted/50 rounded-lg p-0.5" style={t ? { backgroundColor: "var(--t-secondary)" } : undefined}>
+              {tema?.premiacao && (
+                <button
+                  onClick={() => { setRankingTab("premiacao"); setShowFullRanking(false); }}
+                  className={`flex-1 text-xs font-bold py-1.5 rounded-md transition-all ${
+                    rankingTab === "premiacao"
+                      ? t ? "" : "bg-white text-copa-green-700 shadow-sm"
+                      : t ? "" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                  style={t ? { backgroundColor: rankingTab === "premiacao" ? "var(--t-primary)" : "transparent", color: rankingTab === "premiacao" ? "var(--t-btn-text)" : "var(--t-muted)" } : undefined}
+                >
+                  Premiação
+                </button>
+              )}
               <button
                 onClick={() => { setRankingTab("geral"); setShowFullRanking(false); }}
                 className={`flex-1 text-xs font-bold py-1.5 rounded-md transition-all ${
                   rankingTab === "geral"
-                    ? "bg-white text-copa-green-700 shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? t ? "" : "bg-white text-copa-green-700 shadow-sm"
+                    : t ? "" : "text-muted-foreground hover:text-foreground"
                 }`}
+                style={t ? { backgroundColor: rankingTab === "geral" ? "var(--t-primary)" : "transparent", color: rankingTab === "geral" ? "var(--t-btn-text)" : "var(--t-muted)" } : undefined}
               >
                 Geral
               </button>
@@ -1301,17 +1323,71 @@ const BolaoPage = () => {
                 }}
                 className={`flex-1 text-xs font-bold py-1.5 rounded-md transition-all ${
                   rankingTab === "rodada"
-                    ? "bg-white text-copa-green-700 shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? t ? "" : "bg-white text-copa-green-700 shadow-sm"
+                    : t ? "" : "text-muted-foreground hover:text-foreground"
                 }`}
+                style={t ? { backgroundColor: rankingTab === "rodada" ? "var(--t-primary)" : "transparent", color: rankingTab === "rodada" ? "var(--t-btn-text)" : "var(--t-muted)" } : undefined}
               >
-                Esta Semana
+                Últimos Jogos
               </button>
             </div>
           )}
         </CardHeader>
         <CardContent className="space-y-2">
           {/* ── Conteúdo do ranking (Geral ou Rodada) ── */}
+          {/* ── Conteúdo: Premiação ── */}
+          {rankingTab === "premiacao" && tema?.premiacao ? (() => {
+            const prem = tema.premiacao as { valor_inscricao: number; excluir_ids_calculo: string[]; percentuais: number[] };
+            const pagantes = totalParticipantes - (prem.excluir_ids_calculo?.length || 0);
+            const totalPremio = Math.max(0, pagantes) * prem.valor_inscricao;
+            const medalColors = ["text-copa-gold-500", "text-gray-400", "text-amber-600"];
+            return (
+              <div className="space-y-4">
+                {/* Header: Total participantes + Valor arrecadado */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="text-center p-3 rounded-xl" style={t ? { backgroundColor: "var(--t-secondary)", border: "1px solid var(--t-border)" } : { backgroundColor: "#f0fdf4" }}>
+                    <p className="text-2xl font-black" style={t ? { color: "var(--t-text)" } : undefined}>{totalParticipantes}</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-wide" style={t ? { color: "var(--t-muted)" } : { color: "#6b7280" }}>Participantes</p>
+                  </div>
+                  <div className="text-center p-3 rounded-xl" style={t ? { backgroundColor: "var(--t-secondary)", border: "1px solid var(--t-border)" } : { backgroundColor: "#fef9c3" }}>
+                    <p className="text-2xl font-black" style={t ? { color: "var(--t-primary)" } : { color: "#16a34a" }}>R$ {totalPremio.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-wide" style={t ? { color: "var(--t-muted)" } : { color: "#6b7280" }}>Premiação Total</p>
+                  </div>
+                </div>
+                {/* Lista de premiação por posição */}
+                <div className="space-y-1.5">
+                  {prem.percentuais.map((pct, i) => {
+                    const valor = totalPremio * (pct / 100);
+                    const player = ranking[i];
+                    const pos = i + 1;
+                    return (
+                      <div key={i} className="flex items-center gap-3 px-3 py-2.5 rounded-xl" style={t ? { backgroundColor: "var(--t-secondary)", border: "1px solid var(--t-border)" } : { backgroundColor: i < 3 ? "#fefce8" : "#f9fafb" }}>
+                        <span className={`text-lg font-black w-7 text-center ${i < 3 ? medalColors[i] : ""}`} style={t && i >= 3 ? { color: "var(--t-muted)" } : undefined}>
+                          {pos}º
+                        </span>
+                        {player ? (
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold truncate">{player.nome}</p>
+                            <p className="text-[10px]" style={t ? { color: "var(--t-muted)" } : { color: "#9ca3af" }}>{player.pontos} pts</p>
+                          </div>
+                        ) : (
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm italic" style={t ? { color: "var(--t-muted)" } : { color: "#9ca3af" }}>—</p>
+                          </div>
+                        )}
+                        <div className="text-right flex-shrink-0">
+                          <p className="text-sm font-black" style={t ? { color: "var(--t-primary)" } : { color: "#16a34a" }}>R$ {valor.toFixed(2).replace(".", ",")}</p>
+                          <p className="text-[9px]" style={t ? { color: "var(--t-muted)" } : { color: "#9ca3af" }}>{pct}%</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })() : null}
+
+          {/* ── Conteúdo: Ranking Geral / Últimos Jogos ── */}
           {rankingTab === "rodada" && loadingRodada ? (
             <div className="flex items-center justify-center py-6 gap-2 text-sm text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" /> Calculando rodada...
