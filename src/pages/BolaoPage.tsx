@@ -1355,8 +1355,11 @@ const BolaoPage = () => {
                   </div>
                 </div>
                 {/* Lista de premiação em 2 colunas: 1-5 | 6-10 */}
-                <div className="grid grid-cols-2 gap-1.5">
-                  {prem.percentuais.map((pct, i) => {
+                {(() => {
+                  const half = Math.ceil(prem.percentuais.length / 2);
+                  const col1 = prem.percentuais.slice(0, half);
+                  const col2 = prem.percentuais.slice(half);
+                  const renderItem = (pct: number, i: number) => {
                     const valor = totalPremio * (pct / 100);
                     const player = ranking[i];
                     const pos = i + 1;
@@ -1377,7 +1380,14 @@ const BolaoPage = () => {
                         </div>
                       </div>
                     );
-                  })}
+                  };
+                  return (
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <div className="space-y-1.5">{col1.map((pct, i) => renderItem(pct, i))}</div>
+                      <div className="space-y-1.5">{col2.map((pct, i) => renderItem(pct, i + half))}</div>
+                    </div>
+                  );
+                })()}
                 </div>
               </div>
             );
