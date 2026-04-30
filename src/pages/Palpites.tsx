@@ -88,7 +88,8 @@ const Palpites = () => {
     const { data: participacoes } = await supabase
       .from("bolao_participantes")
       .select("bolao_id, boloes(id, nome, modo_pontuacao, time_favorito)")
-      .eq("user_id", user.id);
+      .eq("user_id", user.id)
+      .eq("status", "ativo");
 
     if (!participacoes || participacoes.length <= 1) return;
 

@@ -247,12 +247,14 @@ const DynamicBanner = ({ userBolaoIds, userContext }: DynamicBannerProps) => {
     const { count } = await supabase
       .from("bolao_participantes")
       .select("*", { count: "exact", head: true })
-      .eq("bolao_id", bolaoId);
+      .eq("bolao_id", bolaoId)
+      .eq("status", "ativo");
     const currentCount = count || 0;
     const { data: participants } = await supabase
       .from("bolao_participantes")
       .select("user_id, profiles(plano)")
-      .eq("bolao_id", bolaoId);
+      .eq("bolao_id", bolaoId)
+      .eq("status", "ativo");
     const { data: bolaoData } = await supabase
       .from("boloes")
       .select("criador_id, profiles(plano)")

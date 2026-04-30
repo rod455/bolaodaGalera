@@ -361,7 +361,7 @@ const Home = () => {
         estado = profileData?.estado || null;
         setUserEstado(estado);
 
-        const { data: participacoes } = await supabase.from("bolao_participantes").select("bolao_id, posicao_ranking, boloes(*, campeonatos(*))").eq("user_id", user.id);
+        const { data: participacoes } = await supabase.from("bolao_participantes").select("bolao_id, posicao_ranking, status, boloes(*, campeonatos(*))").eq("user_id", user.id).neq("status", "recusado");
         const privList: Bolao[] = [];
         const posicoes: Record<string, number | null> = {};
 
@@ -389,7 +389,8 @@ const Home = () => {
           const { data: countData } = await supabase
             .from("bolao_participantes")
             .select("bolao_id")
-            .in("bolao_id", privIds);
+            .in("bolao_id", privIds)
+            .eq("status", "ativo");
           if (countData) {
             const counts: Record<string, number> = {};
             countData.forEach((p: any) => {
@@ -426,7 +427,7 @@ const Home = () => {
 
         // Counts para privados — em paralelo
         const privCountPromises = privList.map(async (b) => {
-          const { count } = await supabase.from("bolao_participantes").select("*", { count: "exact", head: true }).eq("bolao_id", b.id);
+          const { count } = await supabase.from("bolao_participantes").select("*", { count: "exact", head: true }).eq("bolao_id", b.id).eq("status", "ativo");
           return [b.id, count || 0] as [string, number];
         });
         const privResults = await Promise.all(privCountPromises);
@@ -439,7 +440,7 @@ const Home = () => {
 
       // Counts para nacionais — em paralelo (carrega em background)
       const nacCountPromises = ((nac as any[]) || []).map(async (b) => {
-        const { count } = await supabase.from("bolao_participantes").select("*", { count: "exact", head: true }).eq("bolao_id", b.id);
+        const { count } = await supabase.from("bolao_participantes").select("*", { count: "exact", head: true }).eq("bolao_id", b.id).eq("status", "ativo");
         return [b.id, count || 0] as [string, number];
       });
       const nacResults = await Promise.all(nacCountPromises);
@@ -480,7 +481,7 @@ const Home = () => {
     const now = new Date();
     const in12h = new Date(now.getTime() + 12 * 60 * 60 * 1000);
     const cutoff = new Date(now.getTime() + 10 * 60 * 1000);
-    const { data: participacoes } = await supabase.from("bolao_participantes").select("bolao_id, boloes(nome, campeonato_id)").eq("user_id", user.id);
+    const { data: participacoes } = await supabase.from("bolao_participantes").select("bolao_id, boloes(nome, campeonato_id)").eq("user_id", user.id).eq("status", "ativo");
     if (!participacoes || participacoes.length === 0) return;
     const pendingAlerts: PendingAlert[] = [];
     for (const p of participacoes) {
@@ -539,12 +540,14 @@ const Home = () => {
     const { count } = await supabase
       .from("bolao_participantes")
       .select("*", { count: "exact", head: true })
-      .eq("bolao_id", bolaoId);
+      .eq("bolao_id", bolaoId)
+      .eq("status", "ativo");
     const currentCount = count || 0;
     const { data: participants } = await supabase
       .from("bolao_participantes")
       .select("user_id, profiles(plano)")
-      .eq("bolao_id", bolaoId);
+      .eq("bolao_id", bolaoId)
+      .eq("status", "ativo");
     const { data: bolaoData } = await supabase
       .from("boloes")
       .select("criador_id, profiles(plano)")

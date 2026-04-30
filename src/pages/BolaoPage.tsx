@@ -296,11 +296,12 @@ const BolaoPage = () => {
       }
       setBolao(bolaoData as any);
 
-      // Count participants
+      // Count participants (only active)
       const { count } = await supabase
         .from("bolao_participantes")
         .select("*", { count: "exact", head: true })
-        .eq("bolao_id", id);
+        .eq("bolao_id", id)
+        .eq("status", "ativo");
       setTotalParticipantes(count || 0);
 
       // Fetch upcoming + recent games from all linked campeonatos
@@ -434,11 +435,12 @@ const BolaoPage = () => {
         }
       }
 
-      // Fetch ranking (all participants)
+      // Fetch ranking (only active participants)
       const { data: participantes } = await supabase
         .from("bolao_participantes")
         .select("user_id, pontuacao_total, posicao_ranking, streak_atual, profiles(nome, avatar_url)")
         .eq("bolao_id", id!)
+        .eq("status", "ativo")
         .order("pontuacao_total", { ascending: false });
 
       const rankingList: RankingEntry[] = (participantes || []).map(
@@ -572,11 +574,12 @@ const BolaoPage = () => {
       ]
     );
 
-    // 2. Buscar todos os bolões que o usuário participa
+    // 2. Buscar todos os bolões que o usuário participa (ativos)
     const { data: participacoes } = await supabase
       .from("bolao_participantes")
       .select("bolao_id, boloes(id, nome, campeonato_id)")
-      .eq("user_id", user.id);
+      .eq("user_id", user.id)
+      .eq("status", "ativo");
 
     const otherBolaoIds = (participacoes || [])
       .filter((p: any) => p.boloes && p.boloes.id !== id)

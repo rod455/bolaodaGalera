@@ -97,7 +97,8 @@ const AoVivo = () => {
         const { data: participacoes } = await supabase
           .from("bolao_participantes")
           .select("bolao_id, boloes(campeonato_id)")
-          .eq("user_id", user.id);
+          .eq("user_id", user.id)
+          .eq("status", "ativo");
 
         const map: Record<string, string> = {};
         (participacoes || []).forEach((p: any) => {

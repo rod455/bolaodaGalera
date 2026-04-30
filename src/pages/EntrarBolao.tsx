@@ -38,7 +38,8 @@ const EntrarBolao = () => {
     const { data } = await supabase
       .from("bolao_participantes")
       .select("bolao_id, boloes(is_nacional)")
-      .eq("user_id", user.id);
+      .eq("user_id", user.id)
+      .eq("status", "ativo");
     const privCount = (data || []).filter((p: any) => p.boloes && !p.boloes.is_nacional).length;
     if (privCount >= FREE_MAX_PRIVADOS) {
       setUpsellModal({ open: true, reason: "privado_limite" });
@@ -48,18 +49,20 @@ const EntrarBolao = () => {
   };
 
   const checkBolaoCapacity = async (bolaoId: string): Promise<boolean> => {
-    // Count current participants
+    // Count current participants (only active)
     const { count } = await supabase
       .from("bolao_participantes")
       .select("*", { count: "exact", head: true })
-      .eq("bolao_id", bolaoId);
+      .eq("bolao_id", bolaoId)
+      .eq("status", "ativo");
     const currentCount = count || 0;
 
     // Check if any participant (or creator) has premium/pro
     const { data: participants } = await supabase
       .from("bolao_participantes")
       .select("user_id, profiles(plano)")
-      .eq("bolao_id", bolaoId);
+      .eq("bolao_id", bolaoId)
+      .eq("status", "ativo");
     const { data: bolaoData } = await supabase
       .from("boloes")
       .select("criador_id, profiles(plano)")
@@ -125,7 +128,8 @@ const EntrarBolao = () => {
         const { data: participantes } = await supabase
           .from("bolao_participantes")
           .select("bolao_id")
-          .in("bolao_id", bolaoIds);
+          .in("bolao_id", bolaoIds)
+          .eq("status", "ativo");
         const counts: Record<string, number> = {};
         for (const p of participantes || []) {
           counts[p.bolao_id] = (counts[p.bolao_id] || 0) + 1;

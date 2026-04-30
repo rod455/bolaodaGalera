@@ -219,7 +219,8 @@ const MataMataDashboard = ({ bolaoId, campeonatoId }: Props) => {
       const { data: bolaoParticipantes } = await supabase
         .from("bolao_participantes")
         .select("user_id")
-        .eq("bolao_id", bolaoId);
+        .eq("bolao_id", bolaoId)
+        .eq("status", "ativo");
 
       if (bolaoParticipantes && bolaoParticipantes.length > 0) {
         const inserts = bolaoParticipantes.map((bp: any) => ({
