@@ -21,6 +21,7 @@ export interface Bolao {
   criador_id: string | null;
   modo_pontuacao: string;
   time_favorito?: string | null;
+  aprovacao_entrada?: boolean;
   campeonatos?: Campeonato | null;
 }
 
