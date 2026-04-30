@@ -165,6 +165,8 @@ const BolaoPage = () => {
   const [niveisRanking, setNiveisRanking] = useState<Record<string, number>>({});
   const [streaksRanking, setStreaksRanking] = useState<Record<string, number>>({});
   const [totalParticipantes, setTotalParticipantes] = useState(0);
+  const [isModerator, setIsModerator] = useState(false);
+  const [pendentes, setPendentes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [leaving, setLeaving] = useState(false);
@@ -295,6 +297,30 @@ const BolaoPage = () => {
         return;
       }
       setBolao(bolaoData as any);
+
+      // Check moderator status
+      const isCreator = bolaoData.criador_id === user?.id;
+      const { data: modData } = await supabase
+        .from("bolao_moderadores")
+        .select("user_id")
+        .eq("bolao_id", id)
+        .eq("user_id", user?.id || "")
+        .maybeSingle();
+      const moderator = isCreator || !!modData;
+      setIsModerator(moderator);
+
+      // Fetch pending requests (if moderator and approval enabled)
+      if (moderator && (bolaoData as any).aprovacao_entrada) {
+        const { data: pend } = await supabase
+          .from("bolao_participantes")
+          .select("user_id, created_at, profiles(nome, avatar_url)")
+          .eq("bolao_id", id)
+          .eq("status", "pendente")
+          .order("created_at", { ascending: true });
+        setPendentes(pend || []);
+      } else {
+        setPendentes([]);
+      }
 
       // Count participants (only active)
       const { count } = await supabase
@@ -673,6 +699,19 @@ const BolaoPage = () => {
     } finally {
       setCopying(false);
     }
+  };
+
+  const handleAprovar = async (userId: string) => {
+    await supabase.from("bolao_participantes").update({ status: "ativo" }).eq("bolao_id", id).eq("user_id", userId);
+    setPendentes((prev) => prev.filter((p) => p.user_id !== userId));
+    setTotalParticipantes((prev) => prev + 1);
+    toast.success("Participante aprovado!");
+  };
+
+  const handleRecusar = async (userId: string) => {
+    await supabase.from("bolao_participantes").delete().eq("bolao_id", id).eq("user_id", userId);
+    setPendentes((prev) => prev.filter((p) => p.user_id !== userId));
+    toast.info("Solicitação recusada.");
   };
 
   if (loading) {
@@ -1181,6 +1220,48 @@ const BolaoPage = () => {
       {/* ═══ PROMO PAULISTÃO ═══ */}
       {id === "71851d2a-88fa-4ec4-a780-7c1e450869ef" && (
         <PromoBolaoHeader regulamentoUrl="/regulamento-bolao-paulistao.html" />
+      )}
+
+      {/* ═══ SOLICITAÇÕES PENDENTES ═══ */}
+      {pendentes.length > 0 && isModerator && (
+        <Card className="rounded-2xl shadow-sm border-amber-200 bg-amber-50" style={t ? { backgroundColor: "var(--t-card)", borderColor: "var(--t-border)", color: "var(--t-text)" } : undefined}>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-bold flex items-center gap-2">
+              <Clock className="w-4 h-4 text-amber-500" />
+              Solicitações pendentes
+              <Badge className="bg-amber-200 text-amber-800 text-xs">{pendentes.length}</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {pendentes.map((p: any) => {
+              const nome = p.profiles?.nome || "Usuário";
+              const initials = nome.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase();
+              return (
+                <div key={p.user_id} className="flex items-center gap-3 p-3 rounded-xl bg-white/80" style={t ? { backgroundColor: "var(--t-secondary)" } : undefined}>
+                  <div className="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center text-xs font-bold text-amber-700 flex-shrink-0" style={t ? { backgroundColor: "var(--t-bg)", color: "var(--t-primary)" } : undefined}>
+                    {initials}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold truncate">{nome}</p>
+                    <p className="text-[10px] text-muted-foreground" style={t ? { color: "var(--t-muted)" } : undefined}>
+                      {new Date(p.created_at).toLocaleDateString("pt-BR")}
+                    </p>
+                  </div>
+                  <div className="flex gap-1.5 flex-shrink-0">
+                    <Button size="sm" onClick={() => handleAprovar(p.user_id)}
+                      className="bg-copa-green-500 hover:bg-copa-green-600 text-white text-xs h-8 px-3 rounded-lg">
+                      Aceitar
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => handleRecusar(p.user_id)}
+                      className="text-red-500 border-red-200 hover:bg-red-50 text-xs h-8 px-3 rounded-lg">
+                      Recusar
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
       )}
 
       {/* ═══ 1. RANKING ═══ */}

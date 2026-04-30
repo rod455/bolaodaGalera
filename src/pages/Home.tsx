@@ -64,11 +64,11 @@ const sortByOrder = (boloes: Bolao[], savedOrder: string[]): Bolao[] => {
 
 /* ─── BolaoCard ─── */
 const BolaoCard = ({
-  bolao, participantes, posicao, isParticipating, onAccess, onInfoClick, imgFallback,
+  bolao, participantes, posicao, isParticipating, isPending, onAccess, onInfoClick, imgFallback,
   canMoveUp, canMoveDown, onMoveUp, onMoveDown,
 }: {
   bolao: Bolao; participantes: number; posicao: number | null;
-  isParticipating?: boolean; onAccess: () => void; onInfoClick?: () => void; imgFallback: string;
+  isParticipating?: boolean; isPending?: boolean; onAccess: () => void; onInfoClick?: () => void; imgFallback: string;
   canMoveUp?: boolean; canMoveDown?: boolean;
   onMoveUp?: () => void; onMoveDown?: () => void;
 }) => (
@@ -114,11 +114,17 @@ const BolaoCard = ({
             )}
           </div>
         </div>
-        <Button size="sm"
-          className={`font-semibold rounded-lg ${isParticipating ? "bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800" : "bg-copa-green-500 hover:bg-copa-green-600 text-white"}`}
-          onClick={(e) => { e.stopPropagation(); onAccess(); }}>
-          {isParticipating ? "Acessar" : "Participar"}<ChevronRight className="w-4 h-4 ml-1" />
-        </Button>
+        {isPending ? (
+          <Badge className="bg-amber-100 text-amber-700 border-amber-200 text-xs font-semibold px-3 py-1.5">
+            <Clock className="w-3 h-3 mr-1" />Aguardando Aprovação
+          </Badge>
+        ) : (
+          <Button size="sm"
+            className={`font-semibold rounded-lg ${isParticipating ? "bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800" : "bg-copa-green-500 hover:bg-copa-green-600 text-white"}`}
+            onClick={(e) => { e.stopPropagation(); onAccess(); }}>
+            {isParticipating ? "Acessar" : "Participar"}<ChevronRight className="w-4 h-4 ml-1" />
+          </Button>
+        )}
       </div>
     </CardContent>
   </Card>
@@ -279,6 +285,7 @@ const Home = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [privados, setPrivados] = useState<Bolao[]>([]);
+  const [pendingBolaoIds, setPendingBolaoIds] = useState<Set<string>>(new Set());
   const [nacionais, setNacionais] = useState<Bolao[]>([]);
   const [participantesCount, setParticipantesCount] = useState<Record<string, number>>({});
   const [userPosicoes, setUserPosicoes] = useState<Record<string, number | null>>({});
@@ -365,8 +372,10 @@ const Home = () => {
         const privList: Bolao[] = [];
         const posicoes: Record<string, number | null> = {};
 
+        const pendingIds = new Set<string>();
         (participacoes || []).forEach((p: any) => {
           participandoIds.add(p.bolao_id);
+          if (p.status === "pendente") pendingIds.add(p.bolao_id);
           if (p.boloes && !p.boloes.is_nacional && !BOLOES_ARQUIVADOS.has(p.boloes.id)) {
             privList.push(p.boloes);
             posicoes[p.boloes.id] = p.posicao_ranking;
@@ -377,6 +386,7 @@ const Home = () => {
         setPrivados(sorted);
         setUserPosicoes(posicoes);
         setUserBolaoIds(participandoIds);
+        setPendingBolaoIds(pendingIds);
 
         // ═══ Contexto para segmentação de banners ═══
         const diasCadastro = user.created_at
@@ -587,11 +597,13 @@ const Home = () => {
     setJoiningByCode(true);
     try {
       await ensureProfile();
-      const { data: bolao } = await supabase.from("boloes").select("id, nome").eq("codigo_convite", codigoInput.trim().toUpperCase()).maybeSingle();
+      const { data: bolao } = await supabase.from("boloes").select("id, nome, aprovacao_entrada, is_nacional").eq("codigo_convite", codigoInput.trim().toUpperCase()).maybeSingle();
       if (!bolao) { toast.error("Código inválido. Verifique e tente novamente."); return; }
       if (!(await checkBolaoCapacity(bolao.id))) return;
-      const { error } = await supabase.from("bolao_participantes").insert({ bolao_id: bolao.id, user_id: user.id });
+      const needsApproval = bolao.aprovacao_entrada && !bolao.is_nacional;
+      const { error } = await supabase.from("bolao_participantes").insert({ bolao_id: bolao.id, user_id: user.id, status: needsApproval ? "pendente" : "ativo" });
       if (error) { if (error.code === "23505") { toast.info("Você já está neste bolão!"); navigate(`/bolao/${bolao.id}`); } else throw error; }
+      else if (needsApproval) { toast.success("Solicitação enviada! Aguarde a aprovação do moderador."); }
       else { toast.success(`Você entrou no "${bolao.nome}"!`); navigate(`/bolao/${bolao.id}`); }
     } catch (err: any) { toast.error(err.message || "Erro ao entrar no bolão"); } finally { setJoiningByCode(false); }
   };
@@ -772,7 +784,8 @@ const Home = () => {
             {privados.map((b, i) => (
               <BolaoCard key={b.id} bolao={b} participantes={participantesCount[b.id] || 0}
                 posicao={userPosicoes[b.id] || null} isParticipating={true}
-                onAccess={() => navigate(`/bolao/${b.id}`)}
+                isPending={pendingBolaoIds.has(b.id)}
+                onAccess={() => { if (!pendingBolaoIds.has(b.id)) navigate(`/bolao/${b.id}`); }}
                 onInfoClick={() => setRegrasModal(b.modo_pontuacao || null)}
                 imgFallback={FALLBACK_IMAGES[i % FALLBACK_IMAGES.length]}
                 canMoveUp={i > 0} canMoveDown={i < privados.length - 1}

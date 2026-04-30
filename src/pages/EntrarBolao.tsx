@@ -179,7 +179,7 @@ const EntrarBolao = () => {
       // Find bolão by codigo_convite
       const { data: bolao, error: fetchError } = await supabase
         .from("boloes")
-        .select("id, nome")
+        .select("id, nome, aprovacao_entrada, is_nacional")
         .eq("codigo_convite", codigo.trim().toUpperCase())
         .single();
 
@@ -206,10 +206,13 @@ const EntrarBolao = () => {
 
       await ensureProfile();
 
+      const needsApproval = bolao.aprovacao_entrada && !bolao.is_nacional;
+      const insertStatus = needsApproval ? "pendente" : "ativo";
+
       // Try to join
       const { error } = await supabase
         .from("bolao_participantes")
-        .insert({ bolao_id: bolao.id, user_id: user.id });
+        .insert({ bolao_id: bolao.id, user_id: user.id, status: insertStatus });
 
       if (error) {
         if (error.code === "23505") {
@@ -217,6 +220,10 @@ const EntrarBolao = () => {
         } else {
           throw error;
         }
+      } else if (needsApproval) {
+        toast.success("Solicitação enviada! Aguarde a aprovação do moderador.");
+        navigate("/home");
+        return;
       } else {
         toast.success(`Você entrou no ${bolao.nome}!`);
       }
@@ -255,9 +262,14 @@ const EntrarBolao = () => {
 
       await ensureProfile();
 
+      // Verificar se precisa aprovação
+      const { data: bolaoInfo } = await supabase.from("boloes").select("aprovacao_entrada, is_nacional").eq("id", bolaoId).single();
+      const needsApproval = bolaoInfo?.aprovacao_entrada && !bolaoInfo?.is_nacional;
+      const insertStatus = needsApproval ? "pendente" : "ativo";
+
       const { error } = await supabase
         .from("bolao_participantes")
-        .insert({ bolao_id: bolaoId, user_id: user.id });
+        .insert({ bolao_id: bolaoId, user_id: user.id, status: insertStatus });
 
       if (error) {
         if (error.code === "23505") {
@@ -266,6 +278,9 @@ const EntrarBolao = () => {
         } else {
           throw error;
         }
+      } else if (needsApproval) {
+        toast.success("Solicitação enviada! Aguarde a aprovação do moderador.");
+        setUserBolaoIds((prev) => new Set(prev).add(bolaoId));
       } else {
         toast.success("Você entrou no bolão!");
         setUserBolaoIds((prev) => new Set(prev).add(bolaoId));

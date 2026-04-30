@@ -99,8 +99,10 @@ const CriarBolao = () => {
   const [xpToast, setXPToast] = useState<{xp: number, msg: string} | null>(null);
 
   const { plano: userPlano } = useUserPlan();
+  const isPremiumUser = userPlano === "premium" || userPlano === "premium_pro";
   const { showAd, adLoading, needsAd } = useRewardedAd();
   const [adCallback, setAdCallback] = useState<(() => void) | null>(null);
+  const [aprovacaoEntrada, setAprovacaoEntrada] = useState(false);
 
   useEffect(() => { loadCampeonatos(); }, []);
 
@@ -296,6 +298,7 @@ const CriarBolao = () => {
         codigo_convite: codigo, criador_id: user.id, campeonato_id: campeonatosSelecionados[0],
         modo_pontuacao: modoSelecionado, regras_ativas: isMataMata ? ["mata_mata"] : regrasAtivas,
         is_publico: false, is_nacional: false,
+        aprovacao_entrada: isPremiumUser && aprovacaoEntrada,
         ...(isFanatico ? { time_favorito: timeFavorito } : {}),
       }).select("id").single();
 
@@ -703,6 +706,23 @@ const CriarBolao = () => {
           <p className="text-[10px] text-center text-muted-foreground/60">Se enviar apenas uma, ela será usada em ambas as plataformas.</p>
         </CardContent>
       </Card>
+
+      {/* 5. Aprovação de entrada (Premium) */}
+      <div className={`flex items-center justify-between p-4 rounded-2xl border ${isPremiumUser ? "bg-white border-gray-200" : "bg-gray-50 border-gray-100 opacity-60"}`}>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold">Aprovar novos participantes</span>
+            {!isPremiumUser && <Badge className="bg-copa-gold-100 text-copa-gold-700 border-0 text-[10px]"><Crown className="w-3 h-3 mr-0.5" />Premium</Badge>}
+          </div>
+          <p className="text-xs text-muted-foreground mt-0.5">Novos membros precisam de aprovação para entrar</p>
+        </div>
+        <button
+          onClick={() => isPremiumUser && setAprovacaoEntrada(!aprovacaoEntrada)}
+          className={`relative w-11 h-6 rounded-full transition-colors ${aprovacaoEntrada && isPremiumUser ? "bg-copa-green-500" : "bg-gray-300"} ${!isPremiumUser ? "cursor-not-allowed" : "cursor-pointer"}`}
+        >
+          <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${aprovacaoEntrada && isPremiumUser ? "translate-x-5" : ""}`} />
+        </button>
+      </div>
 
       {/* Submit */}
       <Button onClick={handleCriar} disabled={criando}
