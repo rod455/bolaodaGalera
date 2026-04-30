@@ -45,6 +45,7 @@ const Palpites = () => {
   const scrollTargetRef = useRef<string | null>(searchParams.get("jogo"));
 
   const [bolaoNome, setBolaoNome] = useState("");
+  const [bolaoTema, setBolaoTema] = useState<any>(null);
   const [jogos, setJogos] = useState<Jogo[]>([]);
   const [palpitesDB, setPalpitesDB] = useState<Record<string, PalpiteDB>>({});
   const [palpitesLocal, setPalpitesLocal] = useState<Record<string, { a: number; b: number }>>({});
@@ -258,10 +259,11 @@ const Palpites = () => {
   const loadData = async () => {
     try {
       const { data: bolao } = await supabase
-        .from("boloes").select("nome, campeonato_id, modo_pontuacao, time_favorito, campeonatos(tipo)")
+        .from("boloes").select("nome, campeonato_id, modo_pontuacao, time_favorito, tema, campeonatos(tipo)")
         .eq("id", id).single();
       if (!bolao) { toast.error("Bolão não encontrado"); navigate(`/bolao/${id}`); return; }
       setBolaoNome(bolao.nome);
+      setBolaoTema((bolao as any).tema || null);
 
       const tipo = (bolao.campeonatos as any)?.tipo;
       const leagueMode = tipo === "nacional" || tipo === "estadual";
@@ -497,8 +499,24 @@ const Palpites = () => {
 
   if (loading) return <LoadingSpinner />;
 
+  const t = !!bolaoTema;
+  const temaStyle = bolaoTema ? {
+    "--t-primary": bolaoTema.cor_primaria || "#16a34a",
+    "--t-secondary": bolaoTema.cor_secundaria || "#000",
+    "--t-bg": bolaoTema.cor_fundo || "#0A0A0A",
+    "--t-card": bolaoTema.cor_card || "#1A1A1A",
+    "--t-text": bolaoTema.cor_texto || "#FFF",
+    "--t-muted": bolaoTema.cor_texto_muted || "#999",
+    "--t-border": bolaoTema.cor_borda || bolaoTema.cor_primaria || "#333",
+    "--t-btn": bolaoTema.cor_botao || bolaoTema.cor_primaria || "#16a34a",
+    "--t-btn-text": bolaoTema.cor_botao_texto || "#FFF",
+  } as React.CSSProperties : undefined;
+
   return (
-    <div className="space-y-5 animate-fade-in">
+    <div
+      className={`space-y-5 animate-fade-in ${t ? "rounded-2xl p-4 -mx-4" : ""}`}
+      style={t ? { ...temaStyle, backgroundColor: "var(--t-bg)", color: "var(--t-text)" } : undefined}
+    >
       <SEOHead title="Meus Palpites" noindex />
       {/* ═══ Celebração primeiro palpite (onboarding) ═══ */}
       <FirstPalpiteCelebration
@@ -707,8 +725,10 @@ const Palpites = () => {
               {rodadas.map((r) => (
                 <button key={r} onClick={() => setActiveTab(r)}
                   className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
-                    activeTab === r ? "bg-copa-green-500 text-white shadow-md" : "bg-muted text-muted-foreground hover:bg-muted/80"
-                  }`}>{r.replace("Rodada ", "R")}</button>
+                    t ? "" : activeTab === r ? "bg-copa-green-500 text-white shadow-md" : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  }`}
+                  style={t ? { backgroundColor: activeTab === r ? "var(--t-primary)" : "var(--t-secondary)", color: activeTab === r ? "var(--t-btn-text)" : "var(--t-muted)", borderColor: "var(--t-border)", border: "1px solid var(--t-border)" } : undefined}
+                >{r.replace("Rodada ", "R")}</button>
               ))}
             </div>
           </div>
@@ -721,8 +741,10 @@ const Palpites = () => {
           {fases.map((fase) => (
             <button key={fase} onClick={() => setActiveTab(fase)}
               className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
-                activeTab === fase ? "bg-copa-green-500 text-white shadow-md" : "bg-muted text-muted-foreground hover:bg-muted/80"
-              }`}>{fase}</button>
+                t ? "" : activeTab === fase ? "bg-copa-green-500 text-white shadow-md" : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
+              style={t ? { backgroundColor: activeTab === fase ? "var(--t-primary)" : "var(--t-secondary)", color: activeTab === fase ? "var(--t-btn-text)" : "var(--t-muted)", border: "1px solid var(--t-border)" } : undefined}
+            >{fase}</button>
           ))}
         </div>
       )}
@@ -740,7 +762,7 @@ const Palpites = () => {
           {jogosAbertos.map((jogo) => (
             <PalpiteCard key={jogo.id} jogo={jogo} palpiteDB={palpitesDB[jogo.id] || null}
               localPlacar={palpitesLocal[jogo.id] || { a: 0, b: 0 }} onSetPlacar={setPlacar}
-              onSalvar={salvarPalpite} salvando={salvando === jogo.id} editable />
+              onSalvar={salvarPalpite} salvando={salvando === jogo.id} editable themed={t} />
           ))}
         </div>
       </>)}
@@ -756,7 +778,7 @@ const Palpites = () => {
           {jogosFechados.map((jogo) => (
             <PalpiteCard key={jogo.id} jogo={jogo} palpiteDB={palpitesDB[jogo.id] || null}
               localPlacar={palpitesLocal[jogo.id] || { a: 0, b: 0 }} onSetPlacar={setPlacar}
-              onSalvar={salvarPalpite} salvando={false} editable={false} />
+              onSalvar={salvarPalpite} salvando={false} editable={false} themed={t} />
           ))}
         </div>
       </>)}
@@ -770,7 +792,7 @@ const Palpites = () => {
           {jogosAoVivo.map((jogo) => (
             <PalpiteCard key={jogo.id} jogo={jogo} palpiteDB={palpitesDB[jogo.id] || null}
               localPlacar={palpitesLocal[jogo.id] || { a: 0, b: 0 }} onSetPlacar={setPlacar}
-              onSalvar={salvarPalpite} salvando={false} editable={false} />
+              onSalvar={salvarPalpite} salvando={false} editable={false} themed={t} />
           ))}
         </div>
       </>)}
@@ -784,7 +806,7 @@ const Palpites = () => {
           {jogosEncerrados.map((jogo) => (
             <PalpiteCard key={jogo.id} jogo={jogo} palpiteDB={palpitesDB[jogo.id] || null}
               localPlacar={palpitesLocal[jogo.id] || { a: 0, b: 0 }} onSetPlacar={setPlacar}
-              onSalvar={salvarPalpite} salvando={false} editable={false} />
+              onSalvar={salvarPalpite} salvando={false} editable={false} themed={t} />
           ))}
         </div>
       </>)}
@@ -804,10 +826,10 @@ const Palpites = () => {
   );
 };
 
-const PalpiteCard = ({ jogo, palpiteDB, localPlacar, onSetPlacar, onSalvar, salvando, editable }: {
+const PalpiteCard = ({ jogo, palpiteDB, localPlacar, onSetPlacar, onSalvar, salvando, editable, themed }: {
   jogo: Jogo; palpiteDB: PalpiteDB | null; localPlacar: { a: number; b: number };
   onSetPlacar: (jogoId: string, time: "a" | "b", valor: number) => void;
-  onSalvar: (jogoId: string) => void; salvando: boolean; editable: boolean;
+  onSalvar: (jogoId: string) => void; salvando: boolean; editable: boolean; themed?: boolean;
 }) => {
   const isEncerrado = jogo.status === "encerrado";
   const isAoVivo = jogo.status === "ao_vivo";
@@ -815,10 +837,10 @@ const PalpiteCard = ({ jogo, palpiteDB, localPlacar, onSetPlacar, onSalvar, salv
   const hasChanges = hasPalpite && (localPlacar.a !== palpiteDB!.placar_time_a || localPlacar.b !== palpiteDB!.placar_time_b);
 
   return (
-    <Card id={`jogo-${jogo.id}`} className={`rounded-2xl shadow-sm overflow-hidden transition-all ${!editable && !isEncerrado ? "opacity-75" : ""}`}>
+    <Card id={`jogo-${jogo.id}`} className={`rounded-2xl shadow-sm overflow-hidden transition-all ${!editable && !isEncerrado ? "opacity-75" : ""}`} style={themed ? { backgroundColor: "var(--t-card)", borderColor: "var(--t-border)", color: "var(--t-text)" } : undefined}>
       {(jogo.fase || jogo.rodada) && (
-        <div className={`px-4 py-2 border-b ${isEncerrado ? "bg-gray-50" : "bg-copa-green-50"}`}>
-          <p className={`text-xs font-semibold ${isEncerrado ? "text-gray-500" : "text-copa-green-600"}`}>
+        <div className={`px-4 py-2 border-b ${themed ? "" : isEncerrado ? "bg-gray-50" : "bg-copa-green-50"}`} style={themed ? { backgroundColor: "var(--t-secondary)", borderColor: "var(--t-border)" } : undefined}>
+          <p className={`text-xs font-semibold ${themed ? "" : isEncerrado ? "text-gray-500" : "text-copa-green-600"}`} style={themed ? { color: "var(--t-primary)" } : undefined}>
             {[traduzirFase(jogo.fase), jogo.rodada].filter(Boolean).join(" – ")}
           </p>
         </div>
@@ -853,12 +875,14 @@ const PalpiteCard = ({ jogo, palpiteDB, localPlacar, onSetPlacar, onSalvar, salv
               <input type="number" min="0" max="99" value={localPlacar.a.toString()}
                 onChange={(e) => { const v = parseInt(e.target.value.replace(/^0+(?=\d)/, '')) || 0; onSetPlacar(jogo.id, "a", Math.min(99, Math.max(0, v))); }}
                 onFocus={(e) => e.target.select()}
-                className="w-12 h-12 text-center text-xl font-black border-2 border-copa-green-200 rounded-xl bg-white focus:border-copa-green-500 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                className={`w-12 h-12 text-center text-xl font-black border-2 rounded-xl focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${themed ? "" : "border-copa-green-200 bg-white focus:border-copa-green-500"}`}
+                style={themed ? { borderColor: "var(--t-border)", backgroundColor: "var(--t-secondary)", color: "var(--t-text)" } : undefined} />
               <span className="text-lg font-bold text-muted-foreground">x</span>
               <input type="number" min="0" max="99" value={localPlacar.b.toString()}
                 onChange={(e) => { const v = parseInt(e.target.value.replace(/^0+(?=\d)/, '')) || 0; onSetPlacar(jogo.id, "b", Math.min(99, Math.max(0, v))); }}
                 onFocus={(e) => e.target.select()}
-                className="w-12 h-12 text-center text-xl font-black border-2 border-copa-green-200 rounded-xl bg-white focus:border-copa-green-500 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                className={`w-12 h-12 text-center text-xl font-black border-2 rounded-xl focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${themed ? "" : "border-copa-green-200 bg-white focus:border-copa-green-500"}`}
+                style={themed ? { borderColor: "var(--t-border)", backgroundColor: "var(--t-secondary)", color: "var(--t-text)" } : undefined} />
             </div>
           ) : (
             <div className="flex flex-col items-center gap-1">
@@ -895,7 +919,8 @@ const PalpiteCard = ({ jogo, palpiteDB, localPlacar, onSetPlacar, onSalvar, salv
 
         {editable && (
           <Button onClick={() => onSalvar(jogo.id)} disabled={salvando || (hasPalpite && !hasChanges)}
-            className={`w-full h-11 font-bold rounded-xl ${hasPalpite && !hasChanges ? "bg-copa-green-100 text-copa-green-600 hover:bg-copa-green-200" : "bg-copa-green-500 hover:bg-copa-green-600 text-white"}`}>
+            className={`w-full h-11 font-bold rounded-xl ${themed ? "" : hasPalpite && !hasChanges ? "bg-copa-green-100 text-copa-green-600 hover:bg-copa-green-200" : "bg-copa-green-500 hover:bg-copa-green-600 text-white"}`}
+            style={themed ? { backgroundColor: hasPalpite && !hasChanges ? "var(--t-secondary)" : "var(--t-btn)", color: hasPalpite && !hasChanges ? "var(--t-primary)" : "var(--t-btn-text)", borderColor: "var(--t-border)" } : undefined}>
             {salvando ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
             {hasPalpite && !hasChanges ? "Palpite salvo" : "Salvar palpite"}
           </Button>
