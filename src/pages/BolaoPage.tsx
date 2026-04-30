@@ -1354,30 +1354,26 @@ const BolaoPage = () => {
                     <p className="text-[10px] font-semibold uppercase tracking-wide" style={t ? { color: "var(--t-muted)" } : { color: "#6b7280" }}>Premiação Total</p>
                   </div>
                 </div>
-                {/* Lista de premiação por posição */}
-                <div className="space-y-1.5">
+                {/* Lista de premiação em 2 colunas: 1-5 | 6-10 */}
+                <div className="grid grid-cols-2 gap-1.5">
                   {prem.percentuais.map((pct, i) => {
                     const valor = totalPremio * (pct / 100);
                     const player = ranking[i];
                     const pos = i + 1;
                     return (
-                      <div key={i} className="flex items-center gap-3 px-3 py-2.5 rounded-xl" style={t ? { backgroundColor: "var(--t-secondary)", border: "1px solid var(--t-border)" } : { backgroundColor: i < 3 ? "#fefce8" : "#f9fafb" }}>
-                        <span className={`text-lg font-black w-7 text-center ${i < 3 ? medalColors[i] : ""}`} style={t && i >= 3 ? { color: "var(--t-muted)" } : undefined}>
+                      <div key={i} className="flex items-center gap-2 px-2.5 py-2 rounded-xl" style={t ? { backgroundColor: "var(--t-secondary)", border: "1px solid var(--t-border)" } : { backgroundColor: i < 3 ? "#fefce8" : "#f9fafb" }}>
+                        <span className={`text-sm font-black w-6 text-center flex-shrink-0 ${i < 3 ? medalColors[i] : ""}`} style={t && i >= 3 ? { color: "var(--t-muted)" } : undefined}>
                           {pos}º
                         </span>
-                        {player ? (
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold truncate">{player.nome}</p>
-                            <p className="text-[10px]" style={t ? { color: "var(--t-muted)" } : { color: "#9ca3af" }}>{player.pontos} pts</p>
-                          </div>
-                        ) : (
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm italic" style={t ? { color: "var(--t-muted)" } : { color: "#9ca3af" }}>—</p>
-                          </div>
-                        )}
+                        <div className="flex-1 min-w-0">
+                          {player ? (
+                            <p className="text-xs font-semibold truncate">{player.nome}</p>
+                          ) : (
+                            <p className="text-xs italic" style={t ? { color: "var(--t-muted)" } : { color: "#9ca3af" }}>—</p>
+                          )}
+                        </div>
                         <div className="text-right flex-shrink-0">
-                          <p className="text-sm font-black" style={t ? { color: "var(--t-primary)" } : { color: "#16a34a" }}>R$ {valor.toFixed(2).replace(".", ",")}</p>
-                          <p className="text-[9px]" style={t ? { color: "var(--t-muted)" } : { color: "#9ca3af" }}>{pct}%</p>
+                          <p className="text-xs font-black" style={t ? { color: "var(--t-primary)" } : { color: "#16a34a" }}>R$ {valor.toFixed(2).replace(".", ",")}</p>
                         </div>
                       </div>
                     );
