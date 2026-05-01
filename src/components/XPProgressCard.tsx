@@ -32,7 +32,7 @@ const XPProgressCard = ({ userXP, referralCode, variant = "full" }: XPProgressCa
 
   const getReferralText = () => {
     const url = Capacitor.isNativePlatform() ? getStoreUrl() : getReferralUrl(referralCode ?? "", "whatsapp");
-    return Capacitor.isNativePlatform() ? `🏆 Vem jogar no Bolão na Copa comigo!\n\nQuero ver quem sabe mais do que eu!\n\nBaixe o app: ${url}` : `🏆 Vem jogar no Bolão na Copa comigo!\n\nUse meu código: ${referralCode}\n\nCadastre aqui: ${url}`;
+    return Capacitor.isNativePlatform() ? `🏆 Vem jogar no Bolão da Galera comigo!\n\nQuero ver quem sabe mais do que eu!\n\nBaixe o app: ${url}` : `🏆 Vem jogar no Bolão da Galera comigo!\n\nUse meu código: ${referralCode}\n\nCadastre aqui: ${url}`;
   };
 
   const handleWhatsAppReferral = () => {
@@ -43,7 +43,7 @@ const XPProgressCard = ({ userXP, referralCode, variant = "full" }: XPProgressCa
   const handleCopyReferral = () => {
     if (!referralCode) return;
     if (navigator.share) {
-      navigator.share({ title: "Bolão na Copa", text: getReferralText() }).catch(() => {});
+      navigator.share({ title: "Bolão da Galera", text: getReferralText() }).catch(() => {});
     } else {
       navigator.clipboard.writeText(getReferralText());
       toast.success("Link de convite copiado!");

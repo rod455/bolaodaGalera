@@ -1,4 +1,4 @@
-// ═══ Tipos compartilhados do Bolão na Copa ═══
+// ═══ Tipos compartilhados do Bolão da Galera ═══
 
 export interface Campeonato {
   id?: string;

@@ -25,14 +25,14 @@ const SplashScreen = ({ onFinish }: { onFinish: () => void }) => {
       <div className="splash-logo-container">
         <img
           src={LOGO_URL}
-          alt="Bolão na Copa"
+          alt="Bolão da Galera"
           className="w-44 h-44 object-contain drop-shadow-2xl splash-bounce"
         />
       </div>
 
       {/* Nome do app */}
       <h1 className="text-white text-3xl font-black mt-6 tracking-tight splash-fade-in">
-        Bolão na Copa
+        Bolão da Galera
       </h1>
 
       {/* Subtítulo */}

@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.bolaonacopa.app',
-  appName: 'Bolão na Copa',
+  appName: 'Bolão da Galera',
   webDir: 'dist',
   server: {
     androidScheme: 'https',

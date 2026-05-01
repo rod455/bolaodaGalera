@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-        <string>Bolão na Copa</string>
+        <string>Bolão da Galera</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -92,7 +92,7 @@
 	<key>FacebookClientToken</key>
 	<string>placeholder</string>
 	<key>FacebookDisplayName</key>
-	<string>Bolão na Copa</string>
+	<string>Bolão da Galera</string>
 	<key>FacebookAutoLogAppEventsEnabled</key>
 	<false/>
 	<key>FacebookAdvertiserIDCollectionEnabled</key>

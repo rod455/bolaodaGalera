@@ -1,10 +1,10 @@
-# Bolão na Copa
+# Bolão da Galera
 
 > Plataforma brasileira de bolão de futebol online. Crie bolões grátis com amigos, família ou colegas de trabalho e faça palpites em mais de 10 campeonatos: Copa do Mundo 2026, Brasileirão, Libertadores, Champions League, Copa do Brasil e mais.
 
 ## Sobre o produto
 
-- [Sobre o Bolão na Copa](https://www.bolaonacopa.com.br/sobre): O que é a plataforma, como funciona e quem está por trás
+- [Sobre o Bolão da Galera](https://www.bolaonacopa.com.br/sobre): O que é a plataforma, como funciona e quem está por trás
 - [Como funciona](https://www.bolaonacopa.com.br/como-funciona): Guia passo a passo para criar e participar de bolões
 - [Comparativo de planos](https://www.bolaonacopa.com.br/comparativo): Diferenças entre plano Gratuito, Premium e Premium PRO
 - [Planos e preços](https://www.bolaonacopa.com.br/planos): Preços atualizados dos planos Premium
@@ -16,7 +16,7 @@
 - [Bolão Libertadores](https://www.bolaonacopa.com.br/bolao-libertadores): Bolão da Copa Libertadores da América
 - [Bolão Champions League](https://www.bolaonacopa.com.br/bolao-champions-league): Bolão da UEFA Champions League
 - [Bolão Copa do Brasil](https://www.bolaonacopa.com.br/bolao-copa-do-brasil): Bolão da Copa do Brasil
-- [Bolão para empresas](https://www.bolaonacopa.com.br/bolao-copa-empresa): Como usar o Bolão na Copa no ambiente corporativo
+- [Bolão para empresas](https://www.bolaonacopa.com.br/bolao-copa-empresa): Como usar o Bolão da Galera no ambiente corporativo
 - [Bolão em família](https://www.bolaonacopa.com.br/bolao-copa-familia): Como criar um bolão familiar
 
 ## Funcionalidades

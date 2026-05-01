@@ -53,13 +53,13 @@ const InstallAppBanner = () => {
           {/* App icon */}
           <img
             src="https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/604913%20(512%20x%20512%20px).png"
-            alt="Bolão na Copa"
+            alt="Bolão da Galera"
             className="w-12 h-12 rounded-xl flex-shrink-0"
           />
 
           {/* Info */}
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-gray-900 leading-tight">Bolão na Copa</p>
+            <p className="text-sm font-bold text-gray-900 leading-tight">Bolão da Galera</p>
             <div className="flex items-center gap-1 mt-0.5">
               <div className="flex">
                 {[1, 2, 3, 4, 5].map((i) => (

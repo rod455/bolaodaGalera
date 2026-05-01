@@ -646,7 +646,7 @@ const Home = () => {
     <div className={`space-y-6 animate-fade-in ${!user ? "pb-20" : ""}`}>
       <SEOHead
         title="Bolão de Futebol Grátis | Copa 2026, Campeonatos e mais"
-        description="Bolão na Copa: crie bolões de futebol grátis e dispute com amigos! Palpites em campeonatos nacionais e internacionais, Champions League e mais. Cadastre-se em 10 segundos."
+        description="Bolão da Galera: crie bolões de futebol grátis e dispute com amigos! Palpites em campeonatos nacionais e internacionais, Champions League e mais. Cadastre-se em 10 segundos."
         path="/home"
         keywords="bolão na copa, bolão da copa, bolão de futebol grátis, palpites futebol, bolão brasileirão 2026, bolão copa de futebol 2026, bolão entre amigos"
       />
@@ -885,7 +885,7 @@ const Home = () => {
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-10 translate-x-10 blur-2xl" />
           <div className="relative z-10 space-y-3 flex flex-col items-center">
             <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-2xl">🏆</div>
-            <h3 className="text-xl font-black">Como funciona o Bolão na Copa?</h3>
+            <h3 className="text-xl font-black">Como funciona o Bolão da Galera?</h3>
             <p className="text-xs max-w-sm" style={{ color: "rgba(255,255,255,.7)" }}>
               Crie bolões, faça palpites nos jogos e dispute com amigos. Ranking automático e 7 modos de pontuação.
             </p>

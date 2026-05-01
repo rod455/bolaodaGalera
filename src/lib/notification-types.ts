@@ -1,4 +1,4 @@
-// ═══ Tipos de Notificação do Bolão na Copa ═══
+// ═══ Tipos de Notificação do Bolão da Galera ═══
 
 export type NotificacaoTipo =
   | "palpite_pendente"

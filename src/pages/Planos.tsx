@@ -221,18 +221,18 @@ const Planos = () => {
     <div className="space-y-6 animate-fade-in">
       <SEOHead
         title="Planos Premium — Bolões Ilimitados a partir de R$19,90/mês"
-        description="Desbloqueie modos de pontuação exclusivos, bolões ilimitados, sem anúncios e mais. Bolão na Copa Premium a partir de R$19,90/mês ou R$119,90/ano."
+        description="Desbloqueie modos de pontuação exclusivos, bolões ilimitados, sem anúncios e mais. Bolão da Galera Premium a partir de R$19,90/mês ou R$119,90/ano."
         path="/planos"
         keywords="bolão na copa premium, planos bolão, bolão sem anúncios, bolão ilimitado"
         schema={{
           "@context": "https://schema.org",
           "@type": "Product",
-          "name": "Bolão na Copa Premium",
+          "name": "Bolão da Galera Premium",
           "description": "Planos premium para bolões de futebol ilimitados com modos de pontuação exclusivos e sem anúncios.",
           "url": "https://www.bolaonacopa.com.br/planos",
           "brand": {
             "@type": "Brand",
-            "name": "Bolão na Copa"
+            "name": "Bolão da Galera"
           },
           "offers": [
             {

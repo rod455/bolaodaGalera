@@ -1,4 +1,4 @@
-// ═══ Constantes compartilhadas do Bolão na Copa ═══
+// ═══ Constantes compartilhadas do Bolão da Galera ═══
 
 import type { RegraInfo, ModoConfig } from "./types";
 

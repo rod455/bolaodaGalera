@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Excluir Conta — Bolão na Copa</title>
+  <title>Excluir Conta — Bolão da Galera</title>
   <link rel="icon" type="image/png" href="https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/604913%20(512%20x%20512%20px).png">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
@@ -69,14 +69,14 @@
 <body>
 
 <header>
-  <img src="https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/604913%20(512%20x%20512%20px).png" alt="Bolão na Copa">
+  <img src="https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/604913%20(512%20x%20512%20px).png" alt="Bolão da Galera">
   <h1>Exclusão de Conta</h1>
-  <p>Bolão na Copa</p>
+  <p>Bolão da Galera</p>
 </header>
 
 <div class="container">
   <h2>Solicitar exclusão da conta</h2>
-  <p>Se você deseja excluir sua conta do Bolão na Copa, preencha o formulário abaixo. Você também pode excluir sua conta diretamente pelo aplicativo em <strong>Perfil → Excluir conta</strong>.</p>
+  <p>Se você deseja excluir sua conta do Bolão da Galera, preencha o formulário abaixo. Você também pode excluir sua conta diretamente pelo aplicativo em <strong>Perfil → Excluir conta</strong>.</p>
 
   <div class="warning-box">
     <strong>Atenção:</strong> A exclusão da conta é permanente e irreversível. Ao solicitar a exclusão, os seguintes dados serão removidos:
@@ -127,7 +127,7 @@
 </div>
 
 <footer>
-  Bolão na Copa &copy; 2026 — Todos os direitos reservados.
+  Bolão da Galera &copy; 2026 — Todos os direitos reservados.
 </footer>
 
 <script>
@@ -138,7 +138,7 @@ function handleSubmit(e) {
   const motivo = document.getElementById('motivo').value;
 
   // Envia email via mailto como fallback
-  const subject = encodeURIComponent('Solicitação de Exclusão de Conta - Bolão na Copa');
+  const subject = encodeURIComponent('Solicitação de Exclusão de Conta - Bolão da Galera');
   const body = encodeURIComponent(
     `Solicitação de exclusão de conta\n\nNome: ${nome}\nE-mail: ${email}\nMotivo: ${motivo || 'Não informado'}\n\nConfirmo que desejo excluir minha conta permanentemente.`
   );

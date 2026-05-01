@@ -17,7 +17,7 @@ export const LENDAS: Lenda[] = [
     id: "pele", nome: "Pelé", bandeira: "🇧🇷", emoji: "👑",
     titulo: "Você é PELÉ — o Rei do Futebol!",
     desc: "O maior de todos os tempos. Técnica, genialidade e uma alegria que contagia todos ao redor. Tricampeão mundial porque uma Copa jamais seria suficiente para ele.",
-    share: "Fiz o quiz do Bolão na Copa e sou PELÉ 👑⚽ O Rei! Descobre qual lenda você seria → bolaonacopa.com.br/quiz-lenda",
+    share: "Fiz o quiz do Bolão da Galera e sou PELÉ 👑⚽ O Rei! Descobre qual lenda você seria → bolaonacopa.com.br/quiz-lenda",
   },
   {
     id: "r9", nome: "Ronaldo Fenômeno", bandeira: "🇧🇷", emoji: "⚡",

@@ -19,7 +19,7 @@ export const JOGADORES: Jogador[] = [
     emoji: "🎯",
     titulo: "Você é o CENTROAVANTE — centro das atenções!",
     desc: "Só aparece nas horas certas, mas quando aparece todo mundo fala. Some a semana toda e aparece sexta no bar dizendo 'fui eu que chamei a galera'.",
-    share: "Fiz o quiz do Bolão na Copa e sou o CENTROAVANTE 🎯⚽ Some a semana, aparece na sexta. Descobre qual jogador você seria → bolaonacopa.com.br/quiz-jogador",
+    share: "Fiz o quiz do Bolão da Galera e sou o CENTROAVANTE 🎯⚽ Some a semana, aparece na sexta. Descobre qual jogador você seria → bolaonacopa.com.br/quiz-jogador",
   },
   {
     id: "lateral_direito",

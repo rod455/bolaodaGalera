@@ -11,11 +11,11 @@ interface SEOHeadProps {
 }
 
 const DEFAULTS = {
-  siteName: "Bolão na Copa",
+  siteName: "Bolão da Galera",
   baseUrl: "https://www.bolaonacopa.com.br",
-  defaultTitle: "Bolão na Copa — Bolão de Futebol Grátis | Temporada 2026 e mais",
+  defaultTitle: "Bolão da Galera — Bolão de Futebol Grátis | Temporada 2026 e mais",
   defaultDescription:
-    "Bolão na Copa: crie bolões de futebol grátis e dispute com amigos! Palpites em campeonatos nacionais e internacionais, Champions League e mais. Cadastre-se em 10 segundos.",
+    "Bolão da Galera: crie bolões de futebol grátis e dispute com amigos! Palpites em campeonatos nacionais e internacionais, Champions League e mais. Cadastre-se em 10 segundos.",
   defaultImage:
     "https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/bolao-capas/og-cover.png",
   defaultKeywords:
@@ -31,9 +31,9 @@ const SEOHead = ({
   keywords,
   schema,
 }: SEOHeadProps) => {
-  // Padrão: "Bolão na Copa — {título da página}" para que o nome do site
+  // Padrão: "Bolão da Galera — {título da página}" para que o nome do site
   // apareça primeiro nas buscas do Google
-  const fullTitle = title ? `Bolão na Copa — ${title}` : DEFAULTS.defaultTitle;
+  const fullTitle = title ? `Bolão da Galera — ${title}` : DEFAULTS.defaultTitle;
   const fullUrl = `${DEFAULTS.baseUrl}${path}`;
 
   return (

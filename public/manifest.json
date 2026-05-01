@@ -1,6 +1,6 @@
 {
-  "name": "Bolão na Copa — Palpites de Futebol Grátis",
-  "short_name": "Bolão na Copa",
+  "name": "Bolão da Galera — Palpites de Futebol Grátis",
+  "short_name": "Bolão da Galera",
   "description": "Crie e participe de bolões de futebol grátis. Paulistão, Brasileirão, Copa do Brasil e mais.",
   "start_url": "/home",
   "display": "standalone",

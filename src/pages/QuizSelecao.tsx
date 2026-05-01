@@ -275,7 +275,7 @@ const QuizSelecao = () => {
           <div className="relative z-10 flex flex-col items-center text-center px-5 py-10 space-y-5">
             {/* Logo */}
             <img src="https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/604913%20(512%20x%20512%20px).png"
-              alt="Bolao na Copa" className="w-16 h-16 rounded-2xl"
+              alt="Bolao da Galera" className="w-16 h-16 rounded-2xl"
               style={{ boxShadow: "0 0 30px rgba(250,204,21,.3)" }} />
 
             <div className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-[10px] font-bold uppercase tracking-widest"
@@ -440,7 +440,7 @@ const QuizSelecao = () => {
               <ArrowLeft className="w-5 h-5" />
             </button>
 
-            <img src={LOGO_URL} alt="Bolao na Copa" className="w-[72px] h-[72px] rounded-2xl mb-5"
+            <img src={LOGO_URL} alt="Bolao da Galera" className="w-[72px] h-[72px] rounded-2xl mb-5"
               style={{ boxShadow: "0 0 40px rgba(250,204,21,.3)", animation: "pulse 3s ease-in-out infinite" }} />
 
             <div className="inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[11px] font-bold uppercase tracking-widest mb-4"
@@ -614,7 +614,7 @@ const QuizSelecao = () => {
 
           {/* ── FOOTER ── */}
           <footer className="text-center py-6 text-xs" style={{ color: "rgba(255,255,255,.22)", borderTop: "1px solid rgba(255,255,255,.045)" }}>
-            © 2026 Bolao na Copa · <a href="/privacidade.html" style={{ color: "rgba(255,255,255,.3)" }}>Privacidade</a> · <a href="/home" style={{ color: "rgba(255,255,255,.3)" }}>Abrir no navegador</a>
+            © 2026 Bolao da Galera · <a href="/privacidade.html" style={{ color: "rgba(255,255,255,.3)" }}>Privacidade</a> · <a href="/home" style={{ color: "rgba(255,255,255,.3)" }}>Abrir no navegador</a>
           </footer>
         </div>
 
@@ -941,7 +941,7 @@ const QuizSelecao = () => {
 
           {/* ── Footer ── */}
           <footer className="text-center py-6 text-xs" style={{ color: "rgba(255,255,255,.18)", borderTop: "1px solid rgba(255,255,255,.04)" }}>
-            © 2026 Bolao na Copa · <a href="/privacidade.html" style={{ color: "rgba(255,255,255,.25)", textDecoration: "none" }}>Privacidade</a> · <a href="/home" style={{ color: "rgba(255,255,255,.25)", textDecoration: "none" }}>Abrir o app</a>
+            © 2026 Bolao da Galera · <a href="/privacidade.html" style={{ color: "rgba(255,255,255,.25)", textDecoration: "none" }}>Privacidade</a> · <a href="/home" style={{ color: "rgba(255,255,255,.25)", textDecoration: "none" }}>Abrir o app</a>
           </footer>
         </div>
       </div>

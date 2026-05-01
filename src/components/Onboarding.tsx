@@ -78,9 +78,9 @@ const WelcomeStep = ({
     </div>
 
     <div className="flex-1 flex flex-col items-center justify-center px-8">
-      <img src={LOGO_URL} alt="Bolão na Copa" className="w-24 h-24 object-contain mb-6 drop-shadow-lg" />
+      <img src={LOGO_URL} alt="Bolão da Galera" className="w-24 h-24 object-contain mb-6 drop-shadow-lg" />
       <h1 className="text-3xl font-black text-white text-center leading-tight">
-        Bolão na Copa
+        Bolão da Galera
       </h1>
       <p className="text-copa-green-100 text-center mt-4 text-base leading-relaxed px-4">
         Faça palpites nos jogos com seus amigos.{"\n"}Quem acerta mais, lidera o ranking.

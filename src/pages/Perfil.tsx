@@ -655,7 +655,7 @@ const Perfil = () => {
             <Button
               onClick={() => {
                 const url = Capacitor.isNativePlatform() ? getStoreUrl() : (referralCode ? getReferralUrl(referralCode, "whatsapp") : "https://www.bolaonacopa.com.br/auth?utm_source=convite&utm_medium=whatsapp");
-                const text = `🏆 Vem jogar no Bolão na Copa! Faça seus palpites e dispute com seus amigos. Cadastre-se aqui: ${url}`;
+                const text = `🏆 Vem jogar no Bolão da Galera! Faça seus palpites e dispute com seus amigos. Cadastre-se aqui: ${url}`;
                 shareViaWhatsApp(text);
               }}
               className="flex-1 h-11 bg-[#25D366] hover:bg-[#1da851] text-white font-semibold rounded-xl"

@@ -286,7 +286,7 @@ const QuizJogador = () => {
           </section>
 
           <footer className="text-center py-6 text-xs" style={{ color: "rgba(255,255,255,.22)", borderTop: "1px solid rgba(255,255,255,.045)" }}>
-            © 2026 Bolão na Copa · <a href="/privacidade.html" style={{ color: "rgba(255,255,255,.3)" }}>Privacidade</a> · <a href="/quiz" style={{ color: "rgba(255,255,255,.3)" }}>Outros quizzes</a>
+            © 2026 Bolão da Galera · <a href="/privacidade.html" style={{ color: "rgba(255,255,255,.3)" }}>Privacidade</a> · <a href="/quiz" style={{ color: "rgba(255,255,255,.3)" }}>Outros quizzes</a>
           </footer>
         </div>
       </div>
@@ -489,7 +489,7 @@ const QuizJogador = () => {
           </section>
 
           <footer className="text-center py-6 text-xs" style={{ color: "rgba(255,255,255,.18)", borderTop: "1px solid rgba(255,255,255,.04)" }}>
-            © 2026 Bolão na Copa · <a href="/privacidade.html" style={{ color: "rgba(255,255,255,.25)", textDecoration: "none" }}>Privacidade</a> · <a href="/quiz" style={{ color: "rgba(255,255,255,.25)", textDecoration: "none" }}>Outros quizzes</a>
+            © 2026 Bolão da Galera · <a href="/privacidade.html" style={{ color: "rgba(255,255,255,.25)", textDecoration: "none" }}>Privacidade</a> · <a href="/quiz" style={{ color: "rgba(255,255,255,.25)", textDecoration: "none" }}>Outros quizzes</a>
           </footer>
         </div>
       </div>

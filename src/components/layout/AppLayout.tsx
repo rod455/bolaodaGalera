@@ -64,8 +64,8 @@ const AppLayout = () => {
         style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
         <div className="container max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={LOGO_URL} alt="Bolão na Copa" className="w-10 h-10 object-contain" />
-            <h1 className="text-lg font-bold tracking-tight">Bolão na Copa</h1>
+            <img src={LOGO_URL} alt="Bolão da Galera" className="w-10 h-10 object-contain" />
+            <h1 className="text-lg font-bold tracking-tight">Bolão da Galera</h1>
           </div>
           <div className="flex items-center gap-2">
             {isLoggedIn ? (
@@ -132,8 +132,8 @@ const AppLayout = () => {
         style={{ paddingTop: "max(2rem, env(safe-area-inset-top, 2rem))" }}>
         <div className="container max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3" onClick={() => navigate("/home")} style={{ cursor: "pointer" }}>
-            <img src={LOGO_URL} alt="Bolão na Copa" className="w-9 h-9 object-contain" />
-            <h1 className="text-lg font-bold tracking-tight">Bolão na Copa</h1>
+            <img src={LOGO_URL} alt="Bolão da Galera" className="w-9 h-9 object-contain" />
+            <h1 className="text-lg font-bold tracking-tight">Bolão da Galera</h1>
           </div>
           {isLoggedIn ? (
             <NotificationCenter />
@@ -205,7 +205,7 @@ const AppLayout = () => {
 
       {/* Footer - desktop only */}
       <footer className="text-center py-4 text-xs text-muted-foreground border-t hidden md:block space-y-1">
-        <p>Bolão na Copa &copy; {new Date().getFullYear()}</p>
+        <p>Bolão da Galera &copy; {new Date().getFullYear()}</p>
         <p className="text-[10px] opacity-60">Aplicativo independente, sem vínculo ou afiliação com FIFA, CBF, UEFA ou qualquer entidade esportiva oficial.</p>
       </footer>
     </div>

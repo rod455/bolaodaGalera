@@ -932,7 +932,7 @@ const BolaoPage = () => {
       {xpToast && <XPToast xp={xpToast.xp} message={xpToast.msg} onDone={() => setXPToast(null)} />}
       <SEOHead
         title={bolao ? `Bolão ${bolao.nome}` : "Bolão"}
-        description={bolao ? `Participe do bolão ${bolao.nome} e faça seus palpites!` : "Bolão na Copa"}
+        description={bolao ? `Participe do bolão ${bolao.nome} e faça seus palpites!` : "Bolão da Galera"}
         path={`/bolao/${id}`}
         schema={bolao ? {
           "@context": "https://schema.org",
@@ -942,7 +942,7 @@ const BolaoPage = () => {
           "url": `https://www.bolaonacopa.com.br/bolao/${id}`,
           "organizer": {
             "@type": "Organization",
-            "name": "Bolão na Copa",
+            "name": "Bolão da Galera",
             "url": "https://www.bolaonacopa.com.br"
           }
         } : undefined}

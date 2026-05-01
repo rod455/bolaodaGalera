@@ -115,7 +115,7 @@ export default function FeedbackBanner({ className }: Props) {
       {step === "stars" && (
         <div className="text-center space-y-3">
           <p className="text-sm font-bold text-foreground">
-            O que você acha do Bolão na Copa?
+            O que você acha do Bolão da Galera?
           </p>
           <p className="text-xs text-muted-foreground">
             Sua opinião nos ajuda a melhorar

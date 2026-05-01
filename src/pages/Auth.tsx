@@ -280,7 +280,7 @@ const Auth = () => {
     <div className="min-h-screen bg-copa-green-500 flex flex-col items-center justify-start p-6 overflow-y-auto pt-8 pb-[40vh]">
       <SEOHead
         title="Criar Conta Grátis ou Entrar"
-        description="Crie sua conta grátis no Bolão na Copa e comece a palpitar nos jogos de futebol nacionais e internacionais, Champions League e mais. Cadastro em 10 segundos."
+        description="Crie sua conta grátis no Bolão da Galera e comece a palpitar nos jogos de futebol nacionais e internacionais, Champions League e mais. Cadastro em 10 segundos."
         path="/auth"
         keywords="criar conta bolão, bolão na copa cadastro, bolão grátis, login bolão da copa"
       />
@@ -291,7 +291,7 @@ const Auth = () => {
         {/* Logo */}
         <div className="flex flex-col items-center gap-3">
           <img src="https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/604913%20(512%20x%20512%20px).png"
-            alt="Bolão na Copa" className="w-44 h-44 object-contain drop-shadow-lg" />
+            alt="Bolão da Galera" className="w-44 h-44 object-contain drop-shadow-lg" />
           <p className="text-copa-green-100 text-sm">
             {isResettingPassword ? "Defina sua nova senha" : isForgotPassword ? "Recupere sua senha" : isLogin ? "Seu palpite, sua torcida, sua galera." : "Crie sua conta grátis em segundos"}
           </p>

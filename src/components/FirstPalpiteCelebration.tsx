@@ -88,8 +88,8 @@ const FirstPalpiteCelebration = ({
   // Mensagem WhatsApp contextual com o palpite real
   const whatsappText = [
     palpiteResumo
-      ? `🎯 Acabei de palpitar ${palpiteResumo} no Bolão na Copa!`
-      : `🏆 Acabei de fazer meu primeiro palpite no Bolão na Copa!`,
+      ? `🎯 Acabei de palpitar ${palpiteResumo} no Bolão da Galera!`
+      : `🏆 Acabei de fazer meu primeiro palpite no Bolão da Galera!`,
     `\nSer\u00e1 que voc\u00ea consegue me superar? 😏`,
     bolaoNome ? `\n\n⚽ Bol\u00e3o: ${bolaoNome}` : "",
     bolaoCode ? `\n📋 C\u00f3digo: ${bolaoCode}` : "",

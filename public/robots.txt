@@ -1,4 +1,4 @@
-# Bolão na Copa - robots.txt
+# Bolão da Galera - robots.txt
 
 User-agent: *
 Allow: /
