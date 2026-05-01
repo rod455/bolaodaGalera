@@ -853,7 +853,7 @@ const Home = () => {
         })()}
 
         <div className="space-y-4">
-          {(user ? nacionais : []).map((b, i) => {
+          {(user ? nacionais : nacionais.filter(b => b.id === "e83a2ff7-e76f-4b9d-ba76-f9a889e6b6c0")).map((b, i) => {
             const isPaulistao = b.id === PAULISTAO_BOLAO_ID;
             const card = (
               <NacionalCard key={b.id} bolao={b} participantes={participantesCount[b.id] || 0}
