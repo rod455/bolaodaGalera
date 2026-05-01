@@ -16,9 +16,9 @@ workflows:
 
     triggering:
       events:
-        - tag
-      tag_patterns:
-        - pattern: 'ios-v*'
+        - push
+      branch_patterns:
+        - pattern: 'ios/release'
           include: true
 
     scripts:
