@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Qual lenda da Copa você seria? — Bolão na Copa</title>
+  <meta name="description" content="Pelé, Zidane, Maradona ou Ronaldo Fenômeno? Responda 10 perguntas e descubra qual lenda da Copa do Mundo você seria. Quiz grátis!">
+  <meta property="og:title" content="Qual lenda da Copa você seria?">
+  <meta property="og:description" content="Pelé, Zidane, Maradona ou Ronaldo Fenômeno? 10 perguntas revelam sua lenda. Quiz grátis!">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://www.bolaonacopa.com.br/quiz-lenda">
+  <link rel="icon" type="image/png" href="https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/604913%20(512%20x%20512%20px).png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Bebas+Neue&family=Barlow+Condensed:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #071410; color: #fff; overflow-x: hidden; }
+    .grid-bg { position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background: repeating-linear-gradient(90deg,transparent,transparent 60px,rgba(255,255,255,.018) 60px,rgba(255,255,255,.018) 61px),
+                  repeating-linear-gradient(0deg,transparent,transparent 60px,rgba(255,255,255,.018) 60px,rgba(255,255,255,.018) 61px); }
+    .hero { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 48px 20px; text-align: center;
+      background: radial-gradient(ellipse at 50% 0%, rgba(22,163,74,.38) 0%, transparent 68%); }
+    .logo { width: 72px; height: 72px; border-radius: 16px; margin-bottom: 20px;
+      box-shadow: 0 0 40px rgba(250,204,21,.3); animation: pulse 3s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { box-shadow: 0 0 20px rgba(250,204,21,.2); } 50% { box-shadow: 0 0 55px rgba(250,204,21,.55); } }
+    .chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 6px 16px;
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;
+      background: rgba(250,204,21,.14); border: 1px solid rgba(250,204,21,.38); color: #facc15; margin-bottom: 16px; }
+    h1 { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.8rem,11vw,6.5rem); line-height: .88;
+      text-shadow: 0 4px 28px rgba(0,0,0,.45); margin-bottom: 8px; }
+    h1 span { color: #facc15; }
+    .subtitle { max-width: 480px; margin: 12px auto 0; font-size: clamp(.95rem,2.8vw,1.15rem); line-height: 1.6; color: rgba(255,255,255,.72); }
+    .subtitle strong { color: #fff; }
+    .legends-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-width: 480px; margin: 32px auto 0; }
+    .legend-chip { display: flex; align-items: center; gap: 6px; border-radius: 999px; padding: 6px 14px;
+      font-size: 13px; font-weight: 600; background: rgba(255,255,255,.065); border: 1px solid rgba(255,255,255,.09); color: rgba(255,255,255,.78); }
+    .legend-chip.blur { filter: blur(5px); user-select: none; }
+    .cta { display: inline-flex; align-items: center; justify-content: center; gap: 12px; width: 100%; max-width: 330px;
+      padding: 16px; border-radius: 16px; border: none; cursor: pointer; font-family: 'Inter', sans-serif;
+      font-weight: 900; font-size: 16px; background: #facc15; color: #14532d;
+      box-shadow: 0 8px 28px rgba(250,204,21,.33); transition: transform .15s; margin-top: 40px; text-decoration: none; }
+    .cta:hover { transform: translateY(-2px); }
+    .social { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 28px; }
+    .social .avatars { display: flex; }
+    .social .avatars span { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700; background: #15803d; border: 2px solid #071410; color: #fff; margin-left: -6px; }
+    .social .avatars span:first-child { margin-left: 0; }
+    .social p { font-size: 12px; color: rgba(255,255,255,.58); }
+    .social strong { color: #facc15; }
+    .strip { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; padding: 14px 20px;
+      font-size: 12px; background: rgba(250,204,21,.07); border-top: 1px solid rgba(250,204,21,.15);
+      border-bottom: 1px solid rgba(250,204,21,.15); color: rgba(255,255,255,.6); }
+    .strip strong { color: #facc15; }
+    footer { text-align: center; padding: 24px; font-size: 12px; color: rgba(255,255,255,.22);
+      border-top: 1px solid rgba(255,255,255,.045); }
+    footer a { color: rgba(255,255,255,.3); text-decoration: none; }
+    @media (max-width: 640px) { .hero { padding: 32px 16px; } }
+  </style>
+</head>
+<body>
+  <div class="grid-bg"></div>
+  <section class="hero">
+    <img class="logo" src="https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/604913%20(512%20x%20512%20px).png" alt="Bolao na Copa">
+    <div class="chip">👑 25 lendas · Copa do Mundo</div>
+    <h1>Qual lenda da Copa<br><span>você seria?</span></h1>
+    <p class="subtitle">
+      10 perguntas revelam qual das <strong>25 maiores lendas</strong> do futebol mundial combina com o seu estilo de jogo. Pelé, Zidane, Maradona ou alguém que você não esperava?
+    </p>
+    <div class="legends-grid">
+      <span class="legend-chip">👑 Pelé</span>
+      <span class="legend-chip">⚡ Ronaldo</span>
+      <span class="legend-chip">🐐 Messi</span>
+      <span class="legend-chip blur">🔥 Maradona</span>
+      <span class="legend-chip blur">🎩 Zidane</span>
+      <span class="legend-chip blur">💪 CR7</span>
+      <span class="legend-chip blur">😁 Ronaldinho</span>
+      <span class="legend-chip blur">🎯 Romário</span>
+      <span class="legend-chip blur">💨 Mbappé</span>
+      <span class="legend-chip blur">+16 lendas</span>
+    </div>
+    <a class="cta" href="/quiz?quiz=lenda&start=true">⚽ Começar o Quiz — Grátis</a>
+    <div class="social">
+      <div class="avatars"><span>M</span><span>J</span><span>A</span><span>R</span><span>+</span></div>
+      <p><strong>+3.200 pessoas</strong> já descobriram sua lenda hoje</p>
+    </div>
+  </section>
+  <div class="strip">
+    <span>👑 <strong>25 lendas</strong> possíveis</span>
+    <span>🎯 <strong>10 perguntas</strong> precisas</span>
+    <span>🔥 <strong>100% grátis</strong></span>
+    <span>📊 <strong>Ranking</strong> ao vivo no bolão</span>
+  </div>
+  <footer>
+    &copy; 2026 Bolão na Copa &middot; <a href="/privacidade.html">Privacidade</a> &middot; <a href="/home">Abrir o app</a>
+  </footer>
+</body>
+</html>

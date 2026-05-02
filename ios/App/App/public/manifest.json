@@ -1,0 +1,20 @@
+{
+  "name": "Bolão na Copa — Palpites de Futebol Grátis",
+  "short_name": "Bolão na Copa",
+  "description": "Crie e participe de bolões de futebol grátis. Paulistão, Brasileirão, Copa do Brasil e mais.",
+  "start_url": "/home",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#16a34a",
+  "orientation": "portrait",
+  "lang": "pt-BR",
+  "categories": ["sports", "entertainment", "games"],
+  "icons": [
+    {
+      "src": "https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/604913%20(512%20x%20512%20px).png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

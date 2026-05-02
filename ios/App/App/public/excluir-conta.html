@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Excluir Conta — Bolão na Copa</title>
+  <link rel="icon" type="image/png" href="https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/604913%20(512%20x%20512%20px).png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --green-700: #1B5E20;
+      --green-500: #2E7D32;
+      --green-50: #E8F5E9;
+      --red-500: #DC2626;
+      --red-50: #FEF2F2;
+      --text: #1a1a1a;
+      --text-muted: #6b7280;
+      --bg: #FAFDF7;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+    header {
+      background: linear-gradient(135deg, var(--green-700), var(--green-500));
+      color: white; padding: 2.5rem 1.5rem; text-align: center;
+    }
+    header img { width: 72px; height: 72px; object-fit: contain; margin-bottom: 1rem; }
+    header h1 { font-size: 1.75rem; font-weight: 800; margin-bottom: 0.25rem; }
+    header p { opacity: 0.85; font-size: 0.9rem; }
+    .container { max-width: 600px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+    h2 { font-size: 1.2rem; font-weight: 700; color: var(--green-700); margin: 1.5rem 0 0.75rem; }
+    p, li { font-size: 0.95rem; color: #374151; margin-bottom: 0.75rem; }
+    ul { padding-left: 1.25rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.4rem; }
+    .warning-box {
+      background: var(--red-50); border-left: 4px solid var(--red-500);
+      padding: 1rem 1.25rem; border-radius: 0 0.5rem 0.5rem 0; margin: 1.5rem 0; font-size: 0.9rem;
+    }
+    .info-box {
+      background: var(--green-50); border-left: 4px solid var(--green-500);
+      padding: 1rem 1.25rem; border-radius: 0 0.5rem 0.5rem 0; margin: 1.5rem 0; font-size: 0.9rem;
+    }
+    .form-group { margin-bottom: 1.25rem; }
+    label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--text); }
+    input, textarea {
+      width: 100%; padding: 0.75rem 1rem; border: 2px solid #e5e7eb; border-radius: 0.75rem;
+      font-family: inherit; font-size: 0.95rem; transition: border-color 0.2s;
+    }
+    input:focus, textarea:focus { outline: none; border-color: var(--green-500); }
+    textarea { resize: vertical; min-height: 80px; }
+    .btn {
+      display: block; width: 100%; padding: 0.875rem; border: none; border-radius: 0.75rem;
+      font-family: inherit; font-size: 1rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-danger { background: var(--red-500); color: white; }
+    .btn-danger:hover { background: #B91C1C; }
+    .btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }
+    .success-msg {
+      display: none; text-align: center; padding: 2rem;
+      background: var(--green-50); border-radius: 1rem; margin-top: 1.5rem;
+    }
+    .success-msg h3 { color: var(--green-700); margin-bottom: 0.5rem; }
+    footer {
+      text-align: center; padding: 2rem 1.5rem; font-size: 0.8rem;
+      color: var(--text-muted); border-top: 1px solid #e5e7eb;
+    }
+    a { color: var(--green-500); }
+  </style>
+</head>
+<body>
+
+<header>
+  <img src="https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/604913%20(512%20x%20512%20px).png" alt="Bolão na Copa">
+  <h1>Exclusão de Conta</h1>
+  <p>Bolão na Copa</p>
+</header>
+
+<div class="container">
+  <h2>Solicitar exclusão da conta</h2>
+  <p>Se você deseja excluir sua conta do Bolão na Copa, preencha o formulário abaixo. Você também pode excluir sua conta diretamente pelo aplicativo em <strong>Perfil → Excluir conta</strong>.</p>
+
+  <div class="warning-box">
+    <strong>Atenção:</strong> A exclusão da conta é permanente e irreversível. Ao solicitar a exclusão, os seguintes dados serão removidos:
+    <ul style="margin-top: 0.5rem; margin-bottom: 0;">
+      <li>Seus dados pessoais (nome, e-mail, foto de perfil)</li>
+      <li>Todos os seus palpites e histórico</li>
+      <li>Participação em bolões</li>
+      <li>Assinatura Premium (se houver)</li>
+    </ul>
+  </div>
+
+  <div id="form-section">
+    <form id="deleteForm" onsubmit="handleSubmit(event)">
+      <div class="form-group">
+        <label for="email">E-mail da conta</label>
+        <input type="email" id="email" placeholder="seu@email.com" required>
+      </div>
+      <div class="form-group">
+        <label for="nome">Nome completo</label>
+        <input type="text" id="nome" placeholder="Seu nome" required>
+      </div>
+      <div class="form-group">
+        <label for="motivo">Motivo (opcional)</label>
+        <textarea id="motivo" placeholder="Conte-nos por que deseja excluir sua conta..."></textarea>
+      </div>
+      <div class="form-group" style="display: flex; align-items: flex-start; gap: 0.5rem;">
+        <input type="checkbox" id="confirma" required style="width: auto; margin-top: 0.35rem;">
+        <label for="confirma" style="font-weight: 400; font-size: 0.85rem; margin-bottom: 0;">
+          Confirmo que desejo excluir minha conta e entendo que esta ação é <strong>permanente e irreversível</strong>.
+        </label>
+      </div>
+      <button type="submit" class="btn btn-danger" id="submitBtn">Solicitar exclusão da conta</button>
+    </form>
+  </div>
+
+  <div class="success-msg" id="success-msg">
+    <h3>Solicitação enviada!</h3>
+    <p>Recebemos sua solicitação de exclusão. Seus dados serão removidos em até <strong>30 dias</strong>.</p>
+    <p>Você receberá uma confirmação por e-mail.</p>
+  </div>
+
+  <div class="info-box">
+    <strong>Prazo:</strong> Sua conta será excluída em até 30 dias após a solicitação. Dados anonimizados para fins estatísticos poderão ser mantidos conforme nossa <a href="/privacidade.html">Política de Privacidade</a>.
+  </div>
+
+  <h2>Contato</h2>
+  <p>Em caso de dúvidas, entre em contato: <strong>appfactory.rlm@gmail.com</strong></p>
+</div>
+
+<footer>
+  Bolão na Copa &copy; 2026 — Todos os direitos reservados.
+</footer>
+
+<script>
+function handleSubmit(e) {
+  e.preventDefault();
+  const email = document.getElementById('email').value;
+  const nome = document.getElementById('nome').value;
+  const motivo = document.getElementById('motivo').value;
+
+  // Envia email via mailto como fallback
+  const subject = encodeURIComponent('Solicitação de Exclusão de Conta - Bolão na Copa');
+  const body = encodeURIComponent(
+    `Solicitação de exclusão de conta\n\nNome: ${nome}\nE-mail: ${email}\nMotivo: ${motivo || 'Não informado'}\n\nConfirmo que desejo excluir minha conta permanentemente.`
+  );
+  window.location.href = `mailto:appfactory.rlm@gmail.com?subject=${subject}&body=${body}`;
+
+  // Mostra mensagem de sucesso
+  document.getElementById('form-section').style.display = 'none';
+  document.getElementById('success-msg').style.display = 'block';
+}
+</script>
+
+</body>
+</html>
