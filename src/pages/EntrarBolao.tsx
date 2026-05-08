@@ -300,13 +300,29 @@ const EntrarBolao = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <SEOHead title="Entrar em Bolão" path="/entrar" noindex />
+      <SEOHead title="Grupos" path="/entrar" noindex />
       <div>
-        <h2 className="text-2xl font-bold text-foreground">Entrar no Grupo</h2>
+        <h2 className="text-2xl font-bold text-foreground">Grupos</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Use um código ou encontre grupos públicos
+          {userBolaoIds.size > 0 ? "Encontre novos grupos ou crie o seu" : "Crie seu primeiro grupo ou entre em um existente"}
         </p>
       </div>
+
+      {/* Empty state — sem grupos */}
+      {!loading && userBolaoIds.size === 0 && (
+        <div className="text-center py-8 space-y-4">
+          <div className="w-16 h-16 bg-copa-green-100 rounded-full flex items-center justify-center mx-auto">
+            <Users className="w-8 h-8 text-copa-green-500" />
+          </div>
+          <div>
+            <p className="text-lg font-bold">Você ainda não está em nenhum grupo</p>
+            <p className="text-sm text-muted-foreground mt-1">Crie um grupo e convide seus amigos!</p>
+          </div>
+          <Button onClick={() => navigate("/criar")} className="bg-copa-green-500 hover:bg-copa-green-600 text-white font-bold rounded-xl px-6">
+            <PlusCircle className="w-4 h-4 mr-2" /> Criar meu primeiro grupo
+          </Button>
+        </div>
+      )}
 
       {/* Quick Actions */}
       <div className="grid grid-cols-2 gap-3">

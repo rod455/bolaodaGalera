@@ -1,5 +1,5 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Home, PlusCircle, Radio, User, LogOut, LogIn, HelpCircle, Globe } from "lucide-react";
+import { Home, User, Users, LogOut, Globe } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -20,20 +20,12 @@ const AppLayout = () => {
 
   const isLoggedIn = !!user;
 
-  const navItems = isLoggedIn
-    ? [
-        { path: "/home", label: "Home", icon: Home },
-        { path: "/quiz", label: "Quiz na Copa", icon: Globe },
-        { path: "/criar", label: "Novo Grupo", icon: PlusCircle },
-        { path: "/ao-vivo", label: "Ao Vivo", icon: Radio },
-        { path: "/perfil", label: "Perfil", icon: User },
-      ]
-    : [
-        { path: "/home", label: "Home", icon: Home },
-        { path: "/quiz", label: "Quiz na Copa", icon: Globe },
-        { path: "/como-funciona", label: "Como Funciona", icon: HelpCircle },
-        { path: "/auth?modo=cadastro", label: "Criar Conta", icon: LogIn },
-      ];
+  const navItems = [
+    { path: "/home", label: "Home", icon: Home },
+    { path: "/entrar", label: "Grupos", icon: Users },
+    { path: "/quiz", label: "Quiz", icon: Globe },
+    { path: "/perfil", label: "Perfil", icon: User },
+  ];
 
   const isActive = (path: string) => {
     const basePath = path.split("?")[0];
