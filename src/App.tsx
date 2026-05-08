@@ -37,14 +37,14 @@ import { showAppOpenAd } from "@/hooks/useRewardedAd";
 
 const queryClient = new QueryClient();
 
-/** Redireciona / para /home preservando o hash */
+/** Redireciona / para /auth (deslogado) ou /home (logado), preservando hash OAuth */
 const RootRedirect = () => {
   const hash = window.location.hash;
   if (hash && (hash.includes("access_token") || hash.includes("type=signup") || hash.includes("type=recovery"))) {
     window.location.replace("/home" + hash);
     return null;
   }
-  return <Navigate to="/home" replace />;
+  return <Navigate to="/auth" replace />;
 };
 
 // Rotas onde o botao voltar deve fechar o app
@@ -193,28 +193,8 @@ const App = () => {
             <Routes>
               <Route path="/" element={<RootRedirect />} />
               <Route path="/auth" element={<Auth />} />
-              {/* Rota pública de descadastro — sem autenticação */}
               <Route path="/unsubscribe" element={<Unsubscribe />} />
-              {/* Planos — acessível sem login */}
-              <Route path="/planos" element={<AppLayout />}>
-                <Route index element={<Planos />} />
-              </Route>
-              <Route path="/home" element={<AppLayout />}>
-                <Route index element={<Home />} />
-              </Route>
-              {/* Quiz — acessível sem login (mostra CTA de cadastro se guest) */}
-              <Route path="/quiz" element={<AppLayout />}>
-                <Route index element={<Quiz />} />
-              </Route>
-              <Route path="/quiz/selecao" element={<AppLayout />}>
-                <Route index element={<QuizSelecao />} />
-              </Route>
-              <Route path="/quiz/lenda" element={<AppLayout />}>
-                <Route index element={<QuizLenda />} />
-              </Route>
-              <Route path="/quiz/jogador" element={<AppLayout />}>
-                <Route index element={<QuizJogador />} />
-              </Route>
+              {/* Todas as rotas exigem login */}
               <Route
                 element={
                   <ProtectedRoute>
@@ -222,6 +202,12 @@ const App = () => {
                   </ProtectedRoute>
                 }
               >
+                <Route path="/home" element={<Home />} />
+                <Route path="/planos" element={<Planos />} />
+                <Route path="/quiz" element={<Quiz />} />
+                <Route path="/quiz/selecao" element={<QuizSelecao />} />
+                <Route path="/quiz/lenda" element={<QuizLenda />} />
+                <Route path="/quiz/jogador" element={<QuizJogador />} />
                 <Route path="/criar" element={<CriarBolao />} />
                 <Route path="/entrar" element={<EntrarBolao />} />
                 <Route path="/ao-vivo" element={<AoVivo />} />
