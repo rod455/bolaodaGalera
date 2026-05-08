@@ -405,6 +405,28 @@ const CriarBolao = () => {
               onBlur={() => { if (nome.trim()) scrollToSection("section-pontuacao"); }}
               className="h-11 rounded-xl bg-muted/50" />
           </div>
+
+          {/* Imagem de capa */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Imagem de capa <span className="text-xs text-muted-foreground font-normal">(opcional)</span></Label>
+            <label className="cursor-pointer block hover:opacity-80 transition-opacity">
+              {imagemPreview ? (
+                <div className="relative w-full">
+                  <img src={imagemPreview} alt="Preview" className="w-full h-32 object-cover rounded-xl" />
+                  <button onClick={(e) => { e.preventDefault(); setImagemFile(null); setImagemPreview(null); setImagemMobileFile(null); setImagemMobilePreview(null); }}
+                    className="absolute top-2 right-2 w-6 h-6 bg-black/50 rounded-full flex items-center justify-center hover:bg-black/70 transition-colors">
+                    <X className="w-3.5 h-3.5 text-white" />
+                  </button>
+                </div>
+              ) : (
+                <div className="w-full h-32 bg-copa-green-50 border-2 border-dashed border-copa-green-200 rounded-xl flex flex-col items-center justify-center gap-2">
+                  <Upload className="w-6 h-6 text-copa-green-400" />
+                  <span className="text-xs text-muted-foreground">Toque para adicionar uma foto</span>
+                </div>
+              )}
+              <input type="file" accept="image/*" className="hidden" onChange={(e) => { handleImagemChange(e); handleImagemMobileChange(e); }} />
+            </label>
+          </div>
         </CardContent>
       </Card>
 
@@ -635,57 +657,7 @@ const CriarBolao = () => {
         </div>
       )}
 
-      {/* 4. Upload Cover — Web + Mobile */}
-      <Card id="section-imagem" className="border-dashed border-2 border-copa-green-200 rounded-2xl">
-        <CardContent className="py-6 space-y-4">
-          <p className="text-sm font-semibold text-center text-copa-green-700">Imagem de capa <span className="text-xs text-muted-foreground/60 font-normal">(opcional)</span></p>
-          <div className="grid grid-cols-2 gap-3">
-            {/* Web */}
-            <div className="space-y-2">
-              <p className="text-xs font-semibold text-center text-muted-foreground">Web (16:9)</p>
-              <label className="cursor-pointer flex flex-col items-center hover:opacity-80 transition-opacity">
-                {imagemPreview ? (
-                  <div className="relative w-full">
-                    <img src={imagemPreview} alt="Preview Web" className="w-full h-24 object-cover rounded-lg" />
-                    <button onClick={(e) => { e.preventDefault(); setImagemFile(null); setImagemPreview(null); }}
-                      className="absolute top-1 right-1 w-5 h-5 bg-black/50 rounded-full flex items-center justify-center hover:bg-black/70 transition-colors">
-                      <X className="w-3 h-3 text-white" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="w-full h-24 bg-copa-green-50 border-2 border-dashed border-copa-green-200 rounded-lg flex flex-col items-center justify-center gap-1">
-                    <Upload className="w-5 h-5 text-copa-green-400" />
-                    <span className="text-[10px] text-muted-foreground">1200 x 675px</span>
-                  </div>
-                )}
-                <input type="file" accept="image/*" className="hidden" onChange={handleImagemChange} />
-              </label>
-            </div>
-            {/* Mobile */}
-            <div className="space-y-2">
-              <p className="text-xs font-semibold text-center text-muted-foreground">Mobile (4:3)</p>
-              <label className="cursor-pointer flex flex-col items-center hover:opacity-80 transition-opacity">
-                {imagemMobilePreview ? (
-                  <div className="relative w-full">
-                    <img src={imagemMobilePreview} alt="Preview Mobile" className="w-full h-24 object-cover rounded-lg" />
-                    <button onClick={(e) => { e.preventDefault(); setImagemMobileFile(null); setImagemMobilePreview(null); }}
-                      className="absolute top-1 right-1 w-5 h-5 bg-black/50 rounded-full flex items-center justify-center hover:bg-black/70 transition-colors">
-                      <X className="w-3 h-3 text-white" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="w-full h-24 bg-copa-green-50 border-2 border-dashed border-copa-green-200 rounded-lg flex flex-col items-center justify-center gap-1">
-                    <Upload className="w-5 h-5 text-copa-green-400" />
-                    <span className="text-[10px] text-muted-foreground">900 x 675px</span>
-                  </div>
-                )}
-                <input type="file" accept="image/*" className="hidden" onChange={handleImagemMobileChange} />
-              </label>
-            </div>
-          </div>
-          <p className="text-[10px] text-center text-muted-foreground/60">Se enviar apenas uma, ela será usada em ambas as plataformas.</p>
-        </CardContent>
-      </Card>
+      {/* Seção 4 de imagem removida — agora está dentro de Informações Básicas */}
 
       {/* 5. Aprovação de entrada (Premium) */}
       <div className={`flex items-center justify-between p-4 rounded-2xl border ${isPremiumUser ? "bg-white border-gray-200" : "bg-gray-50 border-gray-100 opacity-60"}`}>
