@@ -395,17 +395,6 @@ const CriarBolao = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Nome do Grupo</Label>
-            <Input placeholder="Ex: Bolão da Galera" value={nome} onChange={(e) => setNome(e.target.value)} className="h-11 rounded-xl bg-muted/50" />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Descrição</Label>
-            <Input placeholder="Descreva seu grupo" value={descricao} onChange={(e) => setDescricao(e.target.value)}
-              onBlur={() => { if (nome.trim()) scrollToSection("section-pontuacao"); }}
-              className="h-11 rounded-xl bg-muted/50" />
-          </div>
-
           {/* Imagem de capa */}
           <div className="space-y-2">
             <Label className="text-sm font-medium">Imagem de capa <span className="text-xs text-muted-foreground font-normal">(opcional)</span></Label>
@@ -427,6 +416,18 @@ const CriarBolao = () => {
               <input type="file" accept="image/*" className="hidden" onChange={(e) => { handleImagemChange(e); handleImagemMobileChange(e); }} />
             </label>
           </div>
+
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Nome do Grupo</Label>
+            <Input placeholder="Ex: Bolão da Galera" value={nome} onChange={(e) => setNome(e.target.value)} className="h-11 rounded-xl bg-muted/50" />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Descrição</Label>
+            <Input placeholder="Descreva seu grupo" value={descricao} onChange={(e) => setDescricao(e.target.value)}
+              onBlur={() => { if (nome.trim()) scrollToSection("section-pontuacao"); }}
+              className="h-11 rounded-xl bg-muted/50" />
+          </div>
+
         </CardContent>
       </Card>
 
