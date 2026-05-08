@@ -642,60 +642,68 @@ const Home = () => {
     );
   }
 
+  const userName = user?.user_metadata?.nome || user?.email?.split("@")[0] || "Jogador";
+
   return (
-    <div className={`space-y-6 animate-fade-in ${!user ? "pb-20" : ""}`}>
+    <div className="space-y-6 animate-fade-in">
       <SEOHead
-        title="Bolão de Futebol Grátis | Copa 2026, Campeonatos e mais"
-        description="Bolão da Galera: crie bolões de futebol grátis e dispute com amigos! Palpites em campeonatos nacionais e internacionais, Champions League e mais. Cadastre-se em 10 segundos."
+        title="Bolão da Galera — Palpites de Futebol entre Amigos"
+        description="Bolão da Galera: crie bolões de futebol e dispute com amigos! Palpites em campeonatos nacionais e internacionais."
         path="/home"
-        keywords="bolão na copa, bolão da copa, bolão de futebol grátis, palpites futebol, bolão brasileirão 2026, bolão copa de futebol 2026, bolão entre amigos"
       />
 
+      {/* ═══ HEADER: Bem-vindo ═══ */}
+      <div className="text-center pt-2">
+        <img
+          src="https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/BolaoDaGalera%20-%20sem%20fundo.png"
+          alt="Bolão da Galera"
+          className="w-16 h-16 mx-auto mb-2 object-contain"
+        />
+        <h1 className="text-xl font-bold text-foreground">Bem-vindo, {userName}!</h1>
+        <p className="text-sm text-muted-foreground">Qual seu palpite hoje?</p>
+      </div>
 
-
-      {/* ═══ GUEST: Countdown ═══ */}
-      {!user && <CountdownStrip />}
-
-      {/* ═══ BANNERS DINÂMICOS — carrossel ═══ */}
-      <DynamicBanner userBolaoIds={userBolaoIds} userContext={userBannerCtx} />
-
-
-
-      {/* ═══ GUEST: Login rápido ═══ */}
-      {!user && Capacitor.getPlatform() === "ios" && (
+      {/* ═══ BANNERS: Perguntas para o Grupo + Quiz do Dia ═══ */}
+      <div className="space-y-3">
         <button
-          onClick={handleAppleLogin}
-          className="w-full flex items-center justify-center gap-3 bg-black hover:bg-gray-900 rounded-xl py-3.5 font-semibold text-sm text-white transition-all"
+          onClick={() => navigate("/quiz")}
+          className="w-full flex items-center gap-3 rounded-2xl px-4 py-4 transition-all hover:shadow-md active:scale-[0.98]"
+          style={{ background: "linear-gradient(135deg, #14532d 0%, #166534 100%)" }}
         >
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
-          </svg>
-          Cadastre-se rápido com Apple
+          <span className="text-3xl flex-shrink-0">🧠</span>
+          <div className="flex-1 text-left">
+            <p className="text-sm font-bold text-white">Quiz do Dia</p>
+            <p className="text-[11px] text-white/60">Descubra qual lenda, seleção ou jogador você seria</p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-white/50 flex-shrink-0" />
         </button>
-      )}
-      {!user && Capacitor.getPlatform() !== "ios" && !/FBAN|FBAV|Instagram|Line|TikTok|Snapchat/i.test(navigator.userAgent) && (
-        <button
-          onClick={handleGoogleLogin}
-          className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 hover:border-copa-green-400 hover:shadow-md rounded-xl py-3.5 font-semibold text-sm text-gray-600 transition-all"
-        >
-          <svg className="w-5 h-5" viewBox="0 0 24 24">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-          </svg>
-          Cadastre-se rápido com Google
-        </button>
-      )}
 
-      {/* ═══ GUEST: Banner Quiz (dinâmico do Supabase) ═══ */}
-      {!user && <QuizBannerCarousel />}
+        <button
+          onClick={() => {
+            const texto = "⚽ Bora fazer um bolão? Baixa o Bolão da Galera e entra no meu grupo!\n\nhttps://www.bolaonacopa.com.br";
+            if (navigator.share) {
+              navigator.share({ title: "Bolão da Galera", text: texto }).catch(() => {});
+            } else {
+              navigator.clipboard.writeText(texto).then(() => toast.success("Link copiado!")).catch(() => {});
+            }
+          }}
+          className="w-full flex items-center gap-3 rounded-2xl px-4 py-4 transition-all hover:shadow-md active:scale-[0.98]"
+          style={{ background: "linear-gradient(135deg, #92400e 0%, #b45309 100%)" }}
+        >
+          <span className="text-3xl flex-shrink-0">📣</span>
+          <div className="flex-1 text-left">
+            <p className="text-sm font-bold text-white">Convide a Galera</p>
+            <p className="text-[11px] text-white/60">Mande o link para o grupo e desafie seus amigos</p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-white/50 flex-shrink-0" />
+        </button>
+      </div>
 
       {/* ═══ FEEDBACK BANNER — aparece após palpitar ═══ */}
-      {user && <FeedbackBanner />}
+      <FeedbackBanner />
 
 
-      {/* ═══ CONTEÚDO LOGADO: Alerts + Meus Bolões + Privados ═══ */}
+      {/* ═══ Alerts + Meus Bolões + Privados ═══ */}
       {user && (
         <>
           {visibleAlerts.length > 0 && (
