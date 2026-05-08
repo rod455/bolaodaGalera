@@ -45,7 +45,7 @@ const ProgressDots = ({ current, total }: { current: number; total: number }) =>
   </div>
 );
 
-const LOGO_URL = "https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/604913%20(512%20x%20512%20px).png";
+const LOGO_URL = "https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/BolaoDaGalera%20-%20sem%20fundo.png";
 
 // ═══════════════════════════════════════════════════════
 // Step 1: Welcome (simplificado — 5 segundos)
