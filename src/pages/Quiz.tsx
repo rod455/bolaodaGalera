@@ -46,7 +46,7 @@ const Quiz = () => {
         title="Quiz na Copa — Descubra sua seleção, sua lenda e mais"
         description="Quizzes interativos de futebol. Descubra qual seleção combinaria com você, qual lenda do futebol você seria e muito mais."
         path="/quiz"
-        keywords="quiz copa do mundo, quiz selecao, quiz lenda futebol, bolao na copa quiz"
+        keywords="quiz futebol, quiz selecao, quiz lenda futebol, bolao na copa quiz"
       />
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => navigate("/home")} className="rounded-full">
@@ -67,7 +67,7 @@ const Quiz = () => {
             <p style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "1.1rem", lineHeight: 1, color: "#fff" }}>
               Para qual seleção <span style={{ color: "#facc15" }}>você seria convocado?</span>
             </p>
-            <p className="text-[11px] text-white/60 mt-0.5">Seleções do mundo · 10 perguntas · Copa 2026</p>
+            <p className="text-[11px] text-white/60 mt-0.5">Seleções do mundo · 10 perguntas · Futebol</p>
           </div>
           <ChevronDown className={`w-5 h-5 text-white/60 flex-shrink-0 transition-transform duration-300 ${expandedQuiz === "selecao" ? "rotate-180" : ""}`} />
         </button>
@@ -76,7 +76,7 @@ const Quiz = () => {
           <div className="px-4 py-5 space-y-4 text-center" style={{ background: "linear-gradient(160deg, #14532d 0%, #166534 30%, #15803d 70%, #14532d 100%)" }}>
             <div className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-[10px] font-bold uppercase tracking-widest mx-auto"
               style={{ background: "rgba(250,204,21,.14)", border: "1px solid rgba(250,204,21,.38)", color: "#facc15" }}>
-              ⚽ Seleções do mundo · Copa 2026
+              ⚽ Seleções do mundo · Futebol
             </div>
 
             <h3 className="leading-[0.9]" style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(2rem,8vw,3.5rem)", color: "#fff", textShadow: "0 4px 24px rgba(0,0,0,.4)" }}>

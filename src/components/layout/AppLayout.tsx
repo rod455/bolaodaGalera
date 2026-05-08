@@ -198,7 +198,7 @@ const AppLayout = () => {
       {/* Footer - desktop only */}
       <footer className="text-center py-4 text-xs text-muted-foreground border-t hidden md:block space-y-1">
         <p>Bolão da Galera &copy; {new Date().getFullYear()}</p>
-        <p className="text-[10px] opacity-60">Aplicativo independente, sem vínculo ou afiliação com FIFA, CBF, UEFA ou qualquer entidade esportiva oficial.</p>
+        <p className="text-[10px] opacity-60">Aplicativo independente, sem vínculo com entidades esportivas oficiais.</p>
       </footer>
     </div>
   );

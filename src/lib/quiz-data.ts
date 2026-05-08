@@ -1,4 +1,4 @@
-// ═══ Quiz "Qual seleção da Copa 2026 você seria?" ═══
+// ═══ Quiz "Qual seleção do futebol você seria?" ═══
 // 48 seleções, 10 perguntas, 5 dimensões de perfil
 
 export interface SelecaoQuiz {

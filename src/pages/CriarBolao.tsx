@@ -45,10 +45,9 @@ interface CategoriaConfig {
 }
 
 const CATEGORIAS: CategoriaConfig[] = [
-  { id: "estaduais", label: "Campeonatos Estaduais", emoji: "🏟️", tipos: ["estadual"], keywords: ["Mineiro", "Paulistão", "Gaúcho", "Carioca", "Baiano", "Catarinense", "Paranaense", "Pernambucano"] },
-  { id: "nacionais", label: "Campeonatos Nacionais", emoji: "🇧🇷", tipos: ["nacional"], keywords: ["Brasileirão", "Copa do Brasil", "Serie A", "Serie B"] },
-  { id: "copa_mundo", label: "Copa do Mundo", emoji: "🌍", tipos: ["mundial"], keywords: ["Copa do Mundo", "Mundial"] },
-  { id: "internacionais", label: "Campeonatos Internacionais", emoji: "⭐", tipos: ["continental"], keywords: ["Champions League", "Europa League", "Conference League", "Libertadores", "Sul-Americana", "Premier League", "La Liga", "Bundesliga", "Serie A IT", "Ligue 1"] },
+  { id: "estaduais", label: "Estaduais", emoji: "🏟️", tipos: ["estadual"], keywords: ["Mineiro", "Paulistão", "Gaúcho", "Carioca", "Baiano", "Catarinense", "Paranaense", "Pernambucano"] },
+  { id: "nacionais", label: "Nacionais", emoji: "🇧🇷", tipos: ["nacional", "mundial"], keywords: ["Brasileirão", "Copa do Brasil", "Serie A", "Serie B", "Mundial"] },
+  { id: "internacionais", label: "Internacionais", emoji: "⭐", tipos: ["continental"], keywords: ["Champions League", "Europa League", "Conference League", "Libertadores", "Sul-Americana", "Premier League", "La Liga", "Bundesliga", "Serie A IT", "Ligue 1"] },
 ];
 
 const categorizeCampeonato = (camp: Campeonato): string => {
@@ -84,6 +83,7 @@ const CriarBolao = () => {
   const [upsellModal, setUpsellModal] = useState<{ open: boolean; reason: UpsellReason; extra?: string }>({ open: false, reason: "criar_limite" });
   const [regrasModalOpen, setRegrasModalOpen] = useState(false);
   const [categoriaAberta, setCategoriaAberta] = useState<string | null>(null);
+  const [campeonatoListOpen, setCampeonatoListOpen] = useState(false);
 
   // Fanático - time do coração
   const [timeFavorito, setTimeFavorito] = useState("");
@@ -360,6 +360,7 @@ const CriarBolao = () => {
   })).filter((cat) => cat.campeonatos.length > 0);
 
   const campsSelecionados = campeonatos.filter((c) => campeonatosSelecionados.includes(c.id));
+  const allCampeonatosFlat = campeonatos.sort((a, b) => (a.nome_popular || a.nome).localeCompare(b.nome_popular || b.nome));
 
   const toggleCampeonato = (campId: string) => {
     setCampeonatosSelecionados((prev) =>
@@ -539,7 +540,7 @@ const CriarBolao = () => {
 
       {/* Banner Ad antes do campeonato */}
 
-      {/* 3. Campeonato por Categoria */}
+      {/* 3. Campeonato — campo único com lista expansível */}
       <Card id="section-campeonato" className="rounded-2xl shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-bold flex items-center gap-2">
@@ -547,93 +548,72 @@ const CriarBolao = () => {
             <Trophy className="w-4 h-4 text-copa-gold-500" />
             Campeonato
           </CardTitle>
-          <p className="text-xs text-muted-foreground mt-1">Escolha um ou mais campeonatos para o grupo</p>
         </CardHeader>
         <CardContent className="space-y-2">
-          {loadingCampeonatos ? (
-            <div className="flex items-center justify-center py-4"><Loader2 className="w-5 h-5 text-copa-green-500 animate-spin" /></div>
-          ) : (
-            campeonatosPorCategoria.map((cat) => {
-              const isOpen = categoriaAberta === cat.id;
-              const selectedCount = cat.campeonatos.filter((c) => campeonatosSelecionados.includes(c.id)).length;
-              return (
-                <div key={cat.id} className="rounded-xl overflow-hidden border border-gray-100">
-                  <button onClick={() => toggleCategoria(cat.id)}
-                    className={`w-full flex items-center justify-between px-4 py-3 transition-all ${
-                      isOpen ? "bg-copa-green-50" : selectedCount > 0 ? "bg-copa-green-50/50" : "bg-muted/40 hover:bg-muted/70"
-                    }`}>
-                    <div className="flex items-center gap-3">
-                      <span className="text-lg">{cat.emoji}</span>
-                      <div className="text-left">
-                        <span className="text-sm font-semibold">{cat.label}</span>
-                        <span className="text-[10px] text-muted-foreground ml-2">
-                          {cat.campeonatos.length} {cat.campeonatos.length === 1 ? "campeonato" : "campeonatos"}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {selectedCount > 0 && !isOpen && (
-                        <span className="text-[10px] font-bold text-copa-green-600 bg-copa-green-100 rounded-full px-2 py-0.5">
-                          {selectedCount} selecionado{selectedCount > 1 ? "s" : ""}
-                        </span>
-                      )}
-                      <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`} />
-                    </div>
-                  </button>
-                  {isOpen && (
-                    <div className="px-2 py-2 space-y-1 bg-white animate-fade-in">
-                      {cat.campeonatos.map((camp) => {
-                        const selected = campeonatosSelecionados.includes(camp.id);
-                        return (
-                          <div key={camp.id}
-                            onClick={() => toggleCampeonato(camp.id)}
-                            className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
-                              selected ? "bg-copa-green-50 border border-copa-green-300" : "hover:bg-muted/50"
-                            }`}>
-                            <div className={`w-[18px] h-[18px] rounded flex items-center justify-center flex-shrink-0 ${
-                              selected ? "bg-copa-green-500" : "border-2 border-gray-300"
-                            }`}>
-                              {selected && <Check className="w-3 h-3 text-white" />}
-                            </div>
-                            {camp.logo_url ? (
-                              <img src={camp.logo_url} alt={camp.nome_popular} className="w-7 h-7 object-contain flex-shrink-0"
-                                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                            ) : (
-                              <div className="w-7 h-7 bg-muted rounded-full flex items-center justify-center flex-shrink-0">
-                                <Trophy className="w-3.5 h-3.5 text-muted-foreground" />
-                              </div>
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <span className="text-sm font-medium block truncate">{camp.nome_popular || camp.nome}</span>
-                              <span className="text-[10px] text-muted-foreground">Temporada {camp.temporada}</span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            })
-          )}
-          {!loadingCampeonatos && campeonatos.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-4">Nenhum campeonato disponível.</p>
-          )}
+          {/* Campo clicável */}
+          <button
+            onClick={() => setCampeonatoListOpen(!campeonatoListOpen)}
+            className="w-full flex items-center justify-between px-4 py-3 rounded-xl border border-gray-200 hover:border-copa-green-400 transition-colors bg-white"
+          >
+            <span className={`text-sm ${campeonatosSelecionados.length > 0 ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
+              {campeonatosSelecionados.length > 0
+                ? `${campeonatosSelecionados.length} campeonato${campeonatosSelecionados.length > 1 ? "s" : ""} selecionado${campeonatosSelecionados.length > 1 ? "s" : ""}`
+                : "Selecione os campeonatos"}
+            </span>
+            <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${campeonatoListOpen ? "rotate-180" : ""}`} />
+          </button>
+
+          {/* Chips dos selecionados */}
           {campeonatosSelecionados.length > 0 && (
-            <div className="bg-copa-green-50 border border-copa-green-200 rounded-xl p-3 mt-2">
-              <p className="text-xs font-bold text-copa-green-700 mb-1">
-                {campeonatosSelecionados.length} campeonato{campeonatosSelecionados.length > 1 ? "s" : ""} selecionado{campeonatosSelecionados.length > 1 ? "s" : ""}:
-              </p>
-              <div className="flex flex-wrap gap-1">
-                {campsSelecionados.map((c) => (
-                  <span key={c.id} className="text-[10px] bg-copa-green-100 text-copa-green-700 rounded-full px-2 py-0.5 flex items-center gap-1">
-                    {c.nome_popular || c.nome}
-                    <button onClick={() => toggleCampeonato(c.id)} className="hover:text-red-500">
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                ))}
-              </div>
+            <div className="flex flex-wrap gap-1">
+              {campsSelecionados.map((c) => (
+                <span key={c.id} className="text-[10px] bg-copa-green-100 text-copa-green-700 rounded-full px-2 py-0.5 flex items-center gap-1">
+                  {c.nome_popular || c.nome}
+                  <button onClick={() => toggleCampeonato(c.id)} className="hover:text-red-500">
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Lista expansível */}
+          {campeonatoListOpen && (
+            <div className="border border-gray-100 rounded-xl overflow-hidden bg-white animate-fade-in max-h-80 overflow-y-auto">
+              {loadingCampeonatos ? (
+                <div className="flex items-center justify-center py-6"><Loader2 className="w-5 h-5 text-copa-green-500 animate-spin" /></div>
+              ) : (
+                <>
+                  {allCampeonatosFlat.map((camp) => {
+                    const selected = campeonatosSelecionados.includes(camp.id);
+                    return (
+                      <div key={camp.id}
+                        onClick={() => toggleCampeonato(camp.id)}
+                        className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-all border-b border-gray-50 last:border-0 ${
+                          selected ? "bg-copa-green-50" : "hover:bg-muted/50"
+                        }`}>
+                        <div className={`w-[18px] h-[18px] rounded flex items-center justify-center flex-shrink-0 ${
+                          selected ? "bg-copa-green-500" : "border-2 border-gray-300"
+                        }`}>
+                          {selected && <Check className="w-3 h-3 text-white" />}
+                        </div>
+                        {camp.logo_url ? (
+                          <img src={camp.logo_url} alt={camp.nome_popular} className="w-6 h-6 object-contain flex-shrink-0"
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                        ) : (
+                          <div className="w-6 h-6 bg-muted rounded-full flex items-center justify-center flex-shrink-0">
+                            <Trophy className="w-3 h-3 text-muted-foreground" />
+                          </div>
+                        )}
+                        <span className="text-sm font-medium truncate">{camp.nome_popular || camp.nome}</span>
+                      </div>
+                    );
+                  })}
+                  {!loadingCampeonatos && campeonatos.length === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-4">Nenhum campeonato disponível.</p>
+                  )}
+                </>
+              )}
             </div>
           )}
         </CardContent>

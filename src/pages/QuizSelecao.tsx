@@ -254,7 +254,7 @@ const QuizSelecao = () => {
           title="Quiz na Copa — Para qual seleção você seria convocado?"
           description="Responda 10 perguntas e descubra qual seleção do futebol mundial combina com você. Quiz na Copa — grátis!"
           path="/quiz"
-          keywords="quiz copa do mundo, quiz selecao, quiz futebol, bolao na copa quiz"
+          keywords="quiz futebol, quiz selecao, quiz futebol, bolao na copa quiz"
         />
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => navigate("/home")} className="rounded-full">
@@ -280,7 +280,7 @@ const QuizSelecao = () => {
 
             <div className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-[10px] font-bold uppercase tracking-widest"
               style={{ background: "rgba(250,204,21,.14)", border: "1px solid rgba(250,204,21,.38)", color: "#facc15" }}>
-              ⚽ Seleções do mundo · Copa 2026
+              ⚽ Seleções do mundo · Futebol
             </div>
 
             <h3 className="leading-[0.88]" style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(2.5rem,10vw,5rem)", textShadow: "0 4px 24px rgba(0,0,0,.4)" }}>
@@ -421,7 +421,7 @@ const QuizSelecao = () => {
           title="Quiz na Copa — Para qual seleção você seria convocado?"
           description="Responda 10 perguntas e descubra qual seleção do futebol mundial combina com seu estilo de jogo."
           path="/quiz"
-          keywords="quiz copa do mundo, quiz selecao, quiz futebol, bolao na copa quiz"
+          keywords="quiz futebol, quiz selecao, quiz futebol, bolao na copa quiz"
         />
         {/* Grid sutil no fundo */}
         <div className="fixed inset-0 pointer-events-none z-0" style={{
@@ -445,7 +445,7 @@ const QuizSelecao = () => {
 
             <div className="inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[11px] font-bold uppercase tracking-widest mb-4"
               style={{ background: "rgba(250,204,21,.14)", border: "1px solid rgba(250,204,21,.38)", color: "#facc15" }}>
-              ⚽ Seleções do mundo · Copa 2026
+              ⚽ Seleções do mundo · Futebol
             </div>
 
             <h1 className="leading-[0.88] mb-2" style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(2.8rem,11vw,6.5rem)", textShadow: "0 4px 28px rgba(0,0,0,.45)" }}>
@@ -513,7 +513,7 @@ const QuizSelecao = () => {
                 Descubra agora<br /><span style={{ color: "#facc15" }}>100% grátis</span>
               </h2>
               <p className="text-xs mb-6" style={{ color: "rgba(255,255,255,.45)" }}>
-                Quiz completo · seleções do mundo · bolão da Copa 2026
+                Quiz completo · seleções do mundo · bolão da Futebol
               </p>
               <button onClick={handleStart}
                 className="w-full max-w-[330px] mx-auto flex items-center justify-center gap-3 py-4 rounded-2xl font-black text-base transition-all hover:-translate-y-0.5 active:scale-[0.98]"

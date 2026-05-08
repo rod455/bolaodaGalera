@@ -762,7 +762,7 @@ const Perfil = () => {
 
       {/* Disclaimer de não-afiliação */}
       <p className="text-[11px] text-muted-foreground text-center leading-relaxed px-2">
-        Este aplicativo é independente e não possui vínculo, afiliação ou endosso com a FIFA, CBF, UEFA ou qualquer entidade esportiva oficial. Nomes e marcas de campeonatos são usados apenas para fins informativos.
+        Este aplicativo é independente e não possui vínculo com entidades esportivas oficiais. Nomes de campeonatos são usados apenas para fins informativos.
       </p>
 
       {/* Logout */}
