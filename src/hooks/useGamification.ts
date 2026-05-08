@@ -24,7 +24,7 @@ const NIVEIS = [
   { nivel: 5, xp: 600, titulo: "Craque" },
   { nivel: 6, xp: 1000, titulo: "Mestre" },
   { nivel: 7, xp: 1500, titulo: "Lenda" },
-  { nivel: 8, xp: 2500, titulo: "Rei do Bolão" },
+  { nivel: 8, xp: 2500, titulo: "Rei do Grupo" },
 ];
 
 export const getNivelInfo = (nivel: number) => NIVEIS.find((n) => n.nivel === nivel) || NIVEIS[0];

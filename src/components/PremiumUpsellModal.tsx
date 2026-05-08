@@ -19,10 +19,10 @@ const UPSELL_CONTENT: Record<UpsellReason, {
 }> = {
   criar_limite: {
     icon: "🚫",
-    title: "Limite de bolões atingido",
-    subtitle: "No plano Free você pode criar apenas 1 bolão privado. Com Premium PRO, crie quantos quiser!",
+    title: "Limite de grupos atingido",
+    subtitle: "No plano Free você pode criar apenas 1 grupo privado. Com Premium PRO, crie quantos quiser!",
     benefits: [
-      "Bolões ilimitados",
+      "Grupos ilimitados",
       "Até 50 participantes por grupo",
       "Sem anúncios entre telas",
       "Todos os modos de jogo",
@@ -30,11 +30,11 @@ const UPSELL_CONTENT: Record<UpsellReason, {
   },
   privado_limite: {
     icon: "🔒",
-    title: "Limite de bolões privados",
-    subtitle: "Você já participa de 3 bolões privados no plano Free. Desbloqueie participação ilimitada!",
+    title: "Limite de grupos privados",
+    subtitle: "Você já participa de 3 grupos privados no plano Free. Desbloqueie participação ilimitada!",
     benefits: [
-      "Participe de bolões ilimitados",
-      "Crie quantos bolões quiser",
+      "Participe de grupos ilimitados",
+      "Crie quantos grupos quiser",
       "Sem anúncios entre telas",
       "Badge Premium no perfil",
     ],
@@ -45,7 +45,7 @@ const UPSELL_CONTENT: Record<UpsellReason, {
     subtitle: "Este grupo atingiu o limite de participantes do plano Free. Com Premium, o limite sobe para 50!",
     benefits: [
       "Até 50 participantes por grupo",
-      "Bolões ilimitados",
+      "Grupos ilimitados",
       "Sem anúncios entre telas",
       "Modos de jogo exclusivos",
     ],
@@ -56,7 +56,7 @@ const UPSELL_CONTENT: Record<UpsellReason, {
     subtitle: "Este modo de jogo é exclusivo para assinantes. Desbloqueie modos com pontuações diferenciadas!",
     benefits: [
       "Modos: Profissional, Fanático, Tudo ou Nada",
-      "Bolões ilimitados",
+      "Grupos ilimitados",
       "Sem anúncios entre telas",
       "Suporte prioritário",
     ],

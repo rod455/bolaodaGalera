@@ -1,4 +1,4 @@
-// ═══ Tipos de Notificação do Bolão da Galera ═══
+// ═══ Tipos de Notificação do Grupo da Galera ═══
 
 export type NotificacaoTipo =
   | "palpite_pendente"

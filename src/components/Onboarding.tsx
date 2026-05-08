@@ -89,7 +89,7 @@ const WelcomeStep = ({
       <div className="mt-10 w-full max-w-xs space-y-3">
         <div className="flex items-center gap-3 bg-white/10 rounded-xl px-4 py-3">
           <span className="text-2xl">🏆</span>
-          <p className="text-white text-sm font-medium">Crie bolões e convide amigos</p>
+          <p className="text-white text-sm font-medium">Crie grupos e convide amigos</p>
         </div>
         <div className="flex items-center gap-3 bg-white/10 rounded-xl px-4 py-3">
           <span className="text-2xl">⚽</span>
@@ -107,7 +107,7 @@ const WelcomeStep = ({
         onClick={onNext}
         className="w-full h-13 bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-900 font-black text-base rounded-xl shadow-lg"
       >
-        Criar meu bolão agora
+        Criar meu grupo agora
         <ChevronRight className="w-5 h-5 ml-1" />
       </Button>
       <button
@@ -195,18 +195,18 @@ const QuickBolaoStep = ({
         bolao_id: newBolao.id,
         campeonato_id: selectedChamp,
       });
-      if (campError) throw new Error("Erro ao vincular campeonato ao bolão");
+      if (campError) throw new Error("Erro ao vincular campeonato ao grupo");
 
       const { error: partError } = await supabase.from("bolao_participantes").insert({
         bolao_id: newBolao.id,
         user_id: user.id,
       });
-      if (partError) throw new Error("Erro ao adicionar participante ao bolão");
+      if (partError) throw new Error("Erro ao adicionar participante ao grupo");
 
       toast.success(`Bolão "${bolaoName.trim()}" criado!\nCódigo: ${codigo}`);
       onCreated(newBolao.id);
     } catch (err: any) {
-      // Rollback: se o bolão foi criado mas as etapas seguintes falharam, limpar
+      // Rollback: se o grupo foi criado mas as etapas seguintes falharam, limpar
       if (createdBolaoId) {
         void err;
         await supabase.from("bolao_campeonatos").delete().eq("bolao_id", createdBolaoId).catch(() => {});
@@ -229,14 +229,14 @@ const QuickBolaoStep = ({
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <div>
-          <h2 className="text-xl font-black">Crie seu bolão</h2>
+          <h2 className="text-xl font-black">Crie seu grupo</h2>
           <p className="text-xs text-muted-foreground">Rápido e fácil — 3 campos</p>
         </div>
       </div>
 
-      {/* 1. Nome do Bolão */}
+      {/* 1. Nome do Grupo */}
       <div className="space-y-1.5">
-        <label className="text-sm font-bold text-gray-700">Nome do bolão</label>
+        <label className="text-sm font-bold text-gray-700">Nome do grupo</label>
         <input
           type="text"
           placeholder="Ex: Bolão da Família, Bolão do Trabalho..."
@@ -342,7 +342,7 @@ const QuickBolaoStep = ({
           {creating ? (
             <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Criando...</>
           ) : (
-            <>Criar bolão e palpitar</>
+            <>Criar grupo e palpitar</>
           )}
         </Button>
         <button onClick={onSkip} className="w-full text-muted-foreground text-[11px] hover:text-foreground transition-colors">
@@ -361,11 +361,11 @@ const SkipConfirmModal = ({ onConfirm, onCancel }: { onConfirm: () => void; onCa
     <div className="bg-white rounded-2xl p-5 max-w-xs w-full shadow-xl">
       <h3 className="font-bold text-base">Pular configuração?</h3>
       <p className="text-sm text-muted-foreground mt-2">
-        Você pode criar bolões depois pela tela principal. Deseja pular?
+        Você pode criar grupos depois pela tela principal. Deseja pular?
       </p>
       <div className="mt-4 space-y-2">
         <Button onClick={onCancel} className="w-full bg-copa-green-600 hover:bg-copa-green-700 text-white font-bold rounded-xl">
-          Continuar criando bolão
+          Continuar criando grupo
         </Button>
         <button onClick={onConfirm} className="w-full text-sm text-muted-foreground hover:text-foreground">
           Sim, pular

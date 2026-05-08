@@ -70,13 +70,13 @@ const GerenciarCampeonatos = ({ bolaoId, isOpen, onClose, onUpdated }: Gerenciar
 
       setAllCampeonatos((camps || []) as Campeonato[]);
 
-      // Buscar campeonatos já vinculados ao bolão
+      // Buscar campeonatos já vinculados ao grupo
       const { data: bcData } = await supabase
         .from("bolao_campeonatos")
         .select("campeonato_id")
         .eq("bolao_id", bolaoId);
 
-      // Também verificar o campeonato_id legado do bolão
+      // Também verificar o campeonato_id legado do grupo
       const { data: bolaoData } = await supabase
         .from("boloes")
         .select("campeonato_id")
@@ -169,9 +169,9 @@ const GerenciarCampeonatos = ({ bolaoId, isOpen, onClose, onUpdated }: Gerenciar
       if (addedCount > 0 && removedCount > 0) {
         toast.success(`${addedCount} campeonato(s) adicionado(s), ${removedCount} removido(s)`);
       } else if (addedCount > 0) {
-        toast.success(`${addedCount} campeonato(s) adicionado(s) ao bolão!`);
+        toast.success(`${addedCount} campeonato(s) adicionado(s) ao grupo!`);
       } else if (removedCount > 0) {
-        toast.success(`${removedCount} campeonato(s) removido(s) do bolão`);
+        toast.success(`${removedCount} campeonato(s) removido(s) do grupo`);
       }
 
       onUpdated();

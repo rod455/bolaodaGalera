@@ -92,7 +92,7 @@ const AoVivo = () => {
         allJogos.filter((j) => j.status === "encerrado")
       );
 
-      // Get user's bolões to link games
+      // Get user's grupos to link games
       if (user) {
         const { data: participacoes } = await supabase
           .from("bolao_participantes")

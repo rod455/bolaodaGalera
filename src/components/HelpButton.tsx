@@ -12,7 +12,7 @@ const HelpButton = () => {
     if (user) {
       navigate("/perfil?feedback=true");
     } else {
-      const subject = encodeURIComponent("Dúvida sobre o Bolão da Galera");
+      const subject = encodeURIComponent("Dúvida sobre o Grupo da Galera");
       const body = encodeURIComponent("Olá, tenho uma dúvida:\n\n");
       // Abre composição do Gmail (funciona em qualquer browser/app)
       window.open(`https://mail.google.com/mail/?view=cm&to=${EMAIL}&su=${subject}&body=${body}`, "_blank");

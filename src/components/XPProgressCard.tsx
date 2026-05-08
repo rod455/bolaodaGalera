@@ -32,7 +32,7 @@ const XPProgressCard = ({ userXP, referralCode, variant = "full" }: XPProgressCa
 
   const getReferralText = () => {
     const url = Capacitor.isNativePlatform() ? getStoreUrl() : getReferralUrl(referralCode ?? "", "whatsapp");
-    return Capacitor.isNativePlatform() ? `🏆 Vem jogar no Bolão da Galera comigo!\n\nQuero ver quem sabe mais do que eu!\n\nBaixe o app: ${url}` : `🏆 Vem jogar no Bolão da Galera comigo!\n\nUse meu código: ${referralCode}\n\nCadastre aqui: ${url}`;
+    return Capacitor.isNativePlatform() ? `🏆 Vem jogar no Grupo da Galera comigo!\n\nQuero ver quem sabe mais do que eu!\n\nBaixe o app: ${url}` : `🏆 Vem jogar no Grupo da Galera comigo!\n\nUse meu código: ${referralCode}\n\nCadastre aqui: ${url}`;
   };
 
   const handleWhatsAppReferral = () => {
@@ -144,7 +144,7 @@ const XPProgressCard = ({ userXP, referralCode, variant = "full" }: XPProgressCa
             {[
               { icon: "🎯", label: "Fazer palpite", xp: "+5 XP" },
               { icon: "📢", label: "Convidar amigo", xp: "+30 XP" },
-              { icon: "🏟️", label: "Criar bolão", xp: "+20 XP" },
+              { icon: "🏟️", label: "Criar grupo", xp: "+20 XP" },
               { icon: "📤", label: "Compartilhar", xp: "+10 XP" },
             ].map((item) => (
               <div key={item.label} className="flex items-center gap-2 bg-muted/50 rounded-lg px-2.5 py-2">

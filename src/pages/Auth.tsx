@@ -280,7 +280,7 @@ const Auth = () => {
     <div className="min-h-screen bg-copa-green-500 flex flex-col items-center justify-start p-6 overflow-y-auto pt-8 pb-[40vh]">
       <SEOHead
         title="Criar Conta Grátis ou Entrar"
-        description="Crie sua conta grátis no Bolão da Galera e comece a palpitar nos jogos de futebol nacionais e internacionais, Champions League e mais. Cadastro em 10 segundos."
+        description="Crie sua conta grátis no Grupo da Galera e comece a palpitar nos jogos de futebol nacionais e internacionais, Champions League e mais. Cadastro em 10 segundos."
         path="/auth"
         keywords="criar conta bolão, bolão na copa cadastro, bolão grátis, login bolão da copa"
       />
@@ -298,7 +298,7 @@ const Auth = () => {
           {!isResettingPassword && !isForgotPassword && !isLogin && (
             <div className="flex items-center gap-2 bg-white/15 backdrop-blur-sm rounded-full px-4 py-1.5 mt-2">
               <span className="text-xs font-semibold text-white/90">
-                {bolaoRedirect ? "🏆 Crie sua conta para entrar no bolão" : "⚽ Junte-se a centenas de torcedores"}
+                {bolaoRedirect ? "🏆 Crie sua conta para entrar no grupo" : "⚽ Junte-se a centenas de torcedores"}
               </span>
             </div>
           )}

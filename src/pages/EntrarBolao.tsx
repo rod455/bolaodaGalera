@@ -103,7 +103,7 @@ const EntrarBolao = () => {
 
   const loadData = async () => {
     try {
-      // Fetch public bolões (non-nacional ones that are public)
+      // Fetch public grupos (non-nacional ones that are public)
       const { data: boloesPublicos } = await supabase
         .from("boloes")
         .select("*, campeonatos(logo_url, nome_popular)")
@@ -122,7 +122,7 @@ const EntrarBolao = () => {
       const ids = new Set((participacoes || []).map((p: any) => p.bolao_id));
       setUserBolaoIds(ids);
 
-      // Count participants for all public bolões in a single query
+      // Count participants for all public grupos in a single query
       const bolaoIds = ((boloesPublicos as any[]) || []).map((b: any) => b.id);
       if (bolaoIds.length > 0) {
         const { data: participantes } = await supabase
@@ -137,7 +137,7 @@ const EntrarBolao = () => {
         setParticipantesCount(counts);
       }
     } catch {
-      // failed to load public bolões
+      // failed to load public grupos
     } finally {
       setLoading(false);
     }
@@ -165,7 +165,7 @@ const EntrarBolao = () => {
 
   const handleEntrarCodigo = async () => {
     if (!codigo.trim()) {
-      toast.error("Informe o código do bolão");
+      toast.error("Informe o código do grupo");
       return;
     }
     if (!user) return;
@@ -189,7 +189,7 @@ const EntrarBolao = () => {
         return;
       }
 
-      // Verificar capacidade do bolão
+      // Verificar capacidade do grupo
       if (!(await checkBolaoCapacity(bolao.id))) {
         setBuscando(false);
         return;
@@ -230,7 +230,7 @@ const EntrarBolao = () => {
 
       navigate(`/bolao/${bolao.id}`);
     } catch (err: any) {
-      toast.error(err.message || "Erro ao entrar no bolão");
+      toast.error(err.message || "Erro ao entrar no grupo");
     } finally {
       setBuscando(false);
     }
@@ -245,7 +245,7 @@ const EntrarBolao = () => {
     setJoining(bolaoId);
 
     try {
-      // Verificar capacidade do bolão
+      // Verificar capacidade do grupo
       if (!(await checkBolaoCapacity(bolaoId))) {
         setJoining(null);
         return;
@@ -282,7 +282,7 @@ const EntrarBolao = () => {
         toast.success("Solicitação enviada! Aguarde a aprovação do moderador.");
         setUserBolaoIds((prev) => new Set(prev).add(bolaoId));
       } else {
-        toast.success("Você entrou no bolão!");
+        toast.success("Você entrou no grupo!");
         setUserBolaoIds((prev) => new Set(prev).add(bolaoId));
         setParticipantesCount((prev) => ({
           ...prev,
@@ -292,7 +292,7 @@ const EntrarBolao = () => {
 
       navigate(`/bolao/${bolaoId}`);
     } catch (err: any) {
-      toast.error(err.message || "Erro ao entrar no bolão");
+      toast.error(err.message || "Erro ao entrar no grupo");
     } finally {
       setJoining(null);
     }
@@ -302,9 +302,9 @@ const EntrarBolao = () => {
     <div className="space-y-6 animate-fade-in">
       <SEOHead title="Entrar em Bolão" path="/entrar" noindex />
       <div>
-        <h2 className="text-2xl font-bold text-foreground">Entrar no Bolão</h2>
+        <h2 className="text-2xl font-bold text-foreground">Entrar no Grupo</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Use um código ou encontre bolões públicos
+          Use um código ou encontre grupos públicos
         </p>
       </div>
 
@@ -316,7 +316,7 @@ const EntrarBolao = () => {
           className="h-12 border-copa-green-200 text-copa-green-600 hover:bg-copa-green-50 font-semibold rounded-xl"
         >
           <PlusCircle className="w-4 h-4 mr-2" />
-          Criar novo bolão
+          Criar novo grupo
         </Button>
         <Button
           variant="outline"
@@ -332,7 +332,7 @@ const EntrarBolao = () => {
         <CardContent className="p-4">
           <div className="flex gap-3">
             <Input
-              placeholder="Insira o código do bolão"
+              placeholder="Insira o código do grupo"
               value={codigo}
               onChange={(e) => setCodigo(e.target.value.toUpperCase())}
               onKeyDown={(e) => e.key === "Enter" && handleEntrarCodigo()}
@@ -357,9 +357,9 @@ const EntrarBolao = () => {
         </CardContent>
       </Card>
 
-      {/* Public Bolões */}
+      {/* Public Grupos */}
       <div>
-        <h3 className="text-lg font-bold mb-3">Bolões Públicos</h3>
+        <h3 className="text-lg font-bold mb-3">Grupos Públicos</h3>
 
         {loading ? (
           <div className="flex items-center justify-center py-10">
@@ -369,7 +369,7 @@ const EntrarBolao = () => {
           <Card className="rounded-2xl border-dashed border-2 border-gray-200">
             <CardContent className="flex flex-col items-center justify-center py-8 text-center">
               <p className="text-sm text-muted-foreground">
-                Nenhum bolão público disponível no momento.
+                Nenhum grupo público disponível no momento.
               </p>
             </CardContent>
           </Card>

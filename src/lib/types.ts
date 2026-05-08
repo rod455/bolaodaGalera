@@ -1,4 +1,4 @@
-// ═══ Tipos compartilhados do Bolão da Galera ═══
+// ═══ Tipos compartilhados do Grupo da Galera ═══
 
 export interface Campeonato {
   id?: string;

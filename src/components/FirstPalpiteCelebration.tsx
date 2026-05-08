@@ -88,8 +88,8 @@ const FirstPalpiteCelebration = ({
   // Mensagem WhatsApp contextual com o palpite real
   const whatsappText = [
     palpiteResumo
-      ? `🎯 Acabei de palpitar ${palpiteResumo} no Bolão da Galera!`
-      : `🏆 Acabei de fazer meu primeiro palpite no Bolão da Galera!`,
+      ? `🎯 Acabei de palpitar ${palpiteResumo} no Grupo da Galera!`
+      : `🏆 Acabei de fazer meu primeiro palpite no Grupo da Galera!`,
     `\nSer\u00e1 que voc\u00ea consegue me superar? 😏`,
     bolaoNome ? `\n\n⚽ Bol\u00e3o: ${bolaoNome}` : "",
     bolaoCode ? `\n📋 C\u00f3digo: ${bolaoCode}` : "",
@@ -163,7 +163,7 @@ const FirstPalpiteCelebration = ({
             <a href="/planos"
               className="w-full mt-3 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-all"
               style={{ background: "rgba(250,204,21,.12)", border: "1px solid rgba(250,204,21,.3)", color: "#d97706" }}>
-              ⚡ Premium PRO: sem anúncios + bolões ilimitados — R$ 14,90/mês
+              ⚡ Premium PRO: sem anúncios + grupos ilimitados — R$ 14,90/mês
             </a>
 
             {/* Botão secundário para pular */}

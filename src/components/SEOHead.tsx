@@ -15,7 +15,7 @@ const DEFAULTS = {
   baseUrl: "https://www.bolaonacopa.com.br",
   defaultTitle: "Bolão da Galera — Bolão de Futebol Grátis | Temporada 2026 e mais",
   defaultDescription:
-    "Bolão da Galera: crie bolões de futebol grátis e dispute com amigos! Palpites em campeonatos nacionais e internacionais, Champions League e mais. Cadastre-se em 10 segundos.",
+    "Bolão da Galera: crie grupos de futebol grátis e dispute com amigos! Palpites em campeonatos nacionais e internacionais, Champions League e mais. Cadastre-se em 10 segundos.",
   defaultImage:
     "https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/bolao-capas/og-cover.png",
   defaultKeywords:

@@ -122,7 +122,7 @@ const EventosEspeciais = ({ bolaoId, campeonatoId, campeonatos, isCriador, userI
         {eventos.length === 0 ? (
           <div className="text-center py-4">
             <p className="text-sm text-muted-foreground">
-              {isCriador ? "Crie eventos especiais para turbinar seu bolão!" : "Nenhum evento especial no momento."}
+              {isCriador ? "Crie eventos especiais para turbinar seu grupo!" : "Nenhum evento especial no momento."}
             </p>
           </div>
         ) : (
@@ -207,7 +207,7 @@ const CreateEventoModal = ({ open, onClose, bolaoId, campeonatoId, campeonatos, 
   const [jogoSelecionado, setJogoSelecionado] = useState<string | null>(null);
   const [bonus, setBonus] = useState(15);
 
-  // Conta no bolão principal?
+  // Conta no grupo principal?
   const [contaPrincipal, setContaPrincipal] = useState(true);
 
   // Seletor de campeonato
@@ -375,7 +375,7 @@ const CreateEventoModal = ({ open, onClose, bolaoId, campeonatoId, campeonatos, 
           </DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
             {step === "tipo"
-              ? "Escolha o tipo de evento para seu bolão"
+              ? "Escolha o tipo de evento para seu grupo"
               : tipoSelecionado === "multiplicador" ? "Configure o multiplicador e selecione as rodadas"
               : tipoSelecionado === "mini_campeonato" ? "Selecione as rodadas do mini campeonato"
               : "Escolha o jogo e defina o bônus"}
@@ -564,7 +564,7 @@ const CreateEventoModal = ({ open, onClose, bolaoId, campeonatoId, campeonatos, 
               </>
             )}
 
-            {/* Toggle: Conta no bolão principal */}
+            {/* Toggle: Conta no grupo principal */}
             <div onClick={() => setContaPrincipal(!contaPrincipal)}
               className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 cursor-pointer hover:bg-muted/80 transition-all">
               <div className={`w-5 h-5 rounded-md flex items-center justify-center transition-all ${
@@ -573,10 +573,10 @@ const CreateEventoModal = ({ open, onClose, bolaoId, campeonatoId, campeonatos, 
                 {contaPrincipal && <Check className="w-3 h-3 text-white" />}
               </div>
               <div className="flex-1">
-                <span className="text-sm font-medium">Conta no bolão principal</span>
+                <span className="text-sm font-medium">Conta no grupo principal</span>
                 <p className="text-[10px] text-muted-foreground">
                   {contaPrincipal
-                    ? "Pontos extras serão somados ao ranking geral do bolão"
+                    ? "Pontos extras serão somados ao ranking geral do grupo"
                     : "Pontos ficam 100% separados, só no ranking do evento"}
                 </p>
               </div>

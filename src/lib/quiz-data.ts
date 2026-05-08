@@ -206,7 +206,7 @@ export const PERGUNTAS: PerguntaQuiz[] = [
     { texto: "Defender bem e sair em velocidade no contra", icone: "⚡", pontos: [1,1,1,3,0] },
     { texto: "Fazer a galera rir e criar memórias", icone: "🎉", pontos: [1,0,0,1,3] },
   ]},
-  { texto: "Qual é sua maior qualidade no bolão da Copa?", opcoes: [
+  { texto: "Qual é sua maior qualidade no grupo da Copa?", opcoes: [
     { texto: "Criatividade — acerto placares que ninguém tentaria", icone: "🎨", pontos: [3,0,0,2,0] },
     { texto: "Consistência — raramente erro o resultado", icone: "⚙️", pontos: [0,3,1,0,0] },
     { texto: "Convicção — vou no palpite mesmo contra a maioria", icone: "🔥", pontos: [0,0,3,1,0] },

@@ -283,7 +283,7 @@ const Perfil = () => {
                   <div className="w-5 h-5 bg-copa-green-100 rounded-full flex items-center justify-center">
                     <Check className="w-3 h-3 text-copa-green-600" />
                   </div>
-                  <span className="text-sm">Participar de até 3 bolões</span>
+                  <span className="text-sm">Participar de até 3 grupos</span>
                 </div>
                 <div className="flex items-center gap-2.5">
                   <div className="w-5 h-5 bg-copa-green-100 rounded-full flex items-center justify-center">
@@ -321,7 +321,7 @@ const Perfil = () => {
                   <div className="w-5 h-5 bg-copa-green-100 rounded-full flex items-center justify-center">
                     <Check className="w-3 h-3 text-copa-green-600" />
                   </div>
-                  <span className="text-sm">Bolões ilimitados</span>
+                  <span className="text-sm">Grupos ilimitados</span>
                 </div>
                 <div className="flex items-center gap-2.5">
                   <div className="w-5 h-5 bg-copa-green-100 rounded-full flex items-center justify-center">
@@ -447,7 +447,7 @@ const Perfil = () => {
                   <div className="w-5 h-5 bg-copa-green-100 rounded-full flex items-center justify-center">
                     <Check className="w-3 h-3 text-copa-green-600" />
                   </div>
-                  <span className="text-sm">Bolões privados com senha</span>
+                  <span className="text-sm">Grupos privados com senha</span>
                 </div>
                 <div className="flex items-center gap-2.5">
                   <div className="w-5 h-5 bg-copa-green-100 rounded-full flex items-center justify-center">
@@ -629,7 +629,7 @@ const Perfil = () => {
             </div>
             <div>
               <h3 className="text-base font-bold">Convidar Amigos</h3>
-              <p className="text-xs text-muted-foreground">Traga seus amigos para competir nos bolões</p>
+              <p className="text-xs text-muted-foreground">Traga seus amigos para competir nos grupos</p>
             </div>
           </div>
 
@@ -655,7 +655,7 @@ const Perfil = () => {
             <Button
               onClick={() => {
                 const url = Capacitor.isNativePlatform() ? getStoreUrl() : (referralCode ? getReferralUrl(referralCode, "whatsapp") : "https://www.bolaonacopa.com.br/auth?utm_source=convite&utm_medium=whatsapp");
-                const text = `🏆 Vem jogar no Bolão da Galera! Faça seus palpites e dispute com seus amigos. Cadastre-se aqui: ${url}`;
+                const text = `🏆 Vem jogar no Grupo da Galera! Faça seus palpites e dispute com seus amigos. Cadastre-se aqui: ${url}`;
                 shareViaWhatsApp(text);
               }}
               className="flex-1 h-11 bg-[#25D366] hover:bg-[#1da851] text-white font-semibold rounded-xl"
@@ -792,7 +792,7 @@ const Perfil = () => {
               <p className="font-semibold">Ao excluir sua conta, serão removidos:</p>
               <p>• Seus dados pessoais (nome, email, foto)</p>
               <p>• Todos os seus palpites e histórico</p>
-              <p>• Participação em todos os bolões</p>
+              <p>• Participação em todos os grupos</p>
               <p>• Assinatura Premium (se houver)</p>
             </div>
             <div>

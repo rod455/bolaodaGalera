@@ -385,7 +385,7 @@ export const useRewardedAd = () => {
         }
       }
 
-      // Criar bolão, quiz: rewarded
+      // Criar grupo, quiz: rewarded
       setAdLoading(true);
       try {
         return await showNativeRewardedAd(tipo);

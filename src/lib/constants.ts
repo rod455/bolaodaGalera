@@ -1,4 +1,4 @@
-// ═══ Constantes compartilhadas do Bolão da Galera ═══
+// ═══ Constantes compartilhadas do Grupo da Galera ═══
 
 import type { RegraInfo, ModoConfig } from "./types";
 

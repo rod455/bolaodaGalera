@@ -418,7 +418,7 @@ const Home = () => {
           temBolaoSolitario: temSolitario,
         });
 
-        // ═══ ONBOARDING: mostrar para novos usuários sem bolões ═══
+        // ═══ ONBOARDING: mostrar para novos usuários sem grupos ═══
         if (participandoIds.size === 0 && !isOnboardingDone()) {
           setShowOnboarding(true);
         }
@@ -534,8 +534,8 @@ const Home = () => {
       if (error) {
         if (error.code === "23505") { toast.info("Você já está participando!"); setUserBolaoIds((prev) => new Set(prev).add(bolaoId)); navigate(`/bolao/${bolaoId}`); }
         else throw error;
-      } else { toast.success("Você entrou no bolão!"); setUserBolaoIds((prev) => new Set(prev).add(bolaoId)); setParticipantesCount((prev) => ({ ...prev, [bolaoId]: (prev[bolaoId] || 0) + 1 })); navigate(`/bolao/${bolaoId}`); }
-    } catch (err: any) { toast.error(err.message || "Erro ao entrar no bolão"); } finally { setJoiningBolao(null); }
+      } else { toast.success("Você entrou no grupo!"); setUserBolaoIds((prev) => new Set(prev).add(bolaoId)); setParticipantesCount((prev) => ({ ...prev, [bolaoId]: (prev[bolaoId] || 0) + 1 })); navigate(`/bolao/${bolaoId}`); }
+    } catch (err: any) { toast.error(err.message || "Erro ao entrar no grupo"); } finally { setJoiningBolao(null); }
   };
 
   const visibleAlerts = dismissCount >= 2 ? [] : alerts.filter((a) => !dismissedAlerts.has(a.id));
@@ -578,7 +578,7 @@ const Home = () => {
   };
 
   const handleEntrarPorCodigo = async () => {
-    if (!codigoInput.trim()) { toast.error("Informe o código do bolão"); return; }
+    if (!codigoInput.trim()) { toast.error("Informe o código do grupo"); return; }
     if (!user) return;
 
     // Bloquear se atingiu limite de privados no plano free
@@ -605,12 +605,12 @@ const Home = () => {
       if (error) { if (error.code === "23505") { toast.info("Você já está neste bolão!"); navigate(`/bolao/${bolao.id}`); } else throw error; }
       else if (needsApproval) { toast.success("Solicitação enviada! Aguarde a aprovação do moderador."); }
       else { toast.success(`Você entrou no "${bolao.nome}"!`); navigate(`/bolao/${bolao.id}`); }
-    } catch (err: any) { toast.error(err.message || "Erro ao entrar no bolão"); } finally { setJoiningByCode(false); }
+    } catch (err: any) { toast.error(err.message || "Erro ao entrar no grupo"); } finally { setJoiningByCode(false); }
   };
 
   const dismissAlert = (e: React.MouseEvent, alertId: string) => { e.stopPropagation(); setDismissedAlerts((prev) => new Set(prev).add(alertId)); setDismissCount((c) => c + 1); };
 
-  /* ─── Reordenar bolões ─── */
+  /* ─── Reordenar grupos ─── */
   const moveBolao = (index: number, direction: "up" | "down") => {
     const newIndex = direction === "up" ? index - 1 : index + 1;
     if (newIndex < 0 || newIndex >= privados.length) return;
@@ -648,7 +648,7 @@ const Home = () => {
     <div className="space-y-6 animate-fade-in">
       <SEOHead
         title="Bolão da Galera — Palpites de Futebol entre Amigos"
-        description="Bolão da Galera: crie bolões de futebol e dispute com amigos! Palpites em campeonatos nacionais e internacionais."
+        description="Bolão da Galera: crie grupos de futebol e dispute com amigos! Palpites em campeonatos nacionais e internacionais."
         path="/home"
       />
 
@@ -680,7 +680,7 @@ const Home = () => {
 
         <button
           onClick={() => {
-            const texto = "⚽ Bora fazer um bolão? Baixa o Bolão da Galera e entra no meu grupo!\n\nhttps://www.bolaonacopa.com.br";
+            const texto = "⚽ Bora fazer um grupo? Baixa o Grupo da Galera e entra no meu grupo!\n\nhttps://www.bolaonacopa.com.br";
             if (navigator.share) {
               navigator.share({ title: "Bolão da Galera", text: texto }).catch(() => {});
             } else {
@@ -703,7 +703,7 @@ const Home = () => {
       <FeedbackBanner />
 
 
-      {/* ═══ Alerts + Meus Bolões + Privados ═══ */}
+      {/* ═══ Alerts + Meus Grupos + Privados ═══ */}
       {user && (
         <>
           {visibleAlerts.length > 0 && (
@@ -729,13 +729,13 @@ const Home = () => {
           )}
 
           <div>
-            <h2 className="text-2xl font-bold text-foreground">Meus Bolões</h2>
-            <p className="text-sm text-muted-foreground mt-1">Gerencie e acompanhe seus bolões</p>
+            <h2 className="text-2xl font-bold text-foreground">Meus Grupos</h2>
+            <p className="text-sm text-muted-foreground mt-1">Gerencie e acompanhe seus grupos</p>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
             <Button variant="outline" onClick={() => navigate("/criar")} className="h-12 border-copa-green-200 text-copa-green-600 hover:bg-copa-green-50 font-semibold rounded-xl text-xs sm:text-sm px-2 sm:px-4">
-              <PlusCircle className="w-4 h-4 mr-1.5 flex-shrink-0" /> Criar bolão
+              <PlusCircle className="w-4 h-4 mr-1.5 flex-shrink-0" /> Criar grupo
             </Button>
             <Button variant="outline" onClick={() => setShowCodeInput(!showCodeInput)}
               className={`h-12 font-semibold rounded-xl text-xs sm:text-sm px-2 sm:px-4 ${showCodeInput ? "border-copa-gold-400 text-copa-gold-600 bg-copa-gold-50" : "border-copa-green-200 text-copa-green-600 hover:bg-copa-green-50"}`}>
@@ -747,7 +747,7 @@ const Home = () => {
         <Card className="rounded-2xl shadow-sm border-copa-gold-300 bg-copa-gold-50 animate-fade-in">
           <CardContent className="p-4">
             <div className="flex gap-2">
-              <input placeholder="Código do bolão" value={codigoInput}
+              <input placeholder="Código do grupo" value={codigoInput}
                 onChange={(e) => setCodigoInput(e.target.value.toUpperCase())}
                 onKeyDown={(e) => { if (e.key === "Enter") handleEntrarPorCodigo(); }}
                 className="h-11 rounded-xl bg-white min-w-0 flex-1 font-mono text-center tracking-widest text-lg px-3 border border-gray-200 focus:border-copa-green-500 focus:outline-none"
@@ -764,7 +764,7 @@ const Home = () => {
       <div className="space-y-3">
         <div className="flex items-center gap-2">
           <Trophy className="w-4 h-4 text-copa-gold-500" />
-          <h3 className="text-base font-bold">Bolões Privados</h3>
+          <h3 className="text-base font-bold">Grupos Privados</h3>
           {isFree && user && (
             <span className="text-xs text-muted-foreground">({privados.length}/{FREE_MAX_PRIVADOS})</span>
           )}
@@ -778,7 +778,7 @@ const Home = () => {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-amber-800">Limite atingido</p>
-              <p className="text-xs text-amber-600">Você atingiu o máximo de {FREE_MAX_PRIVADOS} bolões privados no plano Free.</p>
+              <p className="text-xs text-amber-600">Você atingiu o máximo de {FREE_MAX_PRIVADOS} grupos privados no plano Free.</p>
             </div>
             <Button size="sm" onClick={() => navigate("/planos")}
               className="bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800 font-bold rounded-lg flex-shrink-0">
@@ -806,11 +806,11 @@ const Home = () => {
               <div className="w-14 h-14 bg-copa-green-100 rounded-full flex items-center justify-center mb-3">
                 <LogIn className="w-6 h-6 text-copa-green-500" />
               </div>
-              <h4 className="font-bold text-foreground mb-1">Nenhum bolão privado</h4>
-              <p className="text-sm text-muted-foreground mb-4 max-w-xs">Crie seu próprio bolão ou entre em um com código de convite</p>
+              <h4 className="font-bold text-foreground mb-1">Nenhum grupo privado</h4>
+              <p className="text-sm text-muted-foreground mb-4 max-w-xs">Crie seu próprio grupo ou entre em um com código de convite</p>
               <div className="flex gap-2">
                 <Button size="sm" onClick={() => navigate("/criar")} className="bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800 font-semibold rounded-lg">
-                  <PlusCircle className="w-4 h-4 mr-1" /> Criar bolão
+                  <PlusCircle className="w-4 h-4 mr-1" /> Criar grupo
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => setShowCodeInput(true)} className="border-copa-green-300 text-copa-green-600 font-semibold rounded-lg">
                   <Keyboard className="w-4 h-4 mr-1" /> Entrar por código
@@ -832,7 +832,7 @@ const Home = () => {
       <div className="space-y-3">
         <div className="flex items-center gap-2">
           <Globe className="w-4 h-4 text-copa-green-500" />
-          <h3 className="text-base font-bold">Bolões Nacionais</h3>
+          <h3 className="text-base font-bold">Grupos Nacionais</h3>
           <span className="text-xs text-muted-foreground">• Abertos para todos</span>
         </div>
 
@@ -882,7 +882,7 @@ const Home = () => {
 
             return card;
           })}
-          {nacionais.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Nenhum bolão nacional disponível.</p>}
+          {nacionais.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Nenhum grupo nacional disponível.</p>}
         </div>
       </div>
 
@@ -893,9 +893,9 @@ const Home = () => {
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-10 translate-x-10 blur-2xl" />
           <div className="relative z-10 space-y-3 flex flex-col items-center">
             <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-2xl">🏆</div>
-            <h3 className="text-xl font-black">Como funciona o Bolão da Galera?</h3>
+            <h3 className="text-xl font-black">Como funciona o Grupo da Galera?</h3>
             <p className="text-xs max-w-sm" style={{ color: "rgba(255,255,255,.7)" }}>
-              Crie bolões, faça palpites nos jogos e dispute com amigos. Ranking automático e 7 modos de pontuação.
+              Crie grupos, faça palpites nos jogos e dispute com amigos. Ranking automático e 7 modos de pontuação.
             </p>
             <div className="flex items-center gap-2 mt-1 py-2.5 px-6 rounded-xl font-bold text-sm bg-white text-copa-green-700">
               Saiba mais <ChevronRight className="w-4 h-4" />

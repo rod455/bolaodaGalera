@@ -122,7 +122,7 @@ const NotificacaoPreferencias = () => {
           <NotifToggle
             icon={UserPlus}
             label="Novos participantes"
-            description="Quando alguém entra no seu bolão"
+            description="Quando alguém entra no seu grupo"
             enabled={preferencias.novo_participante}
             onChange={(v) => handleToggle("novo_participante", v)}
             color="bg-purple-500"
@@ -131,7 +131,7 @@ const NotificacaoPreferencias = () => {
           <NotifToggle
             icon={Flame}
             label="Eventos especiais"
-            description="Novos eventos criados nos seus bolões"
+            description="Novos eventos criados nos seus grupos"
             enabled={preferencias.evento_especial}
             onChange={(v) => handleToggle("evento_especial", v)}
             color="bg-orange-500"

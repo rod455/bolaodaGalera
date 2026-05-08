@@ -118,7 +118,7 @@ function getRankingMessage(ranking: RankingEntry[], userId: string | undefined):
     const diff = segundo ? pontos - segundo.pontos : 0;
     if (diff === 0) return { emoji: "⚔️", text: "Empatado na liderança! Cada ponto conta.", color: "text-copa-green-600 bg-copa-green-50 border-copa-green-200" };
     if (diff <= 3) return { emoji: "👑", text: `Liderando por apenas ${diff} ponto${diff > 1 ? "s" : ""}! Mantenha o foco.`, color: "text-copa-gold-600 bg-copa-gold-50 border-copa-gold-200" };
-    return { emoji: "🏆", text: `Liderando com ${diff} pontos de vantagem! Dominando o bolão.`, color: "text-copa-gold-600 bg-copa-gold-50 border-copa-gold-200" };
+    return { emoji: "🏆", text: `Liderando com ${diff} pontos de vantagem! Dominando o grupo.`, color: "text-copa-gold-600 bg-copa-gold-50 border-copa-gold-200" };
   }
 
   // Pódio (2º ou 3º)
@@ -523,7 +523,7 @@ const BolaoPage = () => {
     if (!id || !user || rankingRodada.length > 0) return;
     setLoadingRodada(true);
     try {
-      // 1. Buscar campeonatos do bolão
+      // 1. Buscar campeonatos do grupo
       const { data: bcData } = await supabase
         .from("bolao_campeonatos")
         .select("campeonato_id")
@@ -608,7 +608,7 @@ const BolaoPage = () => {
       ]
     );
 
-    // 2. Buscar todos os bolões que o usuário participa (ativos)
+    // 2. Buscar todos os grupos que o usuário participa (ativos)
     const { data: participacoes } = await supabase
       .from("bolao_participantes")
       .select("bolao_id, boloes(id, nome, campeonato_id)")
@@ -619,7 +619,7 @@ const BolaoPage = () => {
       .filter((p: any) => p.boloes && p.boloes.id !== id)
       .map((p: any) => p.boloes);
 
-    // 3. Buscar campeonatos de todos esses bolões via bolao_campeonatos
+    // 3. Buscar campeonatos de todos esses grupos via bolao_campeonatos
     const otherIds = otherBolaoIds.map((b: any) => b.id);
     const { data: bcOthers } = otherIds.length > 0
       ? await supabase.from("bolao_campeonatos").select("bolao_id, campeonato_id").in("bolao_id", otherIds)
@@ -635,7 +635,7 @@ const BolaoPage = () => {
       campMap[bc.bolao_id].add(bc.campeonato_id);
     }
 
-    // 4. Filtrar: bolões que compartilham pelo menos 1 campeonato com este
+    // 4. Filtrar: grupos que compartilham pelo menos 1 campeonato com este
     const others = otherBolaoIds
       .filter((b: any) => {
         const camps = campMap[b.id];
@@ -663,7 +663,7 @@ const BolaoPage = () => {
         .eq("bolao_id", sourceBolaoId);
 
       if (!sourcePalpites || sourcePalpites.length === 0) {
-        toast.info("Nenhum palpite encontrado no bolão selecionado.");
+        toast.info("Nenhum palpite encontrado no grupo selecionado.");
         setCopying(false);
         return;
       }
@@ -743,10 +743,10 @@ const BolaoPage = () => {
       if (errPalpites) throw errPalpites;
       const { error: errPart } = await supabase.from("bolao_participantes").delete().eq("user_id", user.id).eq("bolao_id", id);
       if (errPart) throw errPart;
-      toast.success("Você saiu do bolão.");
+      toast.success("Você saiu do grupo.");
       navigate("/home");
     } catch {
-      toast.error("Erro ao sair do bolão.");
+      toast.error("Erro ao sair do grupo.");
     } finally {
       setLeaving(false);
       setShowLeaveConfirm(false);
@@ -756,9 +756,9 @@ const BolaoPage = () => {
   const handleDeleteBolao = async () => {
     if (!user || !id || !bolao) return;
 
-    // Proteção: não permite excluir bolões nacionais
+    // Proteção: não permite excluir grupos nacionais
     if (bolao.is_nacional) {
-      toast.error("Bolões nacionais não podem ser excluídos.");
+      toast.error("Grupos nacionais não podem ser excluídos.");
       return;
     }
 
@@ -800,7 +800,7 @@ const BolaoPage = () => {
         .eq("id", id!);
       if (error) throw error;
       setBolao((prev) => prev ? { ...prev, nome: novoNome.trim() } : prev);
-      toast.success("Nome do bolão atualizado!");
+      toast.success("Nome do grupo atualizado!");
       setEditingNome(false);
     } catch {
       toast.error("Erro ao atualizar nome");
@@ -932,7 +932,7 @@ const BolaoPage = () => {
       {xpToast && <XPToast xp={xpToast.xp} message={xpToast.msg} onDone={() => setXPToast(null)} />}
       <SEOHead
         title={bolao ? `Bolão ${bolao.nome}` : "Bolão"}
-        description={bolao ? `Participe do bolão ${bolao.nome} e faça seus palpites!` : "Bolão da Galera"}
+        description={bolao ? `Participe do grupo ${bolao.nome} e faça seus palpites!` : "Bolão da Galera"}
         path={`/bolao/${id}`}
         schema={bolao ? {
           "@context": "https://schema.org",
@@ -1000,7 +1000,7 @@ const BolaoPage = () => {
                       setEditingNome(true);
                     }}
                     className="text-muted-foreground hover:text-copa-green-600 transition-colors flex-shrink-0"
-                    title="Editar nome do bolão"
+                    title="Editar nome do grupo"
                   >
                     <Pencil className="w-4 h-4" />
                   </button>
@@ -1060,8 +1060,8 @@ const BolaoPage = () => {
                 onClick={() => {
                   const url = Capacitor.isNativePlatform() ? STORE_URL : getInviteUrl(id!, bolao.codigo_convite!, "whatsapp");
                   const text = Capacitor.isNativePlatform()
-                    ? `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nBaixe o app: ${url}`
-                    : `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nÉ só acessar: ${url}`;
+                    ? `🏆 Entra no meu grupo "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nBaixe o app: ${url}`
+                    : `🏆 Entra no meu grupo "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nÉ só acessar: ${url}`;
                   trackEvent('enviar_convite', {
                     metodo: 'whatsapp',
                     bolao_id: id || '',
@@ -1082,8 +1082,8 @@ const BolaoPage = () => {
                 onClick={() => {
                   const url = Capacitor.isNativePlatform() ? STORE_URL : getInviteUrl(id!, bolao.codigo_convite!, "whatsapp");
                   const text = Capacitor.isNativePlatform()
-                    ? `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nBaixe o app: ${url}`
-                    : `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nÉ só acessar: ${url}`;
+                    ? `🏆 Entra no meu grupo "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nBaixe o app: ${url}`
+                    : `🏆 Entra no meu grupo "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nÉ só acessar: ${url}`;
                   trackEvent('enviar_convite', {
                     metodo: navigator.share ? 'share_nativo' : 'copiar_link',
                     bolao_id: id || '',
@@ -1476,8 +1476,8 @@ const BolaoPage = () => {
                 e.stopPropagation();
                 const url = Capacitor.isNativePlatform() ? STORE_URL : getInviteUrl(id!, bolao.codigo_convite!, "whatsapp");
                 const text = Capacitor.isNativePlatform()
-                  ? `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nBaixe o app: ${url}`
-                  : `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nÉ só acessar: ${url}`;
+                  ? `🏆 Entra no meu grupo "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nBaixe o app: ${url}`
+                  : `🏆 Entra no meu grupo "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nÉ só acessar: ${url}`;
                 // Analytics: Convite enviado
                 trackEvent('enviar_convite', {
                   metodo: navigator.share ? 'share_nativo' : 'copiar_link',
@@ -1533,8 +1533,8 @@ const BolaoPage = () => {
                     e.stopPropagation();
                     const url = Capacitor.isNativePlatform() ? STORE_URL : getInviteUrl(id!, bolao.codigo_convite!, "whatsapp");
                     const text = Capacitor.isNativePlatform()
-                  ? `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nBaixe o app: ${url}`
-                  : `🏆 Entra no meu bolão "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nÉ só acessar: ${url}`;
+                  ? `🏆 Entra no meu grupo "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nBaixe o app: ${url}`
+                  : `🏆 Entra no meu grupo "${bolao.nome}"!\n\nCódigo: ${bolao.codigo_convite}\n\nÉ só acessar: ${url}`;
                     // Analytics: Convite enviado
                     trackEvent('enviar_convite', {
                       metodo: navigator.share ? 'share_nativo' : 'copiar_link',
@@ -1732,7 +1732,7 @@ const BolaoPage = () => {
           className="flex items-center gap-2 text-sm text-red-400 hover:text-red-600 transition-colors mx-auto"
         >
           <LogOut className="w-4 h-4" />
-          Sair do bolão
+          Sair do grupo
         </button>
         {bolao.criador_id === user?.id && (
           <button
@@ -1750,7 +1750,7 @@ const BolaoPage = () => {
         <DialogContent className="max-w-sm rounded-2xl">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-red-600">
-              Sair do bolão?
+              Sair do grupo?
             </DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground mt-2">
               Tem certeza que deseja sair de <strong>{bolao.nome}</strong>?
@@ -1834,13 +1834,13 @@ const BolaoPage = () => {
               Copiar palpites
             </DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
-              Copie os palpites que você já fez em outro bolão do mesmo campeonato para este.
+              Copie os palpites que você já fez em outro grupo do mesmo campeonato para este.
             </DialogDescription>
           </DialogHeader>
           {otherBoloes.length === 0 ? (
             <div className="text-center py-6">
               <p className="text-sm text-muted-foreground">
-                Você não participa de outro bolão com o mesmo campeonato.
+                Você não participa de outro grupo com o mesmo campeonato.
               </p>
             </div>
           ) : (

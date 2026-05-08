@@ -24,7 +24,7 @@ const AppLayout = () => {
     ? [
         { path: "/home", label: "Home", icon: Home },
         { path: "/quiz", label: "Quiz na Copa", icon: Globe },
-        { path: "/criar", label: "Novo Bolão", icon: PlusCircle },
+        { path: "/criar", label: "Novo Grupo", icon: PlusCircle },
         { path: "/ao-vivo", label: "Ao Vivo", icon: Radio },
         { path: "/perfil", label: "Perfil", icon: User },
       ]

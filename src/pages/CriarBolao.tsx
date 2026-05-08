@@ -234,7 +234,7 @@ const CriarBolao = () => {
   const handleCriar = async () => {
     if (criando) return;
     if (campeonatosSelecionados.length === 0) { toast.error("Selecione pelo menos um campeonato"); return; }
-    if (!nome) { toast.error("Informe o nome do bolão"); return; }
+    if (!nome) { toast.error("Informe o nome do grupo"); return; }
     if (!modoSelecionado) { toast.error("Selecione o modo de pontuação"); return; }
     if (!isMataMata && regrasAtivas.length === 0) { toast.error("Selecione pelo menos uma regra de pontuação"); return; }
     if (isMataMata && campeonatosSelecionados.length > 1) { toast.error("Mata a Mata permite apenas 1 campeonato"); return; }
@@ -286,7 +286,7 @@ const CriarBolao = () => {
         }
       }
 
-      // Criar bolão com o primeiro campeonato como referência (legacy)
+      // Criar grupo com o primeiro campeonato como referência (legacy)
       const descFinal = isMataMata
         ? `mata_mata:${pontosIniciais}`
         : (descricao || null);
@@ -321,7 +321,7 @@ const CriarBolao = () => {
         user_id: user.id,
       });
 
-      // Analytics: Criar Bolão
+      // Analytics: Criar Grupo
       trackEvent('Criar_Bolao', {
         campeonato: campeonatosSelecionados[0] || '',
         modo: modoSelecionado || '',
@@ -377,12 +377,12 @@ const CriarBolao = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <SEOHead title="Criar Novo Bolão" path="/criar" noindex />
+      <SEOHead title="Criar Novo Grupo" path="/criar" noindex />
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-full">
           <ArrowLeft className="w-5 h-5" />
         </Button>
-        <h2 className="text-2xl font-bold">Criar Bolão</h2>
+        <h2 className="text-2xl font-bold">Criar Grupo</h2>
       </div>
 
       {/* 1. Basic Info */}
@@ -395,12 +395,12 @@ const CriarBolao = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label className="text-sm font-medium">Nome do Bolão</Label>
+            <Label className="text-sm font-medium">Nome do Grupo</Label>
             <Input placeholder="Ex: Bolão da Galera" value={nome} onChange={(e) => setNome(e.target.value)} className="h-11 rounded-xl bg-muted/50" />
           </div>
           <div className="space-y-2">
             <Label className="text-sm font-medium">Descrição</Label>
-            <Input placeholder="Descreva seu bolão" value={descricao} onChange={(e) => setDescricao(e.target.value)}
+            <Input placeholder="Descreva seu grupo" value={descricao} onChange={(e) => setDescricao(e.target.value)}
               onBlur={() => { if (nome.trim()) scrollToSection("section-pontuacao"); }}
               className="h-11 rounded-xl bg-muted/50" />
           </div>
@@ -547,7 +547,7 @@ const CriarBolao = () => {
             <Trophy className="w-4 h-4 text-copa-gold-500" />
             Campeonato
           </CardTitle>
-          <p className="text-xs text-muted-foreground mt-1">Escolha um ou mais campeonatos para o bolão</p>
+          <p className="text-xs text-muted-foreground mt-1">Escolha um ou mais campeonatos para o grupo</p>
         </CardHeader>
         <CardContent className="space-y-2">
           {loadingCampeonatos ? (
@@ -727,7 +727,7 @@ const CriarBolao = () => {
       {/* Submit */}
       <Button onClick={handleCriar} disabled={criando}
         className="w-full h-13 bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800 font-bold text-base rounded-xl shadow-md disabled:opacity-60">
-        {criando ? (<><Loader2 className="w-4 h-4 mr-2 animate-spin" />Criando...</>) : "Criar Bolão"}
+        {criando ? (<><Loader2 className="w-4 h-4 mr-2 animate-spin" />Criando...</>) : "Criar Grupo"}
       </Button>
 
       <RegrasModal regras={infoModal} open={!!infoModal} onClose={() => setInfoModal(null)} />
@@ -789,7 +789,7 @@ const CriarBolao = () => {
                 Time do Coração
               </DialogTitle>
               <DialogDescription className="text-sm text-muted-foreground">
-                Você só palpitará nos jogos deste time. Cada participante escolherá o seu ao entrar no bolão.
+                Você só palpitará nos jogos deste time. Cada participante escolherá o seu ao entrar no grupo.
               </DialogDescription>
             </DialogHeader>
             {loadingTimes ? (

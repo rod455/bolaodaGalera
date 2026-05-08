@@ -72,7 +72,7 @@ const Palpites = () => {
   const isFirstTime = searchParams.get("firstTime") === "true";
   const firstPalpiteDone = useRef(false);
 
-  // ═══ Copiar palpite para outros bolões ═══
+  // ═══ Copiar palpite para outros grupos ═══
   const [showCopyDialog, setShowCopyDialog] = useState(false);
   const [copyBoloes, setCopyBoloes] = useState<{id: string; nome: string; jaTemPalpite: boolean; temJogo: boolean; palpiteAtual?: string}[]>([]);
   const [copyingBoloes, setCopyingBoloes] = useState<Record<string, "idle" | "loading" | "done">>({});
@@ -84,7 +84,7 @@ const Palpites = () => {
     const jogo = jogos.find(j => j.id === jogoId);
     if (!jogo) return;
 
-    // Buscar todos os bolões que o usuário participa
+    // Buscar todos os grupos que o usuário participa
     const { data: participacoes } = await supabase
       .from("bolao_participantes")
       .select("bolao_id, boloes(id, nome, modo_pontuacao, time_favorito)")
@@ -93,7 +93,7 @@ const Palpites = () => {
 
     if (!participacoes || participacoes.length <= 1) return;
 
-    // Outros bolões (excluindo o atual)
+    // Outros grupos (excluindo o atual)
     const outrosBoloes = (participacoes || [])
       .filter((p: any) => p.boloes && p.boloes.id !== id)
       .map((p: any) => ({
@@ -119,14 +119,14 @@ const Palpites = () => {
     const boloesResult: {id: string; nome: string; jaTemPalpite: boolean; temJogo: boolean; palpiteAtual?: string}[] = [];
 
     for (const ob of outrosBoloes) {
-      // Checar campeonatos do bolão
+      // Checar campeonatos do grupo
       const { data: bcData } = await supabase
         .from("bolao_campeonatos")
         .select("campeonato_id")
         .eq("bolao_id", ob.bolaoId);
 
       const campIds = (bcData || []).map((bc: any) => bc.campeonato_id);
-      // Se o bolão é fanático, só copia se o jogo envolver o time favorito
+      // Se o grupo é fanático, só copia se o jogo envolver o time favorito
       const timeFavBolao = ob.timeFavorito;
       const jogoEnvolveTimeFav = !timeFavBolao ||
         jogo.time_a === timeFavBolao || jogo.time_b === timeFavBolao;
@@ -477,7 +477,7 @@ const Palpites = () => {
         setTimeout(() => setShowCelebration(true), 800);
       }
 
-      // Verificar se há outros bolões para copiar este palpite
+      // Verificar se há outros grupos para copiar este palpite
       checkOutrosBoloes(jogoId, placarA, placarB);
     } catch (err: any) { toast.error(err.message || "Erro ao salvar palpite"); } finally { setSalvando(null); }
   };
@@ -544,7 +544,7 @@ const Palpites = () => {
               <p className="text-sm font-bold text-gray-800">Cansou dos anúncios?</p>
             </div>
             <p className="text-xs text-muted-foreground leading-snug">
-              Premium PRO: <strong className="text-gray-700">sem anúncios</strong>, bolões ilimitados e todos os modos de jogo.
+              Premium PRO: <strong className="text-gray-700">sem anúncios</strong>, grupos ilimitados e todos os modos de jogo.
             </p>
             <button onClick={() => { setShowAdUpsell(false); navigate("/planos"); }}
               className="w-full py-2 rounded-lg font-bold text-xs transition-all"
@@ -555,13 +555,13 @@ const Palpites = () => {
         </div>
       )}
 
-      {/* ═══ Dialog: Copiar palpite para outros bolões ═══ */}
+      {/* ═══ Dialog: Copiar palpite para outros grupos ═══ */}
       <Dialog open={showCopyDialog} onOpenChange={setShowCopyDialog}>
         <DialogContent className="max-w-sm p-3 overflow-x-hidden">
           <DialogHeader>
             <DialogTitle className="text-sm font-bold flex items-center gap-2 pr-6">
               <Copy className="w-4 h-4 text-copa-green-500 flex-shrink-0" />
-              Copiar palpite para outros bolões?
+              Copiar palpite para outros grupos?
             </DialogTitle>
             <DialogDescription className="text-xs">
               {pendingCopy && (

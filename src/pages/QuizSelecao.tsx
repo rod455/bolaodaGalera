@@ -344,7 +344,7 @@ const QuizSelecao = () => {
         {/* Countdown Copa */}
         {diasCopa > 0 && (
           <div className="flex items-center justify-center gap-2 bg-copa-gold-50 border border-copa-gold-200 rounded-xl px-4 py-2.5 text-xs font-semibold text-copa-gold-700">
-            🏆 <strong>Copa começa em {diasCopa} dias.</strong> Faça o quiz e entre no bolão antes de começar!
+            🏆 <strong>Copa começa em {diasCopa} dias.</strong> Faça o quiz e entre no grupo antes de começar!
           </div>
         )}
 
@@ -556,7 +556,7 @@ const QuizSelecao = () => {
               Por que fazer<br /><span style={{ color: "#facc15" }}>o quiz?</span>
             </h2>
             <p className="text-sm leading-relaxed mb-7" style={{ color: "rgba(255,255,255,.6)" }}>
-              Não é só curiosidade. É uma forma de descobrir seu estilo de jogo — e de desafiar seus amigos do bolão.
+              Não é só curiosidade. É uma forma de descobrir seu estilo de jogo — e de desafiar seus amigos do grupo.
             </p>
             <div className="grid grid-cols-2 gap-2.5" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))" }}>
               {[
@@ -580,7 +580,7 @@ const QuizSelecao = () => {
             <div className="max-w-[460px] mx-auto mb-5 px-5">
               <div className="rounded-xl px-4 py-3.5 text-center text-sm"
                 style={{ background: "rgba(220,38,38,.12)", border: "1px solid rgba(220,38,38,.25)", color: "rgba(255,200,200,.85)" }}>
-                <strong style={{ color: "#fca5a5" }}>⏰ Copa começa em {diasCopa} dias.</strong> Faça o quiz agora e entre no bolão antes de começar!
+                <strong style={{ color: "#fca5a5" }}>⏰ Copa começa em {diasCopa} dias.</strong> Faça o quiz agora e entre no grupo antes de começar!
               </div>
             </div>
           )}
@@ -928,7 +928,7 @@ const QuizSelecao = () => {
             {diasCopa > 0 && (
               <div className="rounded-xl px-4 py-3 mb-5 text-sm"
                 style={{ background: "rgba(239,68,68,.09)", border: "1px solid rgba(239,68,68,.2)", color: "rgba(255,180,180,.82)" }}>
-                <strong style={{ color: "#fca5a5" }}>⏰ Copa começa em {diasCopa} dias.</strong> Entra no bolão antes que seus amigos se cadastrem primeiro.
+                <strong style={{ color: "#fca5a5" }}>⏰ Copa começa em {diasCopa} dias.</strong> Entra no grupo antes que seus amigos se cadastrem primeiro.
               </div>
             )}
 

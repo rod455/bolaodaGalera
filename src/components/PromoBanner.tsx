@@ -73,12 +73,12 @@ const PromoBanner = ({ jaParticipa = false, bolaoId }: PromoBannerProps) => {
           throw error;
         }
       } else {
-        toast.success("Você entrou no bolão! Faça seus palpites.");
+        toast.success("Você entrou no grupo! Faça seus palpites.");
       }
 
       navigate(`/bolao/${bolaoId}`);
     } catch (err: any) {
-      toast.error(err.message || "Erro ao entrar no bolão");
+      toast.error(err.message || "Erro ao entrar no grupo");
     } finally {
       setJoining(false);
     }

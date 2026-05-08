@@ -220,15 +220,15 @@ const Planos = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       <SEOHead
-        title="Planos Premium — Bolões Ilimitados a partir de R$19,90/mês"
-        description="Desbloqueie modos de pontuação exclusivos, bolões ilimitados, sem anúncios e mais. Bolão da Galera Premium a partir de R$19,90/mês ou R$119,90/ano."
+        title="Planos Premium — Grupos Ilimitados a partir de R$19,90/mês"
+        description="Desbloqueie modos de pontuação exclusivos, grupos ilimitados, sem anúncios e mais. Bolão da Galera Premium a partir de R$19,90/mês ou R$119,90/ano."
         path="/planos"
         keywords="bolão na copa premium, planos bolão, bolão sem anúncios, bolão ilimitado"
         schema={{
           "@context": "https://schema.org",
           "@type": "Product",
           "name": "Bolão da Galera Premium",
-          "description": "Planos premium para bolões de futebol ilimitados com modos de pontuação exclusivos e sem anúncios.",
+          "description": "Planos premium para grupos de futebol ilimitados com modos de pontuação exclusivos e sem anúncios.",
           "url": "https://www.bolaonacopa.com.br/planos",
           "brand": {
             "@type": "Brand",
@@ -308,7 +308,7 @@ const Planos = () => {
           <div className="space-y-2">
             <div className="flex items-center gap-2.5">
               <Check className="w-4 h-4 text-copa-green-500 flex-shrink-0" />
-              <span className="text-sm">Criar até 1 bolão privado</span>
+              <span className="text-sm">Criar até 1 grupo privado</span>
             </div>
             <div className="flex items-center gap-2.5">
               <Check className="w-4 h-4 text-copa-green-500 flex-shrink-0" />
@@ -319,7 +319,7 @@ const Planos = () => {
             </div>
             <div className="flex items-center gap-2.5">
               <Check className="w-4 h-4 text-copa-green-500 flex-shrink-0" />
-              <span className="text-sm">Participar de até 3 bolões privados</span>
+              <span className="text-sm">Participar de até 3 grupos privados</span>
             </div>
             <div className="flex items-center gap-2.5">
               <Check className="w-4 h-4 text-copa-green-500 flex-shrink-0" />
@@ -327,7 +327,7 @@ const Planos = () => {
             </div>
             <div className="flex items-center gap-2.5">
               <Check className="w-4 h-4 text-copa-green-500 flex-shrink-0" />
-              <span className="text-sm">Bolões nacionais ilimitados</span>
+              <span className="text-sm">Grupos nacionais ilimitados</span>
             </div>
           </div>
         </CardContent>
@@ -365,7 +365,7 @@ const Planos = () => {
           <div className="space-y-2">
             <div className="flex items-center gap-2.5">
               <Check className="w-4 h-4 text-copa-green-500 flex-shrink-0" />
-              <span className="text-sm">Bolões ilimitados</span>
+              <span className="text-sm">Grupos ilimitados</span>
             </div>
             <div className="flex items-center gap-2.5">
               <Check className="w-4 h-4 text-copa-green-500 flex-shrink-0" />
@@ -497,7 +497,7 @@ const Planos = () => {
             </div>
             <div className="flex items-center gap-2.5">
               <Check className="w-4 h-4 text-copa-green-500 flex-shrink-0" />
-              <span className="text-sm">Bolões privados com senha</span>
+              <span className="text-sm">Grupos privados com senha</span>
             </div>
             <div className="flex items-center gap-2.5">
               <Check className="w-4 h-4 text-copa-green-500 flex-shrink-0" />

@@ -94,14 +94,14 @@ const Quiz = () => {
                 Por que fazer <span style={{ color: "#facc15" }}>o quiz?</span>
               </h4>
               <p className="text-xs leading-relaxed mb-3" style={{ color: "rgba(255,255,255,.55)" }}>
-                Não é só curiosidade. É uma forma de descobrir seu estilo de jogo — e de desafiar seus amigos do bolão.
+                Não é só curiosidade. É uma forma de descobrir seu estilo de jogo — e de desafiar seus amigos do grupo.
               </p>
               <div className="grid grid-cols-2 gap-2">
                 {[
                   { ico: "🌍", t: "Seleções do futebol mundial", s: "As principais seleções do futebol mundial." },
                   { ico: "🎯", t: "Algoritmo de perfil", s: "Suas respostas criam um perfil único. Não tem como 'acertar'." },
-                  { ico: "💬", t: "Compartilhe o resultado", s: "Envie para o grupo do bolão e veja quem discorda." },
-                  { ico: "🏆", t: "Entre no bolão", s: "Após o quiz, entre no bolão da Copa e palpite em todos os 104 jogos." },
+                  { ico: "💬", t: "Compartilhe o resultado", s: "Envie para o grupo do grupo e veja quem discorda." },
+                  { ico: "🏆", t: "Entre no grupo", s: "Após o quiz, entre no grupo da Copa e palpite em todos os 104 jogos." },
                 ].map((c, i) => (
                   <div key={i} className="rounded-xl p-3 text-left"
                     style={{ background: "rgba(255,255,255,.045)", border: "1px solid rgba(255,255,255,.075)" }}>
@@ -187,7 +187,7 @@ const Quiz = () => {
                   { ico: "👑", t: "25 lendas reais", s: "De Pelé a Mbappé — os maiores da história das Copas." },
                   { ico: "🎯", t: "Algoritmo único", s: "Suas respostas definem seu perfil. Não tem como 'acertar'." },
                   { ico: "💬", t: "Compartilhe o resultado", s: "Manda pro grupo e veja quem é o Pelé da galera." },
-                  { ico: "🏆", t: "Entre no bolão", s: "Após o quiz, entre no bolão da Copa e palpite nos jogos." },
+                  { ico: "🏆", t: "Entre no grupo", s: "Após o quiz, entre no grupo da Copa e palpite nos jogos." },
                 ].map((c, i) => (
                   <div key={i} className="rounded-xl p-3 text-left"
                     style={{ background: "rgba(255,255,255,.045)", border: "1px solid rgba(255,255,255,.075)" }}>
@@ -341,7 +341,7 @@ const Quiz = () => {
       {/* Countdown Copa */}
       {diasCopa > 0 && (
         <div className="flex items-center justify-center gap-2 bg-copa-gold-50 border border-copa-gold-200 rounded-xl px-4 py-2.5 text-xs font-semibold text-copa-gold-700">
-          🏆 <strong>Copa começa em {diasCopa} dias.</strong> Faça o quiz e entre no bolão antes de começar!
+          🏆 <strong>Copa começa em {diasCopa} dias.</strong> Faça o quiz e entre no grupo antes de começar!
         </div>
       )}
 

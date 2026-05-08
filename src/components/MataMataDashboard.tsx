@@ -69,7 +69,7 @@ const MataMataDashboard = ({ bolaoId, campeonatoId }: Props) => {
 
   const loadData = async () => {
     try {
-      // 0. Buscar pontos_iniciais configurados no bolão (guardado na descrição como "mata_mata:XX")
+      // 0. Buscar pontos_iniciais configurados no grupo (guardado na descrição como "mata_mata:XX")
       let pontosConfig = 20;
       const { data: bolaoData } = await supabase
         .from("boloes")
@@ -215,7 +215,7 @@ const MataMataDashboard = ({ bolaoId, campeonatoId }: Props) => {
 
       if (error) throw error;
 
-      // Inscrever todos os participantes do bolão
+      // Inscrever todos os participantes do grupo
       const { data: bolaoParticipantes } = await supabase
         .from("bolao_participantes")
         .select("user_id")

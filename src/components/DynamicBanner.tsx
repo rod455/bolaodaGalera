@@ -35,8 +35,8 @@ interface BannerData {
 export interface UserBannerContext {
   diasDesdeCadastro: number;
   temBolaoPrivado: boolean;
-  qtdParticipantesMax: number; // maior nº de participantes entre os bolões privados do user
-  temBolaoSolitario: boolean; // criou bolão privado onde só ele participa
+  qtdParticipantesMax: number; // maior nº de participantes entre os grupos privados do user
+  temBolaoSolitario: boolean; // criou grupo privado onde só ele participa
 }
 
 interface DynamicBannerProps {
@@ -308,11 +308,11 @@ const DynamicBanner = ({ userBolaoIds, userContext }: DynamicBannerProps) => {
         if (error.code === "23505") toast.info("Você já está participando!");
         else throw error;
       } else {
-        toast.success("Você entrou no bolão! Faça seus palpites.");
+        toast.success("Você entrou no grupo! Faça seus palpites.");
       }
       navigate(`/bolao/${banner.bolao_id}`);
     } catch (err: any) {
-      toast.error(err.message || "Erro ao entrar no bolão");
+      toast.error(err.message || "Erro ao entrar no grupo");
     } finally {
       setJoining(null);
     }
