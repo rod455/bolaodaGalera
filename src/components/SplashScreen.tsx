@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-const LOGO_URL = "https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/BolaoDaGalera%20-%20sem%20fundo.png";
+const LOGO_URL = "https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/Splash.png";
 
 const SplashScreen = ({ onFinish }: { onFinish: () => void }) => {
   const [phase, setPhase] = useState<"bounce" | "fade-out">("bounce");
@@ -26,12 +26,17 @@ const SplashScreen = ({ onFinish }: { onFinish: () => void }) => {
         <img
           src={LOGO_URL}
           alt="Bolão da Galera"
-          className="w-64 h-64 object-contain drop-shadow-2xl splash-bounce"
+          className="w-44 h-44 object-contain drop-shadow-2xl splash-bounce"
         />
       </div>
 
+      {/* Nome do app */}
+      <h1 className="text-white text-3xl font-black mt-6 tracking-tight splash-fade-in">
+        Bolão da Galera
+      </h1>
+
       {/* Subtítulo */}
-      <p className="text-white/80 text-sm mt-4 splash-fade-in-delayed">
+      <p className="text-white/80 text-sm mt-2 splash-fade-in-delayed">
         Faça seus palpites e dispute com os amigos!
       </p>
 
