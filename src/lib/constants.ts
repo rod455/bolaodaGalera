@@ -162,7 +162,7 @@ export function isIOSPlatform(): boolean {
 export function getStoreUrl(): string {
   return isIOSPlatform() ? APP_STORE_URL : PLAY_STORE_URL;
 }
-const BASE_URL = "https://www.bolaonacopa.com.br";
+const BASE_URL = "https://www.bolaodagalera-ten.vercel.app";
 
 export function getInviteUrl(bolaoId: string, codigoConvite: string, medium: "whatsapp" | "share" | "copy" = "share"): string {
   return `${BASE_URL}/entrar?codigo=${codigoConvite}&utm_source=convite&utm_medium=${medium}&utm_campaign=bolao_${bolaoId}`;

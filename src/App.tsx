@@ -152,9 +152,9 @@ const App = () => {
     window.addEventListener("hashchange", checkDeepLink);
     document.addEventListener("resume", checkDeepLink);
 
-    // appUrlOpen: captura redirect OAuth via scheme bolaonacopa://
+    // appUrlOpen: captura redirect OAuth via scheme bolaodagalera://
     // Usado no Google Sign-In do iPad — o Safari não consegue navegar para
-    // https://localhost, então o redirect usa bolaonacopa:// que o iOS
+    // https://localhost, então o redirect usa bolaodagalera:// que o iOS
     // intercepta e entrega aqui via appUrlOpen.
     const urlOpenListener = CapApp.addListener("appUrlOpen", (event) => {
       const url = event.url;
@@ -228,3 +228,4 @@ const App = () => {
 };
 
 export default App;
+

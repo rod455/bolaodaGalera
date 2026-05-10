@@ -46,7 +46,7 @@ const Quiz = () => {
         title="Quiz na Copa — Descubra sua seleção, sua lenda e mais"
         description="Quizzes interativos de futebol. Descubra qual seleção combinaria com você, qual lenda do futebol você seria e muito mais."
         path="/quiz"
-        keywords="quiz futebol, quiz selecao, quiz lenda futebol, bolao na copa quiz"
+        keywords="quiz futebol, quiz selecao, quiz lenda futebol, bolao da galera quiz"
       />
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => navigate("/home")} className="rounded-full">
@@ -399,3 +399,4 @@ const Quiz = () => {
 };
 
 export default Quiz;
+

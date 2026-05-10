@@ -116,7 +116,7 @@ const QuizJogador = () => {
     const isIOS = Capacitor.getPlatform() === "ios";
     const storeLink = isIOS
       ? "https://apps.apple.com/app/bolao-na-copa/id6761629695"
-      : "https://www.bolaonacopa.com.br/quiz-jogador";
+      : "https://www.bolaodagalera-ten.vercel.app/quiz-jogador";
     const texto = `${jogador.share}\n\nBaixe o app: ${storeLink}`;
     trackEvent("quiz_jogador_share", { resultado: jogador.id, canal });
 
@@ -412,7 +412,7 @@ const QuizJogador = () => {
                 {userName} descobriu sua posição
               </div>
               <p className="text-xs mb-8" style={{ color: "rgba(255,255,255,.4)" }}>
-                Descubra você também em: <span style={{ color: "#facc15" }}>bolaonacopa.com.br/quiz-jogador</span>
+                Descubra você também em: <span style={{ color: "#facc15" }}>bolaodagalera-ten.vercel.app/quiz-jogador</span>
               </p>
 
               {/* Emoji grande */}
@@ -500,3 +500,4 @@ const QuizJogador = () => {
 };
 
 export default QuizJogador;
+

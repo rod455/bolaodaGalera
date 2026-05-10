@@ -141,3 +141,4 @@ const PremiumUpsellModal = ({ open, onClose, reason, extraInfo }: PremiumUpsellM
 
 export default PremiumUpsellModal;
 export type { UpsellReason };
+

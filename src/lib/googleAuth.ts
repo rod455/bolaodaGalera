@@ -98,7 +98,7 @@ export async function signInWithGoogle(
     if (isIPad) {
       // No iPad nativo, usar scheme customizado como redirectTo.
       // O Safari não consegue navegar para https://localhost (que é o origin do app),
-      // então o OAuth nunca voltaria para o app. Com bolaonacopa://, o iOS intercepta
+      // então o OAuth nunca voltaria para o app. Com bolaodagalera://, o iOS intercepta
       // o redirect e dispara o evento appUrlOpen no App.tsx.
       return signInWithGoogleWeb(redirectPath, true);
     }
@@ -173,7 +173,7 @@ async function signInWithGoogleWeb(
   redirectPath: string,
   useAppScheme = false
 ): Promise<{ success: boolean; error?: string }> {
-  // No iPad nativo: usar bolaonacopa:// para que o iOS intercepte o redirect
+  // No iPad nativo: usar bolaodagalera:// para que o iOS intercepte o redirect
   // e abra o app via appUrlOpen (ver App.tsx). Na web, usar a origin normal.
   const redirectTo = useAppScheme
     ? `bolaonacopa:/${redirectPath}`
@@ -196,3 +196,4 @@ async function signInWithGoogleWeb(
     return { success: false, error: err?.message || "Erro ao fazer login com Google" };
   }
 }
+

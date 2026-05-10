@@ -439,3 +439,4 @@ const GuestHeroCarousel = ({ participantesCount, handleGoogleLogin }: GuestHeroC
 };
 
 export default GuestHeroCarousel;
+

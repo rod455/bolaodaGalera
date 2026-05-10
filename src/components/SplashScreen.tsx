@@ -89,3 +89,4 @@ const SplashScreen = ({ onFinish }: { onFinish: () => void }) => {
 };
 
 export default SplashScreen;
+

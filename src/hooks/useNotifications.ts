@@ -238,3 +238,4 @@ export const useNotifications = (): UseNotificationsReturn => {
     refetch: fetchNotificacoes,
   };
 };
+

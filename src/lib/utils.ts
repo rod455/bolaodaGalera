@@ -39,3 +39,4 @@ export async function shareViaWhatsApp(text: string): Promise<void> {
   // 3. Desktop: abrir WhatsApp Web
   window.open(`https://web.whatsapp.com/send?text=${encoded}`, "_blank");
 }
+

@@ -230,3 +230,4 @@ const XPProgressCard = ({ userXP, referralCode, variant = "full" }: XPProgressCa
 };
 
 export default XPProgressCard;
+

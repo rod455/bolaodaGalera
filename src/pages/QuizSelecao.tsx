@@ -145,7 +145,7 @@ const QuizSelecao = () => {
   const generateAndShare = useCallback(async (canal: string) => {
     if (!selecao) return;
     const isIOS = Capacitor.getPlatform() === "ios";
-    const link = isIOS ? "apps.apple.com/app/bolao-na-copa/id6761629695" : "bolaonacopa.com.br/quiz";
+    const link = isIOS ? "apps.apple.com/app/bolao-na-copa/id6761629695" : "bolaodagalera-ten.vercel.app/quiz";
     const femininos = ["Argentina","Alemanha","Australia","Austria","Belgica","Bosnia","Colombia","Croacia","Dinamarca","Escocia","Espanha","Franca","Holanda","Inglaterra","Jamaica","Noruega","Suecia","Suica","Tunisia","Turquia","Rep. Tcheca","Costa Rica","Costa do Marfim","Nova Zelandia","Arabia Saudita","Coreia do Sul","Africa do Sul"];
     const artigo = femininos.some(f => selecao.nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(f)) ? "da" : "do";
     const texto = `${selecao.bandeira} Fui convocado para jogar pela Sele\u00e7\u00e3o ${artigo} ${selecao.nome}! Qual sele\u00e7\u00e3o te convocaria?\n\nDescubra em: ${link}`;
@@ -208,7 +208,7 @@ const QuizSelecao = () => {
       }).catch(() => toast.success("Texto copiado!"));
 
     } else if (canal === "share") {
-      const url = isIOS ? "https://apps.apple.com/app/bolao-na-copa/id6761629695" : "https://www.bolaonacopa.com.br/quiz-selecao";
+      const url = isIOS ? "https://apps.apple.com/app/bolao-na-copa/id6761629695" : "https://www.bolaodagalera-ten.vercel.app/quiz-selecao";
       try {
         if (Capacitor.isNativePlatform()) {
           const { Share } = await import("@capacitor/share");
@@ -254,7 +254,7 @@ const QuizSelecao = () => {
           title="Quiz na Copa — Para qual seleção você seria convocado?"
           description="Responda 10 perguntas e descubra qual seleção do futebol mundial combina com você. Quiz na Copa — grátis!"
           path="/quiz"
-          keywords="quiz futebol, quiz selecao, quiz futebol, bolao na copa quiz"
+          keywords="quiz futebol, quiz selecao, quiz futebol, bolao da galera quiz"
         />
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => navigate("/home")} className="rounded-full">
@@ -421,7 +421,7 @@ const QuizSelecao = () => {
           title="Quiz na Copa — Para qual seleção você seria convocado?"
           description="Responda 10 perguntas e descubra qual seleção do futebol mundial combina com seu estilo de jogo."
           path="/quiz"
-          keywords="quiz futebol, quiz selecao, quiz futebol, bolao na copa quiz"
+          keywords="quiz futebol, quiz selecao, quiz futebol, bolao da galera quiz"
         />
         {/* Grid sutil no fundo */}
         <div className="fixed inset-0 pointer-events-none z-0" style={{
@@ -780,7 +780,7 @@ const QuizSelecao = () => {
                 {userName} descobriu sua seleção
               </div>
               <p className="text-xs mb-8" style={{ color: "rgba(255,255,255,.4)" }}>
-                Descubra você também em: <span style={{ color: "#facc15" }}>bolaonacopa.com.br/quiz</span>
+                Descubra você também em: <span style={{ color: "#facc15" }}>bolaodagalera-ten.vercel.app/quiz</span>
               </p>
 
               {/* Bandeira */}
@@ -952,3 +952,4 @@ const QuizSelecao = () => {
 };
 
 export default QuizSelecao;
+

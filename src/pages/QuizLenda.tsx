@@ -116,7 +116,7 @@ const QuizLenda = () => {
     const isIOS = Capacitor.getPlatform() === "ios";
     const storeLink = isIOS
       ? "https://apps.apple.com/app/bolao-na-copa/id6761629695"
-      : "https://www.bolaonacopa.com.br/quiz-lenda";
+      : "https://www.bolaodagalera-ten.vercel.app/quiz-lenda";
     const texto = `${lenda.share}\n\nBaixe o app: ${storeLink}`;
     trackEvent("quiz_lenda_share", { resultado: lenda.id, canal });
 
@@ -412,7 +412,7 @@ const QuizLenda = () => {
                 {userName} descobriu sua lenda
               </div>
               <p className="text-xs mb-8" style={{ color: "rgba(255,255,255,.4)" }}>
-                Descubra você também em: <span style={{ color: "#facc15" }}>bolaonacopa.com.br/quiz-lenda</span>
+                Descubra você também em: <span style={{ color: "#facc15" }}>bolaodagalera-ten.vercel.app/quiz-lenda</span>
               </p>
 
               {/* Emoji grande */}
@@ -498,3 +498,4 @@ const QuizLenda = () => {
 };
 
 export default QuizLenda;
+

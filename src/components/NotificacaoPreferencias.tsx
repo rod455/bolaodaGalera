@@ -161,3 +161,4 @@ const NotificacaoPreferencias = () => {
 };
 
 export default NotificacaoPreferencias;
+

@@ -155,3 +155,4 @@ export const useGamification = () => {
     proximoNivel: userXP ? getProximoNivel(userXP.nivel) : NIVEIS[1],
   };
 };
+

@@ -532,3 +532,4 @@ const DynamicBanner = ({ userBolaoIds, userContext }: DynamicBannerProps) => {
 };
 
 export default DynamicBanner;
+

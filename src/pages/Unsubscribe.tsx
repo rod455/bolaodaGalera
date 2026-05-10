@@ -95,7 +95,7 @@ export default function Unsubscribe() {
               N\u00e3o encontramos sua conta. O link pode ter expirado.
             </p>
             <a
-              href="https://bolaonacopa.com.br"
+              href="https://bolaodagalera-ten.vercel.app"
               className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold text-sm inline-block"
             >
               Voltar ao app
@@ -111,7 +111,7 @@ export default function Unsubscribe() {
               Voc\u00ea j\u00e1 havia solicitado o descadastro. N\u00e3o enviaremos mais emails de engajamento.
             </p>
             <a
-              href="https://bolaonacopa.com.br"
+              href="https://bolaodagalera-ten.vercel.app"
               className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold text-sm inline-block"
             >
               Voltar ao app
@@ -191,7 +191,7 @@ export default function Unsubscribe() {
               Sua conta continua ativa normalmente.
             </p>
             <a
-              href="https://bolaonacopa.com.br"
+              href="https://bolaodagalera-ten.vercel.app"
               className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold text-sm inline-block"
             >
               Voltar ao app
@@ -219,3 +219,4 @@ export default function Unsubscribe() {
     </div>
   );
 }
+

@@ -95,3 +95,4 @@ export const NOTIFICACAO_VISUAL: Record<NotificacaoTipo, NotificacaoVisualConfig
     border: "border-gray-200",
   },
 };
+

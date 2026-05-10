@@ -121,3 +121,4 @@ export async function signInWithApple(
     return { success: false, error: err?.message || "Erro ao fazer login com Apple" };
   }
 }
+

@@ -62,3 +62,4 @@ const RegrasModal = ({ regras, open, onClose }: RegrasModalProps) => {
 };
 
 export default RegrasModal;
+

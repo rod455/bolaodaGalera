@@ -27,7 +27,7 @@ interface UTMParams {
 
 /**
  * Captura UTMs da URL atual (web).
- * Ex: https://bolaonacopa.com.br/?utm_source=instagram&utm_campaign=bolao2026
+ * Ex: https://bolaodagalera-ten.vercel.app/?utm_source=instagram&utm_campaign=bolao2026
  */
 function captureWebUTMs(): UTMParams | null {
   try {
@@ -183,3 +183,4 @@ export async function initUTMTracker() {
     await captureInstallReferrer();
   }
 }
+

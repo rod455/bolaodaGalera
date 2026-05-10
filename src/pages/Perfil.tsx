@@ -642,7 +642,7 @@ const Perfil = () => {
           <div className="flex gap-2">
             <Button
               onClick={() => {
-                const url = Capacitor.isNativePlatform() ? getStoreUrl() : (referralCode ? getReferralUrl(referralCode, "copy") : "https://www.bolaonacopa.com.br/auth?utm_source=convite&utm_medium=copy");
+                const url = Capacitor.isNativePlatform() ? getStoreUrl() : (referralCode ? getReferralUrl(referralCode, "copy") : "https://www.bolaodagalera-ten.vercel.app/auth?utm_source=convite&utm_medium=copy");
                 navigator.clipboard.writeText(url);
                 toast.success("Link copiado!");
               }}
@@ -654,7 +654,7 @@ const Perfil = () => {
             </Button>
             <Button
               onClick={() => {
-                const url = Capacitor.isNativePlatform() ? getStoreUrl() : (referralCode ? getReferralUrl(referralCode, "whatsapp") : "https://www.bolaonacopa.com.br/auth?utm_source=convite&utm_medium=whatsapp");
+                const url = Capacitor.isNativePlatform() ? getStoreUrl() : (referralCode ? getReferralUrl(referralCode, "whatsapp") : "https://www.bolaodagalera-ten.vercel.app/auth?utm_source=convite&utm_medium=whatsapp");
                 const text = `🏆 Vem jogar no Grupo da Galera! Faça seus palpites e dispute com seus amigos. Cadastre-se aqui: ${url}`;
                 shareViaWhatsApp(text);
               }}
@@ -831,3 +831,4 @@ const Perfil = () => {
 };
 
 export default Perfil;
+

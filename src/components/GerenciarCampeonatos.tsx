@@ -368,3 +368,4 @@ const GerenciarCampeonatos = ({ bolaoId, isOpen, onClose, onUpdated }: Gerenciar
 };
 
 export default GerenciarCampeonatos;
+

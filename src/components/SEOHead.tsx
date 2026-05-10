@@ -12,7 +12,7 @@ interface SEOHeadProps {
 
 const DEFAULTS = {
   siteName: "Bolão da Galera",
-  baseUrl: "https://www.bolaonacopa.com.br",
+  baseUrl: "https://www.bolaodagalera-ten.vercel.app",
   defaultTitle: "Bolão da Galera — Bolão de Futebol Grátis | Temporada 2026 e mais",
   defaultDescription:
     "Bolão da Galera: crie grupos de futebol grátis e dispute com amigos! Palpites em campeonatos nacionais e internacionais, Champions League e mais. Cadastre-se em 10 segundos.",
@@ -70,3 +70,4 @@ const SEOHead = ({
 };
 
 export default SEOHead;
+

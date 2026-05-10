@@ -600,3 +600,4 @@ const CreateEventoModal = ({ open, onClose, bolaoId, campeonatoId, campeonatos, 
 };
 
 export default EventosEspeciais;
+

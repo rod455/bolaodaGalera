@@ -86,3 +86,4 @@ async function ensureAdMobReady(): Promise<boolean> {
 }
 
 export default AdBanner;
+

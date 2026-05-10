@@ -19,3 +19,4 @@ const AdLoadingOverlay = () => (
 );
 
 export default AdLoadingOverlay;
+

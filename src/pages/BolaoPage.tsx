@@ -939,11 +939,11 @@ const BolaoPage = () => {
           "@type": "SportsEvent",
           "name": `Bolão ${bolao.nome}`,
           "description": `Bolão de futebol online: ${bolao.nome}. Faça seus palpites e dispute com amigos.`,
-          "url": `https://www.bolaonacopa.com.br/bolao/${id}`,
+          "url": `https://www.bolaodagalera-ten.vercel.app/bolao/${id}`,
           "organizer": {
             "@type": "Organization",
             "name": "Bolão da Galera",
-            "url": "https://www.bolaonacopa.com.br"
+            "url": "https://www.bolaodagalera-ten.vercel.app"
           }
         } : undefined}
       />
@@ -2150,3 +2150,4 @@ const ExpandableJogoRow = ({
 };
 
 export default BolaoPage;
+

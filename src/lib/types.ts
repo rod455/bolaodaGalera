@@ -104,3 +104,4 @@ export interface MataMataEscolha {
   jogo_id: string;
   resultado: "vitoria" | "derrota" | "empate" | null;
 }
+

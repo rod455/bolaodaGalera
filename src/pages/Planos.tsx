@@ -26,10 +26,10 @@ const STRIPE_PRICES = {
 
 // ═══ Product IDs do RevenueCat/Apple (iOS) ═══
 const RC_PRODUCTS = {
-  premium_mensal: "premium_mensal",
-  premium_anual: "premium_anual",
-  premium_pro_mensal: "premium_pro_mensal",
-  premium_pro_anual: "premium_pro_anual",
+  premium_mensal: "galera_premium_mensal",
+  premium_anual: "galera_premium_anual",
+  premium_pro_mensal: "galera_pro_mensal",
+  premium_pro_anual: "galera_pro_anual",
 };
 
 const Planos = () => {
@@ -229,7 +229,7 @@ const Planos = () => {
           "@type": "Product",
           "name": "Bolão da Galera Premium",
           "description": "Planos premium para grupos de futebol ilimitados com modos de pontuação exclusivos e sem anúncios.",
-          "url": "https://www.bolaonacopa.com.br/planos",
+          "url": "https://www.bolaodagalera-ten.vercel.app/planos",
           "brand": {
             "@type": "Brand",
             "name": "Bolão da Galera"
@@ -242,7 +242,7 @@ const Planos = () => {
               "priceCurrency": "BRL",
               "priceValidUntil": "2026-12-31",
               "availability": "https://schema.org/InStock",
-              "url": "https://www.bolaonacopa.com.br/planos"
+              "url": "https://www.bolaodagalera-ten.vercel.app/planos"
             },
             {
               "@type": "Offer",
@@ -251,7 +251,7 @@ const Planos = () => {
               "priceCurrency": "BRL",
               "priceValidUntil": "2026-12-31",
               "availability": "https://schema.org/InStock",
-              "url": "https://www.bolaonacopa.com.br/planos"
+              "url": "https://www.bolaodagalera-ten.vercel.app/planos"
             }
           ]
         }}
@@ -587,3 +587,5 @@ const Planos = () => {
 };
 
 export default Planos;
+
+

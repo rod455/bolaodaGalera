@@ -680,7 +680,7 @@ const Home = () => {
 
         <button
           onClick={() => {
-            const texto = "⚽ Bora fazer um grupo? Baixa o Grupo da Galera e entra no meu grupo!\n\nhttps://www.bolaonacopa.com.br";
+            const texto = "⚽ Bora fazer um grupo? Baixa o Grupo da Galera e entra no meu grupo!\n\nhttps://www.bolaodagalera-ten.vercel.app";
             if (navigator.share) {
               navigator.share({ title: "Bolão da Galera", text: texto }).catch(() => {});
             } else {
@@ -964,3 +964,4 @@ const Home = () => {
 };
 
 export default Home;
+

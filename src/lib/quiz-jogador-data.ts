@@ -19,7 +19,7 @@ export const JOGADORES: Jogador[] = [
     emoji: "🎯",
     titulo: "Você é o CENTROAVANTE — centro das atenções!",
     desc: "Só aparece nas horas certas, mas quando aparece todo mundo fala. Some a semana toda e aparece sexta no bar dizendo 'fui eu que chamei a galera'.",
-    share: "Fiz o quiz do Grupo da Galera e sou o CENTROAVANTE 🎯⚽ Some a semana, aparece na sexta. Descobre qual jogador você seria → bolaonacopa.com.br/quiz-jogador",
+    share: "Fiz o quiz do Grupo da Galera e sou o CENTROAVANTE 🎯⚽ Some a semana, aparece na sexta. Descobre qual jogador você seria → bolaodagalera-ten.vercel.app/quiz-jogador",
   },
   {
     id: "lateral_direito",
@@ -27,7 +27,7 @@ export const JOGADORES: Jogador[] = [
     emoji: "🏃",
     titulo: "Você é o LATERAL DIREITO — vai e volta sem parar!",
     desc: "Está em todo lugar — na festa, no trabalho, ajudando a mudar, no churrasco. Mas no final do dia não sabe bem o que fez de útil.",
-    share: "Fiz o quiz e sou o LATERAL DIREITO 🏃⚽ Em todo lugar, em lugar nenhum. Descobre o seu → bolaonacopa.com.br/quiz-jogador",
+    share: "Fiz o quiz e sou o LATERAL DIREITO 🏃⚽ Em todo lugar, em lugar nenhum. Descobre o seu → bolaodagalera-ten.vercel.app/quiz-jogador",
   },
   {
     id: "lateral_esquerdo",
@@ -35,7 +35,7 @@ export const JOGADORES: Jogador[] = [
     emoji: "👻",
     titulo: "Você é o LATERAL ESQUERDO — ninguém lembra que você existe!",
     desc: "Igual ao lateral direito mas invisível até fazer falta. O colaborador silencioso que só aparece no RH quando pede demissão.",
-    share: "Fiz o quiz e sou o LATERAL ESQUERDO 👻⚽ Ninguém lembra até fazer falta. Descobre o seu → bolaonacopa.com.br/quiz-jogador",
+    share: "Fiz o quiz e sou o LATERAL ESQUERDO 👻⚽ Ninguém lembra até fazer falta. Descobre o seu → bolaodagalera-ten.vercel.app/quiz-jogador",
   },
   {
     id: "zagueiro_racudo",
@@ -43,7 +43,7 @@ export const JOGADORES: Jogador[] = [
     emoji: "💥",
     titulo: "Você é o ZAGUEIRO RAÇUDO — sem técnica mas com coração!",
     desc: "Bate em qualquer um sem hesitar. Não entende nada da reunião mas é o primeiro a defender o chefe na hora do problema.",
-    share: "Fiz o quiz e sou o ZAGUEIRO RAÇUDO 💥⚽ Sem técnica, com coração. Descobre o seu → bolaonacopa.com.br/quiz-jogador",
+    share: "Fiz o quiz e sou o ZAGUEIRO RAÇUDO 💥⚽ Sem técnica, com coração. Descobre o seu → bolaodagalera-ten.vercel.app/quiz-jogador",
   },
   {
     id: "zagueiro_elegante",
@@ -51,7 +51,7 @@ export const JOGADORES: Jogador[] = [
     emoji: "🧊",
     titulo: "Você é o ZAGUEIRO ELEGANTE — nunca parece se esforçar!",
     desc: "Sai jogando pelo chão, cabelo no lugar. Faz tudo na última hora e entrega impecável. Todo mundo odeia com carinho.",
-    share: "Fiz o quiz e sou o ZAGUEIRO ELEGANTE 🧊⚽ Última hora, resultado impecável. Descobre o seu → bolaonacopa.com.br/quiz-jogador",
+    share: "Fiz o quiz e sou o ZAGUEIRO ELEGANTE 🧊⚽ Última hora, resultado impecável. Descobre o seu → bolaodagalera-ten.vercel.app/quiz-jogador",
   },
   {
     id: "volante_destruidor",
@@ -59,7 +59,7 @@ export const JOGADORES: Jogador[] = [
     emoji: "🔨",
     titulo: "Você é o VOLANTE DESTRUIDOR — não cria nada mas acaba com tudo!",
     desc: "Nunca tem ideia própria mas sempre sabe onde o plano vai dar errado antes de todo mundo. O pessimista que salva o grupo.",
-    share: "Fiz o quiz e sou o VOLANTE DESTRUIDOR 🔨⚽ Não cria, mas prevê o desastre. Descobre o seu → bolaonacopa.com.br/quiz-jogador",
+    share: "Fiz o quiz e sou o VOLANTE DESTRUIDOR 🔨⚽ Não cria, mas prevê o desastre. Descobre o seu → bolaodagalera-ten.vercel.app/quiz-jogador",
   },
   {
     id: "volante_box",
@@ -67,7 +67,7 @@ export const JOGADORES: Jogador[] = [
     emoji: "🐴",
     titulo: "Você é o VOLANTE BOX-TO-BOX — corre 12km e ninguém percebe!",
     desc: "Faz o trabalho de quatro pessoas, não recebe aumento e ainda sorri na foto da confraternização. O herói sem cabo.",
-    share: "Fiz o quiz e sou o VOLANTE BOX-TO-BOX 🐴⚽ Trabalha por quatro, crédito zero. Descobre o seu → bolaonacopa.com.br/quiz-jogador",
+    share: "Fiz o quiz e sou o VOLANTE BOX-TO-BOX 🐴⚽ Trabalha por quatro, crédito zero. Descobre o seu → bolaodagalera-ten.vercel.app/quiz-jogador",
   },
   {
     id: "meia_armador",
@@ -75,7 +75,7 @@ export const JOGADORES: Jogador[] = [
     emoji: "🎩",
     titulo: "Você é o MEIA ARMADOR — toca em 3 bolas mas muda o jogo!",
     desc: "Fala pouco na reunião mas quando fala todo mundo anota. O passe que muda tudo vem sempre de você — quando você aparece.",
-    share: "Fiz o quiz e sou o MEIA ARMADOR 🎩⚽ Fala pouco, muda tudo. Descobre o seu → bolaonacopa.com.br/quiz-jogador",
+    share: "Fiz o quiz e sou o MEIA ARMADOR 🎩⚽ Fala pouco, muda tudo. Descobre o seu → bolaodagalera-ten.vercel.app/quiz-jogador",
   },
   {
     id: "meia_atacante",
@@ -83,7 +83,7 @@ export const JOGADORES: Jogador[] = [
     emoji: "🌪️",
     titulo: "Você é o MEIA ATACANTE — genial mas inconsistente!",
     desc: "Jogo perfeito semana sim, sumido semana não. Tem a melhor ideia do grupo e esquece de executar. Potencial ilimitado, entrega variável.",
-    share: "Fiz o quiz e sou o MEIA ATACANTE 🌪️⚽ Melhor ideia do grupo, entrega variável. Descobre o seu → bolaonacopa.com.br/quiz-jogador",
+    share: "Fiz o quiz e sou o MEIA ATACANTE 🌪️⚽ Melhor ideia do grupo, entrega variável. Descobre o seu → bolaodagalera-ten.vercel.app/quiz-jogador",
   },
   {
     id: "ponta_direita",
@@ -91,7 +91,7 @@ export const JOGADORES: Jogador[] = [
     emoji: "🚀",
     titulo: "Você é a PONTA DIREITA — velocidade absurda no primeiro passo!",
     desc: "Começa 7 projetos por mês, termina nenhum. O drible sai, o que vem depois... a gente torce.",
-    share: "Fiz o quiz e sou a PONTA DIREITA 🚀⚽ Começa tudo, termina nada. Descobre o seu → bolaonacopa.com.br/quiz-jogador",
+    share: "Fiz o quiz e sou a PONTA DIREITA 🚀⚽ Começa tudo, termina nada. Descobre o seu → bolaodagalera-ten.vercel.app/quiz-jogador",
   },
   {
     id: "ponta_esquerda",
@@ -99,7 +99,7 @@ export const JOGADORES: Jogador[] = [
     emoji: "🐧",
     titulo: "Você é a PONTA ESQUERDA — faz tudo diferente e não é pior!",
     desc: "Usa Linux, bebe café sem açúcar e explica isso pra todo mundo sem ser perguntado. Diferente por princípio, não por acidente.",
-    share: "Fiz o quiz e sou a PONTA ESQUERDA 🐧⚽ Diferente por princípio. Descobre o seu → bolaonacopa.com.br/quiz-jogador",
+    share: "Fiz o quiz e sou a PONTA ESQUERDA 🐧⚽ Diferente por princípio. Descobre o seu → bolaodagalera-ten.vercel.app/quiz-jogador",
   },
   {
     id: "falso_9",
@@ -107,7 +107,7 @@ export const JOGADORES: Jogador[] = [
     emoji: "🌀",
     titulo: "Você é o FALSO 9 — ninguém sabe o que você faz mas funciona!",
     desc: "Cargo de 'analista sênior de projetos estratégicos' no LinkedIn. A mãe ainda pergunta o que você faz. O resultado aparece, a função ninguém explica.",
-    share: "Fiz o quiz e sou o FALSO 9 🌀⚽ Ninguém entende, mas funciona. Descobre o seu → bolaonacopa.com.br/quiz-jogador",
+    share: "Fiz o quiz e sou o FALSO 9 🌀⚽ Ninguém entende, mas funciona. Descobre o seu → bolaodagalera-ten.vercel.app/quiz-jogador",
   },
   {
     id: "goleiro_tranquilo",
@@ -115,7 +115,7 @@ export const JOGADORES: Jogador[] = [
     emoji: "😴",
     titulo: "Você é o GOLEIRO TRANQUILO — 80 minutos sem tocar na bola!",
     desc: "Não vai a nenhuma reunião desnecessária e no prazo final entrega tudo enquanto os outros entram em colapso. O zen do escritório.",
-    share: "Fiz o quiz e sou o GOLEIRO TRANQUILO 😴⚽ Sumido até salvar tudo. Descobre o seu → bolaonacopa.com.br/quiz-jogador",
+    share: "Fiz o quiz e sou o GOLEIRO TRANQUILO 😴⚽ Sumido até salvar tudo. Descobre o seu → bolaodagalera-ten.vercel.app/quiz-jogador",
   },
   {
     id: "goleiro_nervoso",
@@ -123,7 +123,7 @@ export const JOGADORES: Jogador[] = [
     emoji: "😬",
     titulo: "Você é o GOLEIRO NERVOSO — se autoboicota na hora H!",
     desc: "Estudou para a prova, dormiu bem, tomou café — e na hora esqueceu o nome do professor. Preparado para tudo, traído pelo próprio cérebro.",
-    share: "Fiz o quiz e sou o GOLEIRO NERVOSO 😬⚽ Preparado, traído na hora H. Descobre o seu → bolaonacopa.com.br/quiz-jogador",
+    share: "Fiz o quiz e sou o GOLEIRO NERVOSO 😬⚽ Preparado, traído na hora H. Descobre o seu → bolaodagalera-ten.vercel.app/quiz-jogador",
   },
   {
     id: "segundo_volante",
@@ -131,7 +131,7 @@ export const JOGADORES: Jogador[] = [
     emoji: "🔗",
     titulo: "Você é o SEGUNDO VOLANTE — ninguém define o que você faz!",
     desc: "Remove de time e o time piora. O amigo do grupo que 'não faz nada' mas sem ele o grupo se dissolve em 3 semanas.",
-    share: "Fiz o quiz e sou o SEGUNDO VOLANTE 🔗⚽ Ninguém define, todos precisam. Descobre o seu → bolaonacopa.com.br/quiz-jogador",
+    share: "Fiz o quiz e sou o SEGUNDO VOLANTE 🔗⚽ Ninguém define, todos precisam. Descobre o seu → bolaodagalera-ten.vercel.app/quiz-jogador",
   },
   {
     id: "reserva",
@@ -139,7 +139,7 @@ export const JOGADORES: Jogador[] = [
     emoji: "⚡",
     titulo: "Você é o ATACANTE RESERVA — entra nos últimos 15 com energia total!",
     desc: "Chega na festa 23h quando todo mundo está em modo automático e acha que acabou de começar. Energia fora de hora, mas genuína.",
-    share: "Fiz o quiz e sou o ATACANTE RESERVA ⚡⚽ Energia fora de hora. Descobre o seu → bolaonacopa.com.br/quiz-jogador",
+    share: "Fiz o quiz e sou o ATACANTE RESERVA ⚡⚽ Energia fora de hora. Descobre o seu → bolaodagalera-ten.vercel.app/quiz-jogador",
   },
   {
     id: "libero",
@@ -147,7 +147,7 @@ export const JOGADORES: Jogador[] = [
     emoji: "🧠",
     titulo: "Você é o ZAGUEIRO-LÍBERO — parece meia mas mora na defesa!",
     desc: "O gerente que ainda faz o trabalho dos analistas 'só para ajudar'. Organiza tudo, delega nada, reclama de tudo — e está certo em tudo.",
-    share: "Fiz o quiz e sou o ZAGUEIRO-LÍBERO 🧠⚽ Chefe que não delega. Descobre o seu → bolaonacopa.com.br/quiz-jogador",
+    share: "Fiz o quiz e sou o ZAGUEIRO-LÍBERO 🧠⚽ Chefe que não delega. Descobre o seu → bolaodagalera-ten.vercel.app/quiz-jogador",
   },
   {
     id: "meia_classico",
@@ -155,7 +155,7 @@ export const JOGADORES: Jogador[] = [
     emoji: "📠",
     titulo: "Você é o MEIA CLÁSSICO — joga do mesmo jeito há 15 anos!",
     desc: "Funcionava em 2009 e funciona agora. Ainda manda e-mail formal com 'Prezados' para pedir pizza na sexta. Consistente como um fax.",
-    share: "Fiz o quiz e sou o MEIA CLÁSSICO 📠⚽ Consistente como um fax. Descobre o seu → bolaonacopa.com.br/quiz-jogador",
+    share: "Fiz o quiz e sou o MEIA CLÁSSICO 📠⚽ Consistente como um fax. Descobre o seu → bolaodagalera-ten.vercel.app/quiz-jogador",
   },
   {
     id: "pivo",
@@ -163,7 +163,7 @@ export const JOGADORES: Jogador[] = [
     emoji: "🫱",
     titulo: "Você é o CENTROAVANTE PIVÔ — coloca o time para frente mas nunca aparece!",
     desc: "Recebe de costas, protege, distribui para os outros brilharem. O líder que nunca aparece no press release mas é o motivo do sucesso.",
-    share: "Fiz o quiz e sou o CENTROAVANTE PIVÔ 🫱⚽ Trabalha nos bastidores, vitória dos outros. Descobre o seu → bolaonacopa.com.br/quiz-jogador",
+    share: "Fiz o quiz e sou o CENTROAVANTE PIVÔ 🫱⚽ Trabalha nos bastidores, vitória dos outros. Descobre o seu → bolaodagalera-ten.vercel.app/quiz-jogador",
   },
   {
     id: "coringa",
@@ -171,7 +171,7 @@ export const JOGADORES: Jogador[] = [
     emoji: "🤷",
     titulo: "Você é o LATERAL QUE VIROU CENTROAVANTE — não sabe mais o que é!",
     desc: "Formado em Direito, trabalha com marketing, tem canal no YouTube sobre finanças. Começou numa função, foi empurrado para outra. Versátil ou perdido? Por que não os dois?",
-    share: "Fiz o quiz e sou o LATERAL QUE VIROU CENTROAVANTE 🤷⚽ Formado em Direito, trabalha com marketing. Descobre o seu → bolaonacopa.com.br/quiz-jogador",
+    share: "Fiz o quiz e sou o LATERAL QUE VIROU CENTROAVANTE 🤷⚽ Formado em Direito, trabalha com marketing. Descobre o seu → bolaodagalera-ten.vercel.app/quiz-jogador",
   },
 ];
 
@@ -310,3 +310,4 @@ export function calcularJogador(respostas: number[]): Jogador {
   const maxScore = Math.max(...scores);
   return JOGADORES[scores.indexOf(maxScore)];
 }
+

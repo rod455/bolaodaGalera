@@ -35,3 +35,4 @@ const XPToast = ({ xp, message, onDone }: XPToastProps) => {
 };
 
 export default XPToast;
+
