@@ -83,9 +83,9 @@ workflows:
         script: |
           cd ios/App
           agvtool new-marketing-version 1.0.0
-          agvtool new-version -all 1
+          agvtool new-version -all 2
           # Fallback: forçar no pbxproj diretamente
-          sed -i '' 's/CURRENT_PROJECT_VERSION = [0-9]*/CURRENT_PROJECT_VERSION = 1/g' App.xcodeproj/project.pbxproj
+          sed -i '' 's/CURRENT_PROJECT_VERSION = [0-9]*/CURRENT_PROJECT_VERSION = 2/g' App.xcodeproj/project.pbxproj
           echo "Build version set to:"
           grep CURRENT_PROJECT_VERSION App.xcodeproj/project.pbxproj
 
@@ -104,5 +104,6 @@ workflows:
       app_store_connect:
         auth: integration
         submit_to_testflight: true
+
 
 
