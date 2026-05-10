@@ -49,15 +49,12 @@ const EntrarBolao = () => {
   };
 
   const checkBolaoCapacity = async (bolaoId: string): Promise<boolean> => {
-    // Count current participants (only active)
     const { count } = await supabase
       .from("bolao_participantes")
       .select("*", { count: "exact", head: true })
       .eq("bolao_id", bolaoId)
       .eq("status", "ativo");
     const currentCount = count || 0;
-
-    // Check if any participant (or creator) has premium/pro
     const { data: participants } = await supabase
       .from("bolao_participantes")
       .select("user_id, profiles(plano)")
@@ -68,16 +65,13 @@ const EntrarBolao = () => {
       .select("criador_id, profiles(plano)")
       .eq("id", bolaoId)
       .single();
-
     const allPlanos = [
       ...(participants || []).map((p: any) => p.profiles?.plano),
       bolaoData?.profiles?.plano,
     ];
     const hasProMember = allPlanos.includes("premium_pro");
     const hasPremiumMember = hasProMember || allPlanos.includes("premium");
-
     const maxCapacity = hasProMember ? PREMIUM_PRO_MAX_PARTICIPANTES : hasPremiumMember ? PREMIUM_MAX_PARTICIPANTES : FREE_MAX_PARTICIPANTES;
-
     if (currentCount >= maxCapacity) {
       setUpsellModal({ open: true, reason: "grupo_lotado" });
       return false;
@@ -89,55 +83,24 @@ const EntrarBolao = () => {
     const codigoFromUrl = searchParams.get("codigo");
     if (codigoFromUrl) setCodigo(codigoFromUrl.toUpperCase());
     if (user) loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  // Auto-submete quando código vem da URL e usuário está pronto
   useEffect(() => {
     const codigoFromUrl = searchParams.get("codigo");
     if (codigoFromUrl && user && !loading) {
       handleEntrarCodigo();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, loading]);
 
   const loadData = async () => {
     try {
-      // Fetch public grupos (non-nacional ones that are public)
-      const { data: boloesPublicos } = await supabase
-        .from("boloes")
-        .select("*, campeonatos(logo_url, nome_popular)")
-        .eq("is_publico", true)
-        .eq("is_nacional", false)
-        .order("created_at", { ascending: false });
-
-      setPublicos((boloesPublicos as any[]) || []);
-
-      // Fetch user's current participations
       const { data: participacoes } = await supabase
         .from("bolao_participantes")
         .select("bolao_id")
         .eq("user_id", user?.id ?? "");
-
       const ids = new Set((participacoes || []).map((p: any) => p.bolao_id));
       setUserBolaoIds(ids);
-
-      // Count participants for all public grupos in a single query
-      const bolaoIds = ((boloesPublicos as any[]) || []).map((b: any) => b.id);
-      if (bolaoIds.length > 0) {
-        const { data: participantes } = await supabase
-          .from("bolao_participantes")
-          .select("bolao_id")
-          .in("bolao_id", bolaoIds)
-          .eq("status", "ativo");
-        const counts: Record<string, number> = {};
-        for (const p of participantes || []) {
-          counts[p.bolao_id] = (counts[p.bolao_id] || 0) + 1;
-        }
-        setParticipantesCount(counts);
-      }
     } catch {
-      // failed to load public grupos
     } finally {
       setLoading(false);
     }
@@ -169,33 +132,23 @@ const EntrarBolao = () => {
       return;
     }
     if (!user) return;
-
-    // Verificar limite de privados
     if (!(await checkPrivateLimit())) return;
-
     setBuscando(true);
-
     try {
-      // Find bolão by codigo_convite
       const { data: bolao, error: fetchError } = await supabase
         .from("boloes")
         .select("id, nome, aprovacao_entrada, is_nacional")
         .eq("codigo_convite", codigo.trim().toUpperCase())
         .single();
-
       if (fetchError || !bolao) {
-        toast.error("Bolão não encontrado. Verifique o código.");
+        toast.error("Grupo não encontrado. Verifique o código.");
         setBuscando(false);
         return;
       }
-
-      // Verificar capacidade do grupo
       if (!(await checkBolaoCapacity(bolao.id))) {
         setBuscando(false);
         return;
       }
-
-      // Mostrar ad antes de entrar
       if (needsAd) {
         const adResult = await showAd("entrar");
         if (!adResult) {
@@ -203,20 +156,15 @@ const EntrarBolao = () => {
           return;
         }
       }
-
       await ensureProfile();
-
       const needsApproval = bolao.aprovacao_entrada && !bolao.is_nacional;
       const insertStatus = needsApproval ? "pendente" : "ativo";
-
-      // Try to join
       const { error } = await supabase
         .from("bolao_participantes")
         .insert({ bolao_id: bolao.id, user_id: user.id, status: insertStatus });
-
       if (error) {
         if (error.code === "23505") {
-          toast.info("Você já está neste bolão!");
+          toast.info("Você já está neste grupo!");
         } else {
           throw error;
         }
@@ -227,74 +175,11 @@ const EntrarBolao = () => {
       } else {
         toast.success(`Você entrou no ${bolao.nome}!`);
       }
-
       navigate(`/bolao/${bolao.id}`);
     } catch (err: any) {
       toast.error(err.message || "Erro ao entrar no grupo");
     } finally {
       setBuscando(false);
-    }
-  };
-
-  const handleParticipar = async (bolaoId: string) => {
-    if (!user) return;
-
-    // Verificar limite de privados
-    if (!(await checkPrivateLimit())) return;
-
-    setJoining(bolaoId);
-
-    try {
-      // Verificar capacidade do grupo
-      if (!(await checkBolaoCapacity(bolaoId))) {
-        setJoining(null);
-        return;
-      }
-
-      // Mostrar ad antes de entrar
-      if (needsAd) {
-        const adResult = await showAd("entrar");
-        if (!adResult) {
-          setJoining(null);
-          return;
-        }
-      }
-
-      await ensureProfile();
-
-      // Verificar se precisa aprovação
-      const { data: bolaoInfo } = await supabase.from("boloes").select("aprovacao_entrada, is_nacional").eq("id", bolaoId).single();
-      const needsApproval = bolaoInfo?.aprovacao_entrada && !bolaoInfo?.is_nacional;
-      const insertStatus = needsApproval ? "pendente" : "ativo";
-
-      const { error } = await supabase
-        .from("bolao_participantes")
-        .insert({ bolao_id: bolaoId, user_id: user.id, status: insertStatus });
-
-      if (error) {
-        if (error.code === "23505") {
-          toast.info("Você já está participando!");
-          setUserBolaoIds((prev) => new Set(prev).add(bolaoId));
-        } else {
-          throw error;
-        }
-      } else if (needsApproval) {
-        toast.success("Solicitação enviada! Aguarde a aprovação do moderador.");
-        setUserBolaoIds((prev) => new Set(prev).add(bolaoId));
-      } else {
-        toast.success("Você entrou no grupo!");
-        setUserBolaoIds((prev) => new Set(prev).add(bolaoId));
-        setParticipantesCount((prev) => ({
-          ...prev,
-          [bolaoId]: (prev[bolaoId] || 0) + 1,
-        }));
-      }
-
-      navigate(`/bolao/${bolaoId}`);
-    } catch (err: any) {
-      toast.error(err.message || "Erro ao entrar no grupo");
-    } finally {
-      setJoining(null);
     }
   };
 
@@ -308,7 +193,6 @@ const EntrarBolao = () => {
         </p>
       </div>
 
-      {/* Empty state — sem grupos */}
       {!loading && userBolaoIds.size === 0 && (
         <div className="text-center py-8 space-y-4">
           <div className="w-16 h-16 bg-copa-green-100 rounded-full flex items-center justify-center mx-auto">
@@ -324,7 +208,6 @@ const EntrarBolao = () => {
         </div>
       )}
 
-      {/* Quick Actions */}
       <div className="grid grid-cols-2 gap-3">
         <Button
           variant="outline"
@@ -343,7 +226,6 @@ const EntrarBolao = () => {
         </Button>
       </div>
 
-      {/* Code Input */}
       <Card className="rounded-2xl shadow-sm border-copa-gold-300 bg-copa-gold-50">
         <CardContent className="p-4">
           <div className="flex gap-3">
@@ -372,113 +254,6 @@ const EntrarBolao = () => {
           </div>
         </CardContent>
       </Card>
-
-      {/* Public Grupos */}
-      <div>
-        <h3 className="text-lg font-bold mb-3">Grupos Públicos</h3>
-
-        {loading ? (
-          <div className="flex items-center justify-center py-10">
-            <Loader2 className="w-6 h-6 text-copa-green-500 animate-spin" />
-          </div>
-        ) : publicos.length === 0 ? (
-          <Card className="rounded-2xl border-dashed border-2 border-gray-200">
-            <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-              <p className="text-sm text-muted-foreground">
-                Nenhum grupo público disponível no momento.
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-4">
-            {publicos.map((bolao, i) => {
-              const isParticipando = userBolaoIds.has(bolao.id);
-              return (
-                <Card
-                  key={bolao.id}
-                  className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow cursor-pointer rounded-2xl"
-                  onClick={() => {
-                    if (isParticipando) navigate(`/bolao/${bolao.id}`);
-                  }}
-                >
-                  <div className="relative h-36 overflow-hidden">
-                    <img
-                      src={bolao.imagem_url || FALLBACK_IMAGES[i % FALLBACK_IMAGES.length]}
-                      alt={bolao.nome}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src =
-                          FALLBACK_IMAGES[i % FALLBACK_IMAGES.length];
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    {(bolao.campeonatos as any)?.logo_url && (
-                      <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm rounded-lg p-1.5">
-                        <img
-                          src={(bolao.campeonatos as any).logo_url}
-                          alt=""
-                          className="w-5 h-5 object-contain"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = "none";
-                          }}
-                        />
-                      </div>
-                    )}
-                    <div className="absolute bottom-3 left-4">
-                      <h3 className="text-white font-bold text-lg">{bolao.nome}</h3>
-                    </div>
-                  </div>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        {bolao.descricao && (
-                          <p className="text-sm text-muted-foreground">{bolao.descricao}</p>
-                        )}
-                        <span className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                          <Users className="w-3 h-3" />
-                          {(participantesCount[bolao.id] || 0).toLocaleString("pt-BR")}{" "}
-                          participantes
-                        </span>
-                      </div>
-                      {isParticipando ? (
-                        <Button
-                          size="sm"
-                          className="bg-copa-gold-400 hover:bg-copa-gold-500 text-copa-green-800 font-semibold rounded-lg"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/bolao/${bolao.id}`);
-                          }}
-                        >
-                          Acessar <ChevronRight className="w-4 h-4 ml-1" />
-                        </Button>
-                      ) : (
-                        <Button
-                          size="sm"
-                          disabled={joining === bolao.id}
-                          className="bg-copa-green-500 hover:bg-copa-green-600 text-white font-semibold rounded-lg disabled:opacity-60"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleParticipar(bolao.id);
-                          }}
-                        >
-                          {joining === bolao.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <>
-                              Participar <ChevronRight className="w-4 h-4 ml-1" />
-                            </>
-                          )}
-                        </Button>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
       <PremiumUpsellModal
         open={upsellModal.open}
         onClose={() => setUpsellModal({ ...upsellModal, open: false })}
@@ -489,4 +264,3 @@ const EntrarBolao = () => {
 };
 
 export default EntrarBolao;
-
