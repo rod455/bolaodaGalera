@@ -86,3 +86,4 @@ const AdRewardModal = ({ open, onComplete, message }: AdRewardModalProps) => {
 
 export default AdRewardModal;
 
+

@@ -169,3 +169,4 @@ const PromoBanner = ({ jaParticipa = false, bolaoId }: PromoBannerProps) => {
 
 export default PromoBanner;
 
+

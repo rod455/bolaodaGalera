@@ -311,3 +311,4 @@ export function calcularJogador(respostas: number[]): Jogador {
   return JOGADORES[scores.indexOf(maxScore)];
 }
 
+

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-const LOGO_URL = "https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/Splash.png";
+const LOGO_URL = "https://dtfqmxmmbbfmfpouzqzt.supabase.co/storage/v1/object/public/iconesapp/Splash.png";
 
 const SplashScreen = ({ onFinish }: { onFinish: () => void }) => {
   const [phase, setPhase] = useState<"bounce" | "fade-out">("bounce");
@@ -89,4 +89,5 @@ const SplashScreen = ({ onFinish }: { onFinish: () => void }) => {
 };
 
 export default SplashScreen;
+
 

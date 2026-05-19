@@ -52,7 +52,7 @@ const InstallAppBanner = () => {
         <div className="flex items-center gap-3 p-3">
           {/* App icon */}
           <img
-            src="https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/BolaoDaGalera%20-%20sem%20fundo.png"
+            src="https://dtfqmxmmbbfmfpouzqzt.supabase.co/storage/v1/object/public/iconesapp/BolaoDaGalera%20-%20sem%20fundo.png"
             alt="Bolão da Galera"
             className="w-12 h-12 rounded-xl flex-shrink-0"
           />
@@ -94,4 +94,5 @@ const InstallAppBanner = () => {
 };
 
 export default InstallAppBanner;
+
 

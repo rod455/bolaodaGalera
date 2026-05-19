@@ -251,3 +251,4 @@ async function resolveUserId(supabase: any, sub: any): Promise<string | null> {
   }
   return profile.id;
 }
+

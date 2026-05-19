@@ -45,7 +45,7 @@ const ProgressDots = ({ current, total }: { current: number; total: number }) =>
   </div>
 );
 
-const LOGO_URL = "https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/BolaoDaGalera%20-%20sem%20fundo.png";
+const LOGO_URL = "https://dtfqmxmmbbfmfpouzqzt.supabase.co/storage/v1/object/public/iconesapp/BolaoDaGalera%20-%20sem%20fundo.png";
 
 // ═══════════════════════════════════════════════════════
 // Step 1: Welcome (simplificado — 5 segundos)
@@ -463,4 +463,5 @@ const Onboarding = ({ onComplete }: OnboardingProps) => {
 
 export { isOnboardingDone, markOnboardingDone };
 export default Onboarding;
+
 

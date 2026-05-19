@@ -40,3 +40,4 @@ export async function shareViaWhatsApp(text: string): Promise<void> {
   window.open(`https://web.whatsapp.com/send?text=${encoded}`, "_blank");
 }
 
+

@@ -77,7 +77,7 @@ export default function Unsubscribe() {
 
         <div className="flex justify-center mb-6">
           <img
-            src="https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/BolaoDaGalera%20-%20sem%20fundo.png"
+            src="https://dtfqmxmmbbfmfpouzqzt.supabase.co/storage/v1/object/public/iconesapp/BolaoDaGalera%20-%20sem%20fundo.png"
             alt="Bol\u00e3o na Copa"
             className="w-14 h-14"
           />
@@ -219,4 +219,5 @@ export default function Unsubscribe() {
     </div>
   );
 }
+
 

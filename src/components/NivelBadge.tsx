@@ -35,3 +35,4 @@ const NivelBadge = ({ nivel, size = "sm", showTitulo = false }: NivelBadgeProps)
 
 export default NivelBadge;
 
+

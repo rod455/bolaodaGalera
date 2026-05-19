@@ -501,3 +501,4 @@ const QuizJogador = () => {
 
 export default QuizJogador;
 
+

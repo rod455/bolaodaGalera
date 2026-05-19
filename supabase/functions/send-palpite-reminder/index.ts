@@ -56,7 +56,7 @@ function buildEmailHtml(
 <body style="margin:0;padding:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
   <div style="max-width:600px;margin:0 auto;padding:20px;">
     <div style="background:linear-gradient(135deg,#16a34a,#15803d);border-radius:16px 16px 0 0;padding:30px;text-align:center;">
-      <img src="https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/604913%20(512%20x%20512%20px).png" 
+      <img src="https://dtfqmxmmbbfmfpouzqzt.supabase.co/storage/v1/object/public/iconesapp/604913%20(512%20x%20512%20px).png" 
            alt="Bolao na Copa" style="width:60px;height:60px;margin-bottom:12px;">
       <h1 style="color:white;font-size:20px;margin:0;">${plural ? "Seus palpites estao pendentes!" : "Falta pouco para a rodada!"}</h1>
     </div>
@@ -388,3 +388,4 @@ serve(async (req) => {
     );
   }
 });
+

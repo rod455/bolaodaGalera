@@ -300,3 +300,4 @@ export function calcularLenda(respostas: number[]): Lenda {
   return LENDAS[scores.indexOf(maxScore)];
 }
 
+

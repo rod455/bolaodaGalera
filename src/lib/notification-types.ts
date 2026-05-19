@@ -96,3 +96,4 @@ export const NOTIFICACAO_VISUAL: Record<NotificacaoTipo, NotificacaoVisualConfig
   },
 };
 
+

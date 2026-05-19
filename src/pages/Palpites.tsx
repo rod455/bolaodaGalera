@@ -933,3 +933,4 @@ const PalpiteCard = ({ jogo, palpiteDB, localPlacar, onSetPlacar, onSalvar, salv
 
 export default Palpites;
 
+

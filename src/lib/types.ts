@@ -105,3 +105,4 @@ export interface MataMataEscolha {
   resultado: "vitoria" | "derrota" | "empate" | null;
 }
 
+

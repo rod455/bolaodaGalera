@@ -171,3 +171,4 @@ export function getInviteUrl(bolaoId: string, codigoConvite: string, medium: "wh
 export function getReferralUrl(referralCode: string, medium: "whatsapp" | "share" | "copy" = "share"): string {
   return `${BASE_URL}/auth?modo=cadastro&ref=${referralCode}&utm_source=referral&utm_medium=${medium}&utm_campaign=indicacao`;
 }
+

@@ -106,3 +106,4 @@ serve(async (req) => {
 
   return new Response(JSON.stringify({ error: "Metodo nao suportado" }), { status: 405, headers: corsHeaders });
 });
+

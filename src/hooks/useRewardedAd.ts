@@ -417,3 +417,4 @@ export async function showAppOpenAd(isPremium?: boolean): Promise<void> {
 }
 
 
+

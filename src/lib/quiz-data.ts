@@ -302,3 +302,4 @@ export function calcularCompatibilidade(perfil: Perfil, selecao: SelecaoQuiz): n
   return Math.min(99, Math.max(55, Math.round((score / maxPossivel) * 100) + 40));
 }
 
+

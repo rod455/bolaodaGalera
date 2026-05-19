@@ -52,3 +52,4 @@ const PromoBolaoHeader = ({ regulamentoUrl = "/regulamento-paulistao" }: PromoBo
 
 export default PromoBolaoHeader;
 
+

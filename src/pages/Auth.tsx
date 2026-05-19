@@ -290,7 +290,7 @@ const Auth = () => {
       <div className="relative z-10 w-full max-w-md space-y-8 animate-fade-in">
         {/* Logo */}
         <div className="flex flex-col items-center gap-3">
-          <img src="https://hvgsdxcdufekksxgqyoj.supabase.co/storage/v1/object/public/iconesapp/BolaoDaGalera%20-%20sem%20fundo.png"
+          <img src="https://dtfqmxmmbbfmfpouzqzt.supabase.co/storage/v1/object/public/iconesapp/BolaoDaGalera%20-%20sem%20fundo.png"
             alt="Bolão da Galera" className="w-44 h-44 object-contain drop-shadow-lg" />
           <p className="text-copa-green-100 text-sm">
             {isResettingPassword ? "Defina sua nova senha" : isForgotPassword ? "Recupere sua senha" : isLogin ? "Seu palpite, sua torcida, sua galera." : "Crie sua conta grátis em segundos"}
@@ -617,4 +617,5 @@ const Auth = () => {
 };
 
 export default Auth;
+
 
