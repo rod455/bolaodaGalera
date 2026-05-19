@@ -29,7 +29,7 @@ import { Capacitor } from "@capacitor/core";
 import { App as CapApp } from "@capacitor/app";
 import { SplashScreen as NativeSplash } from "@capacitor/splash-screen";
 import { supabase } from "@/integrations/supabase/client";
-import { initGoogleAuth } from "@/lib/googleAuth";
+import { initAppleAuth } from "@/lib/appleAuth";
 import { initUTMTracker } from "@/lib/utm-tracker";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { showAppOpenAd } from "@/hooks/useRewardedAd";
@@ -103,7 +103,7 @@ const App = () => {
   }, [isNative]);
 
   useEffect(() => {
-    initGoogleAuth();
+    initAppleAuth();
     initUTMTracker();
     // Rewarded interstitial na abertura — conta > 24h, não premium
     // Delay increased to avoid interfering with app launch and review
