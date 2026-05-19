@@ -219,7 +219,7 @@ CREATE TABLE IF NOT EXISTS public.daily_metrics (
   avg_user_level numeric(5,2) DEFAULT 0,
   revenue_stripe numeric(12,2) DEFAULT 0,
   revenue_ads numeric(12,2) DEFAULT 0,
-  revenue_total numeric(12,2) DEFAULT (revenue_stripe + revenue_ads),
+  revenue_total numeric(12,2) GENERATED ALWAYS AS (revenue_stripe + revenue_ads) STORED,
   active_subscriptions integer DEFAULT 0,
   new_subscriptions integer DEFAULT 0,
   churned_subscriptions integer DEFAULT 0,
