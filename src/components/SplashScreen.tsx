@@ -18,7 +18,7 @@ const SplashScreen = ({ onFinish }: { onFinish: () => void }) => {
         phase === "fade-out" ? "opacity-0" : "opacity-100"
       }`}
       style={{
-        background: "linear-gradient(135deg, #1B5E20 0%, #2E7D32 30%, #F9A825 100%)",
+        background: "#FAFAF7",
       }}
     >
       {/* Logo com animação bounce */}
@@ -26,24 +26,24 @@ const SplashScreen = ({ onFinish }: { onFinish: () => void }) => {
         <img
           src={LOGO_URL}
           alt="Bolão da Galera"
-          className="w-44 h-44 object-contain drop-shadow-2xl splash-bounce"
+          className="w-72 h-72 object-contain drop-shadow-xl splash-bounce"
         />
       </div>
 
       {/* Nome do app */}
-      <h1 className="text-white text-3xl font-black mt-6 tracking-tight splash-fade-in">
+      <h1 className="text-copa-green-700 text-3xl font-black mt-6 tracking-tight splash-fade-in">
         Bolão da Galera
       </h1>
 
       {/* Subtítulo */}
-      <p className="text-white/80 text-sm mt-2 splash-fade-in-delayed">
-        Faça seus palpites e dispute com os amigos!
+      <p className="text-copa-green-600/80 text-sm mt-2 splash-fade-in-delayed">
+        Reúna os amigos, vibre com a galera.
       </p>
 
       {/* Loading dot */}
       <div className="mt-10 splash-fade-in-delayed">
-        <div className="w-8 h-8 rounded-full bg-white/30 flex items-center justify-center">
-          <div className="w-4 h-4 rounded-full bg-white splash-pulse" />
+        <div className="w-8 h-8 rounded-full bg-copa-green-100 flex items-center justify-center">
+          <div className="w-4 h-4 rounded-full bg-copa-green-500 splash-pulse" />
         </div>
       </div>
 

@@ -26,7 +26,7 @@ function registrarSessao(userId: string) {
   if (localStorage.getItem(chave)) return;
   localStorage.setItem(chave, "1");
   const origem = Capacitor.isNativePlatform() ? Capacitor.getPlatform() : "web";
-  supabase.from("user_sessions").insert({ user_id: userId, origem }).catch(() => {});
+  supabase.from("user_sessions").insert({ user_id: userId, origem }).then(() => {}, () => {});
 }
 
 // Processar referral pendente do localStorage
@@ -51,10 +51,18 @@ function processarReferralPendente(userId: string) {
       supabase.rpc("processar_referral", {
         p_referred_id: userId,
         p_referral_code: code,
-      }).catch((err) => {
-        console.error("Erro ao processar referral:", err);
-        localStorage.setItem("pending_referral", raw);
-      });
+      }).then(
+        ({ error }) => {
+          if (error) {
+            console.error("Erro ao processar referral:", error);
+            localStorage.setItem("pending_referral", raw);
+          }
+        },
+        (err) => {
+          console.error("Erro ao processar referral:", err);
+          localStorage.setItem("pending_referral", raw);
+        }
+      );
     }
   } catch {}
 }
