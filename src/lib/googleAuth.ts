@@ -98,7 +98,7 @@ export async function signInWithGoogle(
     if (isIPad) {
       // No iPad nativo, usar scheme customizado como redirectTo.
       // O Safari não consegue navegar para https://localhost (que é o origin do app),
-      // então o OAuth nunca voltaria para o app. Com bolaodagalera://, o iOS intercepta
+      // então o OAuth nunca voltaria para o app. Com bolaonacopa://, o iOS intercepta
       // o redirect e dispara o evento appUrlOpen no App.tsx.
       return signInWithGoogleWeb(redirectPath, true);
     }

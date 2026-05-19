@@ -24,11 +24,12 @@ function getCorsHeaders(req: Request) {
 const SITE_URL = "https://www.bolaonacopa.com.br";
 const STRIPE_API = "https://api.stripe.com/v1";
 
+// IMPORTANTE: precisa ficar igual ao STRIPE_PRICES em src/pages/Planos.tsx
 const PRICE_PLAN_MAP: Record<string, string> = {
-  "price_1T1TxnC1YtBHMBc2hJMfOwqL": "premium",
-  "price_1T1TyYC1YtBHMBc2E12oGz6Q": "premium",
-  "price_1T1TzjC1YtBHMBc2CGkzhsUe": "premium_pro",
-  "price_1T1U0KC1YtBHMBc2gqSGO0jD": "premium_pro",
+  "price_1TInzQC1YtBHMBc2x4A0qqvv": "premium",      // premium_mensal
+  "price_1TInyIC1YtBHMBc22Un0xubk": "premium",      // premium_anual
+  "price_1TInzoC1YtBHMBc2q9hXSUcL": "premium_pro",  // premium_pro_mensal
+  "price_1TInxHC1YtBHMBc2jObJAvDk": "premium_pro",  // premium_pro_anual
 };
 
 // Helper para chamadas à API do Stripe

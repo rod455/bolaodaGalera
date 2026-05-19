@@ -1,4 +1,4 @@
-# Protocolos de Desenvolvimento - Bolao na Copa
+# Protocolos de Desenvolvimento - Bolao da Galera
 
 ## Edge Functions (Supabase)
 
@@ -73,5 +73,11 @@ Os status validos no banco sao:
 
 ## Projeto Supabase
 
-- Project ref: `fccdsfhsinwczrkpgnbw`
-- URL: `https://hvgsdxcdufekksxgqyoj.supabase.co`
+- Project ref: `dtfqmxmmbbfmfpouzqzt`
+- URL: `https://dtfqmxmmbbfmfpouzqzt.supabase.co`
+- Projeto legado (só leitura, não usar mais): `hvgsdxcdufekksxgqyoj` (bolaonacopa)
+
+## Bundle IDs
+
+- iOS: `com.bolaodagalera.app` (novo, App Store)
+- Android: `com.bolaonacopa.app` (mantido por compat com Play Store)

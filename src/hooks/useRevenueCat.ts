@@ -28,10 +28,10 @@ interface RCCustomerInfo {
 
 // Map RevenueCat product IDs to our plan names
 const PRODUCT_PLAN_MAP: Record<string, string> = {
-  premium_mensal: "premium",
-  premium_anual: "premium",
-  premium_pro_mensal: "premium_pro",
-  premium_pro_anual: "premium_pro",
+  galera_premium_mensal: "premium",
+  galera_premium_anual: "premium",
+  galera_pro_mensal: "premium_pro",
+  galera_pro_anual: "premium_pro",
 };
 
 // RevenueCat API keys

@@ -89,16 +89,6 @@
 			</array>
 		</dict>
 	</array>
-	<key>FacebookAppID</key>
-	<string>000000000000000</string>
-	<key>FacebookClientToken</key>
-	<string>placeholder</string>
-	<key>FacebookDisplayName</key>
-	<string>Bolão da Galera</string>
-	<key>FacebookAutoLogAppEventsEnabled</key>
-	<false/>
-	<key>FacebookAdvertiserIDCollectionEnabled</key>
-	<false/>
 </dict>
 </plist>
 

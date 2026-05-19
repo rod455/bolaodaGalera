@@ -25,12 +25,13 @@ function getCorsHeaders(req: Request) {
 }
 
 // Mapeia price ID → plano
+// IMPORTANTE: precisa ficar igual ao STRIPE_PRICES em src/pages/Planos.tsx
 const PRICE_PLAN_MAP: Record<string, string> = {
-  "price_1T1TxnC1YtBHMBc2hJMfOwqL": "premium",
-  "price_1T1TyYC1YtBHMBc2E12oGz6Q": "premium",
-  "price_1T1TzjC1YtBHMBc2CGkzhsUe": "premium_pro",
-  "price_1T1U0KC1YtBHMBc2gqSGO0jD": "premium_pro",
-  "price_1TNdckC1YtBHMBc2ulK4fQfr": "premium_pro", // Bolão Corporativo
+  "price_1TInzQC1YtBHMBc2x4A0qqvv": "premium",      // premium_mensal
+  "price_1TInyIC1YtBHMBc22Un0xubk": "premium",      // premium_anual
+  "price_1TInzoC1YtBHMBc2q9hXSUcL": "premium_pro",  // premium_pro_mensal
+  "price_1TInxHC1YtBHMBc2jObJAvDk": "premium_pro",  // premium_pro_anual
+  "price_1TNdckC1YtBHMBc2ulK4fQfr": "premium_pro",  // Bolão Corporativo
 };
 
 const CORPORATE_PRICE_ID = "price_1TNdckC1YtBHMBc2ulK4fQfr";
@@ -217,7 +218,7 @@ async function notificarVendaCorporativa(supabase: any, userId: string, sub: any
       method: "POST",
       headers: { "Authorization": `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: "Bolão na Copa <noreply@bolaonacopa.com.br>",
+        from: "Bolão da Galera <noreply@bolaonacopa.com.br>",
         to: [OWNER_EMAIL],
         subject: `🏢 Nova venda corporativa — ${customerName}`,
         html,
