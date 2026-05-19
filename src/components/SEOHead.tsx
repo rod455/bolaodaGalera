@@ -17,7 +17,7 @@ const DEFAULTS = {
   defaultDescription:
     "Bolão da Galera: crie grupos de futebol grátis e dispute com amigos! Palpites em campeonatos nacionais e internacionais, Champions League e mais. Cadastre-se em 10 segundos.",
   defaultImage:
-    "https://dtfqmxmmbbfmfpouzqzt.supabase.co/storage/v1/object/public/bolao-capas/og-cover.png",
+    "https://dtfqmxmmbbfmfpouzqzt.supabase.co/storage/v1/object/public/logos/BolaoDaGalera%20-%20com%20fundo.png",
   defaultKeywords:
     "bolão na copa, bolão de futebol, bolão grátis, palpites futebol, bolão futebol 2026, bolão campeonato, bolão entre amigos",
 };

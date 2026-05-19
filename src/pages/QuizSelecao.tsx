@@ -274,7 +274,7 @@ const QuizSelecao = () => {
 
           <div className="relative z-10 flex flex-col items-center text-center px-5 py-10 space-y-5">
             {/* Logo */}
-            <img src="https://dtfqmxmmbbfmfpouzqzt.supabase.co/storage/v1/object/public/iconesapp/BolaoDaGalera%20-%20sem%20fundo.png"
+            <img src="https://dtfqmxmmbbfmfpouzqzt.supabase.co/storage/v1/object/public/logos/BolaoDaGalera%20-%20sem%20fundo.png"
               alt="Bolao da Galera" className="w-16 h-16 rounded-2xl"
               style={{ boxShadow: "0 0 30px rgba(250,204,21,.3)" }} />
 
@@ -404,7 +404,7 @@ const QuizSelecao = () => {
   // ═══ TELA: INTRO (landing page dark — visual da quiz-selecao.html) ═══
   if (step === "intro") {
     const diasCopa = getDaysUntilCopa();
-    const LOGO_URL = "https://dtfqmxmmbbfmfpouzqzt.supabase.co/storage/v1/object/public/iconesapp/BolaoDaGalera%20-%20sem%20fundo.png";
+    const LOGO_URL = "https://dtfqmxmmbbfmfpouzqzt.supabase.co/storage/v1/object/public/logos/BolaoDaGalera%20-%20sem%20fundo.png";
     const PREVIEW_SELECOES = [
       { bandeira: "🇧🇷", nome: "Brasil" }, { bandeira: "🇩🇪", nome: "Alemanha" },
       { bandeira: "🇦🇷", nome: "Argentina", blur: true }, { bandeira: "🇫🇷", nome: "Franca", blur: true },

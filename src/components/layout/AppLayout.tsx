@@ -11,7 +11,7 @@ import { getStoreUrl, isIOSPlatform, APP_STORE_URL, PLAY_STORE_URL } from "@/lib
 const STORE_URL = getStoreUrl();
 const IS_IOS = isIOSPlatform();
 
-const LOGO_URL = "https://dtfqmxmmbbfmfpouzqzt.supabase.co/storage/v1/object/public/iconesapp/BolaoDaGalera%20-%20sem%20fundo.png";
+const LOGO_URL = "https://dtfqmxmmbbfmfpouzqzt.supabase.co/storage/v1/object/public/logos/BolaoDaGalera%20-%20sem%20fundo.png";
 
 const AppLayout = () => {
   const location = useLocation();
