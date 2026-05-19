@@ -262,7 +262,7 @@ const Auth = () => {
           <img src="https://dtfqmxmmbbfmfpouzqzt.supabase.co/storage/v1/object/public/logos/BolaoDaGalera%20-%20sem%20fundo.png"
             alt="Bolão da Galera" className="w-44 h-44 object-contain drop-shadow-lg" />
           <p className="text-copa-green-100 text-sm">
-            {isResettingPassword ? "Defina sua nova senha" : isForgotPassword ? "Recupere sua senha" : isLogin ? "Seu palpite, sua torcida, sua galera." : "Crie sua conta grátis em segundos"}
+            {isResettingPassword ? "Defina sua nova senha" : isForgotPassword ? "Recupere sua senha" : isLogin ? "Reúna os amigos, vibre com a galera." : "Crie sua conta grátis em segundos"}
           </p>
           {!isResettingPassword && !isForgotPassword && !isLogin && (
             <div className="flex items-center gap-2 bg-white/15 backdrop-blur-sm rounded-full px-4 py-1.5 mt-2">
