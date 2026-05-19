@@ -57,8 +57,6 @@
 	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
-	<key>GIDClientID</key>
-	<string>259731661832-c4kampg0pu5dca2k9lb9dsfjgp1aqqjd.apps.googleusercontent.com</string>
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-9316035916536420~7457000023</string>
 	<key>SKAdNetworkItems</key>
@@ -74,14 +72,6 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>com.bolaodagalera.app</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>com.googleusercontent.apps.259731661832-c4kampg0pu5dca2k9lb9dsfjgp1aqqjd</string>
-			</array>
-		</dict>
-		<dict>
-			<key>CFBundleURLName</key>
 			<string>com.bolaodagalera.app.oauth</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
@@ -89,16 +79,6 @@
 			</array>
 		</dict>
 	</array>
-	<key>FacebookAppID</key>
-	<string>000000000000000</string>
-	<key>FacebookClientToken</key>
-	<string>placeholder</string>
-	<key>FacebookDisplayName</key>
-	<string>Bolão da Galera</string>
-	<key>FacebookAutoLogAppEventsEnabled</key>
-	<false/>
-	<key>FacebookAdvertiserIDCollectionEnabled</key>
-	<false/>
 </dict>
 </plist>
 

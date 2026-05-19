@@ -2,8 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { Capacitor } from "@capacitor/core";
-import { signInWithGoogle } from "@/lib/googleAuth";
-import { signInWithApple } from "@/lib/appleAuth";
 import {
   PlusCircle, Keyboard, Users, MapPin, ChevronRight, ChevronUp, ChevronDown, GripVertical,
   Trophy, Globe, LogIn, AlertTriangle, Clock, X, Loader2, Calendar, Search, Info, UserPlus, Crown,
@@ -305,7 +303,7 @@ const Home = () => {
       <SEOHead title="Bolão da Galera" description="Crie grupos e dispute com amigos!" path="/home" />
 
       <div className="text-center pt-2">
-        <img src="https://dtfqmxmmbbfmfpouzqzt.supabase.co/storage/v1/object/public/iconesapp/BolaoDaGalera%20-%20sem%20fundo.png"
+        <img src="https://dtfqmxmmbbfmfpouzqzt.supabase.co/storage/v1/object/public/logos/BolaoDaGalera%20-%20sem%20fundo.png"
           alt="Bolão da Galera" className="w-16 h-16 mx-auto mb-2 object-contain" />
         <h1 className="text-xl font-bold text-foreground">Bem-vindo, {userName}!</h1>
         <p className="text-sm text-muted-foreground">Qual seu palpite hoje?</p>

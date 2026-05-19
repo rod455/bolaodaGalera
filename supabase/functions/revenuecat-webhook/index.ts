@@ -15,11 +15,12 @@ const corsHeaders = {
 };
 
 // Map RevenueCat product IDs to plan names
+// IMPORTANTE: precisa ficar igual ao RC_PRODUCTS em src/pages/Planos.tsx
 const PRODUCT_PLAN_MAP: Record<string, string> = {
-  premium_mensal: "premium",
-  premium_anual: "premium",
-  premium_pro_mensal: "premium_pro",
-  premium_pro_anual: "premium_pro",
+  galera_premium_mensal: "premium",
+  galera_premium_anual: "premium",
+  galera_pro_mensal: "premium_pro",
+  galera_pro_anual: "premium_pro",
 };
 
 serve(async (req) => {

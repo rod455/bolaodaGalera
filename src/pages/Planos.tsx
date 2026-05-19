@@ -1,30 +1,20 @@
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Check, Crown, Zap, Trophy, Info, X, Loader2, ExternalLink, RotateCcw } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft, Check, Crown, Zap, Trophy, Info, Loader2, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
-import { Capacitor } from "@capacitor/core";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserPlan } from "@/hooks/useUserPlan";
 import { useRevenueCat } from "@/hooks/useRevenueCat";
-import { supabase } from "@/integrations/supabase/client";
 import RegrasModal from "@/components/RegrasModal";
 import type { RegraInfo } from "@/lib/types";
 import { MODO_REGRAS } from "@/lib/constants";
 import SEOHead from "@/components/SEOHead";
 import { trackEvent } from "@/lib/analytics";
 
-// ═══ Price IDs do Stripe (Android/Web) ═══
-const STRIPE_PRICES = {
-  premium_mensal: "price_1TInzQC1YtBHMBc2x4A0qqvv",
-  premium_anual: "price_1TInyIC1YtBHMBc22Un0xubk",
-  premium_pro_mensal: "price_1TInzoC1YtBHMBc2q9hXSUcL",
-  premium_pro_anual: "price_1TInxHC1YtBHMBc2jObJAvDk",
-};
-
-// ═══ Product IDs do RevenueCat/Apple (iOS) ═══
+// ═══ Product IDs do RevenueCat/Apple ═══
 const RC_PRODUCTS = {
   premium_mensal: "galera_premium_mensal",
   premium_anual: "galera_premium_anual",
@@ -34,33 +24,14 @@ const RC_PRODUCTS = {
 
 const Planos = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const { session } = useAuth();
-  const { plano: userPlano, loading: loadingPlano, refetch } = useUserPlan();
-  const { purchase, restore, purchasing, isAvailable: rcAvailable } = useRevenueCat();
-  const isIOS = Capacitor.getPlatform() === "ios";
-  const useIAP = isIOS && rcAvailable;
+  const { plano: userPlano, refetch } = useUserPlan();
+  const { purchase, restore } = useRevenueCat();
   const [infoModal, setInfoModal] = useState<RegraInfo | null>(null);
   const [loadingCheckout, setLoadingCheckout] = useState<string | null>(null);
   const [billingPeriod, setBillingPeriod] = useState<"mensal" | "anual">("mensal");
 
-  // Verificar status de retorno do Stripe
-  useEffect(() => {
-    const status = searchParams.get("status");
-    const planoParam = searchParams.get("plano");
-
-    if (status === "sucesso") {
-      toast.success(`Parabéns! Seu plano ${planoParam === "premium_pro" ? "Premium PRO" : "Premium"} foi ativado!`);
-      refetch();
-      window.history.replaceState({}, "", "/planos");
-    } else if (status === "cancelado") {
-      toast.info("Pagamento cancelado. Você pode tentar novamente quando quiser.");
-      window.history.replaceState({}, "", "/planos");
-    }
-  }, [searchParams, refetch]);
-
-  // ═══ IAP via RevenueCat (iOS) ═══
-  const handleIAPCheckout = async (rcProductId: string) => {
+  const handleCheckout = async (rcProductId: string) => {
     if (!session) {
       toast.error("Você precisa estar logado");
       return;
@@ -101,109 +72,6 @@ const Planos = () => {
     }
   };
 
-  // ═══ Stripe checkout (Android/Web) — BLOQUEADO no iOS ═══
-  const handleStripeCheckout = async (priceId: string) => {
-    // Apple Guideline 3.1.1: iOS must use IAP only
-    if (isIOS) {
-      toast.error("Assinatura indisponível no momento. Tente novamente em instantes.");
-      return;
-    }
-
-    if (!session) {
-      toast.error("Você precisa estar logado");
-      return;
-    }
-
-    setLoadingCheckout(priceId);
-    try {
-      // Garantir sessão atualizada antes de chamar a edge function
-      const { data: { session: freshSession } } = await supabase.auth.getSession();
-      if (!freshSession?.access_token) {
-        toast.error("Sessão expirada. Faça login novamente.");
-        setLoadingCheckout(null);
-        return;
-      }
-
-      const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: { priceId },
-      });
-
-      if (error) {
-        console.error("[Planos] Invoke error:", error);
-        throw error;
-      }
-
-      // Upgrade com proration (sem checkout, já atualizado)
-      if (data?.upgraded) {
-        trackEvent('upgrade_premium', { plano: data.plano });
-        toast.success("Plano atualizado com sucesso! O valor foi ajustado proporcionalmente.");
-        window.location.href = data.url;
-        return;
-      }
-
-      // Já tem o mesmo plano ativo
-      if (data?.upgraded === false && data?.message) {
-        toast.info(data.message);
-        return;
-      }
-
-      if (data?.url) {
-        const planoMap: Record<string, string> = {
-          [STRIPE_PRICES.premium_mensal]: 'premium',
-          [STRIPE_PRICES.premium_anual]: 'premium',
-          [STRIPE_PRICES.premium_pro_mensal]: 'premium_pro',
-          [STRIPE_PRICES.premium_pro_anual]: 'premium_pro',
-        };
-        const periodoMap: Record<string, string> = {
-          [STRIPE_PRICES.premium_mensal]: 'mensal',
-          [STRIPE_PRICES.premium_anual]: 'anual',
-          [STRIPE_PRICES.premium_pro_mensal]: 'mensal',
-          [STRIPE_PRICES.premium_pro_anual]: 'anual',
-        };
-        const valorMap: Record<string, number> = {
-          [STRIPE_PRICES.premium_mensal]: 19.90,
-          [STRIPE_PRICES.premium_anual]: 119.90,
-          [STRIPE_PRICES.premium_pro_mensal]: 39.90,
-          [STRIPE_PRICES.premium_pro_anual]: 199.90,
-        };
-        trackEvent('iniciar_premium', {
-          plano: planoMap[priceId] || 'premium',
-          periodo: periodoMap[priceId] || 'mensal',
-          valor: valorMap[priceId] || 0,
-        });
-
-        if (Capacitor.isNativePlatform()) {
-          window.open(data.url, "_system");
-        } else {
-          window.location.href = data.url;
-        }
-      } else {
-        throw new Error("URL de checkout não retornada");
-      }
-    } catch (err) {
-      console.error("[Planos] Checkout error:", err);
-      toast.error("Erro ao iniciar pagamento. Tente novamente.");
-    } finally {
-      setLoadingCheckout(null);
-    }
-  };
-
-  // ═══ Handler unificado — roteia para IAP ou Stripe ═══
-  const handleCheckout = async (priceId: string) => {
-    if (useIAP) {
-      // No iOS, mapeia Stripe price ID para RevenueCat product ID
-      const rcMap: Record<string, string> = {
-        [STRIPE_PRICES.premium_mensal]: RC_PRODUCTS.premium_mensal,
-        [STRIPE_PRICES.premium_anual]: RC_PRODUCTS.premium_anual,
-        [STRIPE_PRICES.premium_pro_mensal]: RC_PRODUCTS.premium_pro_mensal,
-        [STRIPE_PRICES.premium_pro_anual]: RC_PRODUCTS.premium_pro_anual,
-      };
-      await handleIAPCheckout(rcMap[priceId] || priceId);
-    } else {
-      await handleStripeCheckout(priceId);
-    }
-  };
-
   const InfoButton = ({ modo }: { modo: string }) => (
     <button
       onClick={() => setInfoModal(MODO_REGRAS[modo])}
@@ -213,9 +81,6 @@ const Planos = () => {
       <Info className="w-3 h-3 text-copa-green-600" />
     </button>
   );
-
-  const isPremium = userPlano === "premium" || userPlano === "premium_pro";
-  const isPro = userPlano === "premium_pro";
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -405,8 +270,8 @@ const Planos = () => {
               onClick={() =>
                 handleCheckout(
                   billingPeriod === "mensal"
-                    ? STRIPE_PRICES.premium_mensal
-                    : STRIPE_PRICES.premium_anual
+                    ? RC_PRODUCTS.premium_mensal
+                    : RC_PRODUCTS.premium_anual
                 )
               }
               disabled={!!loadingCheckout}
@@ -417,7 +282,7 @@ const Planos = () => {
               ) : (
                 <Crown className="w-4 h-4 mr-2" />
               )}
-              {loadingCheckout ? "Redirecionando..." : "Assinar Premium"}
+              {loadingCheckout ? "Processando..." : "Assinar Premium"}
             </Button>
           )}
 
@@ -514,8 +379,8 @@ const Planos = () => {
               onClick={() =>
                 handleCheckout(
                   billingPeriod === "mensal"
-                    ? STRIPE_PRICES.premium_pro_mensal
-                    : STRIPE_PRICES.premium_pro_anual
+                    ? RC_PRODUCTS.premium_pro_mensal
+                    : RC_PRODUCTS.premium_pro_anual
                 )
               }
               disabled={!!loadingCheckout}
@@ -545,16 +410,14 @@ const Planos = () => {
       </Card>
 
       {/* Restaurar compras — obrigatório pela Apple */}
-      {useIAP && (
-        <button
-          onClick={handleRestore}
-          disabled={!!loadingCheckout}
-          className="w-full flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
-        >
-          <RotateCcw className="w-3.5 h-3.5" />
-          Restaurar compras anteriores
-        </button>
-      )}
+      <button
+        onClick={handleRestore}
+        disabled={!!loadingCheckout}
+        className="w-full flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
+      >
+        <RotateCcw className="w-3.5 h-3.5" />
+        Restaurar compras anteriores
+      </button>
 
       {/* Links obrigatórios — Política de Privacidade e Termos de Uso */}
       <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground pt-2 pb-4">

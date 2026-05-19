@@ -4,7 +4,7 @@ workflows:
     max_build_duration: 60
     instance_type: mac_mini_m2
     integrations:
-      app_store_connect: Bolao na Copa
+      app_store_connect: Bolão da Galera
 
     environment:
       vars:
@@ -18,7 +18,7 @@ workflows:
       events:
         - push
       branch_patterns:
-        - pattern: 'ios/release'
+        - pattern: 'main'
           include: true
 
     scripts:
@@ -83,9 +83,9 @@ workflows:
         script: |
           cd ios/App
           agvtool new-marketing-version 1.0.0
-          agvtool new-version -all 2
+          agvtool new-version -all 6
           # Fallback: forçar no pbxproj diretamente
-          sed -i '' 's/CURRENT_PROJECT_VERSION = [0-9]*/CURRENT_PROJECT_VERSION = 2/g' App.xcodeproj/project.pbxproj
+          sed -i '' 's/CURRENT_PROJECT_VERSION = [0-9]*/CURRENT_PROJECT_VERSION = 6/g' App.xcodeproj/project.pbxproj
           echo "Build version set to:"
           grep CURRENT_PROJECT_VERSION App.xcodeproj/project.pbxproj
 

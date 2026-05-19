@@ -1,6 +1,6 @@
 {
 	"appId": "com.bolaodagalera.app",
-	"appName": "Bolão na Copa",
+	"appName": "Bolão da Galera",
 	"webDir": "dist",
 	"server": {
 		"androidScheme": "https",
