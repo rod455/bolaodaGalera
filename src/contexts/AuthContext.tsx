@@ -93,7 +93,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(session?.user ?? null);
         setLoading(false);
 
-        // Salvar origem do cadastro na primeira vez (Google OAuth via redirect)
+        // Salvar origem do cadastro na primeira vez (OAuth via redirect)
         if (event === "SIGNED_IN" && session?.user && !session.user.user_metadata?.origem) {
           const origem = Capacitor.isNativePlatform() ? Capacitor.getPlatform() : "web";
           supabase.auth.updateUser({ data: { origem } }).catch(() => {});
