@@ -1,7 +1,7 @@
-# ════════════════════════════════════════════════════════════════════════════
+# ===========================================================================
 # Migracao Supabase: hvgsdxcdufekksxgqyoj (antigo) -> dtfqmxmmbbfmfpouzqzt (novo)
 #
-# Versao PowerShell — equivalente a scripts/migrate-supabase.sh para Windows.
+# Versao PowerShell - equivalente a scripts/migrate-supabase.sh para Windows.
 #
 # Pre-requisitos no PATH: pg_dump (v17), psql (v17), supabase CLI
 # Teste com:
@@ -14,7 +14,7 @@
 #
 # Se a Execution Policy bloquear o script:
 #   Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-# ════════════════════════════════════════════════════════════════════════════
+# ===========================================================================
 
 [CmdletBinding()]
 param(
@@ -37,7 +37,7 @@ $env:PGCLIENTENCODING = "UTF8"
 
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 
-# ─── Pre-flight: checar ferramentas ─────────────────────────────────────
+# --- Pre-flight: checar ferramentas ---------------------------------------
 foreach ($cmd in @("pg_dump", "psql", "supabase")) {
   if (-not (Get-Command $cmd -ErrorAction SilentlyContinue)) {
     throw "$cmd nao encontrado no PATH. Instale e adicione ao PATH antes de continuar."
@@ -52,7 +52,7 @@ $schemaFile  = Join-Path $OutDir "01_schema.sql"
 $seedFile    = Join-Path $OutDir "02_seed.sql"
 $bucketsFile = Join-Path $OutDir "03_buckets.csv"
 
-# ─── 1. Schema dump (somente structure, schema public) ──────────────────
+# --- 1. Schema dump (somente structure, schema public) --------------------
 Write-Host "[1/6] Dumping schema (public) do antigo..." -ForegroundColor Yellow
 & pg_dump `
   --schema-only `
@@ -66,7 +66,7 @@ Write-Host "[1/6] Dumping schema (public) do antigo..." -ForegroundColor Yellow
 if ($LASTEXITCODE -ne 0) { throw "pg_dump schema falhou" }
 Write-Host "      -> $schemaFile"
 
-# ─── 2. Seed data (sem usuarios) ────────────────────────────────────────
+# --- 2. Seed data (sem usuarios) ------------------------------------------
 # Envolve em session_replication_role = replica pra ignorar FKs orfas
 # (banners_home.bolao_id, eventos_especiais.bolao_id apontam para boloes,
 # tabela que nao vai ser migrada).
@@ -93,7 +93,7 @@ if ($LASTEXITCODE -ne 0) { throw "pg_dump seed falhou" }
 "COMMIT;"                                    | Add-Content -Path $seedFile -Encoding utf8
 Write-Host "      -> $seedFile"
 
-# ─── 3. Storage buckets ─────────────────────────────────────────────────
+# --- 3. Storage buckets ---------------------------------------------------
 Write-Host "[3/6] Dumping storage buckets..." -ForegroundColor Yellow
 & psql $SourceDbUrl --csv -c `
   "SELECT id, name, public, file_size_limit, COALESCE(array_to_string(allowed_mime_types, ','), '') AS mimes FROM storage.buckets ORDER BY id" |
@@ -102,7 +102,7 @@ if ($LASTEXITCODE -ne 0) { throw "psql buckets dump falhou" }
 $bucketCount = (Get-Content $bucketsFile).Count - 1
 Write-Host "      -> $bucketsFile ($bucketCount buckets)"
 
-# ─── 4. Aplicar schema + seed no projeto novo ───────────────────────────
+# --- 4. Aplicar schema + seed no projeto novo -----------------------------
 Write-Host ""
 Write-Host "[4/6] Aplicando schema no projeto novo..." -ForegroundColor Yellow
 & psql $TargetDbUrl --single-transaction -v ON_ERROR_STOP=1 -f $schemaFile
@@ -112,7 +112,7 @@ Write-Host "[4/6] Aplicando seed data..." -ForegroundColor Yellow
 & psql $TargetDbUrl --single-transaction -v ON_ERROR_STOP=1 -f $seedFile
 if ($LASTEXITCODE -ne 0) { throw "psql apply seed falhou" }
 
-# ─── 5. Recriar storage buckets ─────────────────────────────────────────
+# --- 5. Recriar storage buckets -------------------------------------------
 Write-Host "[5/6] Criando storage buckets no projeto novo..." -ForegroundColor Yellow
 Import-Csv $bucketsFile | ForEach-Object {
   $id     = $_.id
@@ -130,7 +130,7 @@ Import-Csv $bucketsFile | ForEach-Object {
   if ($LASTEXITCODE -ne 0) { throw "psql insert bucket '$name' falhou" }
 }
 
-# ─── 6. Pos-restore (trigger em auth.users + cron jobs) ─────────────────
+# --- 6. Pos-restore (trigger em auth.users + cron jobs) -------------------
 Write-Host "[6/6] Aplicando pos-restore (trigger em auth.users + cron jobs)..." -ForegroundColor Yellow
 $postRestore = "scripts\migrate-post-restore.sql"
 if (Test-Path $postRestore) {
@@ -140,16 +140,16 @@ if (Test-Path $postRestore) {
   Write-Warning "$postRestore nao encontrado, pulando."
 }
 
-# ─── Final ──────────────────────────────────────────────────────────────
+# --- Final ----------------------------------------------------------------
 Write-Host ""
-Write-Host "─── Schema + seed + buckets aplicados. ──────────────────────────────" -ForegroundColor Green
+Write-Host "Schema + seed + buckets aplicados." -ForegroundColor Green
 Write-Host ""
 Write-Host "PROXIMOS PASSOS MANUAIS:" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "1) Deploy das edge functions no projeto novo:"
+Write-Host "1. Deploy das edge functions no projeto novo:"
 Write-Host "     supabase functions deploy --project-ref $TargetRef --no-verify-jwt"
 Write-Host ""
-Write-Host "2) Configurar secrets das edge functions:"
+Write-Host "2. Configurar secrets das edge functions:"
 Write-Host "     supabase secrets set --project-ref $TargetRef ``"
 Write-Host "       STRIPE_SECRET_KEY=... ``"
 Write-Host "       STRIPE_WEBHOOK_SECRET=... ``"
@@ -158,13 +158,13 @@ Write-Host "       RESEND_API_KEY=... ``"
 Write-Host "       FOOTBALL_DATA_TOKEN=... ``"
 Write-Host "       CUSTOM_SERVICE_KEY=..."
 Write-Host ""
-Write-Host "3) Copiar arquivos dos buckets (avatars, bolao-capas, iconesapp,"
-Write-Host "   iconesCampeonatos, logos, banner-capas, bares) usando rclone"
-Write-Host "   ou o dashboard. Os objetos NAO sao copiados por este script."
+Write-Host "3. Copiar arquivos dos buckets usando rclone ou o dashboard."
+Write-Host "   Buckets: avatars, bolao-capas, iconesapp, iconesCampeonatos,"
+Write-Host "   logos, banner-capas, bares. Os objetos NAO sao copiados aqui."
 Write-Host ""
-Write-Host "4) Habilitar Auth providers (Apple, Google) no dashboard do projeto novo."
+Write-Host "4. Habilitar Auth providers Apple e Google no dashboard do novo."
 Write-Host ""
-Write-Host "5) Configurar webhooks externos:"
+Write-Host "5. Configurar webhooks externos:"
 Write-Host "   - Stripe     -> https://$TargetRef.supabase.co/functions/v1/stripe-webhook"
 Write-Host "   - RevenueCat -> https://$TargetRef.supabase.co/functions/v1/revenuecat-webhook"
 Write-Host ""
