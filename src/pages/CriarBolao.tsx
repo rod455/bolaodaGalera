@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Upload, Lock, Info, Check, Trophy, Loader2, X, ChevronDown, Heart, Search } from "lucide-react";
+import { ArrowLeft, Upload, Lock, Info, Check, Trophy, Loader2, X, ChevronDown, Heart, Search, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
@@ -448,7 +449,7 @@ const CriarBolao = () => {
             return (
               <div key={modo.id}
                 onClick={() => {
-                  if (locked) { setUpsellModal({ open: true, reason: "modo_bloqueado", extra: cfg.label }); return; }
+                  if (locked) { setUpsellModal({ open: true, reason: "modo_bloqueado", extra: modo.nome }); return; }
                   setModoSelecionado(modo.id);
                 }}
                 className={`flex items-center justify-between p-3.5 rounded-xl cursor-pointer transition-all border-2 ${

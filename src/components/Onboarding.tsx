@@ -209,9 +209,9 @@ const QuickBolaoStep = ({
       // Rollback: se o grupo foi criado mas as etapas seguintes falharam, limpar
       if (createdBolaoId) {
         void err;
-        await supabase.from("bolao_campeonatos").delete().eq("bolao_id", createdBolaoId).catch(() => {});
-        await supabase.from("bolao_participantes").delete().eq("bolao_id", createdBolaoId).catch(() => {});
-        await supabase.from("boloes").delete().eq("id", createdBolaoId).catch(() => {});
+        try { await supabase.from("bolao_campeonatos").delete().eq("bolao_id", createdBolaoId); } catch {}
+        try { await supabase.from("bolao_participantes").delete().eq("bolao_id", createdBolaoId); } catch {}
+        try { await supabase.from("boloes").delete().eq("id", createdBolaoId); } catch {}
       }
       toast.error(err.message || "Erro ao criar bolão");
     } finally {
