@@ -66,10 +66,8 @@ Os status validos no banco sao:
 
 ## Plataformas
 
-- **iOS**: usa RevenueCat para pagamentos (Apple IAP obrigatorio)
-- **Android**: usa Stripe (RevenueCat key Android esta vazia)
-- **Web**: usa Stripe
-- `androidScheme: 'https'` no `capacitor.config.ts`
+- App iOS-puro. Pagamentos exclusivamente via RevenueCat (Apple IAP).
+- Sem fluxo Stripe / sem build Android/Web em produção.
 
 ## Projeto Supabase
 

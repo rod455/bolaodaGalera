@@ -29,7 +29,6 @@ const Perfil = () => {
   const feedbackRef = useRef<HTMLDivElement>(null);
   const { plano: userPlano, loading: loadingPlano } = useUserPlan();
   const { userXP, referralCode } = useGamification();
-  const [loadingPortal, setLoadingPortal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [deletingAccount, setDeletingAccount] = useState(false);
@@ -355,60 +354,23 @@ const Perfil = () => {
                 </div>
               </div>
 
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => navigate("/planos")}
-                  variant="outline"
-                  className="flex-1 h-11 border-copa-gold-400 text-copa-gold-600 hover:bg-copa-gold-50 font-semibold rounded-xl"
-                >
-                  <Crown className="w-4 h-4 mr-2" />
-                  Ver planos
-                </Button>
-                <Button
-                  onClick={async () => {
-                    setLoadingPortal(true);
-                    try {
-                      const { data, error } = await supabase.functions.invoke("create-checkout", {
-                        body: { priceId: "price_1T1TzjC1YtBHMBc2CGkzhsUe" },
-                      });
-                      if (error) throw error;
-                      if (data?.url) { if (Capacitor.isNativePlatform()) { window.open(data.url, "_system"); } else { window.location.href = data.url; } }
-                      else { toast.error("Não foi possível gerar o link de pagamento. Tente novamente."); }
-                    } catch {
-                      toast.error("Erro ao iniciar pagamento.");
-                    } finally {
-                      setLoadingPortal(false);
-                    }
-                  }}
-                  disabled={loadingPortal}
-                  className="h-11 bg-copa-green-500 hover:bg-copa-green-600 text-white font-semibold rounded-xl px-4"
-                >
-                  {loadingPortal ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Zap className="w-4 h-4 mr-1" />}
-                  Upgrade PRO
-                </Button>
-              </div>
-
               <Button
-                onClick={async () => {
-                  setLoadingPortal(true);
-                  try {
-                    const { data, error } = await supabase.functions.invoke("create-portal");
-                    if (error) throw error;
-                    if (data?.url) { if (Capacitor.isNativePlatform()) { window.open(data.url, "_system"); } else { window.location.href = data.url; } }
-                    else { toast.error("Não foi possível abrir o portal. Tente novamente."); }
-                  } catch {
-                    toast.error("Erro ao abrir cancelamento.");
-                  } finally {
-                    setLoadingPortal(false);
-                  }
-                }}
-                disabled={loadingPortal}
-                variant="ghost"
-                className="w-full h-9 text-xs text-muted-foreground hover:text-destructive"
+                onClick={() => navigate("/planos")}
+                variant="outline"
+                className="w-full h-11 border-copa-gold-400 text-copa-gold-600 hover:bg-copa-gold-50 font-semibold rounded-xl"
               >
-                {loadingPortal ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : null}
-                Cancelar assinatura
+                <Crown className="w-4 h-4 mr-2" />
+                Ver planos
               </Button>
+
+              <a
+                href="https://apps.apple.com/account/subscriptions"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full inline-flex items-center justify-center h-9 text-xs text-muted-foreground hover:text-destructive transition-colors"
+              >
+                Gerenciar / cancelar assinatura
+              </a>
             </>
           ) : (
             <>
@@ -466,27 +428,14 @@ const Perfil = () => {
                 Ver planos
               </Button>
 
-              <Button
-                onClick={async () => {
-                  setLoadingPortal(true);
-                  try {
-                    const { data, error } = await supabase.functions.invoke("create-portal");
-                    if (error) throw error;
-                    if (data?.url) { if (Capacitor.isNativePlatform()) { window.open(data.url, "_system"); } else { window.location.href = data.url; } }
-                    else { toast.error("Não foi possível abrir o portal. Tente novamente."); }
-                  } catch {
-                    toast.error("Erro ao abrir cancelamento.");
-                  } finally {
-                    setLoadingPortal(false);
-                  }
-                }}
-                disabled={loadingPortal}
-                variant="ghost"
-                className="w-full h-9 text-xs text-muted-foreground hover:text-destructive"
+              <a
+                href="https://apps.apple.com/account/subscriptions"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full inline-flex items-center justify-center h-9 text-xs text-muted-foreground hover:text-destructive transition-colors"
               >
-                {loadingPortal ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : null}
-                Cancelar assinatura
-              </Button>
+                Gerenciar / cancelar assinatura
+              </a>
             </>
           )}
         </CardContent>
