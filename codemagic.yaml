@@ -8,7 +8,7 @@ workflows:
 
     environment:
       vars:
-        BUNDLE_ID: com.bolaodagalera.app
+        BUNDLE_ID: com.bolaonacopa.app
         XCODE_SCHEME: App
         TEAM_ID: GGM89XNN4S
       node: 22.0.0

@@ -77,5 +77,6 @@ Os status validos no banco sao:
 
 ## Bundle IDs
 
-- iOS: `com.bolaodagalera.app` (novo, App Store)
-- Android: `com.bolaonacopa.app` (mantido por compat com Play Store)
+- iOS: `com.bolaonacopa.app` (mesmo bundle do Android, submetido em slot já existente da App Store Connect)
+- Android: `com.bolaonacopa.app`
+- Display name (Info.plist): `Bolão da Galera`
