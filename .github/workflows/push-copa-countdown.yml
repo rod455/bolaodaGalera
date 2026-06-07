@@ -1,9 +1,10 @@
 name: Push Copa Countdown (Semanal)
 
 on:
-  schedule:
-    # Toda segunda-feira às 15h UTC (12h BRT)
-    - cron: '0 15 * * 1'
+  # PAUSADO: app nao sera lancado
+  # schedule:
+  #   # Toda segunda-feira às 15h UTC (12h BRT)
+  #   - cron: '0 15 * * 1'
   workflow_dispatch:
 
 jobs:

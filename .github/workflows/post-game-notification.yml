@@ -1,9 +1,10 @@
 name: Post-Game Notification
 
 on:
-  schedule:
-    - cron: '5,35 15-23 * * *'
-    - cron: '5,35 0-5 * * *'
+  # PAUSADO: app nao sera lancado
+  # schedule:
+  #   - cron: '5,35 15-23 * * *'
+  #   - cron: '5,35 0-5 * * *'
   workflow_dispatch:
 
 jobs:

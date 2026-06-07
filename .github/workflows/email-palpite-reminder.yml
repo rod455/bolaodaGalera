@@ -1,8 +1,9 @@
 name: Email Palpite Reminder
 
 on:
-  schedule:
-    - cron: '0 15,21 * * *'
+  # PAUSADO: app nao sera lancado
+  # schedule:
+  #   - cron: '0 15,21 * * *'
   workflow_dispatch:
 
 jobs:

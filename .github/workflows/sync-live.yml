@@ -1,9 +1,10 @@
 name: Sync Live Scores
 
 on:
-  schedule:
-    - cron: '*/15 13-23 * * *'
-    - cron: '*/15 0-5 * * *'
+  # PAUSADO: app nao sera lancado
+  # schedule:
+  #   - cron: '*/15 13-23 * * *'
+  #   - cron: '*/15 0-5 * * *'
   workflow_dispatch:
 
 jobs:

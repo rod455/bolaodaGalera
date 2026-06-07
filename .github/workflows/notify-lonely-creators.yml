@@ -1,8 +1,9 @@
 name: Notify Lonely Creators
 
 on:
-  schedule:
-    - cron: '0 13 * * 1'
+  # PAUSADO: app nao sera lancado
+  # schedule:
+  #   - cron: '0 13 * * 1'
   workflow_dispatch:
 
 jobs:
