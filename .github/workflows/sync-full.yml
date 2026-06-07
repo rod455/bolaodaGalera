@@ -1,8 +1,9 @@
 name: Full Sync Weekly
 
 on:
-  schedule:
-    - cron: '0 11 * * 1,3'
+  # PAUSADO: app nao sera lancado
+  # schedule:
+  #   - cron: '0 11 * * 1,3'
   workflow_dispatch:
 
 jobs:
